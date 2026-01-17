@@ -1,0 +1,24 @@
+name: Deploy Static Site to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # هذا يعني أن النشر يتم عند كل push إلى الفرع الرئيسي
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # الخطوة 1: سحب الملفات من الفرع الرئيسي
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      # الخطوة 2: نشر الملفات في الفرع gh-pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./  # هذا يعني أن جميع الملفات في المجلد الرئيسي ستُنشر
