@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourseHub - منصتك للتعلم</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <div class="top-bar">
+        <div class="logo">CourseHub</div>
+        <nav>
+            <a href="#courses">الدورات</a>
+            <a href="#certificates">الشهادات</a>
+            <a href="#tests">الاختبارات</a>
+            <a href="#contact">تواصل معنا</a>
+        </nav>
+    </div>
+    <div class="search-bar">
+        <input type="text" placeholder="ابحث عن دورة...">
+        <button>بحث</button>
+    </div>
+</header>
+
+<!-- Hero -->
+<div class="hero" style="background-image: url('images/hero.jpg');">
+    <h1>تعلم من خبراء عالميين</h1>
+    <p>اختر دورات، اجتاز الاختبارات، واحصل على شهادات معتمدة</p>
+    <a href="#courses" class="btn">ابدأ التعلم الآن</a>
+</div>
+
+<section>
+    <h2>فئات الدورات</h2>
+    <div class="categories">
+        <button class="active">كل الدورات</button>
+        <button data-category="web">تطوير الويب</button>
+        <button data-category="design">تصميم الجرافيك</button>
+        <button data-category="data">تحليل البيانات</button>
+    </div>
+</section>
+
+<section id="courses">
+    <h2>الدورات المميزة</h2>
+    <div class="courses-grid">
+
+        <div class="card" data-category="web">
+            <img src="images/web.jpg" alt="تطوير الويب">
+            <div class="card-content">
+                <h3>تطوير الويب</h3>
+                <p>تعلم HTML, CSS, JavaScript لبناء مواقع حديثة.</p>
+                <a href="#course1" class="btn">عرض الدورة</a>
+            </div>
+        </div>
+
+        <div class="card" data-category="design">
+            <img src="images/design.jpg" alt="تصميم الجرافيك">
+            <div class="card-content">
+                <h3>تصميم الجرافيك</h3>
+                <p>تعلم استخدام أدوات التصميم لإنشاء تصاميم رائعة.</p>
+                <a href="#course2" class="btn">عرض الدورة</a>
+            </div>
+        </div>
+
+        <div class="card" data-category="data">
+            <img src="images/data.jpg" alt="تحليل البيانات">
+            <div class="card-content">
+                <h3>تحليل البيانات</h3>
+                <p>تعلم التعامل مع البيانات وتحليلها لاتخاذ قرارات أفضل.</p>
+                <a href="#course3" class="btn">عرض الدورة</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<section id="certificates">
+    <h2>الشهادات</h2>
+    <div class="courses-grid">
+        <div class="card">
+            <div class="card-content">
+                <h3>شهادة تطوير الويب</h3>
+                <p>شهادة معتمدة لإثبات مهاراتك أمام الشركات والعملاء.</p>
+                <a href="#" class="btn">احصل عليها</a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-content">
+                <h3>شهادة تصميم الجرافيك</h3>
+                <p>اعرض مهاراتك الإبداعية للشركات والعملاء.</p>
+                <a href="#" class="btn">احصل عليها</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="tests">
+    <h2>الاختبارات</h2>
+    <div class="courses-grid">
+        <div class="card">
+            <div class="card-content">
+                <h3>اختبار HTML & CSS</h3>
+                <p>اختبر مهاراتك في أساسيات تصميم المواقع.</p>
+                <a href="#" class="btn">ابدأ الاختبار</a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-content">
+                <h3>اختبار تحليل البيانات</h3>
+                <p>تحقق من قدرتك على تحليل البيانات واتخاذ القرارات.</p>
+                <a href="#" class="btn">ابدأ الاختبار</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="course1">
+    <div class="course-detail">
+        <h2>دورة تطوير الويب</h2>
+        <img src="images/web.jpg" alt="تفاصيل دورة تطوير الويب">
+        <p>
+            في هذه الدورة ستتعلم أساسيات تطوير المواقع من HTML, CSS, وJavaScript
+            لتتمكن من بناء مواقع حديثة ومتجاوبة.
+        </p>
+        <p>
+            الدورة تشمل دروس فيديو، مشاريع تطبيقية، وتمارين عملية.
+        </p>
+        <a href="#" class="btn">اشترك الآن</a>
+    </div>
+</section>
+
+<footer id="contact">
+    <p>© 2026 CourseHub. جميع الحقوق محفوظة.</p>
+    <p>
+        <a href="#">Facebook</a> |
+        <a href="#">Twitter</a> |
+        <a href="#">Instagram</a>
+    </p>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
