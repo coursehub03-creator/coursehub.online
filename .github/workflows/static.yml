@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourseHub - منصتك للدورات والشهادات</title>
+    <style>
+        /* --- Reset بسيط --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        header {
+            background-color: #0056d2;
+            color: white;
+            padding: 15px 20px;
+        }
+
+        header .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        nav {
+            margin-top: 10px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .hero {
+            background: url('https://images.unsplash.com/photo-1581090700227-0c22c9baf0c7?auto=format&fit=crop&w=1950&q=80') no-repeat center center/cover;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background-color: #ff9900;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #e68a00;
+        }
+
+        section {
+            padding: 50px 20px;
+        }
+
+        section h2 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 32px;
+            color: #0056d2;
+        }
+
+        .courses, .certificates, .tests {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card img {
+            width: 100%;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .card p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        footer {
+            background-color: #222;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        footer a {
+            color: #ff9900;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">CourseHub</div>
+        <nav>
+            <a href="#courses">الدورات</a>
+            <a href="#certificates">الشهادات</a>
+            <a href="#tests">الاختبارات</a>
+            <a href="#contact">تواصل معنا</a>
+        </nav>
+    </header>
+
+    <div class="hero">
+        <h1>تعلم من أفضل الخبراء</h1>
+        <p>دورات، شهادات، واختبارات تساعدك على تطوير مهاراتك</p>
+        <a href="#courses" class="btn">ابدأ التعلم الآن</a>
+    </div>
+
+    <section id="courses">
+        <h2>دوراتنا</h2>
+        <div class="courses">
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1581090700227-0c22c9baf0c7?auto=format&fit=crop&w=400&q=80" alt="Course 1">
+                <h3>تطوير الويب</h3>
+                <p>تعلم HTML, CSS, JavaScript لبناء مواقع حديثة.</p>
+                <a href="#" class="btn">اشترك الآن</a>
+            </div>
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1581090700227-0c22c9baf0c7?auto=format&fit=crop&w=400&q=80" alt="Course 2">
+                <h3>تصميم الجرافيك</h3>
+                <p>تعلم استخدام أدوات التصميم لإنشاء تصاميم رائعة.</p>
+                <a href="#" class="btn">اشترك الآن</a>
+            </div>
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1581090700227-0c22c9baf0c7?auto=format&fit=crop&w=400&q=80" alt="Course 3">
+                <h3>تحليل البيانات</h3>
+                <p>تعلم التعامل مع البيانات وتحليلها لاتخاذ قرارات أفضل.</p>
+                <a href="#" class="btn">اشترك الآن</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="certificates">
+        <h2>الشهادات</h2>
+        <div class="certificates">
+            <div class="card">
+                <h3>شهادة إتمام دورة تطوير الويب</h3>
+                <p>شهادة معتمدة تساعدك على إثبات مهاراتك أمام الشركات.</p>
+                <a href="#" class="btn">احصل عليها</a>
+            </div>
+            <div class="card">
+                <h3>شهادة تصميم الجرافيك</h3>
+                <p>اعرض مهاراتك الإبداعية للشركات والعملاء.</p>
+                <a href="#" class="btn">احصل عليها</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="tests">
+        <h2>الاختبارات</h2>
+        <div class="tests">
+            <div class="card">
+                <h3>اختبار HTML & CSS</h3>
+                <p>اختبر مهاراتك في أساسيات تصميم المواقع.</p>
+                <a href="#" class="btn">ابدأ الاختبار</a>
+            </div>
+            <div class="card">
+                <h3>اختبار تحليل البيانات</h3>
+                <p>تحقق من قدرتك على تحليل البيانات واتخاذ القرارات.</p>
+                <a href="#" class="btn">ابدأ الاختبار</a>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <p>© 2026 CourseHub. جميع الحقوق محفوظة.</p>
+        <p>
+            <a href="#">Facebook</a> |
+            <a href="#">Twitter</a> |
+            <a href="#">Instagram</a>
+        </p>
+    </footer>
+
+</body>
+</html>
