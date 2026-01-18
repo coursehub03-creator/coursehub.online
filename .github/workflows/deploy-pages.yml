@@ -22,7 +22,8 @@ jobs:
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: ./  # كل الملفات في root
+          path: ./coursehub
+
 
       # 4. نشر الموقع على GitHub Pages
       - name: Deploy to GitHub Pages
