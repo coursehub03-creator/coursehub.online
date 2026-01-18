@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write   # للسماح بالكتابة على المستودع
+  id-token: write   # للسماح بالـ OIDC token المطلوب من deploy-pages
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,7 +21,7 @@ jobs:
         uses: actions/configure-pages@v3
 
       - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3  # ← الإصدار الجديد المدعوم
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./  # root لأنه كل الملفات موجودة هنا
 
