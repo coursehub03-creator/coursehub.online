@@ -12,7 +12,7 @@ jobs:
     steps:
       # الخطوة 1: سحب الملفات من الفرع الرئيسي
       - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/upload-artifact@v4
         with:
           ref: main
 
