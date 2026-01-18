@@ -3,22 +3,27 @@ name: Deploy Static Site to GitHub Pages
 on:
   push:
     branches:
-      - main  # هذا يعني أن النشر يتم عند كل push إلى الفرع الرئيسي
+      - main  # النشر عند كل push إلى الفرع الرئيسي
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # الخطوة 1: سحب الملفات من الفرع الرئيسي
+      # 1. سحب الملفات من الفرع الرئيسي
       - name: Checkout repository
-      - uses: actions/upload-artifact@v4
-        with:
-          ref: main
+        uses: actions/checkout@v3
 
-      # الخطوة 2: نشر الملفات في الفرع gh-pages
-      - name: Deploy to GitHub Pages
-        uses: actions/upload-artifact@v4
+      # 2. تهيئة GitHub Pages
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v3
+
+      # 3. رفع الملفات المراد نشرها
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./  # هذا يعني أن جميع الملفات في المجلد الرئيسي ستُنشر
+          path: './'  # كل الملفات في المجلد الرئيسي
+
+      # 4. نشر الملفات على GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
