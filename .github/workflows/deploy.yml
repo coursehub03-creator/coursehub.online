@@ -3,7 +3,7 @@ name: Deploy Static Site to GitHub Pages
 on:
   push:
     branches:
-      - main  # النشر عند كل push إلى الفرع الرئيسي
+      - main
 
 jobs:
   deploy:
@@ -19,7 +19,7 @@ jobs:
         uses: actions/configure-pages@v3
 
       # 3. رفع الملفات المراد نشرها
-      - name: Upload artifact
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v1
         with:
           path: './'  # كل الملفات في المجلد الرئيسي
