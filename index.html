@@ -1,75 +1,65 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CourseHub</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CourseHub - الصفحة الرئيسية</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>
-  <div class="top-bar">
-    <div class="logo">CourseHub</div>
-    <nav>
-      <a href="index.html">الرئيسية</a>
-      <a href="courses.html">الدورات</a>
-      <a href="certificates.html">الشهادات</a>
-      <a href="tests.html">الاختبارات</a>
-      <a href="login.html">تسجيل الدخول</a>
-    </nav>
-  </div>
-  <div class="search-bar">
-    <input type="text" placeholder="ابحث عن دورة...">
-    <button>بحث</button>
-  </div>
-</header>
+  <header>
+    <div class="container">
+      <h1>CourseHub</h1>
+      <nav>
+        <a href="index.html">الرئيسية</a>
+        <a href="courses.html">الدورات</a>
+        <a href="tests.html">الاختبارات</a>
+        <a href="certificate.html">الشهادات</a>
+      </nav>
+    </div>
+  </header>
 
-<section class="hero">
-  <h1>تعلم أي مهارة جديدة بسهولة</h1>
-  <p>انضم إلى آلاف الطلاب وابدأ رحلتك التعليمية الآن!</p>
-  <a href="courses.html" class="btn">استكشف الدورات</a>
-</section>
+  <section class="hero">
+    <div class="container">
+      <h2>تعلم، اختبر، واحصل على شهادتك!</h2>
+      <button onclick="showLogin()">ابدأ الآن</button>
+    </div>
+  </section>
 
-<section>
-  <h2>الدورات الأكثر شعبية</h2>
-  <div class="categories">
-    <button class="active" data-category="all">الكل</button>
-    <button data-category="web">تطوير الويب</button>
-    <button data-category="ai">الذكاء الاصطناعي</button>
-    <button data-category="design">التصميم</button>
-  </div>
-  <div class="courses-grid">
-    <div class="card" data-category="web">
-      <img src="images/course1.jpg" alt="Course 1">
-      <div class="card-content">
-        <h3>تطوير الويب للمبتدئين</h3>
-        <p>تعلم HTML, CSS, JavaScript خطوة بخطوة.</p>
-        <a href="course-detail.html" class="btn">عرض الدورة</a>
+  <section class="featured-courses container">
+    <h3>الدورات المميزة</h3>
+    <div class="cards">
+      <div class="card">
+        <img src="img/course1.jpg" alt="دورة HTML">
+        <h4>دورة HTML و CSS</h4>
+        <p>تعلم أساسيات تصميم المواقع من الصفر.</p>
+        <a href="course-details.html?course=html">التفاصيل</a>
+      </div>
+      <div class="card">
+        <img src="img/course2.jpg" alt="دورة JavaScript">
+        <h4>دورة JavaScript</h4>
+        <p>تعلم البرمجة التفاعلية للمواقع.</p>
+        <a href="course-details.html?course=js">التفاصيل</a>
+      </div>
+      <div class="card">
+        <img src="img/course3.jpg" alt="دورة Python">
+        <h4>دورة Python</h4>
+        <p>ابدأ برمجة تطبيقات ويب وسكريبتات بسرعة.</p>
+        <a href="course-details.html?course=python">التفاصيل</a>
       </div>
     </div>
-    <div class="card" data-category="ai">
-      <img src="images/course2.jpg" alt="Course 2">
-      <div class="card-content">
-        <h3>الذكاء الاصطناعي</h3>
-        <p>ابدأ رحلتك مع تعلم الآلة والذكاء الاصطناعي.</p>
-        <a href="course-detail.html" class="btn">عرض الدورة</a>
-      </div>
-    </div>
-    <div class="card" data-category="design">
-      <img src="images/course3.jpg" alt="Course 3">
-      <div class="card-content">
-        <h3>التصميم الجرافيكي</h3>
-        <p>تعلم Photoshop و Illustrator من الصفر.</p>
-        <a href="course-detail.html" class="btn">عرض الدورة</a>
-      </div>
+  </section>
+
+  <!-- نافذة تسجيل دخول مؤقت -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeLogin()">&times;</span>
+      <h3>تسجيل الدخول</h3>
+      <input type="text" id="username" placeholder="أدخل اسمك">
+      <button onclick="login()">تسجيل</button>
     </div>
   </div>
-</section>
 
-<footer>
-  <p>&copy; 2026 CourseHub. جميع الحقوق محفوظة.</p>
-</footer>
-
-<script src="main.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
