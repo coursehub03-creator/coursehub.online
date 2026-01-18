@@ -5,20 +5,137 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تسجيل الدخول - CourseHub</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  section.course-detail {
+    max-width: 400px;
+    margin: 80px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    text-align: center;
+  }
+
+  section.course-detail h2 {
+    margin-bottom: 25px;
+    color: #0056d2;
+  }
+
+  section.course-detail form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: left;
+  }
+
+  section.course-detail input {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
+  }
+
+  section.course-detail .btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #ff9900;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  section.course-detail .btn:hover {
+    background-color: #e68a00;
+  }
+
+  .oauth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .oauth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: bold;
+    text-decoration: none;
+    color: #333;
+  }
+
+  .oauth-btn:hover {
+    background-color: #f0f0f0;
+  }
+
+  .oauth-google { border-color: #db4437; color: #db4437; }
+  .oauth-facebook { border-color: #1877f2; color: #1877f2; }
+  .oauth-apple { border-color: #000; color: #000; }
+</style>
 </head>
 <body>
+
 <section class="course-detail">
   <h2>تسجيل الدخول</h2>
-  <form>
+
+  <form id="loginForm">
     <label for="email">البريد الإلكتروني</label>
     <input type="email" id="email" name="email" placeholder="example@mail.com" required>
+
     <label for="password">كلمة المرور</label>
     <input type="password" id="password" name="password" placeholder="********" required>
+
     <button class="btn" type="submit">تسجيل الدخول</button>
   </form>
+
+  <div class="oauth-buttons">
+    <a href="#" class="oauth-btn oauth-google"><i class="fab fa-google"></i> تسجيل الدخول بواسطة Google</a>
+    <a href="#" class="oauth-btn oauth-facebook"><i class="fab fa-facebook-f"></i> تسجيل الدخول بواسطة Facebook</a>
+    <a href="#" class="oauth-btn oauth-apple"><i class="fab fa-apple"></i> تسجيل الدخول بواسطة Apple</a>
+  </div>
+
   <p><a href="forgot-password.html">نسيت كلمة المرور؟</a></p>
   <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
 </section>
-<script src="main.js"></script>
+
+<script>
+  // نموذج تسجيل الدخول التقليدي (تجريبي / وهمي)
+  const loginForm = document.getElementById('loginForm');
+  loginForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    alert('تم تسجيل الدخول (وهمي، بدون backend)');
+  });
+
+  // أزرار تسجيل الدخول عبر OAuth (Google, Facebook, Apple)
+  const googleBtn = document.querySelector('.oauth-google');
+  const fbBtn = document.querySelector('.oauth-facebook');
+  const appleBtn = document.querySelector('.oauth-apple');
+
+  googleBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('Google OAuth سيتم تفعيله لاحقًا');
+  });
+
+  fbBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('Facebook OAuth سيتم تفعيله لاحقًا');
+  });
+
+  appleBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('Apple OAuth سيتم تفعيله لاحقًا');
+  });
+</script>
+
 </body>
 </html>
