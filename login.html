@@ -1,31 +1,46 @@
+```html
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول - CourseHub</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
 <section class="course-detail">
   <h2>تسجيل الدخول</h2>
 
-  <form id="email-login-form">
-    <label for="email">البريد الإلكتروني</label>
-    <input type="email" id="email" name="email" placeholder="example@mail.com" required>
-    <label for="password">كلمة المرور</label>
-    <input type="password" id="password" name="password" placeholder="********" required>
-    <button class="btn" type="submit">تسجيل الدخول</button>
+  <form id="loginForm">
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="email" required>
+
+    <label>كلمة المرور</label>
+    <input type="password" id="password" required>
+
+    <button class="btn">تسجيل الدخول</button>
   </form>
 
-  <p>أو سجل الدخول بواسطة:</p>
-  <button class="btn" id="google-login">Google</button>
-  <button class="btn" id="apple-login">Apple</button>
-  <button class="btn" id="phone-login">الهاتف</button>
+  <hr style="margin:20px 0">
 
-  <div id="phone-auth-div" style="display:none;">
-    <input type="text" id="phone-number" placeholder="+213...">
+  <button class="btn" id="googleLogin">تسجيل بواسطة Google</button>
+
+  <button class="btn" id="phoneLogin">تسجيل بواسطة الهاتف</button>
+
+  <div id="phoneBox" style="display:none;margin-top:15px;">
+    <input type="text" id="phone" placeholder="+213..." />
     <div id="recaptcha-container"></div>
-    <button class="btn" id="send-otp">أرسل رمز التحقق</button>
-    <input type="text" id="otp" placeholder="أدخل رمز التحقق">
-    <button class="btn" id="verify-otp">تحقق</button>
+    <button class="btn" id="sendCode">إرسال الرمز</button>
+    <input type="text" id="code" placeholder="رمز التحقق" />
+    <button class="btn" id="verifyCode">تأكيد</button>
   </div>
 
-  <p><a href="forgot-password.html">نسيت كلمة المرور؟</a></p>
   <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
-
-  <div id="login-message"></div>
 </section>
 
-<script type="module" src="login.js"></script>
+<script src="firebase-config.js"></script>
+<script src="login.js"></script>
+</body>
+</html>
+```
