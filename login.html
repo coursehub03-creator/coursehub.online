@@ -1,0 +1,46 @@
+```html
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول - CourseHub</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="course-detail">
+  <h2>تسجيل الدخول</h2>
+
+  <form id="loginForm">
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="email" required>
+
+    <label>كلمة المرور</label>
+    <input type="password" id="password" required>
+
+    <button class="btn">تسجيل الدخول</button>
+  </form>
+
+  <hr style="margin:20px 0">
+
+  <button class="btn" id="googleLogin">تسجيل بواسطة Google</button>
+
+  <button class="btn" id="phoneLogin">تسجيل بواسطة الهاتف</button>
+
+  <div id="phoneBox" style="display:none;margin-top:15px;">
+    <input type="text" id="phone" placeholder="+213..." />
+    <div id="recaptcha-container"></div>
+    <button class="btn" id="sendCode">إرسال الرمز</button>
+    <input type="text" id="code" placeholder="رمز التحقق" />
+    <button class="btn" id="verifyCode">تأكيد</button>
+  </div>
+
+  <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
+</section>
+
+<script src="firebase-config.js"></script>
+<script src="login.js"></script>
+</body>
+</html>
+```
