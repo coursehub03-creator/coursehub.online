@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -5,83 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>إنشاء حساب - CourseHub</title>
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  section.course-detail {
-    max-width: 400px;
-    margin: 80px auto;
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    text-align: center;
-  }
-
-  section.course-detail h2 {
-    margin-bottom: 25px;
-    color: #0056d2;
-  }
-
-  section.course-detail form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    text-align: left;
-  }
-
-  section.course-detail input {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    width: 100%;
-  }
-
-  section.course-detail .btn {
-    width: 100%;
-    padding: 12px;
-    background-color: #ff9900;
-    border: none;
-    color: white;
-    font-weight: bold;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  section.course-detail .btn:hover {
-    background-color: #e68a00;
-  }
-
-  .oauth-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  .oauth-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-weight: bold;
-    text-decoration: none;
-    color: #333;
-  }
-
-  .oauth-btn:hover {
-    background-color: #f0f0f0;
-  }
-
-  .oauth-google { border-color: #db4437; color: #db4437; }
-  .oauth-facebook { border-color: #1877f2; color: #1877f2; }
-  .oauth-apple { border-color: #000; color: #000; }
-</style>
 </head>
 <body>
 
@@ -89,64 +13,16 @@
   <h2>إنشاء حساب جديد</h2>
 
   <form id="registerForm">
-    <label for="name">الاسم الكامل</label>
-    <input type="text" id="name" name="name" placeholder="أدخل اسمك الكامل" required>
-
-    <label for="email">البريد الإلكتروني</label>
-    <input type="email" id="email" name="email" placeholder="example@mail.com" required>
-
-    <label for="password">كلمة المرور</label>
-    <input type="password" id="password" name="password" placeholder="********" required>
-
-    <label for="confirm-password">تأكيد كلمة المرور</label>
-    <input type="password" id="confirm-password" name="confirm-password" placeholder="********" required>
-
-    <button class="btn" type="submit">إنشاء الحساب</button>
+    <input type="email" id="email" placeholder="البريد الإلكتروني" required>
+    <input type="password" id="password" placeholder="كلمة المرور" required>
+    <button class="btn">إنشاء الحساب</button>
   </form>
 
-  <div class="oauth-buttons">
-    <a href="#" class="oauth-btn oauth-google"><i class="fab fa-google"></i> التسجيل بواسطة Google</a>
-    <a href="#" class="oauth-btn oauth-facebook"><i class="fab fa-facebook-f"></i> التسجيل بواسطة Facebook</a>
-    <a href="#" class="oauth-btn oauth-apple"><i class="fab fa-apple"></i> التسجيل بواسطة Apple</a>
-  </div>
-
-  <p>لديك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a></p>
+  <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
 </section>
 
-<script>
-  // نموذج التسجيل التقليدي (تجريبي / وهمي)
-  const registerForm = document.getElementById('registerForm');
-  registerForm.addEventListener('submit', function(e){
-    e.preventDefault();
-    const password = document.getElementById('password').value;
-    const confirm = document.getElementById('confirm-password').value;
-    if(password !== confirm){
-      alert('كلمتا المرور غير متطابقتين');
-      return;
-    }
-    alert('تم إنشاء الحساب (وهمي، بدون backend)');
-  });
-
-  // أزرار تسجيل الدخول عبر OAuth (Google, Facebook, Apple)
-  const googleBtn = document.querySelector('.oauth-google');
-  const fbBtn = document.querySelector('.oauth-facebook');
-  const appleBtn = document.querySelector('.oauth-apple');
-
-  googleBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    alert('Google OAuth سيتم تفعيله لاحقًا');
-  });
-
-  fbBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    alert('Facebook OAuth سيتم تفعيله لاحقًا');
-  });
-
-  appleBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    alert('Apple OAuth سيتم تفعيله لاحقًا');
-  });
-</script>
-
+<script src="firebase-config.js"></script>
+<script src="register.js"></script>
 </body>
 </html>
+```
