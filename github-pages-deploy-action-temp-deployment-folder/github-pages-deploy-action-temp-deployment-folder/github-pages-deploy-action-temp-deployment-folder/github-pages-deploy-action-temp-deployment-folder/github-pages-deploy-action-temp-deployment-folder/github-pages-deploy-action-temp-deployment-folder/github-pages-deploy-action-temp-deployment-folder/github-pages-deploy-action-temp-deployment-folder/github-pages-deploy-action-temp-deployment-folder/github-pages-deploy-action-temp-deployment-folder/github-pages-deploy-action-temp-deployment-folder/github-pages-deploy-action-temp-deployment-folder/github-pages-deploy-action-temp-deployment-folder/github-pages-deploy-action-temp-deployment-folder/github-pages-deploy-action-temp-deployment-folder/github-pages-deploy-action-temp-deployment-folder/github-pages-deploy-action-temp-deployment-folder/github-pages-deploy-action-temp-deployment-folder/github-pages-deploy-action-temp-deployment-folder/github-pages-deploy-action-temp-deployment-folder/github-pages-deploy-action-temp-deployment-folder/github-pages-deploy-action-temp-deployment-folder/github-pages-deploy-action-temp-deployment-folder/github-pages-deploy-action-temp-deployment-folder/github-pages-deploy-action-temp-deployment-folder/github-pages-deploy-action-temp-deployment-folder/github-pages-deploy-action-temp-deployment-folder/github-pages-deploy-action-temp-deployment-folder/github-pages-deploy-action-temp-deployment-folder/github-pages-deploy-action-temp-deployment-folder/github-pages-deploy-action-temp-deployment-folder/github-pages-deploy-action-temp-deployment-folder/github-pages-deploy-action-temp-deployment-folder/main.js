@@ -111,17 +111,25 @@ function setupUserDropdown() {
 // --- إضافة شريط البحث فقط للصفحة الرئيسية وصفحة الدورات ---
 function setupHeaderSearch() {
     const path = window.location.pathname.split("/").pop();
+    const headerContainer = document.querySelector("header .top-bar");
+    const existingSearch = document.querySelector(".search-bar");
+    if(existingSearch) existingSearch.remove(); // إزالة أي بحث موجود
+
     if(path === "index.html" || path === "courses.html") {
-        const nav = document.querySelector("header nav");
-        if(nav){
-            const searchForm = document.createElement("form");
-            searchForm.className = "header-search";
-            searchForm.innerHTML = `
-                <input type="text" placeholder="ابحث عن دورة..." />
-                <button type="submit"><i class="fa fa-search"></i></button>
-            `;
-            nav.appendChild(searchForm);
-        }
+        const searchBar = document.createElement("div");
+        searchBar.className = "search-bar container";
+        searchBar.innerHTML = `
+            <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
+            <button type="button" id="searchBtn"><i class="fa fa-search"></i> بحث</button>
+        `;
+        headerContainer.insertAdjacentElement("afterend", searchBar);
+
+        // زر البحث
+        const searchBtn = document.getElementById("searchBtn");
+        searchBtn.addEventListener("click", ()=>{
+            const query = document.getElementById("searchInput").value;
+            alert(`بحث عن: ${query}`);
+        });
     }
 }
 
