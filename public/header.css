@@ -13,10 +13,26 @@ header {
 /* Top Bar Container */
 .top-bar.container {
   display: flex;
-  justify-content: flex-end; /* شعار أزلناه، فالمسافة للجهة اليمنى */
+  justify-content: flex-end; /* المسافة للجهة اليمنى */
   align-items: center;
   padding: 12px 25px;
   gap: 15px;
+  position: relative; /* للسماح بوضع site-name */
+}
+
+/* --- Site Name --- */
+.site-name {
+  position: absolute;
+  left: 25px;
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+}
+
+.site-name a {
+  text-decoration: none;
+  color: white;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Navigation Links */
@@ -75,14 +91,37 @@ nav a:hover {
   font-weight: bold;
 }
 
+/* --- Login Button (عندما لا يكون المستخدم مسجل) --- */
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-color: #ffcc00;
+  color: #1c3faa;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+
+.login-btn:hover {
+  background-color: #e6b800;
+}
+
 /* --- User Info --- */
 .user-info-container {
-  display: flex;
+  display: none; /* يظهر فقط عند تسجيل الدخول */
   align-items: center;
   gap: 10px;
   position: relative;
   cursor: pointer;
   transition: transform 0.2s;
+}
+
+.user-info-container.active {
+  display: flex;
 }
 
 .user-info-container:hover {
