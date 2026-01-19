@@ -1,136 +1,223 @@
+/* --- Header Top Bar --- */
 header {
-    width: 100%;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background-color: #1c3faa;
-    color: white;
+  background-color: #1c3faa;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-header .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
+/* Top Bar Container */
+.top-bar.container {
+  display: flex;
+  justify-content: flex-end; /* شعار أزلناه، فالمسافة للجهة اليمنى */
+  align-items: center;
+  padding: 12px 25px;
+  gap: 15px;
 }
 
-header .logo a {
-    color: white;
-    font-size: 28px;
-    font-weight: 700;
-    text-decoration: none;
+/* Navigation Links */
+nav a {
+  color: white;
+  margin-left: 20px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
 }
 
-header nav a {
-    color: white;
-    text-decoration: none;
-    margin-left: 20px;
-    font-weight: 600;
+nav a:hover {
+  color: #ffcc00;
 }
-header nav a:hover { color: #ffcc00; }
 
-.header-actions { display: flex; align-items: center; gap: 15px; }
+/* Header Actions Buttons */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
+.header-actions button {
+  background: none;
+  border: none;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.3s;
+}
+
+.header-actions button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.header-actions button i {
+  font-size: 18px;
+}
+
+/* Notification Badge */
+.notification-badge {
+  background: #ffcc00;
+  color: #1c3faa;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-weight: bold;
+}
+
+/* --- User Info --- */
 .user-info-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.user-info-container .user-pic {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid #ffcc00;
-    object-fit: cover;
+.user-info-container:hover {
+  transform: scale(1.02);
+}
+
+.user-info-container img.user-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ffcc00;
+  object-fit: cover;
+}
+
+.user-info-container .user-name {
+  font-weight: 600;
+  color: white;
 }
 
 .user-info-container .dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    min-width: 180px;
-    z-index: 999;
+  display: none;
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: white;
+  color: #333;
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
 }
 
-.user-info-container.active .dropdown-menu { display: block; }
+.user-info-container.active .dropdown-menu {
+  display: block;
+}
+
 .user-info-container .dropdown-menu a {
-    display: block;
-    padding: 10px 15px;
-    color: #333;
-    text-decoration: none;
-    font-weight: 600;
+  display: block;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  transition: background 0.3s;
 }
-.user-info-container .dropdown-menu a:hover { background: #f0f0f0; }
 
+.user-info-container .dropdown-menu a:hover {
+  background-color: #f0f0f0;
+}
+
+/* --- Language Selector --- */
 .language-selector {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
 }
 
 .language-dropdown {
-    display: none;
-    position: absolute;
-    top: 30px;
-    background: white;
-    border-radius: 5px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    overflow: hidden;
+  display: none;
+  position: absolute;
+  top: 35px;
+  right: 0;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  overflow: hidden;
+  z-index: 1000;
 }
+
 .language-dropdown div {
-    padding: 8px 12px;
-    cursor: pointer;
-}
-.language-dropdown div:hover { background: #f0f0f0; }
-
-.notifications {
-    position: relative;
-    font-size: 20px;
-    cursor: pointer;
-}
-.notif-count {
-    position: absolute;
-    top: -5px;
-    right: -10px;
-    background: red;
-    color: white;
-    border-radius: 50%;
-    padding: 2px 6px;
-    font-size: 12px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background 0.3s;
 }
 
+.language-dropdown div:hover {
+  background: #f0f0f0;
+}
+
+/* --- Search Bar --- */
 .search-bar.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #e0e7ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 12px 25px;
+  gap: 10px;
 }
 
 .search-bar input {
-    width: 250px;
-    padding: 8px 12px;
-    border-radius: 6px 0 0 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px 0 0 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
 }
 
 .search-bar button {
-    padding: 8px 12px;
-    border: none;
-    background-color: #1c3faa;
-    color: white;
-    font-weight: bold;
-    border-radius: 0 6px 6px 0;
-    cursor: pointer;
+  background-color: #ffcc00;
+  border: none;
+  color: #1c3faa;
+  padding: 8px 14px;
+  font-weight: 700;
+  border-radius: 0 6px 6px 0;
+  cursor: pointer;
+  transition: background 0.3s;
 }
-.search-bar button:hover { background-color: #163488; }
+
+.search-bar button:hover {
+  background-color: #e6b800;
+}
+
+/* --- Responsive --- */
+@media(max-width:800px){
+  .top-bar.container {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  nav {
+    margin-top: 10px;
+  }
+  .header-actions {
+    margin-top: 10px;
+  }
+  .search-bar.container {
+    flex-direction: column;
+    width: 100%;
+  }
+  .search-bar input {
+    width: 100%;
+    border-radius: 6px;
+  }
+  .search-bar button {
+    width: 100%;
+    border-radius: 6px;
+  }
+}
