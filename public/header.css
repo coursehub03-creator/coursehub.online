@@ -8,23 +8,21 @@ header {
   top: 0;
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 0 20px; /* مسافة من الأطراف */
 }
 
 /* Top Bar Container */
 .top-bar.container {
   display: flex;
-  justify-content: space-between; /* يوزع العناصر بالتساوي بين اليمين واليسار */
+  justify-content: space-between; /* يوزع العناصر بين اليسار واليمين */
   align-items: center;
-  padding: 12px 25px;
-  gap: 20px;
+  padding: 12px 0;
+  gap: 20px; /* مسافة بين العناصر */
   position: relative;
 }
 
-
 /* --- Site Name --- */
 .site-name {
-  position: absolute;
-  left: 25px;
   font-size: 22px;
   font-weight: 700;
   color: white;
@@ -37,9 +35,15 @@ header {
 }
 
 /* Navigation Links */
+nav {
+  margin-left: auto; /* يضغط الروابط نحو اليمين */
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 nav a {
   color: white;
-  margin-left: 20px;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s;
@@ -93,18 +97,17 @@ nav a:hover {
 }
 
 /* --- Login Button (عندما لا يكون المستخدم مسجل) --- */
-/* --- زر تسجيل الدخول (login link) --- */
 #login-link {
-  display: flex;               /* ليكون أفقي */
-  align-items: center;         /* محاذاة رأسية */
-  justify-content: center;     /* المحتوى في الوسط */
-  gap: 5px;                    /* مسافة بين أيقونة ونص */
-  background-color: #ffcc00;   /* خلفية زر */
-  color: #1c3faa;              /* لون النص */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-color: #ffcc00;
+  color: #1c3faa;
   font-weight: 700;
-  padding: 6px 12px;           /* ارتفاع وعرض مناسب */
-  border-radius: 6px;          /* حواف مستديرة */
-  text-decoration: none;       /* إزالة تحت الخط */
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
   transition: background 0.3s;
 }
 
@@ -235,7 +238,6 @@ nav a:hover {
   border-radius: 0 6px 6px 0;
   cursor: pointer;
 }
-
 
 /* --- Responsive --- */
 @media(max-width:800px){
