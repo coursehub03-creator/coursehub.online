@@ -1,10 +1,9 @@
 <!-- Header -->
 <header>
   <div class="top-bar container">
-    <!-- Logo -->
+    <!-- Logo Removed -->
     <div class="logo">
       <a href="index.html">
-        <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width:120px; height:auto;">
         CourseHub
       </a>
     </div>
@@ -17,7 +16,7 @@
       <a href="certificates.html">الشهادات</a>
     </nav>
 
-    <!-- Notifications & Language -->
+    <!-- Header Actions -->
     <div class="header-actions">
       <!-- Notifications -->
       <div class="notifications-container">
@@ -44,7 +43,7 @@
 </header>
 
 <style>
-/* Header و Dropdown احترافي */
+/* Header احترافي */
 header {
   background-color: #1c3faa;
   color: white;
@@ -52,22 +51,17 @@ header {
   position: sticky;
   top: 0;
   z-index: 1000;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   font-family: 'Inter', sans-serif;
 }
 
 header .logo a {
-  display: flex;
-  align-items: center;
   text-decoration: none;
   color: white;
   font-weight: 700;
   font-size: 28px;
-  gap: 10px;
 }
 
+/* Navigation */
 nav a {
   color: white;
   text-decoration: none;
@@ -75,7 +69,6 @@ nav a {
   font-weight: 600;
   transition: 0.3s;
 }
-
 nav a:hover { color: #ffcc00; }
 
 /* Header Actions */
@@ -86,11 +79,7 @@ nav a:hover { color: #ffcc00; }
 }
 
 /* Notifications */
-.notifications-container {
-  position: relative;
-  color: white;
-}
-
+.notifications-container { position: relative; }
 .notifications-dropdown {
   display: none;
   position: absolute;
@@ -104,21 +93,14 @@ nav a:hover { color: #ffcc00; }
   z-index: 999;
   overflow: hidden;
 }
-
 .notifications-dropdown .notif-item {
   padding: 10px 15px;
   border-bottom: 1px solid #eee;
-  font-size: 14px;
 }
-
 .notifications-dropdown .notif-item:last-child { border-bottom: none; }
 
 /* Language */
-.language-container {
-  position: relative;
-  color: white;
-}
-
+.language-container { position: relative; }
 .language-dropdown {
   display: none;
   position: absolute;
@@ -130,9 +112,7 @@ nav a:hover { color: #ffcc00; }
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   min-width: 120px;
   z-index: 999;
-  overflow: hidden;
 }
-
 .language-dropdown a {
   display: block;
   padding: 10px 15px;
@@ -140,7 +120,6 @@ nav a:hover { color: #ffcc00; }
   color: #333;
   font-weight: 600;
 }
-
 .language-dropdown a:hover { background-color: #f0f0f0; }
 
 /* User Info */
@@ -152,7 +131,6 @@ nav a:hover { color: #ffcc00; }
   cursor: pointer;
   color: white;
 }
-
 .user-info-container img.user-pic {
   width: 42px;
   height: 42px;
@@ -160,7 +138,6 @@ nav a:hover { color: #ffcc00; }
   border: 2px solid #ffcc00;
   object-fit: cover;
 }
-
 .user-info-container .dropdown-menu {
   display: none;
   position: absolute;
@@ -173,7 +150,6 @@ nav a:hover { color: #ffcc00; }
   z-index: 999;
   min-width: 180px;
 }
-
 .user-info-container .dropdown-menu a {
   display: block;
   padding: 12px 15px;
@@ -181,10 +157,7 @@ nav a:hover { color: #ffcc00; }
   text-decoration: none;
   font-weight: 600;
 }
-
-.user-info-container .dropdown-menu a:hover {
-  background-color: #f0f0f0;
-}
+.user-info-container .dropdown-menu a:hover { background-color: #f0f0f0; }
 
 /* إظهار القوائم عند الضغط */
 .show { display: block !important; }
@@ -207,12 +180,11 @@ function handleGoogleLogin(response) {
 const user = JSON.parse(localStorage.getItem("coursehub_user"));
 const userContainer = document.getElementById('user-info');
 if(user){
-  document.getElementById('login-link')?.style.display = 'none';
   userContainer.innerHTML = `
     <img src="${user.picture}" alt="${user.name}" class="user-pic" id="user-pic">
     <span id="user-name">${user.name}</span>
     <div class="dropdown-menu" id="user-dropdown">
-      <a href="profile.html">حسابي</a>
+      <a href="profile.html">الملف الشخصي</a>
       <a href="achievements.html">الإنجازات</a>
       <a href="my-courses.html">دوراتي</a>
       <a href="settings.html">الإعدادات</a>
