@@ -57,10 +57,11 @@ function setupUserDropdown() {
         `;
 
         const dropdown = userContainer.querySelector(".dropdown-menu");
-        const toggle = (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle("show");
-        };
+       const toggle = (e) => {
+    e.stopPropagation();
+    userContainer.classList.toggle("active");
+};
+
 
         userContainer.querySelector(".user-pic").addEventListener("click", toggle);
         userContainer.querySelector(".user-name").addEventListener("click", toggle);
