@@ -92,22 +92,29 @@ nav a:hover {
 }
 
 /* --- Login Button (عندما لا يكون المستخدم مسجل) --- */
-.login-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  background-color: #ffcc00;
-  color: #1c3faa;
+/* --- زر تسجيل الدخول (login link) --- */
+#login-link {
+  display: flex;               /* ليكون أفقي */
+  align-items: center;         /* محاذاة رأسية */
+  justify-content: center;     /* المحتوى في الوسط */
+  gap: 5px;                    /* مسافة بين أيقونة ونص */
+  background-color: #ffcc00;   /* خلفية زر */
+  color: #1c3faa;              /* لون النص */
   font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 6px;
-  text-decoration: none;
+  padding: 6px 12px;           /* ارتفاع وعرض مناسب */
+  border-radius: 6px;          /* حواف مستديرة */
+  text-decoration: none;       /* إزالة تحت الخط */
   transition: background 0.3s;
 }
 
-.login-btn:hover {
+#login-link:hover {
   background-color: #e6b800;
+}
+
+/* وضعه داخل .header-actions ليكون بجانب الأزرار الأخرى */
+.header-actions #login-link {
+  display: flex;
+  align-items: center;
 }
 
 /* --- User Info --- */
