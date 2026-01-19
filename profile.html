@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ملف المستخدم - CourseHub</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<header>
+  <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width:120px; height:auto;">
+  <div class="top-bar">
+    <div class="logo">CourseHub</div>
+    <nav>
+      <a href="index.html">الرئيسية</a>
+      <a href="courses.html">الدورات</a>
+      <a href="tests.html">الاختبارات</a>
+      <a href="certificates.html">الشهادات</a>
+      <a href="profile.html" id="login-link">ملفي</a>
+    </nav>
+  </div>
+  <div class="search-bar container">
+    <input type="text" placeholder="ابحث عن دورة...">
+    <button><i class="fa fa-search"></i> بحث</button>
+  </div>
+  <div id="user-info" class="user-info-container"></div>
+</header>
+
+<section class="course-detail">
+  <h2>ملف المستخدم</h2>
+  <p>يمكنك تعديل بياناتك الشخصية هنا. سيتم استخدام اسمك لاحقاً في الشهادات.</p>
+
+  <form id="profile-form">
+    <label for="name">الاسم الكامل</label>
+    <input type="text" id="name" required>
+
+    <label for="email">البريد الإلكتروني</label>
+    <input type="email" id="email" required>
+
+    <label for="picture">رابط الصورة الشخصية</label>
+    <input type="text" id="picture" placeholder="رابط الصورة">
+
+    <button type="submit" class="btn">حفظ التغييرات</button>
+  </form>
+
+  <button class="btn" onclick="logout()">تسجيل الخروج</button>
+</section>
+
+<footer>
+  <div class="container footer-content">
+    <div class="footer-links">
+      <a href="index.html">الرئيسية</a>
+      <a href="courses.html">الدورات</a>
+      <a href="tests.html">الاختبارات</a>
+      <a href="certificates.html">الشهادات</a>
+      <a href="profile.html">ملفي</a>
+    </div>
+    <div class="socials">
+      <a href="#"><i class="fab fa-facebook-f"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-linkedin-in"></i></a>
+    </div>
+    <p>&copy; 2026 CourseHub. جميع الحقوق محفوظة.</p>
+  </div>
+</footer>
+
+<script>
+// حماية الصفحة: إذا المستخدم غير مسجّل دخول، حوله للـ login
+const user = JSON.parse(localStorage.getItem("coursehub_user"));
+if(!user){
+  window.location.href = "login.html";
+}
+
+// عرض بيانات المستخدم في الفورم
+document.getElementById("name").value = user?.name || "";
+document.getElementById("email").value = user?.email || "";
+document.getElementById("picture").value = user?.picture || "";
+
+// حفظ التغييرات
+document.getElementById("profile-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const updatedUser = {
+    name: document.getElementById("name").value,
+    email: document.getElementById("email").value,
+    picture: document.getElementById("picture").value
+  };
+  localStorage.setItem("coursehub_user", JSON.stringify(updatedUser));
+  alert("تم حفظ التغييرات بنجاح!");
+});
+
+// تسجيل الخروج
+function logout(){
+  localStorage.removeItem("coursehub_user");
+  window.location.href = "login.html";
+}
+
+// تحديث الهيدر لعرض اسم المستخدم
+const userInfoContainer = document.getElementById('user-info');
+if(user){
+  userInfoContainer.innerHTML = `
+    <img src="${user.picture}" alt="${user.name}" class="user-pic" style="width:40px; border-radius:50%; margin-left:10px;">
+    <span>مرحباً، ${user.name}</span>
+    <button class="btn" onclick="logout()">تسجيل الخروج</button>
+  `;
+  document.getElementById('login-link').style.display = 'none';
+}
+</script>
+
+</body>
+</html>
