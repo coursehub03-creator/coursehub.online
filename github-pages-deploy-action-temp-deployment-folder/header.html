@@ -14,14 +14,16 @@
     </div>
     <div id="user-info" class="user-info-container"></div>
   </div>
-  <div class="search-bar container">
+
+  <!-- شريط البحث يظهر فقط في index.html و courses.html -->
+  <div class="search-bar container" id="headerSearch">
     <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
     <button onclick="searchCourses()"><i class="fa fa-search"></i> بحث</button>
   </div>
 </header>
 
 <script>
-// عرض المستخدم إذا مسجل الدخول
+// --- عرض المستخدم إذا مسجل الدخول ---
 const user = JSON.parse(localStorage.getItem("coursehub_user"));
 const userContainer = document.getElementById('user-info');
 if(user){
@@ -38,6 +40,7 @@ if(user){
         </div>
     `;
 }
+
 // Toggle Dropdown
 userContainer.addEventListener('click', () => {
     userContainer.classList.toggle('active');
@@ -47,6 +50,7 @@ document.addEventListener('click', e => {
     if(!userContainer.contains(e.target)) userContainer.classList.remove('active');
 });
 
+// Logout
 function logout(){
     localStorage.removeItem("coursehub_user");
     window.location.href='login.html';
@@ -60,4 +64,13 @@ langBtn.addEventListener('click', ()=>{
     else if(current.includes('English')) langBtn.innerHTML='<i class="fa fa-globe"></i> Français';
     else langBtn.innerHTML='<i class="fa fa-globe"></i> عربي';
 });
+
+// --- التحكم في ظهور شريط البحث حسب الصفحة ---
+const headerSearch = document.getElementById('headerSearch');
+const currentPage = window.location.pathname.split("/").pop();
+if(currentPage !== "index.html" && currentPage !== "courses.html"){
+    headerSearch.style.display = "none";
+} else {
+    headerSearch.style.display = "flex"; // عرضه كـ flex للتنسيق
+}
 </script>
