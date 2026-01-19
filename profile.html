@@ -14,14 +14,13 @@
 <style>
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f8f9fb;
-    color: #333;
+    background-color: #f4f6f9;
     margin: 0;
     padding: 0;
-    line-height: 1.6;
+    color: #333;
 }
 
-/* Header same as index.html */
+/* Header */
 header {
     background-color: #1c3faa;
     color: white;
@@ -38,11 +37,11 @@ header .top-bar {
 .logo a {
     display: flex;
     align-items: center;
-    text-decoration: none;
-    color: white;
+    gap: 10px;
     font-weight: 700;
     font-size: 28px;
-    gap: 10px;
+    color: white;
+    text-decoration: none;
 }
 nav a {
     color: white;
@@ -50,16 +49,14 @@ nav a {
     margin-left: 20px;
     font-weight: 600;
 }
-nav a:hover {
-    color: #ffcc00;
-}
+nav a:hover { color: #ffcc00; }
 
-/* User Dropdown */
+/* User Info */
 .user-info-container {
-    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
+    position: relative;
     cursor: pointer;
 }
 .user-info-container img.user-pic {
@@ -72,14 +69,14 @@ nav a:hover {
 .user-info-container .dropdown-menu {
     display: none;
     position: absolute;
-    right: 0;
     top: 55px;
+    right: 0;
     background: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     overflow: hidden;
-    z-index: 999;
     min-width: 150px;
+    z-index: 999;
 }
 .user-info-container:hover .dropdown-menu {
     display: block;
@@ -95,66 +92,77 @@ nav a:hover {
     background-color: #f0f0f0;
 }
 
-/* Profile Form */
-.profile-container {
-    max-width: 600px;
-    margin: 60px auto;
+/* Profile Card */
+.profile-card {
+    max-width: 500px;
+    margin: 80px auto;
     background: white;
-    padding: 35px;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-}
-
-.profile-container h2 {
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     text-align: center;
-    color: #1c3faa;
-    margin-bottom: 30px;
-    font-size: 28px;
+    padding: 40px 30px;
 }
 
-.profile-container label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-}
-
-.profile-container input {
-    width: 100%;
-    padding: 10px;
+.profile-card img.profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #1c3faa;
+    object-fit: cover;
     margin-bottom: 20px;
-    border-radius: 6px;
+}
+
+.profile-card h2 {
+    font-size: 26px;
+    margin-bottom: 5px;
+    color: #1c3faa;
+}
+
+.profile-card p.email {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 25px;
+}
+
+/* Form inside card */
+.profile-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.profile-card input {
+    padding: 12px;
+    border-radius: 8px;
     border: 1px solid #ccc;
     font-size: 16px;
 }
 
-.profile-container .btn-save {
+.profile-card .btn-save {
     background-color: #ffcc00;
     color: #1c3faa;
     font-weight: 700;
-    padding: 12px 25px;
+    padding: 12px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: 0.3s;
 }
-
-.profile-container .btn-save:hover {
+.profile-card .btn-save:hover {
     background-color: #e6b800;
 }
 
-.profile-container .btn-logout {
+.profile-card .btn-logout {
     background-color: #1c3faa;
     color: white;
     font-weight: 700;
-    padding: 12px 25px;
+    padding: 12px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: 0.3s;
-    margin-top: 15px;
 }
-
-.profile-container .btn-logout:hover {
+.profile-card .btn-logout:hover {
     background-color: #163488;
 }
 
@@ -165,16 +173,13 @@ footer {
     padding: 40px 20px;
     text-align: center;
 }
-footer a {
-    color: #ffcc00;
-    text-decoration: none;
-    margin: 0 10px;
-}
+footer a { color: #ffcc00; text-decoration: none; margin: 0 10px; }
 footer a:hover { text-decoration: underline; }
 
 /* Responsive */
-@media(max-width:768px){
-    .profile-container { margin: 40px 20px; }
+@media(max-width:600px){
+    .profile-card { margin: 40px 20px; padding: 30px 20px; }
+    .profile-card img.profile-pic { width: 100px; height: 100px; }
 }
 </style>
 </head>
@@ -195,19 +200,16 @@ footer a:hover { text-decoration: underline; }
   </div>
 </header>
 
-<!-- Profile Form -->
-<div class="profile-container">
-  <h2>حسابي الشخصي</h2>
+<!-- Profile Card -->
+<div class="profile-card">
+  <img src="" alt="Profile Picture" class="profile-pic" id="profilePic">
+  <h2 id="profileName"></h2>
+  <p class="email" id="profileEmail"></p>
+
   <form id="profile-form">
-    <label>الاسم الكامل</label>
-    <input type="text" id="profile-name" required>
-    
-    <label>البريد الإلكتروني</label>
-    <input type="email" id="profile-email" required>
-    
-    <label>صورة الحساب (رابط)</label>
-    <input type="text" id="profile-picture">
-    
+    <input type="text" id="profile-name" placeholder="الاسم الكامل" required>
+    <input type="email" id="profile-email" placeholder="البريد الإلكتروني" required>
+    <input type="text" id="profile-picture" placeholder="رابط الصورة">
     <button type="submit" class="btn-save">حفظ التغييرات</button>
     <button type="button" class="btn-logout" onclick="logout()">تسجيل الخروج</button>
   </form>
@@ -219,13 +221,12 @@ footer a:hover { text-decoration: underline; }
 </footer>
 
 <script>
-// تحقق تسجيل الدخول
+// التحقق من تسجيل الدخول
 const user = JSON.parse(localStorage.getItem("coursehub_user"));
 if(!user){
-    // غير مسجل الدخول => إعادة توجيه
-    window.location.href = 'login.html';
+    window.location.href='login.html';
 } else {
-    document.getElementById('login-link').style.display = 'none';
+    document.getElementById('login-link').style.display='none';
     document.getElementById('user-info').innerHTML = `
       <img src="${user.picture}" alt="${user.name}" class="user-pic">
       <span>${user.name}</span>
@@ -236,10 +237,13 @@ if(!user){
     `;
 }
 
-// تعبئة البيانات تلقائيًا
+// تعبئة البيانات في الحقول
 document.getElementById('profile-name').value = user.name;
 document.getElementById('profile-email').value = user.email;
 document.getElementById('profile-picture').value = user.picture;
+document.getElementById('profilePic').src = user.picture;
+document.getElementById('profileName').innerText = user.name;
+document.getElementById('profileEmail').innerText = user.email;
 
 // حفظ التغييرات
 document.getElementById('profile-form').addEventListener('submit', function(e){
@@ -254,7 +258,7 @@ document.getElementById('profile-form').addEventListener('submit', function(e){
     location.reload();
 });
 
-// Logout
+// تسجيل الخروج
 function logout(){
     localStorage.removeItem("coursehub_user");
     window.location.href='login.html';
