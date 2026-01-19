@@ -52,8 +52,6 @@ function handleGoogleLogin(response) {
   const jwt = response.credential;
   const payload = JSON.parse(atob(jwt.split('.')[1]));
 
-  console.log("Google User:", payload);
-
   // حفظ بيانات المستخدم محليًا
   localStorage.setItem("coursehub_user", JSON.stringify({
     name: payload.name,
