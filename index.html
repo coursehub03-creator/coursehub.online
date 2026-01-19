@@ -3,18 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>CourseHub - تعلم واحصل على شهادتك</title>
 <meta name="description" content="CourseHub – تعلم أي مهارة، احصل على شهادتك، وابدأ رحلتك التعليمية الآن.">
 <meta name="keywords" content="دورات, تعلم, شهادة, كورس, تطوير, تصميم, AI">
+
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
+
 <body>
+
+<!-- Google Init (مخفي) -->
+<div id="g_id_onload"
+     data-client_id="367073521017-fgcrov5u4c4bl66eavkes4j088jtveo6.apps.googleusercontent.com"
+     data-callback="handleGoogleLogin"
+     data-auto_prompt="false">
+</div>
 
 <!-- Header -->
 <header>
- <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width: 120px; height: auto;">
-
+  <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width:120px; height:auto;">
 
   <div class="top-bar">
     <div class="logo">CourseHub</div>
@@ -26,9 +38,12 @@
       <a href="login.html">تسجيل الدخول</a>
     </nav>
   </div>
+
   <div class="search-bar container">
     <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
-    <button onclick="searchCourses()"><i class="fa fa-search"></i> بحث</button>
+    <button onclick="searchCourses()">
+      <i class="fa fa-search"></i> بحث
+    </button>
   </div>
 </header>
 
@@ -48,11 +63,13 @@
     <h3>آلاف الطلاب</h3>
     <p>انضم إلى مجتمع ضخم من المتعلمين من جميع أنحاء العالم.</p>
   </div>
+
   <div class="feature">
     <i class="fa fa-certificate fa-2x"></i>
     <h3>شهادات معتمدة</h3>
     <p>احصل على شهادة رسمية عند إتمام الدورة بنجاح.</p>
   </div>
+
   <div class="feature">
     <i class="fa fa-laptop-code fa-2x"></i>
     <h3>دورات احترافية</h3>
@@ -63,50 +80,58 @@
 <!-- Popular Courses -->
 <section class="popular-courses container">
   <h2>الدورات الأكثر شعبية</h2>
+
   <div class="categories">
-    <button class="active" data-category="all" onclick="filterCategory('all')">الكل</button>
-    <button data-category="web" onclick="filterCategory('web')">تطوير الويب</button>
-    <button data-category="ai" onclick="filterCategory('ai')">الذكاء الاصطناعي</button>
-    <button data-category="design" onclick="filterCategory('design')">التصميم</button>
+    <button class="active" onclick="filterCategory('all')">الكل</button>
+    <button onclick="filterCategory('web')">تطوير الويب</button>
+    <button onclick="filterCategory('ai')">الذكاء الاصطناعي</button>
+    <button onclick="filterCategory('design')">التصميم</button>
   </div>
+
   <div class="courses-grid" id="coursesGrid">
-    <!-- Course Card -->
+
     <div class="card" data-category="web">
-      <img src="images/course1.jpg" alt="Course 1">
+      <img src="images/course1.jpg" alt="Course">
       <div class="card-content">
         <h3>تطوير الويب للمبتدئين</h3>
         <div class="rating">
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-alt"></i><i class="fa fa-star-o"></i>
+          <i class="fa fa-star"></i><i class="fa fa-star"></i>
+          <i class="fa fa-star"></i><i class="fa fa-star-half-alt"></i>
           <span>(1200 طالب)</span>
         </div>
-        <p>تعلم HTML, CSS, JavaScript خطوة بخطوة.</p>
+        <p>تعلم HTML و CSS و JavaScript خطوة بخطوة.</p>
         <a href="course-details.html" class="btn">عرض الدورة</a>
       </div>
     </div>
+
     <div class="card" data-category="ai">
-      <img src="images/course2.jpg" alt="Course 2">
+      <img src="images/course2.jpg" alt="Course">
       <div class="card-content">
         <h3>الذكاء الاصطناعي</h3>
         <div class="rating">
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-alt"></i>
+          <i class="fa fa-star"></i><i class="fa fa-star"></i>
+          <i class="fa fa-star"></i><i class="fa fa-star"></i>
           <span>(950 طالب)</span>
         </div>
         <p>ابدأ رحلتك مع تعلم الآلة والذكاء الاصطناعي.</p>
         <a href="course-details.html" class="btn">عرض الدورة</a>
       </div>
     </div>
+
     <div class="card" data-category="design">
-      <img src="images/course3.jpg" alt="Course 3">
+      <img src="images/course3.jpg" alt="Course">
       <div class="card-content">
         <h3>التصميم الجرافيكي</h3>
         <div class="rating">
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+          <i class="fa fa-star"></i><i class="fa fa-star"></i>
+          <i class="fa fa-star"></i><i class="fa fa-star"></i>
           <span>(800 طالب)</span>
         </div>
         <p>تعلم Photoshop و Illustrator من الصفر.</p>
         <a href="course-details.html" class="btn">عرض الدورة</a>
       </div>
     </div>
+
   </div>
 </section>
 
@@ -120,16 +145,20 @@
       <a href="certificates.html">الشهادات</a>
       <a href="login.html">تسجيل الدخول</a>
     </div>
+
     <div class="socials">
       <a href="#"><i class="fab fa-facebook-f"></i></a>
       <a href="#"><i class="fab fa-twitter"></i></a>
       <a href="#"><i class="fab fa-instagram"></i></a>
       <a href="#"><i class="fab fa-linkedin-in"></i></a>
     </div>
+
     <p>&copy; 2026 CourseHub. جميع الحقوق محفوظة.</p>
   </div>
 </footer>
 
 <script src="main.js"></script>
+<script src="auth.js"></script>
+
 </body>
 </html>
