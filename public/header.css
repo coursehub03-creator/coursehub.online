@@ -13,11 +13,11 @@ header {
 /* Top Bar Container */
 .top-bar.container {
   display: flex;
-  justify-content: flex-end; /* المسافة للجهة اليمنى */
+  justify-content: flex-start; /* يبدأ من اليسار */
   align-items: center;
   padding: 12px 25px;
-  gap: 15px;
-  position: relative; /* للسماح بوضع site-name */
+  gap: 20px; /* مسافة بين العناصر */
+  position: relative;
 }
 
 /* --- Site Name --- */
@@ -211,35 +211,28 @@ nav a:hover {
 }
 
 /* --- Search Bar --- */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .search-bar input {
-  flex: 1;
-  max-width: 400px; /* أقصى عرض للحقل */
-  padding: 8px 12px;
+  width: 200px; /* عرض ثابت أو يمكن تغييره */
+  padding: 6px 10px;
   border-radius: 6px 0 0 6px;
   border: 1px solid #ccc;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .search-bar button {
   background-color: #ffcc00;
   border: none;
   color: #1c3faa;
-  padding: 8px 14px;
+  padding: 6px 10px;
   font-weight: 700;
   border-radius: 0 6px 6px 0;
   cursor: pointer;
-  transition: background 0.3s;
-}
-
-.search-bar button:hover {
-  background-color: #e6b800;
-}
-
-/* لمحاذاة الحقل والزر بشكل أفضل داخل container */
-.search-bar.container {
-  display: flex;
-  justify-content: center; /* يبقى في وسط الهيدر */
-  gap: 0; /* فاصلة بين الحقل والزر */
 }
 
 
