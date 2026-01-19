@@ -6,21 +6,26 @@ on:
       - main
 
 permissions:
-  contents: write   # للسماح بالكتابة على المستودع
+  contents: write   # السماح بالكتابة على المستودع
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ نسخ كل الملفات من المستودع
+      # 1️⃣ جلب الكود
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1   # مهم لتقليل حجم git وتفادي المسارات الطويلة
 
-      # 2️⃣ نشر الملفات مباشرة إلى GitHub Pages
-      - name: Deploy to GitHub Pages
+      # 2️⃣ نشر الموقع
+      - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          branch: gh-pages         # الفرع الذي سينشر عليه الموقع
-          folder: ./               # root folder يحتوي على index.html
-          clean: true              # تنظيف الفرع قبل النشر
+          branch: gh-pages        # الفرع الذي يُنشر عليه الموقع
+          folder: .               # جذر المشروع (index.html موجود هنا)
+          clean: true             # تنظيف الفرع قبل النشر
+          clean-exclude: |        # استثناءات آمنة
+            .gitignore
+            README.md
