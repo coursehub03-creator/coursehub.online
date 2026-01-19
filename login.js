@@ -1,3 +1,4 @@
+
 ```javascript
 const {
   auth,
@@ -58,3 +59,4 @@ verifyCode.onclick = async () => {
   window.location.href = "index.html";
 };
 ```
+

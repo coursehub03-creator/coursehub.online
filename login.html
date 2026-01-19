@@ -1,78 +1,92 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="header.css">
+   <link rel="stylesheet" href="login.css">
+   
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - CourseHub</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تسجيل الدخول - CourseHub</title>
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Identity -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="main.js" defer></script>
+  <!-- JS -->
+  <script src="js/header.js" defer></script>
+  <script src="js/footer.js" defer></script>
+  <script src="js/main.js" defer></script>
 </head>
 
 <body>
 
-<!-- Header Placeholder -->
-<div id="header-placeholder"></div>
+  <!-- المحتوى فقط (الهيدر والفوتر يتم تحميلهم تلقائياً) -->
 
-<section class="course-detail">
-  <h2>تسجيل الدخول</h2>
+  <section class="course-detail login-page">
+    <h2>تسجيل الدخول</h2>
 
-  <!-- Form البريد الإلكتروني -->
-  <form id="email-login-form">
-    <label for="email">البريد الإلكتروني</label>
-    <input type="email" id="email" name="email" autocomplete="email" placeholder="example@mail.com" required>
+    <!-- Email Login -->
+    <form id="email-login-form" class="login-form">
+      <label for="email">البريد الإلكتروني</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="example@mail.com"
+        autocomplete="email"
+        required
+      >
 
-    <label for="password">كلمة المرور</label>
-    <input type="password" id="password" name="password" autocomplete="current-password" placeholder="********" required>
+      <label for="password">كلمة المرور</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="********"
+        autocomplete="current-password"
+        required
+      >
 
-    <button class="btn" type="submit">تسجيل الدخول</button>
-  </form>
+      <button type="submit" class="btn">تسجيل الدخول</button>
+    </form>
 
-  <p>أو سجل الدخول بواسطة:</p>
+    <p class="divider">أو سجل الدخول بواسطة</p>
 
-  <!-- Google Button -->
-  <div id="g_id_onload"
-       data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
-       data-callback="handleGoogleLogin"
-       data-auto_prompt="false">
-  </div>
+    <!-- Google Login -->
+    <div id="g_id_onload"
+      data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
+      data-callback="handleGoogleLogin"
+      data-auto_prompt="false">
+    </div>
 
-  <div class="g_id_signin"
-       data-type="standard"
-       data-size="large">
-  </div>
+    <div class="g_id_signin" data-type="standard" data-size="large"></div>
 
-  <p><a href="forgot-password.html">نسيت كلمة المرور؟</a></p>
-  <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
-</section>
+    <div class="login-links">
+      <p><a href="forgot-password.html">نسيت كلمة المرور؟</a></p>
+      <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
+    </div>
+  </section>
 
-<!-- Footer Placeholder -->
-<div id="footer-placeholder"></div>
+  <!-- Google Login Handler -->
+  <script>
+    function handleGoogleLogin(response) {
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
 
-<script>
-// Google Login Handler
-function handleGoogleLogin(response) {
-  const jwt = response.credential;
-  const payload = JSON.parse(atob(jwt.split('.')[1]));
+      localStorage.setItem("coursehub_user", JSON.stringify({
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture
+      }));
 
-  // حفظ بيانات المستخدم محليًا
-  localStorage.setItem("coursehub_user", JSON.stringify({
-    name: payload.name,
-    email: payload.email,
-    picture: payload.picture
-  }));
-
-  // تحويل للرئيسية بعد تسجيل الدخول
-  window.location.href = "index.html";
-}
-  <link rel="stylesheet" href="footer.css">
-</script>
-
+      window.location.href = "index.html";
+    }
+    
+  </script>
+ <link rel="stylesheet" href="footer.css">
 </body>
 </html>
