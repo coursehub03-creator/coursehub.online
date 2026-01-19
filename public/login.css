@@ -2,6 +2,8 @@
    Login Page Styling - CourseHub
    =============================== */
 
+ <link rel="stylesheet" href="header.css">
+
 .login-page {
   max-width: 420px;
   margin: 80px auto;
@@ -126,3 +128,6 @@
     font-size: 24px;
   }
 }
+
+
+ <link rel="stylesheet" href="footer.css">
