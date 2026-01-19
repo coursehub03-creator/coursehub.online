@@ -29,11 +29,7 @@ header {
 }
 
 
-.site-name a {
-  text-decoration: none;
-  color: white;
-  font-family: 'Inter', sans-serif;
-}
+
 
 /* Navigation Links */
 nav {
