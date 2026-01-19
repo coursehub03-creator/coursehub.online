@@ -7,7 +7,7 @@
 
 <link rel="stylesheet" href="style.css">
 
-<!-- Google Identity -->
+<!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
@@ -16,22 +16,24 @@
 <section class="course-detail">
   <h2>تسجيل الدخول</h2>
 
+  <!-- Form البريد الإلكتروني -->
   <form id="email-login-form">
-    <label>البريد الإلكتروني</label>
-    <input type="email" autocomplete="email" required>
+    <label for="email">البريد الإلكتروني</label>
+    <input type="email" id="email" name="email" autocomplete="email" placeholder="example@mail.com" required>
 
-    <label>كلمة المرور</label>
-    <input type="password" autocomplete="current-password" required>
+    <label for="password">كلمة المرور</label>
+    <input type="password" id="password" name="password" autocomplete="current-password" placeholder="********" required>
 
-    <button class="btn">تسجيل الدخول</button>
+    <button class="btn" type="submit">تسجيل الدخول</button>
   </form>
 
   <p>أو سجل الدخول بواسطة:</p>
 
   <!-- Google Button -->
   <div id="g_id_onload"
-       data-client_id="PUT_YOUR_CLIENT_ID_HERE"
-       data-callback="handleGoogleLogin">
+       data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
+       data-callback="handleGoogleLogin"
+       data-auto_prompt="false">
   </div>
 
   <div class="g_id_signin"
@@ -44,6 +46,25 @@
 
 </section>
 
-<script src="auth.js"></script>
+<!-- Google Login Handler -->
+<script>
+function handleGoogleLogin(response) {
+  const jwt = response.credential;
+  const payload = JSON.parse(atob(jwt.split('.')[1]));
+
+  console.log("Google User:", payload);
+
+  // حفظ بيانات المستخدم محليًا
+  localStorage.setItem("coursehub_user", JSON.stringify({
+    name: payload.name,
+    email: payload.email,
+    picture: payload.picture
+  }));
+
+  // تحويل للرئيسية بعد تسجيل الدخول
+  window.location.href = "index.html";
+}
+</script>
+
 </body>
 </html>
