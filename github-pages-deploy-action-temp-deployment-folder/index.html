@@ -8,13 +8,329 @@
 <meta name="description" content="CourseHub – تعلم أي مهارة، احصل على شهادتك، وابدأ رحلتك التعليمية الآن.">
 <meta name="keywords" content="دورات, تعلم, شهادة, كورس, تطوير, تصميم, AI">
 
+<!-- خطوط جوجل احترافية -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-</head>
 
+<style>
+/* --- تحديث عام للخطوط والألوان --- */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fb;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Header احترافي */
+header {
+    background-color: #1c3faa;
+    color: white;
+    padding: 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+header .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-weight: 700;
+    font-size: 28px;
+    gap: 10px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+nav a:hover {
+    color: #ffcc00;
+}
+
+/* User Dropdown */
+.user-info-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.user-info-container img.user-pic {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 2px solid #ffcc00;
+    object-fit: cover;
+}
+
+.user-info-container .dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 55px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 999;
+    min-width: 150px;
+}
+
+.user-info-container:hover .dropdown-menu {
+    display: block;
+}
+
+.user-info-container .dropdown-menu a {
+    display: block;
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.user-info-container .dropdown-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+/* Search Bar */
+.search-bar {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.search-bar input {
+    padding: 10px;
+    border-radius: 5px 0 0 5px;
+    border: 1px solid #ccc;
+    width: 250px;
+}
+
+.search-bar button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #ffcc00;
+    color: #1c3faa;
+    font-weight: 700;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.search-bar button:hover {
+    background-color: #e6b800;
+}
+
+/* Hero Section */
+.hero {
+    background: url('images/hero.jpg') no-repeat center center/cover;
+    height: 450px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    position: relative;
+}
+
+.hero::after {
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.45);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+}
+
+.hero h1 {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.hero p {
+    font-size: 20px;
+    margin-bottom: 25px;
+}
+
+/* Hero Button */
+.btn-hero {
+    background-color: #ffcc00;
+    color: #1c3faa;
+    font-size: 18px;
+    padding: 12px 30px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.btn-hero:hover {
+    background-color: #e6b800;
+}
+
+/* Features Section */
+.features {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-top: 50px;
+}
+
+.feature {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    width: 250px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.feature:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.feature i {
+    font-size: 36px;
+    margin-bottom: 10px;
+    color: #1c3faa;
+}
+
+.feature h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.feature p {
+    font-size: 16px;
+    color: #555;
+}
+
+/* Popular Courses Grid */
+.popular-courses h2 {
+    color: #1c3faa;
+    margin-bottom: 40px;
+    font-size: 32px;
+}
+
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+}
+
+.card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+.card-content {
+    padding: 15px;
+}
+
+.card-content h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1c3faa;
+}
+
+.card-content p {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.card-content .rating {
+    color: #f1c40f;
+    margin-bottom: 10px;
+}
+
+.card-content .btn {
+    display: inline-block;
+    padding: 8px 15px;
+    font-size: 14px;
+    background-color: #ffcc00;
+    color: #1c3faa;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.card-content .btn:hover {
+    background-color: #e6b800;
+}
+
+/* Footer */
+footer {
+    background-color: #1c3faa;
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+footer a {
+    color: #ffcc00;
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media(max-width:768px){
+    .hero h1 { font-size: 32px; }
+    .hero p { font-size: 16px; }
+    .features { flex-direction: column; align-items: center; }
+    .courses-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+</head>
 <body>
 
 <!-- Google Init -->
@@ -27,10 +343,7 @@
 <!-- Header -->
 <header>
   <div class="top-bar container">
-    <div class="logo">
-      <img src="images/logo.png" alt="CourseHub Logo" class="site-logo">
-    </div>
-
+    <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo">CourseHub</a></div>
     <nav>
       <a href="index.html">الرئيسية</a>
       <a href="courses.html">الدورات</a>
@@ -38,46 +351,35 @@
       <a href="certificates.html">الشهادات</a>
       <a href="login.html" id="login-link">تسجيل الدخول</a>
     </nav>
-
     <div id="user-info" class="user-info-container"></div>
-  </div>
-
-  <!-- Search Bar -->
-  <div class="search-bar container">
-    <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
-    <button onclick="searchCourses()">
-      <i class="fa fa-search"></i> بحث
-    </button>
   </div>
 </header>
 
-<!-- Hero Section -->
+<!-- Hero -->
 <section class="hero">
-  <div class="container hero-content">
-    <h1>تعلم أي مهارة جديدة بسهولة</h1>
-    <p>انضم إلى آلاف الطلاب وابدأ رحلتك التعليمية الآن!</p>
+  <div class="hero-content">
+    <h1>ابدأ رحلتك التعليمية الآن!</h1>
+    <p>انضم إلى آلاف الطلاب وطور مهاراتك بسرعة مع دوراتنا الاحترافية.</p>
     <a href="courses.html" class="btn btn-hero">استكشف الدورات</a>
   </div>
 </section>
 
-<!-- Features Section -->
+<!-- Features -->
 <section class="features container">
   <div class="feature">
-    <i class="fa fa-users fa-2x"></i>
+    <i class="fa fa-users"></i>
     <h3>آلاف الطلاب</h3>
-    <p>انضم إلى مجتمع ضخم من المتعلمين من جميع أنحاء العالم.</p>
+    <p>انضم إلى مجتمع ضخم من المتعلمين حول العالم.</p>
   </div>
-
   <div class="feature">
-    <i class="fa fa-certificate fa-2x"></i>
+    <i class="fa fa-certificate"></i>
     <h3>شهادات معتمدة</h3>
     <p>احصل على شهادة رسمية عند إتمام الدورة بنجاح.</p>
   </div>
-
   <div class="feature">
-    <i class="fa fa-laptop-code fa-2x"></i>
+    <i class="fa fa-laptop-code"></i>
     <h3>دورات احترافية</h3>
-    <p>تعلم من محترفين وابدأ مسارك المهني بسرعة.</p>
+    <p>تعلم من خبراء وابدأ مسارك المهني بسرعة.</p>
   </div>
 </section>
 
@@ -85,143 +387,72 @@
 <section class="popular-courses container">
   <h2>الدورات الأكثر شعبية</h2>
 
-  <div class="categories">
-    <button class="active" onclick="filterCategory('all')">الكل</button>
-    <button onclick="filterCategory('web')">تطوير الويب</button>
-    <button onclick="filterCategory('ai')">الذكاء الاصطناعي</button>
-    <button onclick="filterCategory('design')">التصميم</button>
-  </div>
-
-  <div class="courses-grid" id="coursesGrid">
-    <!-- دورات ديناميكية -->
+  <div class="courses-grid">
+    <div class="card">
+      <img src="images/course1.jpg" alt="Course">
+      <div class="card-content">
+        <h3>تطوير الويب للمبتدئين</h3>
+        <p>تعلم HTML و CSS و JavaScript خطوة بخطوة.</p>
+        <a href="course-details.html" class="btn">عرض الدورة</a>
+      </div>
+    </div>
+    <div class="card">
+      <img src="images/course2.jpg" alt="Course">
+      <div class="card-content">
+        <h3>الذكاء الاصطناعي</h3>
+        <p>ابدأ رحلتك مع تعلم الآلة والذكاء الاصطناعي.</p>
+        <a href="course-details.html" class="btn">عرض الدورة</a>
+      </div>
+    </div>
+    <div class="card">
+      <img src="images/course3.jpg" alt="Course">
+      <div class="card-content">
+        <h3>التصميم الجرافيكي</h3>
+        <p>تعلم Photoshop و Illustrator من الصفر.</p>
+        <a href="course-details.html" class="btn">عرض الدورة</a>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- Footer -->
 <footer>
-  <div class="container footer-content">
-    <div class="footer-links">
-      <a href="index.html">الرئيسية</a>
-      <a href="courses.html">الدورات</a>
-      <a href="tests.html">الاختبارات</a>
-      <a href="certificates.html">الشهادات</a>
-      <a href="login.html" id="footer-login">تسجيل الدخول</a>
-    </div>
-
-    <div class="socials">
-      <a href="#"><i class="fab fa-facebook-f"></i></a>
-      <a href="#"><i class="fab fa-twitter"></i></a>
-      <a href="#"><i class="fab fa-instagram"></i></a>
-      <a href="#"><i class="fab fa-linkedin-in"></i></a>
-    </div>
-
-    <p>&copy; 2026 CourseHub. جميع الحقوق محفوظة.</p>
-  </div>
+  <p>&copy; 2026 CourseHub. جميع الحقوق محفوظة.</p>
 </footer>
 
-<!-- Scripts -->
-<script src="main.js"></script>
 <script>
-// Google Login Handler
+// Google Login Handler & User Display
 function handleGoogleLogin(response) {
   const jwt = response.credential;
   const payload = JSON.parse(atob(jwt.split('.')[1]));
-
   localStorage.setItem("coursehub_user", JSON.stringify({
     name: payload.name,
     email: payload.email,
     picture: payload.picture
   }));
-
   location.reload();
 }
 
-// عرض المستخدم في الهيدر إذا مسجل الدخول
+// عرض المستخدم إذا مسجل الدخول
 const user = JSON.parse(localStorage.getItem("coursehub_user"));
 if(user){
-  document.getElementById('login-link').style.display = 'none';
-  document.getElementById('footer-login').style.display = 'none';
-
-  document.getElementById('user-info').innerHTML = `
-    <div class="user-dropdown">
-      <img src="${user.picture}" alt="${user.name}" class="user-pic" id="user-pic">
-      <span id="user-name">${user.name}</span>
-      <div class="dropdown-menu" id="dropdown-menu">
+    document.getElementById('login-link').style.display = 'none';
+    document.getElementById('user-info').innerHTML = `
+      <img src="${user.picture}" alt="${user.name}" class="user-pic">
+      <span>${user.name}</span>
+      <div class="dropdown-menu">
         <a href="profile.html">حسابي</a>
         <a href="#" onclick="logout()">تسجيل الخروج</a>
       </div>
-    </div>
-  `;
-
-  // Dropdown toggle
-  const userDropdown = document.querySelector('.user-dropdown');
-  const dropdownMenu = document.getElementById('dropdown-menu');
-
-  userDropdown.addEventListener('click', function(){
-    dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-  });
+    `;
 }
 
 // Logout
 function logout(){
-  localStorage.removeItem("coursehub_user");
-  location.reload();
-}
-
-// حماية الصفحات
-document.addEventListener('DOMContentLoaded', function(){
-  const protectedPages = ['courses.html','tests.html','certificates.html'];
-  const currentPage = window.location.pathname.split("/").pop();
-  if(!user && protectedPages.includes(currentPage)){
-    alert('يجب تسجيل الدخول للوصول لهذه الصفحة');
-    window.location.href = 'login.html';
-  }
-});
-
-// Dynamic Courses (يمكنك لاحقاً ربطها بقاعدة بيانات)
-const coursesData = [
-  {title:'تطوير الويب للمبتدئين', category:'web', students:1200, img:'images/course1.jpg', desc:'تعلم HTML و CSS و JavaScript خطوة بخطوة.', link:'course-details.html'},
-  {title:'الذكاء الاصطناعي', category:'ai', students:950, img:'images/course2.jpg', desc:'ابدأ رحلتك مع تعلم الآلة والذكاء الاصطناعي.', link:'course-details.html'},
-  {title:'التصميم الجرافيكي', category:'design', students:800, img:'images/course3.jpg', desc:'تعلم Photoshop و Illustrator من الصفر.', link:'course-details.html'}
-];
-
-function loadCourses(){
-  const grid = document.getElementById('coursesGrid');
-  grid.innerHTML = '';
-  coursesData.forEach(course=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.setAttribute('data-category', course.category);
-    card.innerHTML = `
-      <img src="${course.img}" alt="${course.title}">
-      <div class="card-content">
-        <h3>${course.title}</h3>
-        <div class="rating">
-          ${'<i class="fa fa-star"></i>'.repeat(4)}<i class="fa fa-star-half-alt"></i>
-          <span>(${course.students} طالب)</span>
-        </div>
-        <p>${course.desc}</p>
-        <a href="${course.link}" class="btn">عرض الدورة</a>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-}
-loadCourses();
-
-// Filter
-function filterCategory(cat){
-  const buttons = document.querySelectorAll('.categories button');
-  buttons.forEach(btn=>btn.classList.remove('active'));
-  event.target.classList.add('active');
-
-  const cards = document.querySelectorAll('.card');
-  cards.forEach(c=>{
-    if(cat==='all' || c.dataset.category===cat){
-      c.style.display = 'block';
-    } else c.style.display = 'none';
-  });
+    localStorage.removeItem("coursehub_user");
+    window.location.href='login.html';
 }
 </script>
+
 </body>
 </html>
