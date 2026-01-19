@@ -13,12 +13,13 @@ header {
 /* Top Bar Container */
 .top-bar.container {
   display: flex;
-  justify-content: flex-start; /* يبدأ من اليسار */
+  justify-content: space-between; /* يوزع العناصر بالتساوي بين اليمين واليسار */
   align-items: center;
   padding: 12px 25px;
-  gap: 20px; /* مسافة بين العناصر */
+  gap: 20px;
   position: relative;
 }
+
 
 /* --- Site Name --- */
 .site-name {
