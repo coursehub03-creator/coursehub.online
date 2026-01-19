@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="header.css">
 ```javascript
 const {
   auth,
@@ -58,3 +59,4 @@ verifyCode.onclick = async () => {
   window.location.href = "index.html";
 };
 ```
+<link rel="stylesheet" href="footer.css">
