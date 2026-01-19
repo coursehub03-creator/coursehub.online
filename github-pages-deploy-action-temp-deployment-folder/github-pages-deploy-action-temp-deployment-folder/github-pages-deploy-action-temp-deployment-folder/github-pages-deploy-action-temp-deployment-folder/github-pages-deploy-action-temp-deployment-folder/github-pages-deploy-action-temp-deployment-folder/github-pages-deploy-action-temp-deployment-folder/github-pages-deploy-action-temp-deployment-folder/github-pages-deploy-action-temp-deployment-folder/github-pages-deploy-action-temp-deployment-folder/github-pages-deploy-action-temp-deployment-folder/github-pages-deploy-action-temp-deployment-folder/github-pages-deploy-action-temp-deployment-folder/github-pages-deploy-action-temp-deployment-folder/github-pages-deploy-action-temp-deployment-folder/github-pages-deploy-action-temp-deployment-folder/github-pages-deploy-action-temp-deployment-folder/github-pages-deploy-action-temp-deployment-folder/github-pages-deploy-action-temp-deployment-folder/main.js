@@ -10,8 +10,8 @@ async function loadHeaderFooter() {
     const footerHTML = await footerResponse.text();
     document.body.insertAdjacentHTML('beforeend', footerHTML);
 
-    setupUserDropdown();
-    setupHeaderSearch(); // شريط البحث
+    setupUserDropdown(); // إعداد dropdown المستخدم
+    setupHeaderSearch(); // إعداد شريط البحث فقط للصفحة الرئيسية والدورات
 }
 
 // --- إعداد المستخدم بعد تسجيل الدخول ---
@@ -23,42 +23,24 @@ function setupUserDropdown() {
     if(user && userInfoContainer){
         if(loginLink) loginLink.style.display = "none";
 
-        userInfoContainer.innerHTML = `
-            <div class="header-user-wrapper">
-                <div class="notifications">
-                    <i class="fas fa-bell"></i>
-                    <span class="notif-count">3</span>
-                </div>
+        userInfoContainer.classList.add("header-user-wrapper");
 
-                <div class="language-selector">
-                    <i class="fas fa-globe"></i>
-                    <span>عربي</span>
-                    <div class="language-dropdown">
-                        <div data-lang="ar">العربية</div>
-                        <div data-lang="fr">Français</div>
-                        <div data-lang="en">English</div>
-                    </div>
-                </div>
-
-                <img src="${user.picture}" alt="${user.name}" class="user-pic">
-                <span class="user-name">${user.name}</span>
-
-                <div class="dropdown-menu">
-                    <a href="profile.html"><i class="fas fa-user"></i> الملف الشخصي</a>
-                    <a href="achievements.html"><i class="fas fa-trophy"></i> الإنجازات</a>
-                    <a href="my-courses.html"><i class="fas fa-book"></i> دوراتي</a>
-                    <a href="settings.html"><i class="fas fa-cog"></i> الإعدادات</a>
-                    <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
-                </div>
+        userInfoContainer.innerHTML += `
+            <img src="${user.picture}" alt="${user.name}" class="user-pic">
+            <span class="user-name">${user.name}</span>
+            <div class="dropdown-menu">
+                <a href="profile.html">الملف الشخصي</a>
+                <a href="achievements.html">إنجازاتي</a>
+                <a href="my-courses.html">دوراتي</a>
+                <a href="settings.html">الإعدادات</a>
+                <a href="#" id="logout-link">تسجيل الخروج</a>
             </div>
         `;
 
-        const userWrapper = userInfoContainer.querySelector(".header-user-wrapper");
-        const dropdown = userWrapper.querySelector(".dropdown-menu");
-        const userPic = userWrapper.querySelector(".user-pic");
-        const userName = userWrapper.querySelector(".user-name");
+        const dropdown = userInfoContainer.querySelector(".dropdown-menu");
+        const userPic = userInfoContainer.querySelector(".user-pic");
+        const userName = userInfoContainer.querySelector(".user-name");
 
-        // Toggle Dropdown المستخدم
         const toggleDropdown = (e) => {
             e.stopPropagation();
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
@@ -66,12 +48,10 @@ function setupUserDropdown() {
         userPic.addEventListener("click", toggleDropdown);
         userName.addEventListener("click", toggleDropdown);
 
-        // إخفاء عند النقر خارج
         document.addEventListener("click", () => {
             dropdown.style.display = 'none';
         });
 
-        // Logout
         const logoutLink = document.getElementById("logout-link");
         if(logoutLink){
             logoutLink.addEventListener("click", (e)=>{
@@ -80,29 +60,6 @@ function setupUserDropdown() {
                 window.location.href = "login.html";
             });
         }
-
-        // Dropdown اللغة
-        const langSelector = userWrapper.querySelector(".language-selector");
-        const langDropdown = userWrapper.querySelector(".language-dropdown");
-
-        langSelector.addEventListener("click", (e)=>{
-            e.stopPropagation();
-            langSelector.classList.toggle("active");
-        });
-
-        document.querySelectorAll(".language-dropdown div").forEach(el=>{
-            el.addEventListener("click", ()=>{
-                const selected = el.dataset.lang;
-                langSelector.querySelector("span").textContent = el.textContent;
-                langSelector.classList.remove("active");
-                console.log(`تم اختيار اللغة: ${selected}`);
-            });
-        });
-
-        // إغلاق dropdown اللغة عند النقر خارجها
-        document.addEventListener("click", ()=>{
-            langSelector.classList.remove("active");
-        });
     } else {
         if(loginLink) loginLink.style.display = "block";
     }
@@ -124,7 +81,6 @@ function setupHeaderSearch() {
         `;
         headerContainer.insertAdjacentElement("afterend", searchBar);
 
-        // زر البحث
         const searchBtn = document.getElementById("searchBtn");
         searchBtn.addEventListener("click", ()=>{
             const query = document.getElementById("searchInput").value;

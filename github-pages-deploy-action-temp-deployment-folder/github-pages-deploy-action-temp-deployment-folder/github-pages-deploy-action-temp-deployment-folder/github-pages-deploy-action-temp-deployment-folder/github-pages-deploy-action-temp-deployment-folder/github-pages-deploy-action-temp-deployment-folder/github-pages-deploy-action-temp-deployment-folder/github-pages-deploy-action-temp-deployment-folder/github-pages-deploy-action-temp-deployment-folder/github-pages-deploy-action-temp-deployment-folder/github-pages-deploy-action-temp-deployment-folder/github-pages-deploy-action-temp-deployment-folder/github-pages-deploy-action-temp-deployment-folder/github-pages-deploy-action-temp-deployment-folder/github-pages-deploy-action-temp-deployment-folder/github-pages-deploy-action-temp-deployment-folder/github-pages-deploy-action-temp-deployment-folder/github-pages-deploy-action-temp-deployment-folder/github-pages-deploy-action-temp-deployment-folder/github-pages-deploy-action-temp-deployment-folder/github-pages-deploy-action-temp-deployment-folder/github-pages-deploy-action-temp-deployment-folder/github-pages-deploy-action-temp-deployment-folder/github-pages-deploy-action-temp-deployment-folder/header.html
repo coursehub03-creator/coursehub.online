@@ -1,6 +1,7 @@
 <header>
   <div class="top-bar container">
     <div class="logo"><a href="index.html">CourseHub</a></div>
+
     <nav>
       <a href="index.html">الرئيسية</a>
       <a href="courses.html">الدورات</a>
@@ -8,20 +9,184 @@
       <a href="certificates.html">الشهادات</a>
       <a href="login.html" id="login-link">تسجيل الدخول</a>
     </nav>
+
     <div class="header-actions">
       <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
-      <button id="notifBtn"><i class="fa fa-bell"></i><span class="notification-badge" id="notifBadge">3</span></button>
+      <button id="notifBtn"><i class="fa fa-bell"></i>
+        <span class="notification-badge" id="notifBadge">3</span>
+      </button>
     </div>
+
     <div id="user-info" class="user-info-container"></div>
   </div>
-  <div class="search-bar container">
+
+  <!-- شريط البحث -->
+  <div class="search-bar container" id="headerSearch">
     <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
     <button onclick="searchCourses()"><i class="fa fa-search"></i> بحث</button>
   </div>
 </header>
 
+<style>
+/* --- تنسيق Header --- */
+header {
+  background-color: #1c3faa;
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
+
+.top-bar.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+}
+
+.logo a {
+  color: white;
+  font-weight: 700;
+  font-size: 28px;
+  text-decoration: none;
+}
+
+nav a {
+  color: white;
+  margin-left: 20px;
+  text-decoration: none;
+  font-weight: 600;
+}
+nav a:hover {
+  color: #ffcc00;
+}
+
+.header-actions button {
+  background: none;
+  border: none;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 10px;
+  position: relative;
+}
+
+.header-actions button i {
+  margin-right: 5px;
+}
+
+.notification-badge {
+  background: #ffcc00;
+  color: #1c3faa;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+}
+
+.user-info-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  cursor: pointer;
+}
+
+.user-info-container img.user-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ffcc00;
+  object-fit: cover;
+}
+
+.user-info-container .dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: white;
+  color: #333;
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+}
+
+.user-info-container.active .dropdown-menu {
+  display: block;
+}
+
+.user-info-container .dropdown-menu a {
+  display: block;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+}
+
+.user-info-container .dropdown-menu a:hover {
+  background-color: #f0f0f0;
+}
+
+/* Search Bar */
+.search-bar.container {
+  display: flex;
+  margin: 10px 20px;
+  gap: 10px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 16px;
+}
+
+.search-bar button {
+  background-color: #ffcc00;
+  border: none;
+  color: #1c3faa;
+  padding: 8px 12px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.search-bar button:hover {
+  background-color: #e6b800;
+}
+
+/* Responsive */
+@media(max-width:800px){
+  .top-bar.container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  nav {
+    margin-top: 10px;
+  }
+  .header-actions {
+    margin-top: 10px;
+  }
+  .search-bar.container {
+    flex-direction: column;
+  }
+}
+</style>
+
 <script>
-// عرض المستخدم إذا مسجل الدخول
+// --- التحكم في ظهور شريط البحث حسب الصفحة ---
+const headerSearch = document.getElementById('headerSearch');
+const currentPage = window.location.pathname.split("/").pop();
+if(currentPage !== "index.html" && currentPage !== "courses.html"){
+    headerSearch.style.display = "none";
+} else {
+    headerSearch.style.display = "flex";
+}
+
+// --- عرض المستخدم إذا مسجل الدخول ---
 const user = JSON.parse(localStorage.getItem("coursehub_user"));
 const userContainer = document.getElementById('user-info');
 if(user){
@@ -34,22 +199,29 @@ if(user){
             <a href="achievements.html">إنجازاتي</a>
             <a href="my-courses.html">دوراتي</a>
             <a href="settings.html">الإعدادات</a>
-            <a href="#" onclick="logout()">تسجيل الخروج</a>
+            <a href="#" id="logoutBtn">تسجيل الخروج</a>
         </div>
     `;
 }
+
 // Toggle Dropdown
-userContainer.addEventListener('click', () => {
+userContainer.addEventListener('click', e => {
+    e.stopPropagation();
     userContainer.classList.toggle('active');
 });
-// إغلاق النافذة عند الضغط خارجها
+
+// إغلاق عند النقر خارج
 document.addEventListener('click', e => {
     if(!userContainer.contains(e.target)) userContainer.classList.remove('active');
 });
 
-function logout(){
-    localStorage.removeItem("coursehub_user");
-    window.location.href='login.html';
+// Logout
+const logoutBtn = document.getElementById('logoutBtn');
+if(logoutBtn){
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem("coursehub_user");
+        window.location.href='login.html';
+    });
 }
 
 // تغيير اللغة
@@ -60,4 +232,10 @@ langBtn.addEventListener('click', ()=>{
     else if(current.includes('English')) langBtn.innerHTML='<i class="fa fa-globe"></i> Français';
     else langBtn.innerHTML='<i class="fa fa-globe"></i> عربي';
 });
+
+// --- دالة بحث وهمية ---
+function searchCourses(){
+    const query = document.getElementById('searchInput').value;
+    alert(`بحث عن: ${query}`);
+}
 </script>
