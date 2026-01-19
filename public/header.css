@@ -13,20 +13,21 @@ header {
 
 /* Top Bar Container */
 .top-bar.container {
-  display: flex;
-  justify-content: space-between; /* يوزع العناصر بين اليسار واليمين */
-  align-items: center;
-  padding: 12px 0;
-  gap: 20px; /* مسافة بين العناصر */
-  position: relative;
+    display: flex;
+    justify-content: space-between; /* الشعار على اليسار وبقية العناصر على اليمين */
+    align-items: center;
+    padding: 12px 25px;
+    gap: 20px;
+    position: relative;
 }
 
-/* --- Site Name --- */
 .site-name {
-  font-size: 22px;
-  font-weight: 700;
-  color: white;
+    position: static; /* بدلاً من absolute */
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
 }
+
 
 .site-name a {
   text-decoration: none;
