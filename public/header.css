@@ -204,16 +204,9 @@ nav a:hover {
 }
 
 /* --- Search Bar --- */
-.search-bar.container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 12px 25px;
-  gap: 10px;
-}
-
 .search-bar input {
   flex: 1;
+  max-width: 400px; /* أقصى عرض للحقل */
   padding: 8px 12px;
   border-radius: 6px 0 0 6px;
   border: 1px solid #ccc;
@@ -234,6 +227,14 @@ nav a:hover {
 .search-bar button:hover {
   background-color: #e6b800;
 }
+
+/* لمحاذاة الحقل والزر بشكل أفضل داخل container */
+.search-bar.container {
+  display: flex;
+  justify-content: center; /* يبقى في وسط الهيدر */
+  gap: 0; /* فاصلة بين الحقل والزر */
+}
+
 
 /* --- Responsive --- */
 @media(max-width:800px){
