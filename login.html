@@ -1,15 +1,49 @@
-function handleGoogleLogin(response) {
-  const jwt = response.credential;
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول - CourseHub</title>
 
-  const payload = JSON.parse(atob(jwt.split('.')[1]));
+<link rel="stylesheet" href="style.css">
 
-  console.log("Google User:", payload);
+<!-- Google Identity -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
 
-  localStorage.setItem("coursehub_user", JSON.stringify({
-    name: payload.name,
-    email: payload.email,
-    picture: payload.picture
-  }));
+<body>
 
-  window.location.href = "index.html";
-}
+<section class="course-detail">
+  <h2>تسجيل الدخول</h2>
+
+  <form id="email-login-form">
+    <label>البريد الإلكتروني</label>
+    <input type="email" autocomplete="email" required>
+
+    <label>كلمة المرور</label>
+    <input type="password" autocomplete="current-password" required>
+
+    <button class="btn">تسجيل الدخول</button>
+  </form>
+
+  <p>أو سجل الدخول بواسطة:</p>
+
+  <!-- Google Button -->
+  <div id="g_id_onload"
+       data-client_id="PUT_YOUR_CLIENT_ID_HERE"
+       data-callback="handleGoogleLogin">
+  </div>
+
+  <div class="g_id_signin"
+       data-type="standard"
+       data-size="large">
+  </div>
+
+  <p><a href="forgot-password.html">نسيت كلمة المرور؟</a></p>
+  <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
+
+</section>
+
+<script src="auth.js"></script>
+</body>
+</html>
