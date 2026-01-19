@@ -20,78 +20,6 @@ body {
     color: #333;
 }
 
-/* Header */
-header {
-    background-color: #1c3faa;
-    color: white;
-    padding: 15px 20px;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-header .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.logo a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 28px;
-    color: white;
-    text-decoration: none;
-}
-nav a {
-    color: white;
-    text-decoration: none;
-    margin-left: 20px;
-    font-weight: 600;
-}
-nav a:hover { color: #ffcc00; }
-
-/* User Info */
-.user-info-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-    cursor: pointer;
-}
-.user-info-container img.user-pic {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: 2px solid #ffcc00;
-    object-fit: cover;
-}
-.user-info-container .dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 55px;
-    right: 0;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    overflow: hidden;
-    min-width: 150px;
-    z-index: 999;
-}
-.user-info-container:hover .dropdown-menu {
-    display: block;
-}
-.user-info-container .dropdown-menu a {
-    display: block;
-    padding: 12px 15px;
-    color: #333;
-    text-decoration: none;
-    font-weight: 600;
-}
-.user-info-container .dropdown-menu a:hover {
-    background-color: #f0f0f0;
-}
-
 /* Profile Card */
 .profile-card {
     max-width: 500px;
@@ -125,7 +53,6 @@ nav a:hover { color: #ffcc00; }
     margin-bottom: 25px;
 }
 
-/* Form inside card */
 .profile-card form {
     display: flex;
     flex-direction: column;
@@ -172,17 +99,6 @@ nav a:hover { color: #ffcc00; }
     background-color: #163488;
 }
 
-/* Footer */
-footer {
-    background-color: #1c3faa;
-    color: white;
-    padding: 40px 20px;
-    text-align: center;
-}
-footer a { color: #ffcc00; text-decoration: none; margin: 0 10px; }
-footer a:hover { text-decoration: underline; }
-
-/* Responsive */
 @media(max-width:600px){
     .profile-card { margin: 40px 20px; padding: 30px 20px; }
     .profile-card img.profile-pic { width: 100px; height: 100px; }
@@ -191,20 +107,8 @@ footer a:hover { text-decoration: underline; }
 </head>
 <body>
 
-<!-- Header -->
-<header>
-  <div class="top-bar container">
-    <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo">CourseHub</a></div>
-    <nav>
-      <a href="index.html">الرئيسية</a>
-      <a href="courses.html">الدورات</a>
-      <a href="tests.html">الاختبارات</a>
-      <a href="certificates.html">الشهادات</a>
-      <a href="login.html" id="login-link">تسجيل الدخول</a>
-    </nav>
-    <div id="user-info" class="user-info-container"></div>
-  </div>
-</header>
+<!-- Header Placeholder -->
+<div id="header-placeholder"></div>
 
 <!-- Profile Card -->
 <div class="profile-card">
@@ -221,10 +125,11 @@ footer a:hover { text-decoration: underline; }
   </form>
 </div>
 
-<!-- Footer -->
-<footer>
-  <p>&copy; 2026 CourseHub. جميع الحقوق محفوظة.</p>
-</footer>
+<!-- Footer Placeholder -->
+<div id="footer-placeholder"></div>
+
+<!-- Main JS -->
+<script src="main.js"></script>
 
 <script>
 // التحقق من تسجيل الدخول
@@ -232,23 +137,13 @@ const user = JSON.parse(localStorage.getItem("coursehub_user"));
 if(!user){
     window.location.href='login.html';
 } else {
-    document.getElementById('login-link').style.display='none';
-    document.getElementById('user-info').innerHTML = `
-      <img src="${user.picture}" alt="${user.name}" class="user-pic">
-      <span>${user.name}</span>
-      <div class="dropdown-menu">
-        <a href="profile.html">حسابي</a>
-        <a href="#" onclick="logout()">تسجيل الخروج</a>
-      </div>
-    `;
+    // تعبئة البيانات في الحقول
+    document.getElementById('profile-name').value = user.name;
+    document.getElementById('profile-email').value = user.email;
+    document.getElementById('profilePic').src = user.picture;
+    document.getElementById('profileName').innerText = user.name;
+    document.getElementById('profileEmail').innerText = user.email;
 }
-
-// تعبئة البيانات في الحقول
-document.getElementById('profile-name').value = user.name;
-document.getElementById('profile-email').value = user.email;
-document.getElementById('profilePic').src = user.picture;
-document.getElementById('profileName').innerText = user.name;
-document.getElementById('profileEmail').innerText = user.email;
 
 // تغيير الصورة عند الضغط عليها
 const profilePic = document.getElementById('profilePic');
