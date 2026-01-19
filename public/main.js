@@ -56,7 +56,7 @@ function setupUserDropdown() {
             </div>
         `;
 
-        const dropdown = userContainer.querySelector(".dropdown-menu");
+  
        const toggle = (e) => {
     e.stopPropagation();
     userContainer.classList.toggle("active");
