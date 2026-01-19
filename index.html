@@ -35,7 +35,7 @@
       <a href="courses.html">الدورات</a>
       <a href="tests.html">الاختبارات</a>
       <a href="certificates.html">الشهادات</a>
-      <a href="login.html">تسجيل الدخول</a>
+      <a href="login.html" id="login-link">تسجيل الدخول</a>
     </nav>
   </div>
 
@@ -45,6 +45,9 @@
       <i class="fa fa-search"></i> بحث
     </button>
   </div>
+
+  <!-- User Info بعد تسجيل الدخول -->
+  <div id="user-info" class="user-info-container"></div>
 </header>
 
 <!-- Hero -->
@@ -143,7 +146,7 @@
       <a href="courses.html">الدورات</a>
       <a href="tests.html">الاختبارات</a>
       <a href="certificates.html">الشهادات</a>
-      <a href="login.html">تسجيل الدخول</a>
+      <a href="login.html" id="footer-login">تسجيل الدخول</a>
     </div>
 
     <div class="socials">
@@ -159,22 +162,37 @@
 
 <script src="main.js"></script>
 
-<!-- Google Login Handler -->
+<!-- Google Login Handler & User Display -->
 <script>
 function handleGoogleLogin(response) {
   const jwt = response.credential;
   const payload = JSON.parse(atob(jwt.split('.')[1]));
 
-  console.log("Google User:", payload);
-
+  // حفظ بيانات المستخدم محليًا
   localStorage.setItem("coursehub_user", JSON.stringify({
     name: payload.name,
     email: payload.email,
     picture: payload.picture
   }));
 
-  // تحويل للرئيسية بعد تسجيل الدخول
-  window.location.href = "index.html";
+  location.reload(); // إعادة تحميل لعرض اسم المستخدم في الهيدر
+}
+
+// عرض المستخدم إذا مسجل الدخول
+const user = JSON.parse(localStorage.getItem("coursehub_user"));
+if(user){
+  document.getElementById('login-link').style.display = 'none';
+  document.getElementById('footer-login').style.display = 'none';
+  document.getElementById('user-info').innerHTML = `
+    <img src="${user.picture}" alt="${user.name}" class="user-pic" style="width:40px; border-radius:50%; margin-left:10px;">
+    <span>مرحباً، ${user.name}</span>
+    <button class="btn" onclick="logout()">تسجيل الخروج</button>
+  `;
+}
+
+function logout(){
+  localStorage.removeItem("coursehub_user");
+  location.reload();
 }
 </script>
 
