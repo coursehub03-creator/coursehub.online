@@ -158,7 +158,25 @@
 </footer>
 
 <script src="main.js"></script>
-<script src="auth.js"></script>
+
+<!-- Google Login Handler -->
+<script>
+function handleGoogleLogin(response) {
+  const jwt = response.credential;
+  const payload = JSON.parse(atob(jwt.split('.')[1]));
+
+  console.log("Google User:", payload);
+
+  localStorage.setItem("coursehub_user", JSON.stringify({
+    name: payload.name,
+    email: payload.email,
+    picture: payload.picture
+  }));
+
+  // تحويل للرئيسية بعد تسجيل الدخول
+  window.location.href = "index.html";
+}
+</script>
 
 </body>
 </html>
