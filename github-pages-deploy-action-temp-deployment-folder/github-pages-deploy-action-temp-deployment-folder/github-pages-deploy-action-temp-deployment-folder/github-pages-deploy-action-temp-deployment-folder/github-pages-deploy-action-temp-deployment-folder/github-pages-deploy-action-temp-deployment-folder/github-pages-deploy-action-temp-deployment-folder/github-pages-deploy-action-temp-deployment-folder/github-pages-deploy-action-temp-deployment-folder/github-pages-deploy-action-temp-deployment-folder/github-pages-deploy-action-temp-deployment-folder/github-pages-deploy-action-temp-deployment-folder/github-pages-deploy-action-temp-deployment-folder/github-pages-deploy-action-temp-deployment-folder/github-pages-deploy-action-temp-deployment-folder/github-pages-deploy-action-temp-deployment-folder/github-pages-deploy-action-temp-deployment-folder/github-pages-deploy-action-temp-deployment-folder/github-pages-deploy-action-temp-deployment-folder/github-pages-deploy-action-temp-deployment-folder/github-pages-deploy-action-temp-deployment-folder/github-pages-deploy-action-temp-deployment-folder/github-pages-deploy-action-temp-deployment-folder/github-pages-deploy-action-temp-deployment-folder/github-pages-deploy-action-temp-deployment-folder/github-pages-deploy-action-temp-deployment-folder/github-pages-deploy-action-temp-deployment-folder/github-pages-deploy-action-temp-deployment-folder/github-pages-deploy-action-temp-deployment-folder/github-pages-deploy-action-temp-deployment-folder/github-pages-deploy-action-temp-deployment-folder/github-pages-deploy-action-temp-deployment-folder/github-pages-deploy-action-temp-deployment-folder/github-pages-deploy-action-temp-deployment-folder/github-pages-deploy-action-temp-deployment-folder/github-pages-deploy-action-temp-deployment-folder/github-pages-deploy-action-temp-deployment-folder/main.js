@@ -11,6 +11,7 @@ async function loadHeaderFooter() {
     document.body.insertAdjacentHTML('beforeend', footerHTML);
 
     setupUserDropdown();
+    setupHeaderSearch(); // شريط البحث
 }
 
 // --- إعداد المستخدم بعد تسجيل الدخول ---
@@ -104,6 +105,23 @@ function setupUserDropdown() {
         });
     } else {
         if(loginLink) loginLink.style.display = "block";
+    }
+}
+
+// --- إضافة شريط البحث فقط للصفحة الرئيسية وصفحة الدورات ---
+function setupHeaderSearch() {
+    const path = window.location.pathname.split("/").pop();
+    if(path === "index.html" || path === "courses.html") {
+        const nav = document.querySelector("header nav");
+        if(nav){
+            const searchForm = document.createElement("form");
+            searchForm.className = "header-search";
+            searchForm.innerHTML = `
+                <input type="text" placeholder="ابحث عن دورة..." />
+                <button type="submit"><i class="fa fa-search"></i></button>
+            `;
+            nav.appendChild(searchForm);
+        }
     }
 }
 
