@@ -1,8 +1,6 @@
 <header>
   <div class="top-bar container">
-    <div class="logo">
-      <a href="index.html"><img src="images/logo.png" alt="CourseHub Logo">CourseHub</a>
-    </div>
+    <!-- Navigation -->
     <nav>
       <a href="index.html">الرئيسية</a>
       <a href="courses.html">الدورات</a>
@@ -10,11 +8,18 @@
       <a href="certificates.html">الشهادات</a>
       <a href="login.html" id="login-link">تسجيل الدخول</a>
     </nav>
+
+    <!-- Header Actions -->
     <div class="header-actions">
       <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
       <button id="notifBtn"><i class="fa fa-bell"></i><span class="notification-badge" id="notifBadge">3</span></button>
       <div id="user-info" class="user-info-container"></div>
     </div>
   </div>
-  <!-- شريط البحث سيتم إضافته ديناميكياً عبر main.js -->
+
+  <!-- Search Bar (ديناميكي) -->
+  <div class="search-bar container" id="headerSearchBar" style="display:none;">
+    <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
+    <button id="searchBtn"><i class="fa fa-search"></i> بحث</button>
+  </div>
 </header>
