@@ -1,31 +1,63 @@
 <header>
   <div class="top-bar container">
-    <div class="logo">CourseHub</div>
-
+    <div class="logo"><a href="index.html">CourseHub</a></div>
     <nav>
       <a href="index.html">الرئيسية</a>
       <a href="courses.html">الدورات</a>
       <a href="tests.html">الاختبارات</a>
       <a href="certificates.html">الشهادات</a>
-    </nav>
-
-    <div class="header-actions">
-      <div class="language-dropdown">
-        <i class="fa fa-globe"></i>
-        <select id="languageSelect">
-          <option value="ar">العربية</option>
-          <option value="fr">Français</option>
-          <option value="en">English</option>
-        </select>
-      </div>
-      <div class="notifications">
-        <i class="fa fa-bell"></i>
-        <span class="notif-count" id="notifCount">3</span>
-      </div>
-    </div>
-
-    <div class="user-info-container" id="user-info">
       <a href="login.html" id="login-link">تسجيل الدخول</a>
+    </nav>
+    <div class="header-actions">
+      <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
+      <button id="notifBtn"><i class="fa fa-bell"></i><span class="notification-badge" id="notifBadge">3</span></button>
     </div>
+    <div id="user-info" class="user-info-container"></div>
+  </div>
+  <div class="search-bar container">
+    <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
+    <button onclick="searchCourses()"><i class="fa fa-search"></i> بحث</button>
   </div>
 </header>
+
+<script>
+// عرض المستخدم إذا مسجل الدخول
+const user = JSON.parse(localStorage.getItem("coursehub_user"));
+const userContainer = document.getElementById('user-info');
+if(user){
+    document.getElementById('login-link').style.display='none';
+    userContainer.innerHTML = `
+        <img src="${user.picture}" alt="${user.name}" class="user-pic">
+        <span>${user.name}</span>
+        <div class="dropdown-menu">
+            <a href="profile.html">الملف الشخصي</a>
+            <a href="achievements.html">إنجازاتي</a>
+            <a href="my-courses.html">دوراتي</a>
+            <a href="settings.html">الإعدادات</a>
+            <a href="#" onclick="logout()">تسجيل الخروج</a>
+        </div>
+    `;
+}
+// Toggle Dropdown
+userContainer.addEventListener('click', () => {
+    userContainer.classList.toggle('active');
+});
+// إغلاق النافذة عند الضغط خارجها
+document.addEventListener('click', e => {
+    if(!userContainer.contains(e.target)) userContainer.classList.remove('active');
+});
+
+function logout(){
+    localStorage.removeItem("coursehub_user");
+    window.location.href='login.html';
+}
+
+// تغيير اللغة
+const langBtn = document.getElementById('langBtn');
+langBtn.addEventListener('click', ()=>{
+    const current = langBtn.textContent.trim();
+    if(current.includes('عربي')) langBtn.innerHTML='<i class="fa fa-globe"></i> English';
+    else if(current.includes('English')) langBtn.innerHTML='<i class="fa fa-globe"></i> Français';
+    else langBtn.innerHTML='<i class="fa fa-globe"></i> عربي';
+});
+</script>
