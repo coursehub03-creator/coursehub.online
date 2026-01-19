@@ -17,7 +17,7 @@
 
 <body>
 
-<!-- Google Init (مخفي) -->
+<!-- Google Init -->
 <div id="g_id_onload"
      data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
      data-callback="handleGoogleLogin"
@@ -26,10 +26,11 @@
 
 <!-- Header -->
 <header>
-  <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width:120px; height:auto;">
+  <div class="top-bar container">
+    <div class="logo">
+      <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width:120px; height:auto;">
+    </div>
 
-  <div class="top-bar">
-    <div class="logo">CourseHub</div>
     <nav>
       <a href="index.html">الرئيسية</a>
       <a href="courses.html">الدورات</a>
@@ -37,20 +38,21 @@
       <a href="certificates.html">الشهادات</a>
       <a href="login.html" id="login-link">تسجيل الدخول</a>
     </nav>
+
+    <!-- User Info بعد تسجيل الدخول -->
+    <div id="user-info" class="user-info-container"></div>
   </div>
 
+  <!-- Search Bar -->
   <div class="search-bar container">
     <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
     <button onclick="searchCourses()">
       <i class="fa fa-search"></i> بحث
     </button>
   </div>
-
-  <!-- User Info بعد تسجيل الدخول -->
-  <div id="user-info" class="user-info-container"></div>
 </header>
 
-<!-- Hero -->
+<!-- Hero Section -->
 <section class="hero">
   <div class="container hero-content">
     <h1>تعلم أي مهارة جديدة بسهولة</h1>
@@ -92,7 +94,6 @@
   </div>
 
   <div class="courses-grid" id="coursesGrid">
-
     <div class="card" data-category="web">
       <img src="images/course1.jpg" alt="Course">
       <div class="card-content">
@@ -134,7 +135,6 @@
         <a href="course-details.html" class="btn">عرض الدورة</a>
       </div>
     </div>
-
   </div>
 </section>
 
@@ -162,39 +162,61 @@
 
 <script src="main.js"></script>
 
-<!-- Google Login Handler & User Display -->
+<!-- Google Login & User Display -->
 <script>
 function handleGoogleLogin(response) {
   const jwt = response.credential;
   const payload = JSON.parse(atob(jwt.split('.')[1]));
 
-  // حفظ بيانات المستخدم محليًا
+  // حفظ بيانات المستخدم
   localStorage.setItem("coursehub_user", JSON.stringify({
     name: payload.name,
     email: payload.email,
     picture: payload.picture
   }));
 
-  location.reload(); // إعادة تحميل لعرض اسم المستخدم في الهيدر
+  location.reload(); // إعادة تحميل لعرض اسم المستخدم
 }
 
-// عرض المستخدم إذا مسجل الدخول
+// عرض المستخدم في الهيدر إذا مسجل الدخول
 const user = JSON.parse(localStorage.getItem("coursehub_user"));
 if(user){
   document.getElementById('login-link').style.display = 'none';
   document.getElementById('footer-login').style.display = 'none';
+
   document.getElementById('user-info').innerHTML = `
-    <img src="${user.picture}" alt="${user.name}" class="user-pic" style="width:40px; border-radius:50%; margin-left:10px;">
-    <span>مرحباً، ${user.name}</span>
-    <button class="btn" onclick="logout()">تسجيل الخروج</button>
+    <div class="user-dropdown" onclick="goToProfile()">
+      <img src="${user.picture}" alt="${user.name}" class="user-pic" style="width:40px; border-radius:50%; margin-left:10px; cursor:pointer;">
+      <span style="cursor:pointer;">${user.name}</span>
+      <div class="dropdown-menu" id="dropdown-menu">
+        <a href="profile.html">حسابي</a>
+        <a href="#" onclick="logout()">تسجيل الخروج</a>
+      </div>
+    </div>
   `;
+}
+
+// الذهاب لصفحة البروفايل عند الضغط
+function goToProfile(){
+  window.location.href = "profile.html";
 }
 
 function logout(){
   localStorage.removeItem("coursehub_user");
   location.reload();
 }
-</script>
 
+// Dropdown Hover
+document.addEventListener('click', function(e){
+  const dropdown = document.getElementById('dropdown-menu');
+  if(dropdown){
+    if(!e.target.closest('.user-dropdown')){
+      dropdown.style.display = 'none';
+    }else{
+      dropdown.style.display = 'block';
+    }
+  }
+});
+</script>
 </body>
 </html>
