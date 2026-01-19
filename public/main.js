@@ -34,7 +34,7 @@ async function loadHeaderFooter() {
 }
 
 // ===============================
-// إعداد dropdown المستخدم
+// إعداد dropdown المستخدم (✔ مصحح)
 // ===============================
 function setupUserDropdown() {
     const user = JSON.parse(localStorage.getItem("coursehub_user"));
@@ -56,18 +56,28 @@ function setupUserDropdown() {
             </div>
         `;
 
-  
-       const toggle = (e) => {
-    e.stopPropagation();
-    userContainer.classList.toggle("active");
-};
+        // فتح / إغلاق القائمة
+        const toggleDropdown = (e) => {
+            e.stopPropagation();
+            userContainer.classList.toggle("active");
+        };
 
+        userContainer.querySelector(".user-pic")
+            .addEventListener("click", toggleDropdown);
 
-        userContainer.querySelector(".user-pic").addEventListener("click", toggle);
-        userContainer.querySelector(".user-name").addEventListener("click", toggle);
+        userContainer.querySelector(".user-name")
+            .addEventListener("click", toggleDropdown);
 
-        document.addEventListener("click", () => dropdown.classList.remove("show"));
+        // إغلاق عند الضغط خارجها
+        document.addEventListener("click", () => {
+            userContainer.classList.remove("active");
+        });
 
+        // منع الإغلاق عند الضغط داخل القائمة
+        userContainer.querySelector(".dropdown-menu")
+            .addEventListener("click", (e) => e.stopPropagation());
+
+        // تسجيل الخروج
         document.getElementById("logout-link").addEventListener("click", (e) => {
             e.preventDefault();
             localStorage.removeItem("coursehub_user");
@@ -80,7 +90,7 @@ function setupUserDropdown() {
 }
 
 // ===============================
-// شريط البحث (فقط الرئيسية + الدورات)
+// شريط البحث (الرئيسية + الدورات)
 // ===============================
 function setupHeaderSearch() {
     const page = window.location.pathname.split("/").pop();
@@ -88,8 +98,9 @@ function setupHeaderSearch() {
     if (page === "" || page === "index.html" || page === "courses.html") {
         if (!document.querySelector(".search-bar")) {
             const header = document.querySelector("header");
-            const searchBar = document.createElement("div");
+            if (!header) return;
 
+            const searchBar = document.createElement("div");
             searchBar.className = "search-bar container";
             searchBar.innerHTML = `
                 <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
