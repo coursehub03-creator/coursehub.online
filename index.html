@@ -28,7 +28,7 @@
 <header>
   <div class="top-bar container">
     <div class="logo">
-      <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width:120px; height:auto;">
+      <img src="images/logo.png" alt="CourseHub Logo" class="site-logo">
     </div>
 
     <nav>
@@ -39,7 +39,6 @@
       <a href="login.html" id="login-link">تسجيل الدخول</a>
     </nav>
 
-    <!-- User Info بعد تسجيل الدخول -->
     <div id="user-info" class="user-info-container"></div>
   </div>
 
@@ -61,7 +60,7 @@
   </div>
 </section>
 
-<!-- Features -->
+<!-- Features Section -->
 <section class="features container">
   <div class="feature">
     <i class="fa fa-users fa-2x"></i>
@@ -94,47 +93,7 @@
   </div>
 
   <div class="courses-grid" id="coursesGrid">
-    <div class="card" data-category="web">
-      <img src="images/course1.jpg" alt="Course">
-      <div class="card-content">
-        <h3>تطوير الويب للمبتدئين</h3>
-        <div class="rating">
-          <i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <i class="fa fa-star"></i><i class="fa fa-star-half-alt"></i>
-          <span>(1200 طالب)</span>
-        </div>
-        <p>تعلم HTML و CSS و JavaScript خطوة بخطوة.</p>
-        <a href="course-details.html" class="btn">عرض الدورة</a>
-      </div>
-    </div>
-
-    <div class="card" data-category="ai">
-      <img src="images/course2.jpg" alt="Course">
-      <div class="card-content">
-        <h3>الذكاء الاصطناعي</h3>
-        <div class="rating">
-          <i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <span>(950 طالب)</span>
-        </div>
-        <p>ابدأ رحلتك مع تعلم الآلة والذكاء الاصطناعي.</p>
-        <a href="course-details.html" class="btn">عرض الدورة</a>
-      </div>
-    </div>
-
-    <div class="card" data-category="design">
-      <img src="images/course3.jpg" alt="Course">
-      <div class="card-content">
-        <h3>التصميم الجرافيكي</h3>
-        <div class="rating">
-          <i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <span>(800 طالب)</span>
-        </div>
-        <p>تعلم Photoshop و Illustrator من الصفر.</p>
-        <a href="course-details.html" class="btn">عرض الدورة</a>
-      </div>
-    </div>
+    <!-- دورات ديناميكية -->
   </div>
 </section>
 
@@ -160,22 +119,21 @@
   </div>
 </footer>
 
+<!-- Scripts -->
 <script src="main.js"></script>
-
-<!-- Google Login & User Display -->
 <script>
+// Google Login Handler
 function handleGoogleLogin(response) {
   const jwt = response.credential;
   const payload = JSON.parse(atob(jwt.split('.')[1]));
 
-  // حفظ بيانات المستخدم
   localStorage.setItem("coursehub_user", JSON.stringify({
     name: payload.name,
     email: payload.email,
     picture: payload.picture
   }));
 
-  location.reload(); // إعادة تحميل لعرض اسم المستخدم
+  location.reload();
 }
 
 // عرض المستخدم في الهيدر إذا مسجل الدخول
@@ -185,38 +143,85 @@ if(user){
   document.getElementById('footer-login').style.display = 'none';
 
   document.getElementById('user-info').innerHTML = `
-    <div class="user-dropdown" onclick="goToProfile()">
-      <img src="${user.picture}" alt="${user.name}" class="user-pic" style="width:40px; border-radius:50%; margin-left:10px; cursor:pointer;">
-      <span style="cursor:pointer;">${user.name}</span>
+    <div class="user-dropdown">
+      <img src="${user.picture}" alt="${user.name}" class="user-pic" id="user-pic">
+      <span id="user-name">${user.name}</span>
       <div class="dropdown-menu" id="dropdown-menu">
         <a href="profile.html">حسابي</a>
         <a href="#" onclick="logout()">تسجيل الخروج</a>
       </div>
     </div>
   `;
+
+  // Dropdown toggle
+  const userDropdown = document.querySelector('.user-dropdown');
+  const dropdownMenu = document.getElementById('dropdown-menu');
+
+  userDropdown.addEventListener('click', function(){
+    dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+  });
 }
 
-// الذهاب لصفحة البروفايل عند الضغط
-function goToProfile(){
-  window.location.href = "profile.html";
-}
-
+// Logout
 function logout(){
   localStorage.removeItem("coursehub_user");
   location.reload();
 }
 
-// Dropdown Hover
-document.addEventListener('click', function(e){
-  const dropdown = document.getElementById('dropdown-menu');
-  if(dropdown){
-    if(!e.target.closest('.user-dropdown')){
-      dropdown.style.display = 'none';
-    }else{
-      dropdown.style.display = 'block';
-    }
+// حماية الصفحات
+document.addEventListener('DOMContentLoaded', function(){
+  const protectedPages = ['courses.html','tests.html','certificates.html'];
+  const currentPage = window.location.pathname.split("/").pop();
+  if(!user && protectedPages.includes(currentPage)){
+    alert('يجب تسجيل الدخول للوصول لهذه الصفحة');
+    window.location.href = 'login.html';
   }
 });
+
+// Dynamic Courses (يمكنك لاحقاً ربطها بقاعدة بيانات)
+const coursesData = [
+  {title:'تطوير الويب للمبتدئين', category:'web', students:1200, img:'images/course1.jpg', desc:'تعلم HTML و CSS و JavaScript خطوة بخطوة.', link:'course-details.html'},
+  {title:'الذكاء الاصطناعي', category:'ai', students:950, img:'images/course2.jpg', desc:'ابدأ رحلتك مع تعلم الآلة والذكاء الاصطناعي.', link:'course-details.html'},
+  {title:'التصميم الجرافيكي', category:'design', students:800, img:'images/course3.jpg', desc:'تعلم Photoshop و Illustrator من الصفر.', link:'course-details.html'}
+];
+
+function loadCourses(){
+  const grid = document.getElementById('coursesGrid');
+  grid.innerHTML = '';
+  coursesData.forEach(course=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('data-category', course.category);
+    card.innerHTML = `
+      <img src="${course.img}" alt="${course.title}">
+      <div class="card-content">
+        <h3>${course.title}</h3>
+        <div class="rating">
+          ${'<i class="fa fa-star"></i>'.repeat(4)}<i class="fa fa-star-half-alt"></i>
+          <span>(${course.students} طالب)</span>
+        </div>
+        <p>${course.desc}</p>
+        <a href="${course.link}" class="btn">عرض الدورة</a>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+loadCourses();
+
+// Filter
+function filterCategory(cat){
+  const buttons = document.querySelectorAll('.categories button');
+  buttons.forEach(btn=>btn.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(c=>{
+    if(cat==='all' || c.dataset.category===cat){
+      c.style.display = 'block';
+    } else c.style.display = 'none';
+  });
+}
 </script>
 </body>
 </html>
