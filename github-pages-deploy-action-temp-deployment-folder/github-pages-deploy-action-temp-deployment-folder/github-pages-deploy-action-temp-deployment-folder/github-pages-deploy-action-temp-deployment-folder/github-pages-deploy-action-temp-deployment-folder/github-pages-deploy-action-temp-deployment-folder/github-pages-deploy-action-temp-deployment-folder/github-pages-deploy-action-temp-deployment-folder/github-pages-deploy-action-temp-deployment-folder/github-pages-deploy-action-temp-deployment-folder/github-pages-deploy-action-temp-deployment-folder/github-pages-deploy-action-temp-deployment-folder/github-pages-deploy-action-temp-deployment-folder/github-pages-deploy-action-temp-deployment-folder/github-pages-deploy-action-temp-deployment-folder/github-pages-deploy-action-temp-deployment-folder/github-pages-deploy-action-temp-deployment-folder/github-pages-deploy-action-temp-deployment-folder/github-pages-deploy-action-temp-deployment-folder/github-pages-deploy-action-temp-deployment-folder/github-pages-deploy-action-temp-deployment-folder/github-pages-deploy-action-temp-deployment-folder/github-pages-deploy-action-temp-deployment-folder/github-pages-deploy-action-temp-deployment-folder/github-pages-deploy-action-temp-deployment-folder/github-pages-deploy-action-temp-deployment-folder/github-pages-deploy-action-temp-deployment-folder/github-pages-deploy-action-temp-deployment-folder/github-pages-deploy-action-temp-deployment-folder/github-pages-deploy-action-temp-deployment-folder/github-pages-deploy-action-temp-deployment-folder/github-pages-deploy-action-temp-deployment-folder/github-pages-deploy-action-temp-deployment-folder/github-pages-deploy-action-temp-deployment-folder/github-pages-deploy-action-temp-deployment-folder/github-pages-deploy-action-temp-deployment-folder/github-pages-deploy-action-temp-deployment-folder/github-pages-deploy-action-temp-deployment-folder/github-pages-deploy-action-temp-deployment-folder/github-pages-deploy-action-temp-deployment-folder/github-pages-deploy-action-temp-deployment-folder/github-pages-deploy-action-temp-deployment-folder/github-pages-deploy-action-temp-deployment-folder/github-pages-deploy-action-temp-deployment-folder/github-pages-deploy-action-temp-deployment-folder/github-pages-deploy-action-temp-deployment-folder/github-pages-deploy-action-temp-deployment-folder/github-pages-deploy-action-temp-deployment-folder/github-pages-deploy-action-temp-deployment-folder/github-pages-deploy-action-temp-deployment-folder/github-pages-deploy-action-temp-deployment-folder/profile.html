@@ -3,288 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ملف المستخدم - CourseHub</title>
+<title>حسابي - CourseHub</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* --- Profile Page --- */
-.profile-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background-color: #0056d2;
-    color: white;
+/* --- Page-specific styling --- */
+.profile-container {
+    max-width: 600px;
+    margin: 50px auto;
+    background: #fff;
     padding: 30px;
     border-radius: 10px;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.profile-header img {
-    width: 100px;
-    height: 100px;
+.profile-container h2 {
+    text-align: center;
+    color: #0056d2;
+    margin-bottom: 30px;
+}
+
+.profile-pic {
+    display: block;
+    margin: 0 auto 20px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid white;
+    border: 3px solid #ff9900;
 }
 
-.profile-header .user-details h2 {
-    margin-bottom: 5px;
-    font-size: 28px;
-}
-
-.profile-header .user-details p {
-    font-size: 16px;
-    opacity: 0.8;
-}
-
-.profile-actions {
-    margin-left: auto;
-}
-
-.profile-actions button {
-    background-color: #ff9900;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+.profile-form label {
     font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
+    margin-top: 10px;
 }
 
-.profile-actions button:hover {
-    background-color: #e68a00;
-}
-
-/* --- Edit Form --- */
-.edit-form {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    max-width: 600px;
-    margin-bottom: 30px;
-    display: none;
-}
-
-.edit-form input {
+.profile-form input {
     width: 100%;
     padding: 10px;
-    margin-bottom: 15px;
+    margin-top: 5px;
     border-radius: 5px;
     border: 1px solid #ccc;
 }
 
-.edit-form button {
-    width: 100%;
-}
-
-/* --- User Courses --- */
-.user-courses {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.user-courses .card {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-}
-
-.user-courses .card:hover {
-    transform: translateY(-5px);
-}
-
-.user-courses .card img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-}
-
-.user-courses .card-content {
-    padding: 15px;
-}
-
-.user-courses .card-content h3 {
-    margin-bottom: 10px;
-    font-size: 18px;
-}
-
-.user-courses .card-content p {
-    font-size: 14px;
-    opacity: 0.8;
-    margin-bottom: 10px;
-}
-
-.user-courses .card-content a {
-    text-decoration: none;
-    color: #0056d2;
+.profile-form button {
+    background-color: #ff9900;
+    color: #fff;
+    padding: 12px 20px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
     font-weight: bold;
+    transition: 0.3s;
 }
 
-.user-courses .card-content a:hover {
-    text-decoration: underline;
+.profile-form button:hover {
+    background-color: #e68a00;
 }
 
-/* Responsive */
+.logout-btn {
+    background-color: #c0392b;
+    margin-top: 10px;
+}
+
+.logout-btn:hover {
+    background-color: #a83224;
+}
+
 @media(max-width:768px){
-    .profile-header {
-        flex-direction: column;
-        text-align: center;
-    }
-    .profile-actions {
-        margin-left: 0;
-    }
+    .profile-container { margin: 20px; padding: 20px; }
+    .profile-pic { width: 100px; height: 100px; }
 }
 </style>
 </head>
-
 <body>
 
 <header>
-  <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width:120px; height:auto;">
-  <div class="top-bar">
-    <div class="logo">CourseHub</div>
+  <div class="top-bar container">
+    <div class="logo">
+      <img src="images/logo.png" alt="CourseHub Logo" class="site-logo" style="width:120px;">
+    </div>
     <nav>
       <a href="index.html">الرئيسية</a>
       <a href="courses.html">الدورات</a>
       <a href="tests.html">الاختبارات</a>
       <a href="certificates.html">الشهادات</a>
-      <a href="profile.html" id="login-link">ملفي</a>
+      <a href="login.html" id="login-link">تسجيل الدخول</a>
     </nav>
+    <div id="user-info" class="user-info-container"></div>
   </div>
-  <div id="user-info" class="user-info-container"></div>
 </header>
 
-<section class="container">
+<section class="profile-container">
+  <h2>حسابي الشخصي</h2>
+  <img src="" alt="Profile Picture" id="profile-pic" class="profile-pic">
 
-  <!-- Profile Header -->
-  <div class="profile-header">
-    <img id="profile-pic" src="" alt="صورة المستخدم">
-    <div class="user-details">
-      <h2 id="profile-name"></h2>
-      <p id="profile-email"></p>
-    </div>
-    <div class="profile-actions">
-      <button id="edit-btn">تعديل البيانات</button>
-      <button onclick="logout()">تسجيل الخروج</button>
-    </div>
-  </div>
+  <form id="profile-form" class="profile-form">
+    <label for="name">الاسم الكامل</label>
+    <input type="text" id="name" required>
 
-  <!-- Edit Form -->
-  <div class="edit-form" id="edit-form">
-    <h3>تعديل بياناتك</h3>
-    <input type="text" id="edit-name" placeholder="الاسم الكامل">
-    <input type="email" id="edit-email" placeholder="البريد الإلكتروني">
-    <input type="text" id="edit-picture" placeholder="رابط الصورة الشخصية">
-    <button id="save-btn" class="btn">حفظ التغييرات</button>
-  </div>
+    <label for="email">البريد الإلكتروني</label>
+    <input type="email" id="email" disabled>
 
-  <!-- User Courses -->
-  <h2>دوراتي المسجلة</h2>
-  <div class="user-courses" id="user-courses">
-    <!-- Example placeholder courses -->
-    <div class="card">
-      <img src="images/course1.jpg" alt="Course">
-      <div class="card-content">
-        <h3>تطوير الويب للمبتدئين</h3>
-        <p>HTML, CSS, JavaScript</p>
-        <a href="#">الدخول للدورة</a>
-      </div>
-    </div>
-    <div class="card">
-      <img src="images/course2.jpg" alt="Course">
-      <div class="card-content">
-        <h3>الذكاء الاصطناعي للمبتدئين</h3>
-        <p>Machine Learning & AI</p>
-        <a href="#">الدخول للدورة</a>
-      </div>
-    </div>
-    <div class="card">
-      <img src="images/course3.jpg" alt="Course">
-      <div class="card-content">
-        <h3>التصميم الجرافيكي</h3>
-        <p>Photoshop & Illustrator</p>
-        <a href="#">الدخول للدورة</a>
-      </div>
-    </div>
-  </div>
+    <label for="picture">رابط صورة الملف الشخصي</label>
+    <input type="text" id="picture">
 
+    <button type="submit">حفظ التغييرات</button>
+  </form>
+
+  <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
 </section>
 
-<footer>
-  <div class="container footer-content">
-    <div class="footer-links">
-      <a href="index.html">الرئيسية</a>
-      <a href="courses.html">الدورات</a>
-      <a href="tests.html">الاختبارات</a>
-      <a href="certificates.html">الشهادات</a>
-      <a href="profile.html">ملفي</a>
-    </div>
-    <div class="socials">
-      <a href="#"><i class="fab fa-facebook-f"></i></a>
-      <a href="#"><i class="fab fa-twitter"></i></a>
-      <a href="#"><i class="fab fa-instagram"></i></a>
-      <a href="#"><i class="fab fa-linkedin-in"></i></a>
-    </div>
-    <p>&copy; 2026 CourseHub. جميع الحقوق محفوظة.</p>
-  </div>
-</footer>
-
 <script>
+// حماية الصفحة للمستخدمين فقط
 const user = JSON.parse(localStorage.getItem("coursehub_user"));
-
-// حماية الصفحة
 if(!user){
-  window.location.href = "login.html";
+    alert('يجب تسجيل الدخول للوصول لهذه الصفحة');
+    window.location.href = 'login.html';
 }
 
-// عرض بيانات المستخدم
-document.getElementById("profile-name").textContent = user.name;
-document.getElementById("profile-email").textContent = user.email;
-document.getElementById("profile-pic").src = user.picture || 'images/default-avatar.png';
-
-// الهيدر
-const userInfoContainer = document.getElementById('user-info');
+// عرض بيانات المستخدم الحالية
 if(user){
-  userInfoContainer.innerHTML = `
-    <img src="${user.picture}" alt="${user.name}" class="user-pic" style="width:40px; border-radius:50%; margin-left:10px;">
-    <span>مرحباً، ${user.name}</span>
-    <button class="btn" onclick="logout()">تسجيل الخروج</button>
-  `;
-  document.getElementById('login-link').style.display = 'none';
-}
+    document.getElementById('login-link').style.display = 'none';
+    document.getElementById('footer-login')?.style.display = 'none';
+    document.getElementById('user-info').innerHTML = `
+      <div class="user-dropdown">
+        <img src="${user.picture}" alt="${user.name}" class="user-pic">
+        <span>${user.name}</span>
+        <div class="dropdown-menu">
+          <a href="profile.html">حسابي</a>
+          <a href="#" onclick="logout()">تسجيل الخروج</a>
+        </div>
+      </div>
+    `;
 
-// تعديل البيانات
-const editBtn = document.getElementById("edit-btn");
-const editForm = document.getElementById("edit-form");
-editBtn.addEventListener("click", () => {
-  editForm.style.display = editForm.style.display === "block" ? "none" : "block";
-  document.getElementById("edit-name").value = user.name;
-  document.getElementById("edit-email").value = user.email;
-  document.getElementById("edit-picture").value = user.picture;
-});
+    document.getElementById('profile-pic').src = user.picture;
+    document.getElementById('name').value = user.name;
+    document.getElementById('email').value = user.email;
+    document.getElementById('picture').value = user.picture;
+}
 
 // حفظ التغييرات
-document.getElementById("save-btn").addEventListener("click", () => {
-  const updatedUser = {
-    name: document.getElementById("edit-name").value,
-    email: document.getElementById("edit-email").value,
-    picture: document.getElementById("edit-picture").value
-  };
-  localStorage.setItem("coursehub_user", JSON.stringify(updatedUser));
-  alert("تم حفظ التغييرات بنجاح!");
-  location.reload();
+document.getElementById('profile-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const updatedUser = {
+        name: document.getElementById('name').value,
+        email: user.email,
+        picture: document.getElementById('picture').value
+    };
+    localStorage.setItem("coursehub_user", JSON.stringify(updatedUser));
+    alert('تم حفظ التغييرات بنجاح!');
+    location.reload();
 });
 
-// تسجيل الخروج
+// Logout
 function logout(){
-  localStorage.removeItem("coursehub_user");
-  window.location.href = "login.html";
+    localStorage.removeItem("coursehub_user");
+    window.location.href = 'login.html';
 }
 </script>
 
