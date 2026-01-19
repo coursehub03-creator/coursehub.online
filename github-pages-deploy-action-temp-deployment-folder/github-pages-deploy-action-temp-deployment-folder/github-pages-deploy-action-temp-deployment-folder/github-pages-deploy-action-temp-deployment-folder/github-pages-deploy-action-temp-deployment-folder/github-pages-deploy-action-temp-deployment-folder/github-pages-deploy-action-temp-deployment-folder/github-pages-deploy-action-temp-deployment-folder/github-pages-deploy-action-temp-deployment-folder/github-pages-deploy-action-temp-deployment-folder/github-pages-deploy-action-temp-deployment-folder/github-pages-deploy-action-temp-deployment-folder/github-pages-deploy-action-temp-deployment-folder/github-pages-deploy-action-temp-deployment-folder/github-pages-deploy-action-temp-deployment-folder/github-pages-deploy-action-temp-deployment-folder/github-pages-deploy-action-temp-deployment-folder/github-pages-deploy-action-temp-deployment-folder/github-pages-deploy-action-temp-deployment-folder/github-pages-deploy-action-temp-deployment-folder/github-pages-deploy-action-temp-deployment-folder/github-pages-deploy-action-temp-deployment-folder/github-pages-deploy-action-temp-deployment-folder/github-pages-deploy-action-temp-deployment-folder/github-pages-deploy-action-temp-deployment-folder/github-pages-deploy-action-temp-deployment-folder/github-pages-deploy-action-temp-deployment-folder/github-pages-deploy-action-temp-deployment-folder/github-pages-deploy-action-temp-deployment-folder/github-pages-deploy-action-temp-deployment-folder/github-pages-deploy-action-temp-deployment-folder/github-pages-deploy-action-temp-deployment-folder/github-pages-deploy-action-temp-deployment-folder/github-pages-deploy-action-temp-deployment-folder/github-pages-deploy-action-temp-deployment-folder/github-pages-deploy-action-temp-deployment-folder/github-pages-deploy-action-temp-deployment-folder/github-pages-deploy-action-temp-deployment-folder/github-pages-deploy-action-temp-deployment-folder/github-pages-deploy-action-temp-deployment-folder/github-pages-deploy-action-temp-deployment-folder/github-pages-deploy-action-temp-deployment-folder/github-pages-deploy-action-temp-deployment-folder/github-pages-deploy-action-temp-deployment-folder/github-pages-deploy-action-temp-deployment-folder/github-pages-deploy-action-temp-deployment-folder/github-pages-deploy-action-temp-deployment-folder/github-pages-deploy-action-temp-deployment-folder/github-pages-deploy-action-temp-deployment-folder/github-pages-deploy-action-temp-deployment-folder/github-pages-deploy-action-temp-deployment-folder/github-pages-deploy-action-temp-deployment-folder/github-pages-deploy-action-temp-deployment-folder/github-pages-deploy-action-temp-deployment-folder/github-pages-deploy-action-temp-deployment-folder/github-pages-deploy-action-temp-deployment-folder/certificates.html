@@ -10,16 +10,7 @@
 <body>
 
 <header>
-  <div class="top-bar">
-    <div class="logo">CourseHub</div>
-    <nav>
-      <a href="index.html">الرئيسية</a>
-      <a href="courses.html">الدورات</a>
-      <a href="certificates.html">الشهادات</a>
-      <a href="tests.html">الاختبارات</a>
-      <a href="login.html">تسجيل الدخول</a>
-    </nav>
-  </div>
+<div id="header-placeholder"></div>
 </header>
 
 <section>
@@ -43,26 +34,19 @@
     </div>
   </div>
 </section>
-
+<div id="footer-placeholder"></div>
 <footer>
-  <div class="container footer-content">
-    <div class="footer-links">
-      <a href="index.html">الرئيسية</a>
-      <a href="courses.html">الدورات</a>
-      <a href="tests.html">الاختبارات</a>
-      <a href="certificates.html">الشهادات</a>
-      <a href="login.html">تسجيل الدخول</a>
-    </div>
-    <div class="socials">
-      <a href="#"><i class="fab fa-facebook-f"></i></a>
-      <a href="#"><i class="fab fa-twitter"></i></a>
-      <a href="#"><i class="fab fa-instagram"></i></a>
-      <a href="#"><i class="fab fa-linkedin-in"></i></a>
-    </div>
-    <p>&copy; 2026 CourseHub. جميع الحقوق محفوظة.</p>
-  </div>
-</footer>
 
-<script src="main.js"></script>
+
+  <script>
+    // تحميل الهيدر والفوتر
+    fetch('header.html').then(r => r.text()).then(html => {
+      document.getElementById('header-placeholder').innerHTML = html;
+      // يمكنك هنا إعادة تهيئة الـ JS الخاص بالهيدر مثل dropdown
+    });
+    fetch('footer.html').then(r => r.text()).then(html => {
+      document.getElementById('footer-placeholder').innerHTML = html;
+    });
+  </script>
 </body>
 </html>
