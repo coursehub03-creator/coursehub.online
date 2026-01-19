@@ -13,19 +13,18 @@ header {
 
 /* Top Bar Container */
 .top-bar.container {
-    display: flex;
-    justify-content: space-between; /* الشعار على اليسار وبقية العناصر على اليمين */
-    align-items: center;
-    padding: 12px 25px;
-    gap: 20px;
-    position: relative;
+  display: flex;
+  justify-content: space-between; /* الشعار على اليسار وبقية العناصر على اليمين */
+  align-items: center;
+  padding: 12px 25px;
+  gap: 20px;
 }
 
+/* Site Name */
 .site-name {
-    position: static; /* بدلاً من absolute */
-    font-size: 22px;
-    font-weight: 700;
-    color: white;
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
 }
 
 .site-name a {
@@ -33,7 +32,6 @@ header {
   color: white;
   font-family: 'Inter', sans-serif;
 }
-
 
 /* Navigation Links */
 nav {
@@ -97,7 +95,7 @@ nav a:hover {
   font-weight: bold;
 }
 
-/* --- Login Button (عندما لا يكون المستخدم مسجل) --- */
+/* Login Button */
 #login-link {
   display: flex;
   align-items: center;
@@ -116,15 +114,9 @@ nav a:hover {
   background-color: #e6b800;
 }
 
-/* وضعه داخل .header-actions ليكون بجانب الأزرار الأخرى */
-.header-actions #login-link {
-  display: flex;
-  align-items: center;
-}
-
-/* --- User Info --- */
+/* User Info */
 .user-info-container {
-  display: none; /* يظهر فقط عند تسجيل الدخول */
+  display: none;
   align-items: center;
   gap: 10px;
   position: relative;
@@ -184,7 +176,7 @@ nav a:hover {
   background-color: #f0f0f0;
 }
 
-/* --- Language Selector --- */
+/* Language Selector */
 .language-selector {
   position: relative;
   display: flex;
@@ -215,7 +207,7 @@ nav a:hover {
   background: #f0f0f0;
 }
 
-/* --- Search Bar --- */
+/* Search Bar */
 .search-bar {
   display: flex;
   align-items: center;
@@ -223,7 +215,7 @@ nav a:hover {
 }
 
 .search-bar input {
-  width: 200px; /* عرض ثابت أو يمكن تغييره */
+  width: 200px;
   padding: 6px 10px;
   border-radius: 6px 0 0 6px;
   border: 1px solid #ccc;
@@ -240,7 +232,7 @@ nav a:hover {
   cursor: pointer;
 }
 
-/* --- Responsive --- */
+/* Responsive */
 @media(max-width:800px){
   .top-bar.container {
     flex-direction: column;
@@ -248,20 +240,20 @@ nav a:hover {
   }
   nav {
     margin-top: 10px;
+    flex-wrap: wrap;
   }
   .header-actions {
     margin-top: 10px;
+    flex-wrap: wrap;
   }
-  .search-bar.container {
-    flex-direction: column;
+  .search-bar {
     width: 100%;
+    margin-bottom: 10px;
   }
   .search-bar input {
     width: 100%;
-    border-radius: 6px;
   }
   .search-bar button {
     width: 100%;
-    border-radius: 6px;
   }
 }
