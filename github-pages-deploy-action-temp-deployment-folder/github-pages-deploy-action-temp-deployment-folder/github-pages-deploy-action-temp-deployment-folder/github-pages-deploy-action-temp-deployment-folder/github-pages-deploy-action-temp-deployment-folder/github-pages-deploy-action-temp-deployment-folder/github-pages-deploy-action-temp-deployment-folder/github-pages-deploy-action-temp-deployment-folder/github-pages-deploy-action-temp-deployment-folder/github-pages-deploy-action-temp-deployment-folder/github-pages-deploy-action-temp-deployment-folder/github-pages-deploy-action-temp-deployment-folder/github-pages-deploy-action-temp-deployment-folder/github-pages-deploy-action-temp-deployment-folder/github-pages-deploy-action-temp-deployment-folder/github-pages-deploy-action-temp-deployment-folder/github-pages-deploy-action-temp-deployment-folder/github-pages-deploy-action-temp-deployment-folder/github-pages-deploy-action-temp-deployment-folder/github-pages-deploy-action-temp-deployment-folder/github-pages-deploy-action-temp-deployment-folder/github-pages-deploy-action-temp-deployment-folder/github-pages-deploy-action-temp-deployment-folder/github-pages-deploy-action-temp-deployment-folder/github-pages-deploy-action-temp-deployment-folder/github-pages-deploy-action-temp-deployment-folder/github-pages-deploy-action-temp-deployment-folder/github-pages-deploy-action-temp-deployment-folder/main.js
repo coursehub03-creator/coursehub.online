@@ -1,62 +1,84 @@
-// --- Filtering Categories ---
-const categoryButtons = document.querySelectorAll('.categories button');
-const courseCards = document.querySelectorAll('.courses-grid .card');
+// التحقق من تسجيل الدخول
+const user = JSON.parse(localStorage.getItem("coursehub_user"));
 
-categoryButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        categoryButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
+const userInfoContainer = document.getElementById("user-info");
+const loginLink = document.getElementById("login-link");
 
-        const category = button.dataset.category;
+if(user){
+  loginLink.style.display = "none";
 
-        courseCards.forEach(card => {
-            if(category === undefined || category === "all" || card.dataset.category === category){
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
-        });
+  userInfoContainer.innerHTML = `
+    <div class="notification">
+      <i class="fas fa-bell"></i>
+      <span class="badge">3</span>
+    </div>
+
+    <div class="language-selector">
+      <i class="fas fa-globe"></i> <span>عربي</span>
+      <div class="language-dropdown">
+        <div data-lang="ar">العربية</div>
+        <div data-lang="fr">Français</div>
+        <div data-lang="en">English</div>
+      </div>
+    </div>
+
+    <img src="${user.picture}" alt="${user.name}" class="user-pic">
+    <span class="user-name">${user.name}</span>
+
+    <div class="dropdown-menu">
+      <a href="profile.html"><i class="fas fa-user"></i> الملف الشخصي</a>
+      <a href="#"><i class="fas fa-trophy"></i> الإنجازات</a>
+      <a href="#"><i class="fas fa-book"></i> دوراتي</a>
+      <a href="#"><i class="fas fa-cog"></i> الإعدادات</a>
+      <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+    </div>
+  `;
+
+  // Dropdown المستخدم
+  const userDropdown = userInfoContainer.querySelector(".dropdown-menu");
+  const userPic = userInfoContainer.querySelector(".user-pic");
+  const userName = userInfoContainer.querySelector(".user-name");
+
+  const toggleDropdown = () => userInfoContainer.classList.toggle("active");
+
+  userPic.addEventListener("click", toggleDropdown);
+  userName.addEventListener("click", toggleDropdown);
+
+  // إخفاء عند النقر خارج
+  document.addEventListener("click", (e) => {
+    if(!userInfoContainer.contains(e.target)){
+      userInfoContainer.classList.remove("active");
+    }
+  });
+
+  // Logout
+  document.getElementById("logout-link").addEventListener("click", () => {
+    localStorage.removeItem("coursehub_user");
+    window.location.href="login.html";
+  });
+
+  // Dropdown اللغة
+  const langSelector = userInfoContainer.querySelector(".language-selector");
+  const langDropdown = userInfoContainer.querySelector(".language-dropdown");
+
+  langSelector.addEventListener("click", (e) => {
+    e.stopPropagation(); // منع غلق dropdown
+    langSelector.classList.toggle("active");
+  });
+
+  document.querySelectorAll(".language-dropdown div").forEach(el => {
+    el.addEventListener("click", () => {
+      const selected = el.dataset.lang;
+      alert(`تم اختيار اللغة: ${selected}`);
+      langSelector.querySelector("span").textContent = el.textContent;
+      langSelector.classList.remove("active");
     });
-});
+  });
 
-// --- Search Functionality ---
-const searchButton = document.querySelector('.search-bar button');
-const searchInput = document.querySelector('.search-bar input');
+  document.addEventListener("click", () => {
+    langSelector.classList.remove("active");
+  });
 
-if(searchButton && searchInput){
-    searchButton.addEventListener('click', () => {
-        const query = searchInput.value.toLowerCase();
-        courseCards.forEach(card => {
-            const title = card.querySelector('h3').textContent.toLowerCase();
-            if(title.includes(query)){
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    });
+} else {
+  loginLink.style.display = "block";
 }
-
-// --- Form submission (dummy) ---
-const forms = document.querySelectorAll('form');
-forms.forEach(form => {
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const pass = form.querySelector('#password');
-        const confirm = form.querySelector('#confirm-password');
-        if(pass && confirm && pass.value !== confirm.value){
-            alert('كلمتا المرور غير متطابقتين');
-            return;
-        }
-        alert('تم إرسال البيانات (وهمي، بدون backend)');
-    });
-});
-
-// --- OAuth Buttons ---
-const googleBtn = document.querySelectorAll('.oauth-google');
-const fbBtn = document.querySelectorAll('.oauth-facebook');
-const appleBtn = document.querySelectorAll('.oauth-apple');
-
-googleBtn.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); alert('Google OAuth سيتم تفعيله لاحقًا'); }));
-fbBtn.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); alert('Facebook OAuth سيتم تفعيله لاحقًا'); }));
-appleBtn.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); alert('Apple OAuth سيتم تفعيله لاحقًا'); }));
