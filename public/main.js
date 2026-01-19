@@ -28,117 +28,114 @@ async function loadHeaderFooter() {
     loadCSS("footer.css");
 
     // إعدادات بعد التحميل
-    setupUserDropdown();
+    setupUserState();
     setupHeaderSearch();
-    setupLanguageSwitcher();
+    setupLanguageToggle();
 }
 
 // ===============================
-// إعداد dropdown المستخدم (✔ مصحح)
+// إدارة حالة المستخدم (تسجيل دخول / خروج)
 // ===============================
-function setupUserDropdown() {
+function setupUserState() {
     const user = JSON.parse(localStorage.getItem("coursehub_user"));
     const userContainer = document.getElementById("user-info");
     const loginLink = document.getElementById("login-link");
 
     if (user && userContainer) {
+        // إخفاء زر تسجيل الدخول
         if (loginLink) loginLink.style.display = "none";
 
+        // عرض صورة واسم المستخدم + القائمة المنسدلة
         userContainer.innerHTML = `
             <img src="${user.picture}" alt="${user.name}" class="user-pic">
             <span class="user-name">${user.name}</span>
             <div class="dropdown-menu">
-                <a href="profile.html"><i class="fas fa-user"></i> الملف الشخصي</a>
-                <a href="achievements.html"><i class="fas fa-trophy"></i> الإنجازات</a>
-                <a href="my-courses.html"><i class="fas fa-book"></i> دوراتي</a>
-                <a href="settings.html"><i class="fas fa-cog"></i> الإعدادات</a>
-                <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+                <a href="profile.html">الملف الشخصي</a>
+                <a href="achievements.html">إنجازاتي</a>
+                <a href="my-courses.html">دوراتي</a>
+                <a href="settings.html">الإعدادات</a>
+                <a href="#" id="logout-link">تسجيل الخروج</a>
             </div>
         `;
+        userContainer.style.display = "flex";
 
-        // فتح / إغلاق القائمة
-        const toggleDropdown = (e) => {
+        const dropdown = userContainer.querySelector(".dropdown-menu");
+        const toggleDropdown = e => {
             e.stopPropagation();
-            userContainer.classList.toggle("active");
+            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
         };
 
-        userContainer.querySelector(".user-pic")
-            .addEventListener("click", toggleDropdown);
+        userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
+        userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
 
-        userContainer.querySelector(".user-name")
-            .addEventListener("click", toggleDropdown);
-
-        // إغلاق عند الضغط خارجها
+        // إغلاق عند الضغط خارج القائمة
         document.addEventListener("click", () => {
-            userContainer.classList.remove("active");
+            dropdown.style.display = "none";
         });
 
         // منع الإغلاق عند الضغط داخل القائمة
-        userContainer.querySelector(".dropdown-menu")
-            .addEventListener("click", (e) => e.stopPropagation());
+        dropdown.addEventListener("click", e => e.stopPropagation());
 
         // تسجيل الخروج
-        document.getElementById("logout-link").addEventListener("click", (e) => {
-            e.preventDefault();
-            localStorage.removeItem("coursehub_user");
-            window.location.href = "login.html";
-        });
-
-    } else {
-        if (loginLink) loginLink.style.display = "block";
-    }
-}
-
-// ===============================
-// شريط البحث (الرئيسية + الدورات)
-// ===============================
-function setupHeaderSearch() {
-    const page = window.location.pathname.split("/").pop();
-
-    if (page === "" || page === "index.html" || page === "courses.html") {
-        if (!document.querySelector(".search-bar")) {
-            const header = document.querySelector("header");
-            if (!header) return;
-
-            const searchBar = document.createElement("div");
-            searchBar.className = "search-bar container";
-            searchBar.innerHTML = `
-                <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
-                <button id="searchBtn"><i class="fa fa-search"></i></button>
-            `;
-
-            header.insertAdjacentElement("afterend", searchBar);
-
-            document.getElementById("searchBtn").addEventListener("click", () => {
-                const q = document.getElementById("searchInput").value.trim();
-                if (q) alert(`بحث عن: ${q}`);
+        const logoutLink = document.getElementById("logout-link");
+        if (logoutLink) {
+            logoutLink.addEventListener("click", e => {
+                e.preventDefault();
+                localStorage.removeItem("coursehub_user");
+                // إعادة عرض زر تسجيل الدخول
+                if (loginLink) loginLink.style.display = "block";
+                userContainer.style.display = "none";
+                window.location.href = "login.html";
             });
         }
+
+    } else {
+        // إذا لم يكن المستخدم مسجلاً دخول
+        if (loginLink) loginLink.style.display = "block";
+        if (userContainer) userContainer.style.display = "none";
     }
 }
 
 // ===============================
-// تغيير اللغة
+// شريط البحث (ظهور فقط في index.html و courses.html)
 // ===============================
-function setupLanguageSwitcher() {
+function setupHeaderSearch() {
+    const path = window.location.pathname.split("/").pop();
+    const searchBar = document.getElementById("headerSearchBar");
+
+    if (!searchBar) return;
+
+    if (path === "" || path === "index.html" || path === "courses.html") {
+        searchBar.style.display = "flex";
+
+        const searchBtn = document.getElementById("searchBtn");
+        searchBtn.addEventListener("click", () => {
+            const query = document.getElementById("searchInput").value.trim();
+            if (query) alert(`بحث عن: ${query}`);
+        });
+    } else {
+        searchBar.style.display = "none";
+    }
+}
+
+// ===============================
+// تبديل اللغة
+// ===============================
+function setupLanguageToggle() {
     const langBtn = document.getElementById("langBtn");
     if (!langBtn) return;
 
-    langBtn.addEventListener("click", (e) => {
+    langBtn.addEventListener("click", e => {
         e.stopPropagation();
-        const text = langBtn.textContent;
+        const text = langBtn.textContent.trim();
 
-        if (text.includes("عربي")) {
-            langBtn.innerHTML = `<i class="fa fa-globe"></i> English`;
-        } else if (text.includes("English")) {
-            langBtn.innerHTML = `<i class="fa fa-globe"></i> Français`;
-        } else {
-            langBtn.innerHTML = `<i class="fa fa-globe"></i> عربي`;
-        }
+        if (text.includes("عربي")) langBtn.innerHTML = '<i class="fa fa-globe"></i> English';
+        else if (text.includes("English")) langBtn.innerHTML = '<i class="fa fa-globe"></i> Français';
+        else langBtn.innerHTML = '<i class="fa fa-globe"></i> عربي';
     });
 }
 
 // ===============================
-// تشغيل
+// تشغيل كل شيء بعد تحميل DOM
 // ===============================
 document.addEventListener("DOMContentLoaded", loadHeaderFooter);
