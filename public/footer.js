@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
     </footer>
   `;
 
-  // تحديث السنة تلقائياً
   const yearSpan = document.getElementById("year");
   if(yearSpan){
     yearSpan.textContent = new Date().getFullYear();
