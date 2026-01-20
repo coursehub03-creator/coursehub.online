@@ -1,100 +1,49 @@
-// achievements.js
-import "./firebase-config.js";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } 
+  from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } 
+  from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
+import { app } from "./firebase-config.js";
 
-const {
-  auth,
-  db,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged,
-  doc,
-  getDoc,
-  setDoc
-} = window.firebaseAuth;
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-// تسجيل الدخول مرة واحدة فقط
-async function ensureLogin() {
-  return new Promise((resolve) => {
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        resolve(user);
-      } else {
-        const result = await signInWithPopup(auth, new GoogleAuthProvider());
-        resolve(result.user);
-      }
-    });
-  });
+function openCertificate(url) {
+  window.open(url, "_blank");
 }
 
-async function loadAchievements() {
-  const user = await ensureLogin();
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    const result = await signInWithPopup(auth, provider);
+    user = result.user;
+  }
 
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
+  const ref = doc(db, "users", user.uid);
+  let snap = await getDoc(ref);
 
   let data;
   if (!snap.exists()) {
-    data = {
-      completedCourses: [],
-      certificates: []
-    };
-    await setDoc(userRef, data);
+    data = { completedCourses: [], certificates: [] };
+    await setDoc(ref, data);
   } else {
     data = snap.data();
   }
 
-  // Summary
-  document.getElementById("completedCourses").textContent =
-    data.completedCourses.length;
+  document.getElementById("completedCourses").textContent = data.completedCourses.length;
+  document.getElementById("certificatesCount").textContent = data.certificates.length;
 
-  document.getElementById("certificatesCount").textContent =
-    data.certificates.length;
-
-  // Certificates
   const certList = document.getElementById("certificatesList");
   certList.innerHTML = "";
 
-  if (data.certificates.length === 0) {
-    certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
-  } else {
-    data.certificates.forEach(cert => {
-      certList.innerHTML += `
-        <div class="certificate-card">
-          <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
-          <h4>${cert.title}</h4>
-          <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-          <button onclick="window.open('${cert.certificateUrl}', '_blank')">
-            عرض الشهادة
-          </button>
-        </div>
-      `;
-    });
-  }
+  data.certificates.forEach(cert => {
+    const card = document.createElement("div");
+    card.className = "certificate-card";
 
-  // Completed Courses
-  const coursesList = document.getElementById("coursesList");
-  coursesList.innerHTML = "";
+    const btn = document.createElement("button");
+    btn.textContent = "عرض الشهادة";
+    btn.addEventListener("click", () => openCertificate(cert.certificateUrl));
 
-  if (data.completedCourses.length === 0) {
-    coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
-  } else {
-    data.completedCourses.forEach(course => {
-      coursesList.innerHTML += `
-        <div class="course-card">
-          <img src="${course.image}" alt="${course.title}">
-          <div class="course-content">
-            <h4>
-              <a href="course.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
-                ${course.title}
-              </a>
-            </h4>
-            <span>المدرب: ${course.instructor}</span><br>
-            <span>أكملت في: ${course.completedAt}</span>
-          </div>
-        </div>
-      `;
-    });
-  }
-}
-
-loadAchievements();
+    card.appendChild(btn);
+    certList.appendChild(card);
+  });
+});
