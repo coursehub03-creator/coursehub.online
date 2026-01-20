@@ -53,6 +53,7 @@
 
 <div id="footer-placeholder"></div>
 
+<!-- Firebase + Add Course Script -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
@@ -71,8 +72,7 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  const adminEmails = ["admin@example.com"]; // ضع البريد المسؤول هنا
-
+  const adminEmails = ["kaleadsalous30@gmail.com"]; // ضع البريد المسؤول هنا
   const form = document.getElementById("addCourseForm");
   const notAuthMsg = document.getElementById("notAuthorizedMsg");
 
