@@ -1,59 +1,69 @@
-// --- Firebase Imports ---
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
+// achievements.js
+import "./firebase-config.js";
 
-// افتراضياً: firebase-config.js يستورد Firebase App ويهيئه
-import { app } from "./firebase-config.js"; // تأكد أن ملفك firebase-config.js يصدّر "app"
+const {
+  auth,
+  db,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  doc,
+  getDoc,
+  setDoc
+} = window.firebaseAuth;
 
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+// تسجيل الدخول مرة واحدة فقط
+async function ensureLogin() {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        resolve(user);
+      } else {
+        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        resolve(result.user);
+      }
+    });
+  });
+}
 
-// --- دالة فتح الشهادة في نافذة جديدة ---
-window.openCertificate = function(url) {
-  window.open(url, "_blank");
-};
+async function loadAchievements() {
+  const user = await ensureLogin();
 
-// --- مراقبة حالة تسجيل الدخول ---
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    // تسجيل الدخول بحساب Google
-    const result = await signInWithPopup(auth, provider);
-    user = result.user;
-  }
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
 
-  // جلب مستند المستخدم من Firestore
-  const userDocRef = doc(db, "users", user.uid);
-  let userData = await getDoc(userDocRef);
-
-  if (!userData.exists()) {
-    // إنشاء مستند جديد إذا لم يكن موجودًا
-    userData = {
+  let data;
+  if (!snap.exists()) {
+    data = {
       completedCourses: [],
       certificates: []
     };
-    await setDoc(userDocRef, userData);
+    await setDoc(userRef, data);
   } else {
-    userData = userData.data();
+    data = snap.data();
   }
 
-  // --- ملخص الإنجازات ---
-  document.getElementById("completedCourses").textContent = userData.completedCourses.length;
-  document.getElementById("certificatesCount").textContent = userData.certificates.length;
+  // Summary
+  document.getElementById("completedCourses").textContent =
+    data.completedCourses.length;
 
-  // --- عرض الشهادات ---
+  document.getElementById("certificatesCount").textContent =
+    data.certificates.length;
+
+  // Certificates
   const certList = document.getElementById("certificatesList");
   certList.innerHTML = "";
-  if (userData.certificates.length === 0) {
+
+  if (data.certificates.length === 0) {
     certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
   } else {
-    userData.certificates.forEach(cert => {
+    data.certificates.forEach(cert => {
       certList.innerHTML += `
         <div class="certificate-card">
           <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
           <h4>${cert.title}</h4>
           <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-          <button onclick="openCertificate('${cert.certificateUrl}')">
+          <button onclick="window.open('${cert.certificateUrl}', '_blank')">
             عرض الشهادة
           </button>
         </div>
@@ -61,13 +71,14 @@ onAuthStateChanged(auth, async (user) => {
     });
   }
 
-  // --- عرض الدورات المكتملة ---
+  // Completed Courses
   const coursesList = document.getElementById("coursesList");
   coursesList.innerHTML = "";
-  if (userData.completedCourses.length === 0) {
+
+  if (data.completedCourses.length === 0) {
     coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
   } else {
-    userData.completedCourses.forEach(course => {
+    data.completedCourses.forEach(course => {
       coursesList.innerHTML += `
         <div class="course-card">
           <img src="${course.image}" alt="${course.title}">
@@ -84,4 +95,6 @@ onAuthStateChanged(auth, async (user) => {
       `;
     });
   }
-});
+}
+
+loadAchievements();
