@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>الدورات - CourseHub</title>
-
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="header.css">
   <link rel="stylesheet" href="footer.css">
@@ -28,11 +26,8 @@
   </style>
 </head>
 <body>
-
-  <!-- Header Placeholder -->
   <div id="header-placeholder"></div>
 
-  <!-- Courses Section -->
   <section class="container">
     <h2>جميع الدورات</h2>
     <div class="categories">
@@ -44,7 +39,6 @@
     <div class="courses-grid" id="coursesGrid"></div>
   </section>
 
-  <!-- Footer Placeholder -->
   <div id="footer-placeholder"></div>
 
   <!-- Firebase + Courses Script -->
@@ -68,7 +62,6 @@
     const categoryButtons = document.querySelectorAll('.categories button');
     let allCourses = [];
 
-    // تحميل جميع الدورات من Firestore
     async function loadCourses() {
       try {
         const snapshot = await getDocs(collection(db, "courses"));
@@ -80,7 +73,6 @@
       }
     }
 
-    // عرض الدورات
     function renderCourses(courses) {
       coursesGrid.innerHTML = "";
       if (!courses || courses.length === 0) {
@@ -105,13 +97,10 @@
       });
     }
 
-    // تصفية الدورات حسب الفئة
     function filterCategory(cat) {
       categoryButtons.forEach(b => b.classList.remove('active'));
       document.querySelector(`[data-category="${cat}"]`).classList.add('active');
-
-      if (cat === "all") renderCourses(allCourses);
-      else renderCourses(allCourses.filter(c => c.category === cat));
+      renderCourses(cat === "all" ? allCourses : allCourses.filter(c => c.category === cat));
     }
 
     categoryButtons.forEach(btn => {
@@ -121,7 +110,6 @@
     loadCourses();
   </script>
 
-  <!-- Footer -->
   <script src="main.js" defer></script>
 </body>
 </html>
