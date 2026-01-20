@@ -1,8 +1,6 @@
+// firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-analytics.js";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
-
+import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
@@ -22,4 +20,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-window.firebaseAuth = { auth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged };
+window.firebaseAuth = {
+  auth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged
+};
