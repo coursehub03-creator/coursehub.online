@@ -16,7 +16,6 @@
   <link rel="stylesheet" href="achievements.css">
 
   <style>
-    /* حل مشكلة اتجاه الهيدر على صفحات RTL */
     header {
       direction: ltr !important;
     }
@@ -66,50 +65,68 @@
   <!-- Footer Placeholder -->
   <div id="footer-placeholder"></div>
 
-  <!-- Scripts -->
-  <script src="main.js" defer></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-analytics.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
 
-      const user = JSON.parse(localStorage.getItem("coursehub_user"));
+    const firebaseConfig = {
+      apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+      authDomain: "coursehub-23ed2.firebaseapp.com",
+      projectId: "coursehub-23ed2",
+      storageBucket: "coursehub-23ed2.firebasestorage.app",
+      messagingSenderId: "367073521017",
+      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
+      measurementId: "G-NJ6E39V9NW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const provider = new GoogleAuthProvider();
+
+    // تحقق من تسجيل الدخول
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        alert("يجب تسجيل الدخول لعرض الإنجازات");
-        window.location.href = "login.html";
+        await signInWithPopup(auth, provider);
         return;
       }
 
-      const progressKey = "coursehub_progress";
-      let progress = JSON.parse(localStorage.getItem(progressKey));
+      const userDoc = doc(db, "users", user.uid);
+      let progressData = await getDoc(userDoc);
 
-      if (!progress || progress.userEmail !== user.email) {
-        progress = {
-          userEmail: user.email,
+      if (!progressData.exists()) {
+        // إنشاء مستند جديد إذا لم يكن موجودًا
+        progressData = {
           completedCourses: [],
           certificates: []
         };
-        localStorage.setItem(progressKey, JSON.stringify(progress));
+        await setDoc(userDoc, progressData);
+      } else {
+        progressData = progressData.data();
       }
 
       // --- Summary ---
-      document.getElementById("completedCourses").textContent = progress.completedCourses.length;
-      document.getElementById("certificatesCount").textContent = progress.certificates.length;
+      document.getElementById("completedCourses").textContent = progressData.completedCourses.length;
+      document.getElementById("certificatesCount").textContent = progressData.certificates.length;
 
       // --- Certificates ---
       const certList = document.getElementById("certificatesList");
       certList.innerHTML = "";
-
-      if (progress.certificates.length === 0) {
+      if (progressData.certificates.length === 0) {
         certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
       } else {
-        progress.certificates.forEach(cert => {
+        progressData.certificates.forEach(cert => {
           certList.innerHTML += `
             <div class="certificate-card">
-              <button class="download-btn" onclick="downloadCertificate('${cert.certificateUrl}')">
-                تحميل
-              </button>
+              <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
               <h4>${cert.title}</h4>
               <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-              <button onclick="openCertificate('${cert.certificateUrl}')">
+              <button onclick="window.open('${cert.certificateUrl}', '_blank')">
                 عرض الشهادة
               </button>
             </div>
@@ -120,17 +137,16 @@
       // --- Completed Courses ---
       const coursesList = document.getElementById("coursesList");
       coursesList.innerHTML = "";
-
-      if (progress.completedCourses.length === 0) {
+      if (progressData.completedCourses.length === 0) {
         coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
       } else {
-        progress.completedCourses.forEach(course => {
+        progressData.completedCourses.forEach(course => {
           coursesList.innerHTML += `
             <div class="course-card">
               <img src="${course.image}" alt="${course.title}">
               <div class="course-content">
                 <h4>
-                  <a href="course.html?courseId=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                  <a href="course.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
                     ${course.title}
                   </a>
                 </h4>
@@ -141,22 +157,11 @@
           `;
         });
       }
-
     });
-
-    function openCertificate(url) {
-      window.open(url, "_blank");
-    }
-
-    function downloadCertificate(url) {
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
   </script>
+
+  <!-- Main JS (Header/Footer + وظائف البحث) -->
+  <script src="main.js" defer></script>
 
 </body>
 </html>
