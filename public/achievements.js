@@ -35,19 +35,16 @@ document.addEventListener("DOMContentLoaded", () => {
     certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
   } else {
     progress.certificates.forEach(cert => {
-      const certCard = document.createElement("div");
-      certCard.className = "certificate-card";
-      certCard.innerHTML = `
-        <button class="download-btn" onclick="downloadCertificate('${cert.certificateUrl}')">
-          تحميل
-        </button>
-        <h4>${cert.title}</h4>
-        <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-        <button onclick="openCertificate('${cert.certificateUrl}')">
-          عرض الشهادة
-        </button>
+      certList.innerHTML += `
+        <div class="certificate-card">
+          <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
+          <h4>${cert.title}</h4>
+          <span>تاريخ الإصدار: ${cert.issuedAt}</span>
+          <button onclick="openCertificate('${cert.certificateUrl}')">
+            عرض الشهادة
+          </button>
+        </div>
       `;
-      certList.appendChild(certCard);
     });
   }
 
@@ -59,19 +56,20 @@ document.addEventListener("DOMContentLoaded", () => {
     coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
   } else {
     progress.completedCourses.forEach(course => {
-      const courseCard = document.createElement("div");
-      courseCard.className = "course-card";
-      courseCard.innerHTML = `
-        <img src="${course.image}" alt="${course.title}">
-        <div class="course-content">
-          <h4>
-            <a href="${course.pageUrl}" target="_blank">${course.title}</a>
-          </h4>
-          <span>المدرب: ${course.instructor}</span><br>
-          <span>أكملت في: ${course.completedAt}</span>
+      coursesList.innerHTML += `
+        <div class="course-card">
+          <img src="${course.image}" alt="${course.title}">
+          <div class="course-content">
+            <h4>
+              <a href="course.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                ${course.title}
+              </a>
+            </h4>
+            <span>المدرب: ${course.instructor}</span><br>
+            <span>أكملت في: ${course.completedAt}</span>
+          </div>
         </div>
       `;
-      coursesList.appendChild(courseCard);
     });
   }
 
@@ -80,12 +78,4 @@ document.addEventListener("DOMContentLoaded", () => {
 // فتح الشهادة في نافذة جديدة
 function openCertificate(url) {
   window.open(url, "_blank");
-}
-
-// تحميل الشهادة
-function downloadCertificate(url) {
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = url.split("/").pop(); // اسم الملف من الرابط
-  link.click();
 }
