@@ -1,6 +1,4 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 body, html {
   margin: 0;
   font-family: 'Inter', sans-serif;
