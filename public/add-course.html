@@ -14,7 +14,6 @@
   <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
 </head>
 <body>
 
@@ -25,7 +24,11 @@
 <main class="container add-course-container">
   <h1>إضافة دورة جديدة</h1>
 
-  <form id="addCourseForm">
+  <div id="notAuthorizedMsg" style="display:none; color:red; text-align:center; margin-bottom:20px;">
+    غير مسموح لك بالدخول إلى هذه الصفحة.
+  </div>
+
+  <form id="addCourseForm" style="display:none;">
     <label for="title">عنوان الدورة</label>
     <input type="text" id="title" placeholder="أدخل عنوان الدورة" required>
 
@@ -54,7 +57,68 @@
 <div id="footer-placeholder"></div>
 
 <!-- JS -->
-<script type="module" src="add-course.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 
+  // تكوين Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+    authDomain: "coursehub-23ed2.firebaseapp.com",
+    projectId: "coursehub-23ed2",
+    storageBucket: "coursehub-23ed2.appspot.com",
+    messagingSenderId: "367073521017",
+    appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // بريد المسؤول
+  const adminEmails = ["admin@example.com"]; // ضع بريدك هنا
+
+  const form = document.getElementById("addCourseForm");
+  const notAuthMsg = document.getElementById("notAuthorizedMsg");
+
+  // التحقق من المستخدم
+  onAuthStateChanged(auth, user => {
+    if (user && adminEmails.includes(user.email)) {
+      form.style.display = "block";
+      notAuthMsg.style.display = "none";
+    } else {
+      form.style.display = "none";
+      notAuthMsg.style.display = "block";
+    }
+  });
+
+  // إضافة دورة جديدة
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const newCourse = {
+      title: document.getElementById("title").value,
+      instructor: document.getElementById("instructor").value,
+      category: document.getElementById("category").value,
+      image: document.getElementById("image").value,
+      description: document.getElementById("description").value,
+      rating: 4,
+      students: 0,
+      content: []
+    };
+
+    try {
+      await addDoc(collection(db, "courses"), newCourse);
+      alert("تمت إضافة الدورة بنجاح!");
+      form.reset();
+    } catch (error) {
+      console.error("خطأ أثناء إضافة الدورة:", error);
+      alert("حدث خطأ أثناء إضافة الدورة.");
+    }
+  });
+</script>
+
+<script src="main.js" defer></script>
 </body>
 </html>
