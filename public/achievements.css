@@ -109,6 +109,25 @@ body, html {
   cursor: pointer;
 }
 
+/* زر التحميل فوق كل شهادة */
+.certificate-card .download-btn {
+  display: inline-block;
+  margin-bottom: 10px;
+  background: #ffcc00;
+  border: none;
+  padding: 6px 12px;
+  font-weight: 700;
+  color: #1c3faa;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+
+.certificate-card .download-btn:hover {
+  background: #e6b800;
+}
+
 /* Courses */
 .courses-list {
   display: grid;
