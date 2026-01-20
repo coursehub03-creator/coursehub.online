@@ -14,6 +14,17 @@
 
   <!-- Page Styles -->
   <link rel="stylesheet" href="achievements.css">
+
+  <style>
+    /* حل مشكلة اتجاه الهيدر على صفحات RTL */
+    header {
+      direction: ltr !important; /* يجبر الهيدر على LTR */
+    }
+    .top-bar.container {
+      flex-direction: row !important; /* ترتيب العناصر طبيعي */
+      justify-content: space-between !important;
+    }
+  </style>
 </head>
 <body>
 
