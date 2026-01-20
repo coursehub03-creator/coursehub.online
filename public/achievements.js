@@ -8,42 +8,45 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-function openCertificate(url) {
-  window.open(url, "_blank");
-}
-
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     const result = await signInWithPopup(auth, provider);
     user = result.user;
   }
 
-  const ref = doc(db, "users", user.uid);
-  let snap = await getDoc(ref);
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
 
   let data;
   if (!snap.exists()) {
     data = { completedCourses: [], certificates: [] };
-    await setDoc(ref, data);
+    await setDoc(userRef, data);
   } else {
     data = snap.data();
   }
 
-  document.getElementById("completedCourses").textContent = data.completedCourses.length;
-  document.getElementById("certificatesCount").textContent = data.certificates.length;
+  document.getElementById("completedCourses").textContent =
+    data.completedCourses?.length || 0;
+
+  document.getElementById("certificatesCount").textContent =
+    data.certificates?.length || 0;
 
   const certList = document.getElementById("certificatesList");
   certList.innerHTML = "";
 
-  data.certificates.forEach(cert => {
-    const card = document.createElement("div");
-    card.className = "certificate-card";
-
-    const btn = document.createElement("button");
-    btn.textContent = "عرض الشهادة";
-    btn.addEventListener("click", () => openCertificate(cert.certificateUrl));
-
-    card.appendChild(btn);
-    certList.appendChild(card);
-  });
+  if (!data.certificates || data.certificates.length === 0) {
+    certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
+  } else {
+    data.certificates.forEach(cert => {
+      const div = document.createElement("div");
+      div.className = "certificate-card";
+      div.innerHTML = `
+        <h4>${cert.title}</h4>
+        <button>عرض الشهادة</button>
+      `;
+      div.querySelector("button")
+        .addEventListener("click", () => window.open(cert.certificateUrl, "_blank"));
+      certList.appendChild(div);
+    });
+  }
 });
