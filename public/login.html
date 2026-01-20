@@ -1,96 +1,160 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<link rel="stylesheet" href="login.css">
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="header.css">
-  
-   
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول - CourseHub</title>
 
-  <!-- Styles -->
+  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="css/login.css">
+
+  <!-- Fonts & Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Google Identity -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-  <!-- JS -->
-  <script src="js/header.js" defer></script>
-  <script src="js/footer.js" defer></script>
-  <script src="js/main.js" defer></script>
 </head>
-
 <body>
 
-  <!-- المحتوى فقط (الهيدر والفوتر يتم تحميلهم تلقائياً) -->
+  <div id="header-placeholder"></div>
 
-  <section class="course-detail login-page">
+  <main class="login-page container">
     <h2>تسجيل الدخول</h2>
 
-    <!-- Email Login -->
-    <form id="email-login-form" class="login-form">
+    <!-- Email Login Form -->
+    <form id="loginForm" class="login-form">
       <label for="email">البريد الإلكتروني</label>
-      <input
-        type="email"
-        id="email"
-        name="email"
-        placeholder="example@mail.com"
-        autocomplete="email"
-        required
-      >
+      <input type="email" id="email" placeholder="example@mail.com" required>
 
       <label for="password">كلمة المرور</label>
-      <input
-        type="password"
-        id="password"
-        name="password"
-        placeholder="********"
-        autocomplete="current-password"
-        required
-      >
+      <input type="password" id="password" placeholder="********" required>
 
       <button type="submit" class="btn">تسجيل الدخول</button>
+      <div id="errorMsg" class="error-msg"></div>
     </form>
 
     <p class="divider">أو سجل الدخول بواسطة</p>
 
     <!-- Google Login -->
     <div id="g_id_onload"
-      data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
-      data-callback="handleGoogleLogin"
-      data-auto_prompt="false">
+         data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
+         data-callback="handleGoogleLogin"
+         data-auto_prompt="false">
     </div>
-
     <div class="g_id_signin" data-type="standard" data-size="large"></div>
 
     <div class="login-links">
       <p><a href="forgot-password.html">نسيت كلمة المرور؟</a></p>
       <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
     </div>
-  </section>
+  </main>
 
-  <!-- Google Login Handler -->
-  <script>
-    function handleGoogleLogin(response) {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  <div id="footer-placeholder"></div>
 
-      localStorage.setItem("coursehub_user", JSON.stringify({
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture
-      }));
+  <!-- Firebase + Auth Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
-      window.location.href = "index.html";
-    }
-    
-</script>
-<link rel="stylesheet" href="login.css">
-<script src="main.js" defer></script>
-  <link rel="stylesheet" href="footer.css">
+    // =====================
+    // إعداد Firebase
+    // =====================
+    const firebaseConfig = {
+     apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+  authDomain: "coursehub-23ed2.firebaseapp.com",
+  projectId: "coursehub-23ed2",
+  storageBucket: "coursehub-23ed2.firebasestorage.app",
+  messagingSenderId: "367073521017",
+  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // =====================
+    // عناصر الصفحة
+    // =====================
+    const form = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+
+    // =====================
+    // تسجيل الدخول بالبريد الإلكتروني
+    // =====================
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if(userDoc.exists()){
+          const userData = userDoc.data();
+          localStorage.setItem("coursehub_user", JSON.stringify(userData));
+
+          if(userData.role === "admin") window.location.href = "dashboard.html";
+          else window.location.href = "courses.html";
+        } else {
+          errorMsg.textContent = "المستخدم غير موجود في قاعدة البيانات";
+        }
+      } catch(err){
+        errorMsg.textContent = "خطأ في تسجيل الدخول";
+        console.error(err);
+      }
+    });
+
+    // =====================
+    // تسجيل الدخول عبر Google
+    // =====================
+    window.handleGoogleLogin = async function(response) {
+      try {
+        const jwt = response.credential;
+        const payload = JSON.parse(atob(jwt.split('.')[1]));
+
+        const credential = GoogleAuthProvider.credential(jwt);
+        const userCredential = await signInWithCredential(auth, credential);
+        const user = userCredential.user;
+
+        const userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+
+        let role = "student"; // الدور الافتراضي
+        if(!userDoc.exists()){
+          await setDoc(userRef, {
+            name: payload.name,
+            email: payload.email,
+            picture: payload.picture,
+            role
+          });
+        } else {
+          role = userDoc.data().role;
+        }
+
+        localStorage.setItem("coursehub_user", JSON.stringify({
+          name: payload.name,
+          email: payload.email,
+          picture: payload.picture,
+          role
+        }));
+
+        if(role === "admin") window.location.href = "dashboard.html";
+        else window.location.href = "courses.html";
+
+      } catch (err) {
+        console.error("خطأ في تسجيل الدخول عبر Google:", err);
+        alert("حدث خطأ أثناء تسجيل الدخول عبر Google");
+      }
+    };
+  </script>
+
+  <!-- تحميل الهيدر والفوتر -->
+  <script src="js/main.js" defer></script>
 </body>
 </html>
