@@ -1,69 +1,116 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-     <link rel="stylesheet" href="header.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الدورات - CourseHub</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الدورات - CourseHub</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="main.js" defer></script>
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="header.css">
+  <link rel="stylesheet" href="footer.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    .categories { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+    .categories button { padding: 8px 15px; border: 2px solid #1c3faa; border-radius: 8px; cursor: pointer; background: #fff; color: #1c3faa; font-weight: 600; transition: 0.3s; }
+    .categories button.active { background: #1c3faa; color: #fff; }
+    .courses-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+    .card { background: #fff; border-radius: 10px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; }
+    .card img { width: 100%; height: 140px; object-fit: cover; }
+    .card-content { padding: 15px; flex: 1; display: flex; flex-direction: column; }
+    .card-content h3 { margin: 0 0 10px; font-size: 18px; }
+    .card-content p { font-size: 14px; color: #555; flex: 1; }
+    .rating { color: #f1c40f; margin-bottom: 8px; }
+    .btn { text-decoration: none; padding: 8px 15px; background: #1c3faa; color: #fff; border-radius: 6px; text-align: center; transition: 0.3s; }
+    .btn:hover { background: #1451a1; }
+  </style>
 </head>
 <body>
 
-<!-- Google Init -->
-<div id="g_id_onload"
-     data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
-     data-callback="handleGoogleLogin"
-     data-auto_prompt="false">
-</div>
+  <!-- Header Placeholder -->
+  <div id="header-placeholder"></div>
 
-<!-- Header Placeholder -->
-<div id="header-placeholder"></div>
-
-<!-- Courses Section -->
-<section class="container">
-  <h2>جميع الدورات</h2>
-  <div class="categories">
-    <button class="active" data-category="all" onclick="filterCategory('all')">الكل</button>
-    <button data-category="web" onclick="filterCategory('web')">تطوير الويب</button>
-    <button data-category="ai" onclick="filterCategory('ai')">الذكاء الاصطناعي</button>
-    <button data-category="design" onclick="filterCategory('design')">التصميم</button>
-  </div>
-  <div class="courses-grid" id="coursesGrid">
-    <div class="card" data-category="web">
-      <img src="images/course1.jpg" alt="Course 1">
-      <div class="card-content">
-        <h3>تطوير الويب للمبتدئين</h3>
-        <div class="rating"><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-alt"></i><span>(1200 طالب)</span></div>
-        <p>تعلم HTML, CSS, JavaScript خطوة بخطوة.</p>
-        <a href="course-detail.html" class="btn">عرض الدورة</a>
-      </div>
+  <!-- Courses Section -->
+  <section class="container">
+    <h2>جميع الدورات</h2>
+    <div class="categories">
+      <button class="active" data-category="all">الكل</button>
+      <button data-category="web">تطوير الويب</button>
+      <button data-category="ai">الذكاء الاصطناعي</button>
+      <button data-category="design">التصميم</button>
     </div>
-    <div class="card" data-category="ai">
-      <img src="images/course2.jpg" alt="Course 2">
-      <div class="card-content">
-        <h3>الذكاء الاصطناعي</h3>
-        <div class="rating"><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><span>(950 طالب)</span></div>
-        <p>ابدأ رحلتك مع تعلم الآلة والذكاء الاصطناعي.</p>
-        <a href="course-detail.html" class="btn">عرض الدورة</a>
-      </div>
-    </div>
-    <div class="card" data-category="design">
-      <img src="images/course3.jpg" alt="Course 3">
-      <div class="card-content">
-        <h3>التصميم الجرافيكي</h3>
-        <div class="rating"><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><span>(800 طالب)</span></div>
-        <p>تعلم Photoshop و Illustrator من الصفر.</p>
-        <a href="course-detail.html" class="btn">عرض الدورة</a>
-      </div>
-    </div>
-  </div>
-</section>
+    <div class="courses-grid" id="coursesGrid"></div>
+  </section>
 
-<link rel="stylesheet" href="footer.css">
-<div id="footer-placeholder"></div>
+  <!-- Footer Placeholder -->
+  <div id="footer-placeholder"></div>
 
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+      authDomain: "coursehub-23ed2.firebaseapp.com",
+      projectId: "coursehub-23ed2",
+      storageBucket: "coursehub-23ed2.appspot.com",
+      messagingSenderId: "367073521017",
+      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const coursesGrid = document.getElementById('coursesGrid');
+    const categoryButtons = document.querySelectorAll('.categories button');
+
+    let allCourses = [];
+
+    async function loadCourses() {
+      const snapshot = await getDocs(collection(db, "courses"));
+      allCourses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderCourses(allCourses);
+    }
+
+    function renderCourses(courses) {
+      coursesGrid.innerHTML = "";
+      if (courses.length === 0) {
+        coursesGrid.innerHTML = "<p style='text-align:center;'>لا توجد دورات حالياً.</p>";
+        return;
+      }
+
+      courses.forEach(course => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.category = course.category;
+        card.innerHTML = `
+          <img src="${course.image}" alt="${course.title}">
+          <div class="card-content">
+            <h3>${course.title}</h3>
+            <div class="rating">${"★".repeat(Math.floor(course.rating))} <span>(${course.students} طالب)</span></div>
+            <p>${course.description}</p>
+            <a href="course-detail.html?id=${course.id}" class="btn">عرض الدورة</a>
+          </div>
+        `;
+        coursesGrid.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      categoryButtons.forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-category="${cat}"]`).classList.add('active');
+
+      if (cat === "all") renderCourses(allCourses);
+      else renderCourses(allCourses.filter(c => c.category === cat));
+    }
+
+    categoryButtons.forEach(btn => {
+      btn.addEventListener('click', () => filterCategory(btn.dataset.category));
+    });
+
+    loadCourses();
+  </script>
 </body>
 </html>
