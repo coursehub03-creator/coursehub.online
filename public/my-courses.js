@@ -1,7 +1,5 @@
 import { firebaseAuth } from './firebase-config.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
-
-const db = getFirestore(firebaseAuth.auth.app);
+const { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion } = firebaseAuth;
 
 const tabs = document.querySelectorAll(".tab-btn");
 const contents = document.querySelectorAll(".tab-content");
@@ -15,28 +13,33 @@ tabs.forEach(tab => {
   });
 });
 
-async function loadCourses() {
-  let user = firebaseAuth.auth.currentUser;
-  if (!user) {
-    user = await firebaseAuth.signInWithPopup(firebaseAuth.auth, new firebaseAuth.GoogleAuthProvider());
-  }
+async function loginIfNeeded() {
+  return new Promise(resolve => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        resolve(result.user);
+      } else {
+        resolve(user);
+      }
+    });
+  });
+}
 
-  const userDoc = doc(db, "user_courses", user.uid);
-  const snapshot = await getDoc(userDoc);
+async function loadCourses() {
+  const user = await loginIfNeeded();
+  const userDocRef = doc(db, "user_courses", user.uid);
+  let snapshot = await getDoc(userDocRef);
 
   let coursesData = { current: [], completed: [], favorites: [] };
-
-  if (snapshot.exists()) {
-    coursesData = snapshot.data();
-  } else {
-    await setDoc(userDoc, coursesData);
-  }
+  if (snapshot.exists()) coursesData = snapshot.data();
+  else await setDoc(userDocRef, coursesData);
 
   renderCourses(coursesData);
 }
 
 function renderCourses(data) {
-  for (const key of ["current","completed","favorites"]) {
+  for (const key of ["current", "completed", "favorites"]) {
     const container = document.getElementById(key);
     container.innerHTML = "";
     data[key].forEach(course => {
@@ -52,7 +55,7 @@ function renderCourses(data) {
       `;
       card.querySelector(".favorite-btn").addEventListener("click", async e => {
         const fav = e.target;
-        const uid = firebaseAuth.auth.currentUser.uid;
+        const uid = auth.currentUser.uid;
         if (!fav.classList.contains("favorited")) {
           fav.classList.add("favorited");
           await updateDoc(doc(db, "user_courses", uid), { favorites: arrayUnion(course) });
@@ -63,6 +66,4 @@ function renderCourses(data) {
   }
 }
 
-firebaseAuth.onAuthStateChanged(firebaseAuth.auth, () => {
-  loadCourses();
-});
+loadCourses();
