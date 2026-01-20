@@ -37,6 +37,21 @@ footer {
   color: #ffcc00;
 }
 
+/* زر المسؤول */
+.admin-btn {
+  display: inline-block;
+  padding: 8px 15px;
+  background: #e74c3c;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.3s, transform 0.2s;
+}
+.admin-btn:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+}
+
 .social-icons {
   display: flex;
   gap: 12px;
