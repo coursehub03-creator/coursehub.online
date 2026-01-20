@@ -1,81 +1,42 @@
-// --- تحميل Header + إعداد الوظائف ---
 document.addEventListener("DOMContentLoaded", () => {
-  setupUserDropdown();
-  setupHeaderSearch();
-  setupLanguageToggle();
-});
+  const headerPlaceholder = document.getElementById("header-placeholder");
+  if(!headerPlaceholder) return;
 
-// --- User Dropdown ---
-function setupUserDropdown() {
-  const user = JSON.parse(localStorage.getItem("coursehub_user"));
-  const userContainer = document.getElementById("user-info");
-  const loginLink = document.getElementById("login-link");
+  headerPlaceholder.innerHTML = `
+    <header class="main-header">
+      <div class="container header-container">
+        <div class="logo">
+          <a href="index.html">CourseHub</a>
+        </div>
 
-  if(user && userContainer){
-    if(loginLink) loginLink.style.display = "none";
+        <nav class="main-nav">
+          <ul>
+            <li><a href="index.html">الرئيسية</a></li>
+            <li><a href="courses.html">الدورات</a></li>
+            <li><a href="tests.html">الاختبارات</a></li>
+            <li><a href="certificates.html">الشهادات</a></li>
+          </ul>
+        </nav>
 
-    userContainer.innerHTML = `
-      <img src="${user.picture}" alt="${user.name}" class="user-pic">
-      <span class="user-name">${user.name}</span>
-      <div class="dropdown-menu">
-          <a href="profile.html">الملف الشخصي</a>
-          <a href="achievements.html">إنجازاتي</a>
-          <a href="my-courses.html">دوراتي</a>
-          <a href="settings.html">الإعدادات</a>
-          <a href="#" id="logout-link">تسجيل الخروج</a>
+        <div id="headerSearchBar" class="header-search">
+          <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
+          <button id="searchBtn"><i class="fa fa-search"></i></button>
+        </div>
+
+        <div id="user-info" class="user-info"></div>
+        <a href="login.html" id="login-link" class="login-btn">تسجيل الدخول</a>
+
+        <button id="langBtn" class="lang-btn"><i class="fa fa-globe"></i> عربي</button>
       </div>
-    `;
+    </header>
+  `;
 
-    const dropdown = userContainer.querySelector(".dropdown-menu");
-    const userPic = userContainer.querySelector(".user-pic");
-    const userName = userContainer.querySelector(".user-name");
-
-    const toggleDropdown = e => {
-      e.stopPropagation();
-      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-    };
-    userPic.addEventListener("click", toggleDropdown);
-    userName.addEventListener("click", toggleDropdown);
-
-    document.addEventListener("click", () => dropdown.style.display = 'none');
-
-    const logoutLink = document.getElementById("logout-link");
-    if(logoutLink){
-      logoutLink.addEventListener("click", e => {
-        e.preventDefault();
-        localStorage.removeItem("coursehub_user");
-        window.location.href = "login.html";
-      });
-    }
-  } else {
-    if(loginLink) loginLink.style.display = "block";
-  }
-}
-
-// --- Language Toggle ---
-function setupLanguageToggle() {
-  const langBtn = document.getElementById("langBtn");
-  langBtn.addEventListener("click", () => {
-    const current = langBtn.textContent.trim();
-    if(current.includes("عربي")) langBtn.innerHTML = '<i class="fa fa-globe"></i> English';
-    else if(current.includes("English")) langBtn.innerHTML = '<i class="fa fa-globe"></i> Français';
-    else langBtn.innerHTML = '<i class="fa fa-globe"></i> عربي';
-  });
-}
-
-// --- Search Bar (ظهور فقط في index و courses) ---
-function setupHeaderSearch() {
+  // عرض أو إخفاء Search Bar حسب الصفحة
   const path = window.location.pathname.split("/").pop();
   const searchBar = document.getElementById("headerSearchBar");
   if(path === "index.html" || path === "courses.html") {
     searchBar.style.display = "flex";
-
-    const searchBtn = document.getElementById("searchBtn");
-    searchBtn.addEventListener("click", () => {
-      const query = document.getElementById("searchInput").value.trim();
-      if(query) alert(`بحث عن: ${query}`);
-    });
   } else {
     searchBar.style.display = "none";
   }
-}
+});
