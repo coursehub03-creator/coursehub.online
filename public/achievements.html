@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إنجازاتي | CourseHub</title>
+
+  <!-- Font & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="achievements.css">
+</head>
+<body>
+
+  <!-- Header (يتم تضمينه كما هو عندك) -->
+  <header id="main-header"></header>
+
+  <main class="achievements-container">
+
+    <h1 class="page-title">إنجازاتي</h1>
+
+    <!-- Summary -->
+    <section class="summary-cards">
+      <div class="summary-card">
+        <i class="fa fa-graduation-cap"></i>
+        <h3>الدورات المكتملة</h3>
+        <span id="completedCourses">0</span>
+      </div>
+
+      <div class="summary-card">
+        <i class="fa fa-certificate"></i>
+        <h3>الشهادات</h3>
+        <span id="certificatesCount">0</span>
+      </div>
+
+      <div class="summary-card">
+        <i class="fa fa-clock"></i>
+        <h3>ساعات التعلم</h3>
+        <span id="learningHours">0</span>
+      </div>
+    </section>
+
+    <!-- Certificates -->
+    <section class="section-block">
+      <h2>الشهادات</h2>
+      <div class="certificates-list" id="certificatesList"></div>
+    </section>
+
+    <!-- Completed Courses -->
+    <section class="section-block">
+      <h2>الدورات المكتملة</h2>
+      <div class="courses-list" id="coursesList"></div>
+    </section>
+
+  </main>
+
+  <script src="achievements.js"></script>
+</body>
+</html>
