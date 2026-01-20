@@ -1,43 +1,32 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const footerPlaceholder = document.getElementById("footer-placeholder");
-  if(!footerPlaceholder) return;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 
-  footerPlaceholder.innerHTML = `
-    <footer>
-      <div class="footer-container">
-        <div class="footer-col">
-          <h4>حول CourseHub</h4>
-          <p>CourseHub هو منصتك لتعلم المهارات والحصول على شهادات معتمدة.</p>
-        </div>
-        <div class="footer-col">
-          <h4>روابط سريعة</h4>
-          <a href="index.html">الرئيسية</a>
-          <a href="courses.html">الدورات</a>
-          <a href="tests.html">الاختبارات</a>
-          <a href="certificates.html">الشهادات</a>
-        </div>
-        <div class="footer-col">
-          <h4>تابعنا</h4>
-          <div class="social-icons">
-            <a href="#"><i class="fab fa-facebook-f"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>اتصل بنا</h4>
-          <p>info@coursehub.com</p>
-          <p>+213 123 456 789</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        &copy; <span id="year"></span> CourseHub. جميع الحقوق محفوظة.
-      </div>
-    </footer>
-  `;
+// تكوين Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+  authDomain: "coursehub-23ed2.firebaseapp.com",
+  projectId: "coursehub-23ed2",
+  storageBucket: "coursehub-23ed2.appspot.com",
+  messagingSenderId: "367073521017",
+  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+};
 
-  const yearSpan = document.getElementById("year");
-  if(yearSpan){
-    yearSpan.textContent = new Date().getFullYear();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// البريد المسؤول
+const adminEmails = ["kaleadsalous30@gmail.com"]; // ضع البريد/البريدات هنا
+const adminDiv = document.getElementById("adminAddCourse");
+
+// التحقق من المستخدم وعرض زر المسؤول إذا كان مصرح له
+onAuthStateChanged(auth, (user) => {
+  if (user && adminEmails.includes(user.email)) {
+    adminDiv.innerHTML = `<a href="add-course.html" class="btn admin-btn">إضافة دورة جديدة</a>`;
   }
 });
+
+// تحديث السنة تلقائيًا
+const yearSpan = document.getElementById("year");
+if (yearSpan) {
+  yearSpan.textContent = new Date().getFullYear();
+}
