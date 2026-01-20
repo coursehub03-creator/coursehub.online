@@ -1,129 +1,120 @@
-body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: #f4f6fb;
-  color: #1c1c1c;
-}
-
-/* Container */
 .achievements-container {
   max-width: 1200px;
-  margin: auto;
-  padding: 30px 20px;
+  margin: 0 auto;
+  padding: 30px 15px;
+  font-family: 'Inter', sans-serif;
 }
 
 .page-title {
+  font-size: 28px;
+  font-weight: 700;
   margin-bottom: 25px;
   color: #1c3faa;
 }
 
-/* Summary */
+/* Summary Cards */
 .summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  display: flex;
   gap: 20px;
   margin-bottom: 40px;
+  flex-wrap: wrap;
 }
 
 .summary-card {
-  background: white;
-  border-radius: 12px;
+  flex: 1;
+  background: #1c3faa;
+  color: #fff;
+  border-radius: 10px;
   padding: 20px;
   text-align: center;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  min-width: 150px;
 }
 
 .summary-card i {
   font-size: 30px;
-  color: #ffcc00;
   margin-bottom: 10px;
 }
 
 .summary-card h3 {
-  margin: 10px 0;
+  margin-bottom: 8px;
   font-size: 16px;
-  color: #555;
 }
 
 .summary-card span {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
-  color: #1c3faa;
 }
 
-/* Sections */
+/* Certificates & Courses */
 .section-block {
   margin-bottom: 40px;
 }
 
 .section-block h2 {
+  font-size: 22px;
   margin-bottom: 20px;
   color: #1c3faa;
 }
 
-/* Certificates */
-.certificates-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-}
-
+/* Certificate Card */
 .certificate-card {
-  background: white;
-  padding: 18px;
+  background: #fff;
+  padding: 15px;
   border-radius: 10px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .certificate-card h4 {
-  margin: 0 0 8px;
-}
-
-.certificate-card span {
-  font-size: 14px;
-  color: #666;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .certificate-card button {
-  margin-top: 12px;
-  background: #ffcc00;
+  background: #1c3faa;
+  color: #fff;
   border: none;
-  padding: 8px 14px;
-  font-weight: 700;
-  color: #1c3faa;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
+  transition: background 0.3s;
 }
 
-/* Courses */
-.courses-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
+.certificate-card button:hover {
+  background: #ffcc00;
+  color: #1c3faa;
 }
 
+/* Course Card */
 .course-card {
-  background: white;
+  background: #fff;
+  display: flex;
+  gap: 15px;
   border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  padding: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  align-items: center;
 }
 
 .course-card img {
-  width: 100%;
-  height: 140px;
+  width: 120px;
+  height: 80px;
   object-fit: cover;
+  border-radius: 6px;
 }
 
-.course-card .course-content {
-  padding: 15px;
+.course-card .course-content h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #1c3faa;
 }
 
-.course-card h4 {
-  margin: 0 0 6px;
-}
-
-.course-card span {
+.course-card .course-content span {
   font-size: 14px;
-  color: #666;
+  color: #333;
 }
