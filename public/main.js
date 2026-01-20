@@ -37,44 +37,72 @@ async function loadHeaderFooter() {
 }
 
 // ===============================
-// إدارة حالة المستخدم
+// إدارة حالة المستخدم بدون innerHTML
 // ===============================
 function setupUserState() {
     const user = JSON.parse(localStorage.getItem("coursehub_user"));
     const userContainer = document.getElementById("user-info");
     const loginLink = document.getElementById("login-link");
 
-    if (user && userContainer) {
-        if (loginLink) loginLink.style.display = "none";
+    if (!userContainer) return;
 
-        userContainer.innerHTML = `
-            <img src="${user.picture}" alt="${user.name}" class="user-pic">
-            <span class="user-name">${user.name}</span>
-            <div class="dropdown-menu">
-                <a href="profile.html">الملف الشخصي</a>
-                <a href="achievements.html">إنجازاتي</a>
-                <a href="my-courses.html">دوراتي</a>
-                <a href="settings.html">الإعدادات</a>
-                <a href="#" id="logout-link">تسجيل الخروج</a>
-            </div>
-        `;
+    if (user) {
+        if (loginLink) loginLink.style.display = "none";
+        userContainer.textContent = ""; // إزالة أي محتوى سابق
         userContainer.style.display = "flex";
 
-        const dropdown = userContainer.querySelector(".dropdown-menu");
+        // صورة المستخدم
+        const img = document.createElement("img");
+        img.src = user.picture;
+        img.alt = user.name;
+        img.className = "user-pic";
+
+        // اسم المستخدم
+        const spanName = document.createElement("span");
+        spanName.className = "user-name";
+        spanName.textContent = user.name;
+
+        // قائمة dropdown
+        const dropdown = document.createElement("div");
+        dropdown.className = "dropdown-menu";
+
+        const links = [
+            { href: "profile.html", text: "الملف الشخصي" },
+            { href: "achievements.html", text: "إنجازاتي" },
+            { href: "my-courses.html", text: "دوراتي" },
+            { href: "settings.html", text: "الإعدادات" },
+            { href: "#", text: "تسجيل الخروج", id: "logout-link" }
+        ];
+
+        links.forEach(linkData => {
+            const a = document.createElement("a");
+            a.href = linkData.href;
+            a.textContent = linkData.text;
+            if (linkData.id) a.id = linkData.id;
+            dropdown.appendChild(a);
+        });
+
+        // إضافة العناصر للحاوية
+        userContainer.appendChild(img);
+        userContainer.appendChild(spanName);
+        userContainer.appendChild(dropdown);
+
+        // toggle القائمة
         const toggleDropdown = e => {
             e.stopPropagation();
             dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
         };
+        img.addEventListener("click", toggleDropdown);
+        spanName.addEventListener("click", toggleDropdown);
 
-        userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
-        userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
-
+        // إغلاق القائمة عند الضغط خارجها
         document.addEventListener("click", () => { dropdown.style.display = "none"; });
         dropdown.addEventListener("click", e => e.stopPropagation());
 
-        const logoutLink = document.getElementById("logout-link");
-        if (logoutLink) {
-            logoutLink.addEventListener("click", e => {
+        // زر تسجيل الخروج
+        const logoutLinkEl = document.getElementById("logout-link");
+        if (logoutLinkEl) {
+            logoutLinkEl.addEventListener("click", e => {
                 e.preventDefault();
                 localStorage.removeItem("coursehub_user");
                 if (loginLink) loginLink.style.display = "block";
@@ -85,7 +113,7 @@ function setupUserState() {
 
     } else {
         if (loginLink) loginLink.style.display = "block";
-        if (userContainer) userContainer.style.display = "none";
+        userContainer.style.display = "none";
     }
 }
 
@@ -122,9 +150,9 @@ function setupLanguageToggle() {
     langBtn.addEventListener("click", e => {
         e.stopPropagation();
         const text = langBtn.textContent.trim();
-        if (text.includes("عربي")) langBtn.innerHTML = '<i class="fa fa-globe"></i> English';
-        else if (text.includes("English")) langBtn.innerHTML = '<i class="fa fa-globe"></i> Français';
-        else langBtn.innerHTML = '<i class="fa fa-globe"></i> عربي';
+        if (text.includes("عربي")) langBtn.textContent = "English";
+        else if (text.includes("English")) langBtn.textContent = "Français";
+        else langBtn.textContent = "عربي";
     });
 }
 
