@@ -1,8 +1,5 @@
-/* ============================= */
-/* Body and Container (المحتوى) */
-/* ============================= */
 * {
-  box-sizing: border-box; /* كل العناصر تستخدم box-sizing لتجنب التمدد */
+  box-sizing: border-box;
 }
 
 body, html {
@@ -10,10 +7,9 @@ body, html {
   font-family: 'Inter', sans-serif;
   background: #f4f6fb;
   color: #1c1c1c;
-  overflow-x: hidden; /* منع أي تمدد عرضي */
+  overflow-x: hidden;
 }
 
-/* Container */
 .achievements-container {
   max-width: 1200px;
   width: 100%;
@@ -21,15 +17,11 @@ body, html {
   padding: 30px 20px;
 }
 
-/* Page Title */
 .page-title {
   margin-bottom: 25px;
   color: #1c3faa;
 }
 
-/* ============================= */
-/* Summary Cards (الدورات والشهادات) */
-/* ============================= */
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -63,9 +55,6 @@ body, html {
   color: #1c3faa;
 }
 
-/* ============================= */
-/* Sections (Certificates & Courses) */
-/* ============================= */
 .section-block {
   margin-bottom: 40px;
 }
@@ -75,7 +64,6 @@ body, html {
   color: #1c3faa;
 }
 
-/* Certificates */
 .certificates-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -109,7 +97,6 @@ body, html {
   cursor: pointer;
 }
 
-/* زر التحميل فوق كل شهادة */
 .certificate-card .download-btn {
   display: inline-block;
   margin-bottom: 10px;
@@ -128,7 +115,6 @@ body, html {
   background: #e6b800;
 }
 
-/* Courses */
 .courses-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -161,9 +147,6 @@ body, html {
   color: #666;
 }
 
-/* ============================= */
-/* Responsive Adjustments */
-/* ============================= */
 @media (max-width: 800px) {
   .summary-cards {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
