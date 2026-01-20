@@ -17,10 +17,8 @@
 </head>
 <body>
 
-<!-- Header -->
 <div id="header-placeholder"></div>
 
-<!-- Main Content -->
 <main class="container add-course-container">
   <h1>إضافة دورة جديدة</h1>
 
@@ -53,16 +51,13 @@
   </form>
 </main>
 
-<!-- Footer -->
 <div id="footer-placeholder"></div>
 
-<!-- JS -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 
-  // تكوين Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
     authDomain: "coursehub-23ed2.firebaseapp.com",
@@ -76,13 +71,11 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // بريد المسؤول
-  const adminEmails = ["admin@example.com"]; // ضع بريدك هنا
+  const adminEmails = ["admin@example.com"]; // ضع البريد المسؤول هنا
 
   const form = document.getElementById("addCourseForm");
   const notAuthMsg = document.getElementById("notAuthorizedMsg");
 
-  // التحقق من المستخدم
   onAuthStateChanged(auth, user => {
     if (user && adminEmails.includes(user.email)) {
       form.style.display = "block";
@@ -93,7 +86,6 @@
     }
   });
 
-  // إضافة دورة جديدة
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
