@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إضافة دورة - CourseHub</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="header.css">
+  <link rel="stylesheet" href="footer.css">
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- JS -->
+  <script type="module" src="add-course.js" defer></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <main class="container courses-container">
+    <h1 class="page-title">إضافة دورة جديدة</h1>
+
+    <form id="addCourseForm" class="course-form">
+      <label>عنوان الدورة:</label>
+      <input type="text" id="title" placeholder="مثال: تطوير الويب للمبتدئين" required>
+
+      <label>وصف الدورة:</label>
+      <textarea id="description" placeholder="ضع وصفاً مختصراً للدورة" required></textarea>
+
+      <label>رابط صورة الدورة:</label>
+      <input type="text" id="image" placeholder="ضع رابط الصورة هنا" required>
+
+      <label>الفئة:</label>
+      <select id="category" required>
+        <option value="web">تطوير الويب</option>
+        <option value="ai">الذكاء الاصطناعي</option>
+        <option value="design">التصميم</option>
+      </select>
+
+      <label>محتوى الدورة:</label>
+      <textarea id="content" placeholder="ضع كل درس في سطر جديد" required></textarea>
+
+      <button type="submit" class="btn">إضافة الدورة</button>
+    </form>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+</body>
+</html>
