@@ -1,6 +1,5 @@
-// main.js
 // ===============================
-// تحميل CSS مرة واحدة فقط
+// تحميل CSS
 // ===============================
 function loadCSS(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
@@ -12,26 +11,23 @@ function loadCSS(href) {
 }
 
 // ===============================
-// تحميل Header و Footer من ملفات خارجية
+// تحميل Header و Footer من ملفات منفصلة
 // ===============================
 async function loadHeaderFooter() {
-  // Header
   try {
-    const headerResponse = await fetch("header.html");
-    const headerHTML = await headerResponse.text();
+    const headerResp = await fetch("header.html");
+    const headerHTML = await headerResp.text();
     document.body.insertAdjacentHTML("afterbegin", headerHTML);
     loadCSS("header.css");
   } catch (err) { console.error("فشل تحميل الهيدر:", err); }
 
-  // Footer
   try {
-    const footerResponse = await fetch("footer.html");
-    const footerHTML = await footerResponse.text();
+    const footerResp = await fetch("footer.html");
+    const footerHTML = await footerResp.text();
     document.body.insertAdjacentHTML("beforeend", footerHTML);
     loadCSS("footer.css");
   } catch (err) { console.error("فشل تحميل الفوتر:", err); }
 
-  // إعدادات بعد التحميل
   setupUserState();
   setupHeaderSearch();
   setupLanguageToggle();
@@ -112,12 +108,11 @@ function setupUserState() {
 }
 
 // ===============================
-// شريط البحث
+// البحث في الهيدر
 // ===============================
 function setupHeaderSearch() {
   const path = window.location.pathname.split("/").pop();
   const searchBar = document.getElementById("headerSearchBar");
-
   if (!searchBar) return;
 
   if (path === "" || path === "index.html" || path === "courses.html") {
@@ -151,6 +146,6 @@ function setupLanguageToggle() {
 }
 
 // ===============================
-// تشغيل كل شيء بعد تحميل DOM
+// بدء التحميل بعد DOM
 // ===============================
 document.addEventListener("DOMContentLoaded", loadHeaderFooter);
