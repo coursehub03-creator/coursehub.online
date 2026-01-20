@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     progress.completedCourses.forEach(course => {
       coursesList.innerHTML += `
         <div class="course-card">
-          <img src="${course.image}">
+          <img src="${course.image}" alt="${course.title}">
           <div class="course-content">
             <h4>${course.title}</h4>
             <span>المدرب: ${course.instructor}</span><br>
