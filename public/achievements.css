@@ -13,6 +13,7 @@ body {
   max-width: 1200px;
   margin: auto;
   padding: 30px 20px;
+  box-sizing: border-box; /* لتجنب أي تمدد زائد */
 }
 
 .page-title {
@@ -35,6 +36,9 @@ body {
   text-align: center;
   box-shadow: 0 6px 15px rgba(0,0,0,0.08);
 }
+
+/* إزالة أي أيقونات أو محتوى متعلق بـ "ساعات التعلم" */
+/* لم يعد هناك حاجة للـ i.fa-clock أو #learningHours */
 
 .summary-card i {
   font-size: 30px;
@@ -129,4 +133,13 @@ body {
 .course-card span {
   font-size: 14px;
   color: #666;
+}
+
+/* لمنع أي تمدد عرضي */
+* {
+  box-sizing: border-box;
+}
+
+body, html {
+  overflow-x: hidden;
 }
