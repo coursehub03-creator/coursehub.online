@@ -1,32 +1,8 @@
-// Firebase Config
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+import { firebaseAuth } from './firebase-config.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
-  authDomain: "coursehub-23ed2.firebaseapp.com",
-  projectId: "coursehub-23ed2",
-  storageBucket: "coursehub-23ed2.firebasestorage.app",
-  messagingSenderId: "367073521017",
-  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
-  measurementId: "G-NJ6E39V9NW"
-};
+const db = getFirestore(firebaseAuth.auth.app);
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-// --- تسجيل دخول Google ---
-async function login() {
-  const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
-  return user;
-}
-
-// --- العناصر ---
 const tabs = document.querySelectorAll(".tab-btn");
 const contents = document.querySelectorAll(".tab-content");
 
@@ -39,28 +15,21 @@ tabs.forEach(tab => {
   });
 });
 
-// --- جلب البيانات وعرضها ---
+// جلب الدورات من Firestore وعرضها
 async function loadCourses() {
-  let user = auth.currentUser;
+  let user = firebaseAuth.auth.currentUser;
   if (!user) {
-    user = await login();
+    const provider = new firebaseAuth.GoogleAuthProvider();
+    const result = await firebaseAuth.signInWithPopup(firebaseAuth.auth, provider);
+    user = result.user;
   }
 
-  const userDoc = doc(db, "user_courses", user.uid);
-  const snapshot = await getDoc(userDoc);
+  const userDocRef = doc(db, "user_courses", user.uid);
+  let snapshot = await getDoc(userDocRef);
 
-  let coursesData = {
-    current: [],
-    completed: [],
-    favorites: []
-  };
-
-  if (snapshot.exists()) {
-    coursesData = snapshot.data();
-  } else {
-    // إنشاء مستند جديد للمستخدم
-    await setDoc(userDoc, coursesData);
-  }
+  let coursesData = { current: [], completed: [], favorites: [] };
+  if (snapshot.exists()) coursesData = snapshot.data();
+  else await setDoc(userDocRef, coursesData);
 
   renderCourses(coursesData);
 }
@@ -71,6 +40,7 @@ function renderCourses(data) {
   for (const key in tabsMap) {
     const container = document.getElementById(key);
     container.innerHTML = "";
+
     data[key].forEach(course => {
       const card = document.createElement("div");
       card.className = "course-card";
@@ -85,7 +55,7 @@ function renderCourses(data) {
       // زر المفضلة
       card.querySelector(".favorite-btn").addEventListener("click", async e => {
         const fav = e.target;
-        const uid = auth.currentUser.uid;
+        const uid = firebaseAuth.auth.currentUser.uid;
         if (!fav.classList.contains("favorited")) {
           fav.classList.add("favorited");
           await updateDoc(doc(db, "user_courses", uid), {
@@ -98,6 +68,4 @@ function renderCourses(data) {
   }
 }
 
-auth.onAuthStateChanged(() => {
-  loadCourses();
-});
+firebaseAuth.onAuthStateChanged(firebaseAuth.auth, loadCourses);
