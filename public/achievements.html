@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إنجازاتي | CourseHub</title>
 
-  <!-- Header & Footer Styles (سيتم تحميلها تلقائيًا عبر main.js) -->
+  <!-- Header & Footer Styles -->
   <link rel="stylesheet" href="main.css">
 
   <!-- Font & Icons -->
@@ -18,10 +18,10 @@
   <style>
     /* حل مشكلة اتجاه الهيدر على صفحات RTL */
     header {
-      direction: ltr !important; /* يجبر الهيدر على LTR */
+      direction: ltr !important;
     }
     .top-bar.container {
-      flex-direction: row !important; /* ترتيب العناصر طبيعي */
+      flex-direction: row !important;
       justify-content: space-between !important;
     }
   </style>
@@ -48,8 +48,6 @@
         <h3>الشهادات</h3>
         <span id="certificatesCount">0</span>
       </div>
-
-     
     </section>
 
     <!-- Certificates -->
@@ -69,9 +67,96 @@
   <div id="footer-placeholder"></div>
 
   <!-- Scripts -->
-  <!-- main.js يحتوي على تحميل الهيدر والفوتر + وظائف User/Language/Search -->
   <script src="main.js" defer></script>
-  <script src="achievements.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const user = JSON.parse(localStorage.getItem("coursehub_user"));
+      if (!user) {
+        alert("يجب تسجيل الدخول لعرض الإنجازات");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const progressKey = "coursehub_progress";
+      let progress = JSON.parse(localStorage.getItem(progressKey));
+
+      if (!progress || progress.userEmail !== user.email) {
+        progress = {
+          userEmail: user.email,
+          completedCourses: [],
+          certificates: []
+        };
+        localStorage.setItem(progressKey, JSON.stringify(progress));
+      }
+
+      // --- Summary ---
+      document.getElementById("completedCourses").textContent = progress.completedCourses.length;
+      document.getElementById("certificatesCount").textContent = progress.certificates.length;
+
+      // --- Certificates ---
+      const certList = document.getElementById("certificatesList");
+      certList.innerHTML = "";
+
+      if (progress.certificates.length === 0) {
+        certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
+      } else {
+        progress.certificates.forEach(cert => {
+          certList.innerHTML += `
+            <div class="certificate-card">
+              <button class="download-btn" onclick="downloadCertificate('${cert.certificateUrl}')">
+                تحميل
+              </button>
+              <h4>${cert.title}</h4>
+              <span>تاريخ الإصدار: ${cert.issuedAt}</span>
+              <button onclick="openCertificate('${cert.certificateUrl}')">
+                عرض الشهادة
+              </button>
+            </div>
+          `;
+        });
+      }
+
+      // --- Completed Courses ---
+      const coursesList = document.getElementById("coursesList");
+      coursesList.innerHTML = "";
+
+      if (progress.completedCourses.length === 0) {
+        coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
+      } else {
+        progress.completedCourses.forEach(course => {
+          coursesList.innerHTML += `
+            <div class="course-card">
+              <img src="${course.image}" alt="${course.title}">
+              <div class="course-content">
+                <h4>
+                  <a href="course.html?courseId=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                    ${course.title}
+                  </a>
+                </h4>
+                <span>المدرب: ${course.instructor}</span><br>
+                <span>أكملت في: ${course.completedAt}</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+    });
+
+    function openCertificate(url) {
+      window.open(url, "_blank");
+    }
+
+    function downloadCertificate(url) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
 
 </body>
 </html>
