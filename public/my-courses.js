@@ -1,103 +1,153 @@
-// Firebase Config
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+import { firebaseAuth } from './firebase-config.js';
+const { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } = firebaseAuth;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
-  authDomain: "coursehub-23ed2.firebaseapp.com",
-  projectId: "coursehub-23ed2",
-  storageBucket: "coursehub-23ed2.firebasestorage.app",
-  messagingSenderId: "367073521017",
-  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
-  measurementId: "G-NJ6E39V9NW"
-};
+let globalCoursesData = { current: [], completed: [], favorites: [] };
+let currentTab = "current";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-// --- تسجيل دخول Google ---
-async function login() {
-  const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
-  return user;
+// ===============================
+// User Login
+// ===============================
+async function loginIfNeeded() {
+  return new Promise(resolve => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        resolve(result.user);
+      } else {
+        resolve(user);
+      }
+    });
+  });
 }
 
-// --- العناصر ---
-const tabs = document.querySelectorAll(".tab-btn");
-const contents = document.querySelectorAll(".tab-content");
-
-tabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    tabs.forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-    contents.forEach(c => c.classList.remove("active"));
-    document.getElementById(tab.dataset.tab).classList.add("active");
-  });
-});
-
-// --- جلب البيانات وعرضها ---
+// ===============================
+// Load Courses from Firestore
+// ===============================
 async function loadCourses() {
-  let user = auth.currentUser;
-  if (!user) {
-    user = await login();
-  }
-
-  const userDoc = doc(db, "user_courses", user.uid);
-  const snapshot = await getDoc(userDoc);
-
-  let coursesData = {
-    current: [],
-    completed: [],
-    favorites: []
-  };
+  const user = await loginIfNeeded();
+  const userDocRef = doc(db, "user_courses", user.uid);
+  const snapshot = await getDoc(userDocRef);
 
   if (snapshot.exists()) {
-    coursesData = snapshot.data();
+    globalCoursesData = snapshot.data();
   } else {
-    // إنشاء مستند جديد للمستخدم
-    await setDoc(userDoc, coursesData);
+    await setDoc(userDocRef, globalCoursesData);
   }
 
-  renderCourses(coursesData);
+  renderTab(currentTab);
 }
 
-function renderCourses(data) {
-  const tabsMap = { current: "current", completed: "completed", favorites: "favorites" };
+// ===============================
+// Render a single tab
+// ===============================
+function renderTab(tabKey) {
+  const container = document.getElementById(tabKey);
+  container.innerHTML = "";
 
-  for (const key in tabsMap) {
-    const container = document.getElementById(key);
-    container.innerHTML = "";
-    data[key].forEach(course => {
-      const card = document.createElement("div");
-      card.className = "course-card";
-      card.innerHTML = `
-        <img src="${course.image}" alt="${course.title}">
-        <div class="course-content">
-          <h4 onclick="window.location.href='course.html?id=${course.id}'">${course.title}</h4>
-          <span>المدرب: ${course.instructor}</span>
-        </div>
-        <i class="fa fa-heart favorite-btn ${data.favorites.some(f => f.id === course.id) ? 'favorited' : ''}"></i>
-      `;
-      // زر المفضلة
-      card.querySelector(".favorite-btn").addEventListener("click", async e => {
-        const fav = e.target;
-        const uid = auth.currentUser.uid;
-        if (!fav.classList.contains("favorited")) {
-          fav.classList.add("favorited");
-          await updateDoc(doc(db, "user_courses", uid), {
-            favorites: arrayUnion(course)
-          });
-        }
-      });
-      container.appendChild(card);
+  const courses = globalCoursesData[tabKey] || [];
+  if (courses.length === 0) {
+    const msg = document.createElement("div");
+    msg.className = "empty-msg";
+    msg.textContent = "لا توجد دورات هنا.";
+    container.appendChild(msg);
+    return;
+  }
+
+  courses.forEach(course => {
+    const card = document.createElement("div");
+    card.className = "course-card";
+
+    const img = document.createElement("img");
+    img.src = course.image;
+    img.alt = course.title;
+    card.appendChild(img);
+
+    const content = document.createElement("div");
+    content.className = "course-content";
+
+    const title = document.createElement("h4");
+    title.textContent = course.title;
+    title.style.cursor = "pointer";
+    title.addEventListener("click", () => {
+      window.location.href = `course.html?id=${course.id}`;
     });
-  }
+
+    const instructor = document.createElement("span");
+    instructor.textContent = `المدرب: ${course.instructor}`;
+
+    content.appendChild(title);
+    content.appendChild(document.createElement("br"));
+    content.appendChild(instructor);
+
+    // زر أكملت الدورة فقط للدورات الحالية
+    if (tabKey === "current") {
+      const completeBtn = document.createElement("button");
+      completeBtn.className = "btn-complete";
+      completeBtn.textContent = "أكملت هذه الدورة";
+      completeBtn.addEventListener("click", async () => {
+        const uid = auth.currentUser.uid;
+        globalCoursesData.current = globalCoursesData.current.filter(c => c.id !== course.id);
+        globalCoursesData.completed.push(course);
+        await updateDoc(doc(db, "user_courses", uid), {
+          current: globalCoursesData.current,
+          completed: globalCoursesData.completed
+        });
+        renderTab(currentTab);
+      });
+      content.appendChild(document.createElement("br"));
+      content.appendChild(completeBtn);
+    }
+
+    card.appendChild(content);
+
+    // زر المفضلة
+    const favBtn = document.createElement("i");
+    favBtn.className = "fa fa-heart favorite-btn";
+    if (globalCoursesData.favorites.some(f => f.id === course.id)) favBtn.classList.add("favorited");
+
+    favBtn.addEventListener("click", async () => {
+      const uid = auth.currentUser.uid;
+      if (favBtn.classList.contains("favorited")) {
+        favBtn.classList.remove("favorited");
+        await updateDoc(doc(db, "user_courses", uid), { favorites: arrayRemove(course) });
+        globalCoursesData.favorites = globalCoursesData.favorites.filter(f => f.id !== course.id);
+      } else {
+        favBtn.classList.add("favorited");
+        await updateDoc(doc(db, "user_courses", uid), { favorites: arrayUnion(course) });
+        globalCoursesData.favorites.push(course);
+      }
+      renderTab(currentTab);
+    });
+
+    card.appendChild(favBtn);
+    container.appendChild(card);
+  });
 }
 
-auth.onAuthStateChanged(() => {
-  loadCourses();
+// ===============================
+// Setup Tabs after DOM is ready
+// ===============================
+function setupTabs() {
+  const tabs = document.querySelectorAll(".tab-btn");
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+
+      currentTab = tab.dataset.tab;
+
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      document.getElementById(currentTab).classList.add("active");
+
+      renderTab(currentTab);
+    });
+  });
+}
+
+// ===============================
+// Initialize everything after DOMContentLoaded
+// ===============================
+document.addEventListener("DOMContentLoaded", async () => {
+  setupTabs();
+  await loadCourses();
 });
