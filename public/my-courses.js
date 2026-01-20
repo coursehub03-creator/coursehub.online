@@ -15,32 +15,30 @@ tabs.forEach(tab => {
   });
 });
 
-// جلب الدورات من Firestore وعرضها
 async function loadCourses() {
   let user = firebaseAuth.auth.currentUser;
   if (!user) {
-    const provider = new firebaseAuth.GoogleAuthProvider();
-    const result = await firebaseAuth.signInWithPopup(firebaseAuth.auth, provider);
-    user = result.user;
+    user = await firebaseAuth.signInWithPopup(firebaseAuth.auth, new firebaseAuth.GoogleAuthProvider());
   }
 
-  const userDocRef = doc(db, "user_courses", user.uid);
-  let snapshot = await getDoc(userDocRef);
+  const userDoc = doc(db, "user_courses", user.uid);
+  const snapshot = await getDoc(userDoc);
 
   let coursesData = { current: [], completed: [], favorites: [] };
-  if (snapshot.exists()) coursesData = snapshot.data();
-  else await setDoc(userDocRef, coursesData);
+
+  if (snapshot.exists()) {
+    coursesData = snapshot.data();
+  } else {
+    await setDoc(userDoc, coursesData);
+  }
 
   renderCourses(coursesData);
 }
 
 function renderCourses(data) {
-  const tabsMap = { current: "current", completed: "completed", favorites: "favorites" };
-
-  for (const key in tabsMap) {
+  for (const key of ["current","completed","favorites"]) {
     const container = document.getElementById(key);
     container.innerHTML = "";
-
     data[key].forEach(course => {
       const card = document.createElement("div");
       card.className = "course-card";
@@ -52,15 +50,12 @@ function renderCourses(data) {
         </div>
         <i class="fa fa-heart favorite-btn ${data.favorites.some(f => f.id === course.id) ? 'favorited' : ''}"></i>
       `;
-      // زر المفضلة
       card.querySelector(".favorite-btn").addEventListener("click", async e => {
         const fav = e.target;
         const uid = firebaseAuth.auth.currentUser.uid;
         if (!fav.classList.contains("favorited")) {
           fav.classList.add("favorited");
-          await updateDoc(doc(db, "user_courses", uid), {
-            favorites: arrayUnion(course)
-          });
+          await updateDoc(doc(db, "user_courses", uid), { favorites: arrayUnion(course) });
         }
       });
       container.appendChild(card);
@@ -68,4 +63,6 @@ function renderCourses(data) {
   }
 }
 
-firebaseAuth.onAuthStateChanged(firebaseAuth.auth, loadCourses);
+firebaseAuth.onAuthStateChanged(firebaseAuth.auth, () => {
+  loadCourses();
+});
