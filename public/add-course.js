@@ -6,7 +6,12 @@ const auth = getAuth();
 const db = getFirestore();
 
 // ضع UID حسابك هنا فقط (مسؤول الموقع)
-const ADMIN_UID = "هنا_ضع_UID_حسابك"; 
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("UID الخاص بك:", user.uid);
+    alert("UID الخاص بك: " + user.uid);
+  }
+});
 
 // تحقق من صلاحية الدخول
 onAuthStateChanged(auth, async (user) => {
