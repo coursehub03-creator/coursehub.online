@@ -4,18 +4,20 @@ const { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, doc, 
 // ===============================
 // Tabs Switching
 // ===============================
-const tabs = document.querySelectorAll(".tab-btn");
-const contents = document.querySelectorAll(".tab-content");
+function setupTabs() {
+  const tabs = document.querySelectorAll(".tab-btn");
+  const contents = document.querySelectorAll(".tab-content");
 
-tabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    tabs.forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-    contents.forEach(c => c.classList.remove("active"));
-    const target = document.getElementById(tab.dataset.tab);
-    target.classList.add("active");
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      contents.forEach(c => c.classList.remove("active"));
+      const target = document.getElementById(tab.dataset.tab);
+      target.classList.add("active");
+    });
   });
-});
+}
 
 // ===============================
 // User Login if Needed
@@ -39,6 +41,7 @@ async function loginIfNeeded() {
 let globalCoursesData = { current: [], completed: [], favorites: [] };
 
 async function loadCourses() {
+  setupTabs();
   const user = await loginIfNeeded();
   const userDocRef = doc(db, "user_courses", user.uid);
   let snapshot = await getDoc(userDocRef);
