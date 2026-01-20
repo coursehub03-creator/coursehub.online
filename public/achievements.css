@@ -1,3 +1,6 @@
+/* ============================= */
+/* Body and Container (المحتوى) */
+/* ============================= */
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -127,3 +130,17 @@ body {
   font-size: 14px;
   color: #666;
 }
+
+/* ============================= */
+/* Header Fix for RTL Pages */
+/* ============================= */
+.top-bar.container {
+  display: flex;
+  flex-direction: row; /* منع انعكاس العناصر */
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  direction: ltr; /* يجعل ترتيب الهيدر طبيعي */
+}
+
+/* احتفظ ببقية CSS للheader كما هي */
