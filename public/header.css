@@ -15,6 +15,7 @@ header {
 .top-bar.container {
   display: flex;
   justify-content: space-between; /* الشعار على اليسار، باقي العناصر على اليمين */
+  flex-direction: row; /* مهم جداً */
   align-items: center;
   gap: 20px;
   flex-wrap: wrap;
