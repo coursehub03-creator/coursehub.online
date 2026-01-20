@@ -1,70 +1,124 @@
-<footer>
-  <div class="footer-container container">
-    <div class="footer-col">
-      <h4>CourseHub</h4>
-      <p>منصة تعليمية عربية تقدم دورات، اختبارات وشهادات باحترافية عالية.</p>
-    </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إضافة دورة | CourseHub</title>
 
-    <div class="footer-col">
-      <h4>روابط سريعة</h4>
-      <a href="index.html">الرئيسية</a>
-      <a href="courses.html">الدورات</a>
-      <a href="tests.html">الاختبارات</a>
-      <a href="certificates.html">الشهادات</a>
-    </div>
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="header.css">
+  <link rel="stylesheet" href="footer.css">
+  <link rel="stylesheet" href="add-course.css">
 
-    <div class="footer-col">
-      <h4>الحساب</h4>
-      <a href="login.html">تسجيل الدخول</a>
-      <a href="register.html">إنشاء حساب</a>
-      <a href="my-courses.html">دوراتي</a>
-      <!-- زر المسؤول: يظهر فقط للمسؤول -->
-      <div id="adminAddCourse" style="margin-top:10px;"></div>
-    </div>
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
 
-    <div class="footer-col">
-      <h4>تابعنا</h4>
-      <div class="social-icons">
-        <a href="#"><i class="fa fa-facebook"></i></a>
-        <a href="#"><i class="fa fa-twitter"></i></a>
-        <a href="#"><i class="fa fa-youtube"></i></a>
-        <a href="#"><i class="fa fa-linkedin"></i></a>
-      </div>
-    </div>
+<!-- Header -->
+<div id="header-placeholder"></div>
+
+<!-- Main Content -->
+<main class="container add-course-container">
+  <h1>إضافة دورة جديدة</h1>
+
+  <div id="notAuthorizedMsg" style="display:none; color:red; text-align:center; margin-bottom:20px;">
+    غير مسموح لك بالدخول إلى هذه الصفحة.
   </div>
 
-  <div class="footer-bottom">
-    © <span id="year"></span> CourseHub - جميع الحقوق محفوظة
-  </div>
+  <form id="addCourseForm" style="display:none;">
+    <label for="title">عنوان الدورة</label>
+    <input type="text" id="title" placeholder="أدخل عنوان الدورة" required>
 
-  <!-- Firebase Auth للتحقق من المسؤول -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+    <label for="instructor">اسم المدرب</label>
+    <input type="text" id="instructor" placeholder="أدخل اسم المدرب" required>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
-      authDomain: "coursehub-23ed2.firebaseapp.com",
-      projectId: "coursehub-23ed2",
-      storageBucket: "coursehub-23ed2.appspot.com",
-      messagingSenderId: "367073521017",
-      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+    <label for="category">الفئة</label>
+    <select id="category" required>
+      <option value="">اختر الفئة</option>
+      <option value="web">تطوير الويب</option>
+      <option value="ai">الذكاء الاصطناعي</option>
+      <option value="design">التصميم</option>
+    </select>
+
+    <label for="image">رابط صورة الدورة</label>
+    <input type="url" id="image" placeholder="أدخل رابط صورة الدورة" required>
+
+    <label for="description">وصف الدورة</label>
+    <textarea id="description" rows="5" placeholder="أدخل وصف الدورة" required></textarea>
+
+    <button type="submit" class="btn">إضافة الدورة</button>
+  </form>
+</main>
+
+<!-- Footer -->
+<div id="footer-placeholder"></div>
+
+<!-- JS -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+
+  // تكوين Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+    authDomain: "coursehub-23ed2.firebaseapp.com",
+    projectId: "coursehub-23ed2",
+    storageBucket: "coursehub-23ed2.appspot.com",
+    messagingSenderId: "367073521017",
+    appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // بريد المسؤول
+  const adminEmails = ["admin@example.com"]; // ضع بريدك هنا
+
+  const form = document.getElementById("addCourseForm");
+  const notAuthMsg = document.getElementById("notAuthorizedMsg");
+
+  // التحقق من المستخدم
+  onAuthStateChanged(auth, user => {
+    if (user && adminEmails.includes(user.email)) {
+      form.style.display = "block";
+      notAuthMsg.style.display = "none";
+    } else {
+      form.style.display = "none";
+      notAuthMsg.style.display = "block";
+    }
+  });
+
+  // إضافة دورة جديدة
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const newCourse = {
+      title: document.getElementById("title").value,
+      instructor: document.getElementById("instructor").value,
+      category: document.getElementById("category").value,
+      image: document.getElementById("image").value,
+      description: document.getElementById("description").value,
+      rating: 4,
+      students: 0,
+      content: []
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    try {
+      await addDoc(collection(db, "courses"), newCourse);
+      alert("تمت إضافة الدورة بنجاح!");
+      form.reset();
+    } catch (error) {
+      console.error("خطأ أثناء إضافة الدورة:", error);
+      alert("حدث خطأ أثناء إضافة الدورة.");
+    }
+  });
+</script>
 
-    const adminEmails = ["admin@example.com"]; // ضع هنا البريد/البريدات التي تريدها كمسؤول
-
-    const adminDiv = document.getElementById("adminAddCourse");
-
-    onAuthStateChanged(auth, (user) => {
-      if (user && adminEmails.includes(user.email)) {
-        adminDiv.innerHTML = `<a href="add-course.html" class="btn" style="display:inline-block;padding:8px 15px;background:#e74c3c;color:#fff;border-radius:6px;text-decoration:none;">إضافة دورة جديدة</a>`;
-      }
-    });
-
-    // سنة الفوتر تلقائية
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
-</footer>
+<script src="main.js" defer></script>
+</body>
+</html>
