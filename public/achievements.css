@@ -1,30 +1,38 @@
 /* ============================= */
 /* Body and Container (المحتوى) */
 /* ============================= */
-body {
+* {
+  box-sizing: border-box; /* كل العناصر تستخدم box-sizing لتجنب التمدد */
+}
+
+body, html {
   margin: 0;
   font-family: 'Inter', sans-serif;
   background: #f4f6fb;
   color: #1c1c1c;
+  overflow-x: hidden; /* منع أي تمدد عرضي */
 }
 
 /* Container */
 .achievements-container {
   max-width: 1200px;
+  width: 100%;
   margin: auto;
   padding: 30px 20px;
-  box-sizing: border-box; /* لتجنب أي تمدد زائد */
 }
 
+/* Page Title */
 .page-title {
   margin-bottom: 25px;
   color: #1c3faa;
 }
 
-/* Summary */
+/* ============================= */
+/* Summary Cards (الدورات والشهادات) */
+/* ============================= */
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   margin-bottom: 40px;
 }
@@ -36,9 +44,6 @@ body {
   text-align: center;
   box-shadow: 0 6px 15px rgba(0,0,0,0.08);
 }
-
-/* إزالة أي أيقونات أو محتوى متعلق بـ "ساعات التعلم" */
-/* لم يعد هناك حاجة للـ i.fa-clock أو #learningHours */
 
 .summary-card i {
   font-size: 30px;
@@ -58,7 +63,9 @@ body {
   color: #1c3faa;
 }
 
-/* Sections */
+/* ============================= */
+/* Sections (Certificates & Courses) */
+/* ============================= */
 .section-block {
   margin-bottom: 40px;
 }
@@ -135,11 +142,16 @@ body {
   color: #666;
 }
 
-/* لمنع أي تمدد عرضي */
-* {
-  box-sizing: border-box;
-}
+/* ============================= */
+/* Responsive Adjustments */
+/* ============================= */
+@media (max-width: 800px) {
+  .summary-cards {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
 
-body, html {
-  overflow-x: hidden;
+  .certificates-list,
+  .courses-list {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
 }
