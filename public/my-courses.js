@@ -1,5 +1,5 @@
 import { firebaseAuth } from './firebase-config.js';
-const { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion } = firebaseAuth;
+const { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } = firebaseAuth;
 
 // ===============================
 // Tabs Switching
@@ -58,8 +58,15 @@ function renderCourses(data) {
     const container = document.getElementById(key);
     container.innerHTML = ""; // Clear old content
 
+    if (data[key].length === 0) {
+      const msg = document.createElement("p");
+      msg.textContent = "لا توجد دورات هنا.";
+      msg.style.textAlign = "center";
+      container.appendChild(msg);
+      return;
+    }
+
     data[key].forEach(course => {
-      // إنشاء عناصر البطاقة
       const card = document.createElement("div");
       card.className = "course-card";
 
@@ -84,21 +91,47 @@ function renderCourses(data) {
       content.appendChild(title);
       content.appendChild(document.createElement("br"));
       content.appendChild(instructor);
+
+      // زر "أكملت الدورة" فقط للدورات الحالية
+      if (key === "current") {
+        const completeBtn = document.createElement("button");
+        completeBtn.textContent = "أكملت هذه الدورة";
+        completeBtn.className = "btn-complete";
+        completeBtn.addEventListener("click", async () => {
+          const uid = auth.currentUser.uid;
+          // إزالة من current
+          data.current = data.current.filter(c => c.id !== course.id);
+          // إضافة إلى completed
+          data.completed.push(course);
+          await updateDoc(doc(db, "user_courses", uid), {
+            current: data.current,
+            completed: data.completed
+          });
+          renderCourses(data); // إعادة رسم البطاقة
+        });
+        content.appendChild(document.createElement("br"));
+        content.appendChild(completeBtn);
+      }
+
       card.appendChild(content);
 
-      // زر المفضلة
+      // زر المفضلة (toggle)
       const favBtn = document.createElement("i");
-      favBtn.className = `fa fa-heart favorite-btn`;
-      if (data.favorites.some(f => f.id === course.id)) {
-        favBtn.classList.add("favorited");
-      }
+      favBtn.className = "fa fa-heart favorite-btn";
+      if (data.favorites.some(f => f.id === course.id)) favBtn.classList.add("favorited");
 
       favBtn.addEventListener("click", async () => {
         const uid = auth.currentUser.uid;
-        if (!favBtn.classList.contains("favorited")) {
+        if (favBtn.classList.contains("favorited")) {
+          favBtn.classList.remove("favorited");
+          await updateDoc(doc(db, "user_courses", uid), { favorites: arrayRemove(course) });
+          data.favorites = data.favorites.filter(f => f.id !== course.id);
+        } else {
           favBtn.classList.add("favorited");
           await updateDoc(doc(db, "user_courses", uid), { favorites: arrayUnion(course) });
+          data.favorites.push(course);
         }
+        renderCourses(data); // إعادة رسم لتحديث التغييرات
       });
 
       card.appendChild(favBtn);
