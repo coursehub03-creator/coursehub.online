@@ -1,8 +1,4 @@
 // ===============================
-// main.js - تحميل Header و Footer + وظائف
-// ===============================
-
-// ===============================
 // تحميل CSS مرة واحدة فقط
 // ===============================
 function loadCSS(href) {
@@ -18,26 +14,21 @@ function loadCSS(href) {
 // تحميل Header و Footer من ملفات خارجية
 // ===============================
 async function loadHeaderFooter() {
-
-    // ===== Header =====
+    // Header
     try {
         const headerResponse = await fetch("header.html");
         const headerHTML = await headerResponse.text();
         document.body.insertAdjacentHTML("afterbegin", headerHTML);
         loadCSS("header.css");
-    } catch (err) {
-        console.error("فشل تحميل الهيدر:", err);
-    }
+    } catch (err) { console.error("فشل تحميل الهيدر:", err); }
 
-    // ===== Footer =====
+    // Footer
     try {
         const footerResponse = await fetch("footer.html");
         const footerHTML = await footerResponse.text();
         document.body.insertAdjacentHTML("beforeend", footerHTML);
         loadCSS("footer.css");
-    } catch (err) {
-        console.error("فشل تحميل الفوتر:", err);
-    }
+    } catch (err) { console.error("فشل تحميل الفوتر:", err); }
 
     // إعدادات بعد التحميل
     setupUserState();
@@ -46,7 +37,7 @@ async function loadHeaderFooter() {
 }
 
 // ===============================
-// إدارة حالة المستخدم (تسجيل دخول / خروج)
+// إدارة حالة المستخدم
 // ===============================
 function setupUserState() {
     const user = JSON.parse(localStorage.getItem("coursehub_user"));
@@ -78,10 +69,7 @@ function setupUserState() {
         userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
         userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
 
-        document.addEventListener("click", () => {
-            dropdown.style.display = "none";
-        });
-
+        document.addEventListener("click", () => { dropdown.style.display = "none"; });
         dropdown.addEventListener("click", e => e.stopPropagation());
 
         const logoutLink = document.getElementById("logout-link");
@@ -102,7 +90,7 @@ function setupUserState() {
 }
 
 // ===============================
-// شريط البحث (ظهور فقط في index.html و courses.html)
+// شريط البحث
 // ===============================
 function setupHeaderSearch() {
     const path = window.location.pathname.split("/").pop();
@@ -112,7 +100,6 @@ function setupHeaderSearch() {
 
     if (path === "" || path === "index.html" || path === "courses.html") {
         searchBar.style.display = "flex";
-
         const searchBtn = document.getElementById("searchBtn");
         if (searchBtn) {
             searchBtn.addEventListener("click", () => {
@@ -120,7 +107,6 @@ function setupHeaderSearch() {
                 if (query) alert(`بحث عن: ${query}`);
             });
         }
-
     } else {
         searchBar.style.display = "none";
     }
@@ -136,7 +122,6 @@ function setupLanguageToggle() {
     langBtn.addEventListener("click", e => {
         e.stopPropagation();
         const text = langBtn.textContent.trim();
-
         if (text.includes("عربي")) langBtn.innerHTML = '<i class="fa fa-globe"></i> English';
         else if (text.includes("English")) langBtn.innerHTML = '<i class="fa fa-globe"></i> Français';
         else langBtn.innerHTML = '<i class="fa fa-globe"></i> عربي';
