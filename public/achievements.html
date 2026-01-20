@@ -2,31 +2,64 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إنجازاتي | CourseHub</title>
 
-  <link rel="stylesheet" href="style.css">
+  <!-- Styles -->
+<link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="achievements.css">
 
-  <!-- CSP نظيف -->
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self';
-                 script-src 'self' https://www.gstatic.com;
-                 style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
-                 font-src https://fonts.gstatic.com;
-                 img-src 'self' data: https:;
-                 connect-src https://firestore.googleapis.com https://identitytoolkit.googleapis.com;">
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    header { direction: ltr !important; }
+    .top-bar.container {
+      flex-direction: row !important;
+      justify-content: space-between !important;
+    }
+  </style>
 </head>
 
 <body>
-  <main>
-    <span id="completedCourses">0</span>
-    <span id="certificatesCount">0</span>
 
-    <div id="certificatesList"></div>
-    <div id="coursesList"></div>
+  <div id="header-placeholder"></div>
+
+  <main class="achievements-container">
+    <h1 class="page-title">إنجازاتي</h1>
+
+    <section class="summary-cards">
+      <div class="summary-card">
+        <i class="fa fa-graduation-cap"></i>
+        <h3>الدورات المكتملة</h3>
+        <span id="completedCourses">0</span>
+      </div>
+
+      <div class="summary-card">
+        <i class="fa fa-certificate"></i>
+        <h3>الشهادات</h3>
+        <span id="certificatesCount">0</span>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <h2>الشهادات</h2>
+      <div class="certificates-list" id="certificatesList"></div>
+    </section>
+
+    <section class="section-block">
+      <h2>الدورات المكتملة</h2>
+      <div class="courses-list" id="coursesList"></div>
+    </section>
   </main>
 
-  <!-- JS خارجي فقط -->
-  <script type="module" src="achievements.js"></script>
+  <div id="footer-placeholder"></div>
+
+  <!-- JS -->
+  <script src="./main.js" defer></script>
+  <script type="module" src="./achievements.js"></script>
+
 </body>
 </html>
