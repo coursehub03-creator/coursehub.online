@@ -1,6 +1,4 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 body, html {
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -45,7 +43,6 @@ body, html {
 .tab-content {
   display: none;
   gap: 20px;
-  min-height: 50px; /* لضمان ظهور رسالة عند الفراغ */
 }
 .tab-content.active {
   display: grid;
@@ -89,13 +86,4 @@ body, html {
 }
 .course-card .favorite-btn.favorited {
   color: #ff4b5c;
-}
-
-/* رسالة عدم وجود دورات */
-.empty-msg {
-  text-align: center;
-  font-size: 16px;
-  color: #555;
-  grid-column: 1/-1; /* لتظهر في وسط الشبكة */
-  padding: 20px;
 }
