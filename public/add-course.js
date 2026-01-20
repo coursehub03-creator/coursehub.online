@@ -25,7 +25,7 @@ const auth = getAuth();
 // -----------------------------
 // قائمة المسؤولين (البريد الإلكتروني)
 // -----------------------------
-const ADMIN_EMAILS = ["admin@example.com", "boss@example.com"];
+const ADMIN_EMAILS = ["kaleadsalous30@gmail.com", "boss@example.com"];
 
 // -----------------------------
 // التحقق من المستخدم
