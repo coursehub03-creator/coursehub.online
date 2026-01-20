@@ -1,69 +1,87 @@
-<footer>
-  <div class="footer-container container">
-    <div class="footer-col">
-      <h4>CourseHub</h4>
-      <p>منصة تعليمية عربية تقدم دورات، اختبارات وشهادات باحترافية عالية.</p>
-    </div>
+footer {
+  background-color: #0f1f4d;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  margin-top: 60px;
+}
 
-    <div class="footer-col">
-      <h4>روابط سريعة</h4>
-      <a href="index.html">الرئيسية</a>
-      <a href="courses.html">الدورات</a>
-      <a href="tests.html">الاختبارات</a>
-      <a href="certificates.html">الشهادات</a>
-      <!-- زر المسؤول: يظهر فقط للمسؤول -->
-      <div id="adminAddCourse" style="margin-top:10px;"></div>
-    </div>
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding: 50px 20px;
+}
 
-    <div class="footer-col">
-      <h4>الحساب</h4>
-      <a href="login.html">تسجيل الدخول</a>
-      <a href="register.html">إنشاء حساب</a>
-      <a href="my-courses.html">دوراتي</a>
-    </div>
+.footer-col h4 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #ffcc00;
+}
 
-    <div class="footer-col">
-      <h4>تابعنا</h4>
-      <div class="social-icons">
-        <a href="#"><i class="fa fa-facebook"></i></a>
-        <a href="#"><i class="fa fa-twitter"></i></a>
-        <a href="#"><i class="fa fa-youtube"></i></a>
-        <a href="#"><i class="fa fa-linkedin"></i></a>
-      </div>
-    </div>
-  </div>
+.footer-col p {
+  line-height: 1.7;
+  font-size: 14px;
+  color: #d0d6f0;
+}
 
-  <div class="footer-bottom">
-    © <span id="year"></span> CourseHub - جميع الحقوق محفوظة
-  </div>
+.footer-col a {
+  display: block;
+  color: #d0d6f0;
+  text-decoration: none;
+  margin-bottom: 10px;
+  font-size: 14px;
+  transition: color 0.3s;
+}
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+.footer-col a:hover {
+  color: #ffcc00;
+}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
-      authDomain: "coursehub-23ed2.firebaseapp.com",
-      projectId: "coursehub-23ed2",
-      storageBucket: "coursehub-23ed2.appspot.com",
-      messagingSenderId: "367073521017",
-      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
-    };
+.social-icons {
+  display: flex;
+  gap: 12px;
+}
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+.social-icons a {
+  width: 36px;
+  height: 36px;
+  background-color: #1c3faa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #ffffff;
+  transition: background 0.3s, transform 0.2s;
+}
 
-    const adminEmails = ["kaleadsalous30@gmail.com"]; // ضع هنا البريد المسؤول
+.social-icons a:hover {
+  background-color: #ffcc00;
+  color: #1c3faa;
+  transform: translateY(-3px);
+}
 
-    const adminDiv = document.getElementById("adminAddCourse");
+.footer-bottom {
+  background-color: #0b1638;
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  color: #c0c6e8;
+}
 
-    onAuthStateChanged(auth, (user) => {
-      if (user && adminEmails.includes(user.email)) {
-        adminDiv.innerHTML = `<a href="add-course.html" class="btn" style="display:inline-block;padding:8px 15px;background:#e74c3c;color:#fff;border-radius:6px;text-decoration:none;">إضافة دورة جديدة</a>`;
-      }
-    });
+/* Responsive */
+@media (max-width: 900px) {
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 
-    // سنة الفوتر تلقائية
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
-</footer>
+@media (max-width: 600px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .social-icons {
+    justify-content: center;
+  }
+}
