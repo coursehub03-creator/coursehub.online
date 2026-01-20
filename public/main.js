@@ -1,4 +1,8 @@
 // ===============================
+// main.js - تحميل Header و Footer + وظائف
+// ===============================
+
+// ===============================
 // تحميل CSS مرة واحدة فقط
 // ===============================
 function loadCSS(href) {
@@ -11,21 +15,29 @@ function loadCSS(href) {
 }
 
 // ===============================
-// تحميل Header و Footer
+// تحميل Header و Footer من ملفات خارجية
 // ===============================
 async function loadHeaderFooter() {
 
     // ===== Header =====
-    const headerResponse = await fetch("header.html");
-    const headerHTML = await headerResponse.text();
-    document.body.insertAdjacentHTML("afterbegin", headerHTML);
-    loadCSS("header.css");
+    try {
+        const headerResponse = await fetch("header.html");
+        const headerHTML = await headerResponse.text();
+        document.body.insertAdjacentHTML("afterbegin", headerHTML);
+        loadCSS("header.css");
+    } catch (err) {
+        console.error("فشل تحميل الهيدر:", err);
+    }
 
     // ===== Footer =====
-    const footerResponse = await fetch("footer.html");
-    const footerHTML = await footerResponse.text();
-    document.body.insertAdjacentHTML("beforeend", footerHTML);
-    loadCSS("footer.css");
+    try {
+        const footerResponse = await fetch("footer.html");
+        const footerHTML = await footerResponse.text();
+        document.body.insertAdjacentHTML("beforeend", footerHTML);
+        loadCSS("footer.css");
+    } catch (err) {
+        console.error("فشل تحميل الفوتر:", err);
+    }
 
     // إعدادات بعد التحميل
     setupUserState();
@@ -42,10 +54,8 @@ function setupUserState() {
     const loginLink = document.getElementById("login-link");
 
     if (user && userContainer) {
-        // إخفاء زر تسجيل الدخول
         if (loginLink) loginLink.style.display = "none";
 
-        // عرض صورة واسم المستخدم + القائمة المنسدلة
         userContainer.innerHTML = `
             <img src="${user.picture}" alt="${user.name}" class="user-pic">
             <span class="user-name">${user.name}</span>
@@ -68,21 +78,17 @@ function setupUserState() {
         userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
         userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
 
-        // إغلاق عند الضغط خارج القائمة
         document.addEventListener("click", () => {
             dropdown.style.display = "none";
         });
 
-        // منع الإغلاق عند الضغط داخل القائمة
         dropdown.addEventListener("click", e => e.stopPropagation());
 
-        // تسجيل الخروج
         const logoutLink = document.getElementById("logout-link");
         if (logoutLink) {
             logoutLink.addEventListener("click", e => {
                 e.preventDefault();
                 localStorage.removeItem("coursehub_user");
-                // إعادة عرض زر تسجيل الدخول
                 if (loginLink) loginLink.style.display = "block";
                 userContainer.style.display = "none";
                 window.location.href = "login.html";
@@ -90,7 +96,6 @@ function setupUserState() {
         }
 
     } else {
-        // إذا لم يكن المستخدم مسجلاً دخول
         if (loginLink) loginLink.style.display = "block";
         if (userContainer) userContainer.style.display = "none";
     }
@@ -109,10 +114,13 @@ function setupHeaderSearch() {
         searchBar.style.display = "flex";
 
         const searchBtn = document.getElementById("searchBtn");
-        searchBtn.addEventListener("click", () => {
-            const query = document.getElementById("searchInput").value.trim();
-            if (query) alert(`بحث عن: ${query}`);
-        });
+        if (searchBtn) {
+            searchBtn.addEventListener("click", () => {
+                const query = document.getElementById("searchInput").value.trim();
+                if (query) alert(`بحث عن: ${query}`);
+            });
+        }
+
     } else {
         searchBar.style.display = "none";
     }
