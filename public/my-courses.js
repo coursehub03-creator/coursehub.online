@@ -61,7 +61,7 @@ async function loadCourses() {
 function renderCourses(data) {
   ["current", "completed", "favorites"].forEach(key => {
     const container = document.getElementById(key);
-    container.innerHTML = ""; // Clear old content
+    container.innerHTML = "";
 
     if (!data[key] || data[key].length === 0) {
       const msg = document.createElement("div");
@@ -97,16 +97,13 @@ function renderCourses(data) {
       content.appendChild(document.createElement("br"));
       content.appendChild(instructor);
 
-      // زر "أكملت الدورة" فقط للدورات الحالية
       if (key === "current") {
         const completeBtn = document.createElement("button");
         completeBtn.textContent = "أكملت هذه الدورة";
         completeBtn.className = "btn-complete";
         completeBtn.addEventListener("click", async () => {
           const uid = auth.currentUser.uid;
-          // إزالة من current
           data.current = data.current.filter(c => c.id !== course.id);
-          // إضافة إلى completed
           data.completed.push(course);
           await updateDoc(doc(db, "user_courses", uid), {
             current: data.current,
@@ -120,7 +117,6 @@ function renderCourses(data) {
 
       card.appendChild(content);
 
-      // زر المفضلة (toggle)
       const favBtn = document.createElement("i");
       favBtn.className = "fa fa-heart favorite-btn";
       if (data.favorites.some(f => f.id === course.id)) favBtn.classList.add("favorited");
