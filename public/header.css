@@ -13,11 +13,11 @@ header {
 
 /* Top Bar Container */
 .top-bar.container {
-    display: flex;
-    flex-direction: row; /* مهم جداً */
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
+  display: flex;
+  justify-content: space-between; /* الشعار على اليسار، باقي العناصر على اليمين */
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 
