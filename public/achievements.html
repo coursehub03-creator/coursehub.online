@@ -16,7 +16,6 @@
   </style>
 </head>
 <body>
-
   <div id="header-placeholder"></div>
 
   <main class="achievements-container">
@@ -28,6 +27,7 @@
         <h3>الدورات المكتملة</h3>
         <span id="completedCourses">0</span>
       </div>
+
       <div class="summary-card">
         <i class="fa fa-certificate"></i>
         <h3>الشهادات</h3>
@@ -50,16 +50,23 @@
 
   <script type="module">
     import { firebaseAuth } from './firebase-config.js';
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
 
-    const db = getFirestore(firebaseAuth.auth.app);
+    const { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, doc, getDoc, setDoc } = firebaseAuth;
 
-    firebaseAuth.onAuthStateChanged(firebaseAuth.auth, async (user) => {
-      if (!user) {
-        await firebaseAuth.signInWithPopup(firebaseAuth.auth, new firebaseAuth.GoogleAuthProvider());
-        return;
-      }
+    async function loginIfNeeded() {
+      return new Promise(resolve => {
+        onAuthStateChanged(auth, async (user) => {
+          if (!user) {
+            const result = await signInWithPopup(auth, new GoogleAuthProvider());
+            resolve(result.user);
+          } else {
+            resolve(user);
+          }
+        });
+      });
+    }
 
+    loginIfNeeded().then(async user => {
       const userDocRef = doc(db, "users", user.uid);
       let userDocSnap = await getDoc(userDocRef);
       let progressData;
@@ -75,7 +82,7 @@
       document.getElementById("certificatesCount").textContent = progressData.certificates.length;
 
       const certList = document.getElementById("certificatesList");
-      certList.innerHTML = progressData.certificates.length === 0
+      certList.innerHTML = progressData.certificates.length === 0 
         ? "<p>لم تحصل على أي شهادة بعد.</p>"
         : progressData.certificates.map(cert => `
             <div class="certificate-card">
@@ -87,7 +94,7 @@
           `).join("");
 
       const coursesList = document.getElementById("coursesList");
-      coursesList.innerHTML = progressData.completedCourses.length === 0
+      coursesList.innerHTML = progressData.completedCourses.length === 0 
         ? "<p>لم تكمل أي دورة بعد.</p>"
         : progressData.completedCourses.map(course => `
             <div class="course-card">
