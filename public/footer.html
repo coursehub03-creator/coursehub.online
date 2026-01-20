@@ -1,6 +1,5 @@
 <footer>
   <div class="footer-container container">
-
     <div class="footer-col">
       <h4>CourseHub</h4>
       <p>منصة تعليمية عربية تقدم دورات، اختبارات وشهادات باحترافية عالية.</p>
@@ -19,6 +18,8 @@
       <a href="login.html">تسجيل الدخول</a>
       <a href="register.html">إنشاء حساب</a>
       <a href="my-courses.html">دوراتي</a>
+      <!-- زر المسؤول: يظهر فقط للمسؤول -->
+      <div id="adminAddCourse" style="margin-top:10px;"></div>
     </div>
 
     <div class="footer-col">
@@ -30,10 +31,40 @@
         <a href="#"><i class="fa fa-linkedin"></i></a>
       </div>
     </div>
-
   </div>
 
   <div class="footer-bottom">
     © <span id="year"></span> CourseHub - جميع الحقوق محفوظة
   </div>
+
+  <!-- Firebase Auth للتحقق من المسؤول -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+      authDomain: "coursehub-23ed2.firebaseapp.com",
+      projectId: "coursehub-23ed2",
+      storageBucket: "coursehub-23ed2.appspot.com",
+      messagingSenderId: "367073521017",
+      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const adminEmails = ["admin@example.com"]; // ضع هنا البريد/البريدات التي تريدها كمسؤول
+
+    const adminDiv = document.getElementById("adminAddCourse");
+
+    onAuthStateChanged(auth, (user) => {
+      if (user && adminEmails.includes(user.email)) {
+        adminDiv.innerHTML = `<a href="add-course.html" class="btn" style="display:inline-block;padding:8px 15px;background:#e74c3c;color:#fff;border-radius:6px;text-decoration:none;">إضافة دورة جديدة</a>`;
+      }
+    });
+
+    // سنة الفوتر تلقائية
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </footer>
