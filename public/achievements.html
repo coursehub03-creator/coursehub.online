@@ -63,10 +63,27 @@
   <div id="footer-placeholder"></div>
 
   <!-- Scripts -->
-  <script src="header.js" defer></script>
-  <script src="footer.js" defer></script>
+  <script>
+    // تحميل الهيدر والفوتر من ملفات خارجية
+    document.addEventListener("DOMContentLoaded", () => {
+      fetch('header.html')
+        .then(res => res.text())
+        .then(data => document.getElementById('header-placeholder').innerHTML = data);
+
+      fetch('footer.html')
+        .then(res => res.text())
+        .then(data => document.getElementById('footer-placeholder').innerHTML = data);
+
+      // تحديث السنة في الفوتر
+      const yearSpan = document.getElementById("year");
+      if(yearSpan){
+        yearSpan.textContent = new Date().getFullYear();
+      }
+    });
+  </script>
+
   <script src="achievements.js" defer></script>
   <script src="main.js" defer></script> <!-- يحتوي على User Dropdown و Language Toggle و Search Bar -->
-  
+
 </body>
 </html>
