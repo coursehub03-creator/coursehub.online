@@ -1,38 +1,11 @@
 import { firebaseAuth } from './firebase-config.js';
 const { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } = firebaseAuth;
 
-// ===============================
-// Track current tab
-// ===============================
-let currentTab = "current"; // default
 let globalCoursesData = { current: [], completed: [], favorites: [] };
+let currentTab = "current";
 
 // ===============================
-// Tabs Switching
-// ===============================
-function setupTabs() {
-  const tabs = document.querySelectorAll(".tab-btn");
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      // update tab button classes
-      tabs.forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-
-      // update current tab
-      currentTab = tab.dataset.tab;
-
-      // show/hide tab contents
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      document.getElementById(currentTab).classList.add("active");
-
-      // render content for current tab
-      renderTab(currentTab);
-    });
-  });
-}
-
-// ===============================
-// User Login if Needed
+// User Login
 // ===============================
 async function loginIfNeeded() {
   return new Promise(resolve => {
@@ -48,11 +21,9 @@ async function loginIfNeeded() {
 }
 
 // ===============================
-// Load User Courses
+// Load Courses from Firestore
 // ===============================
 async function loadCourses() {
-  setupTabs();
-
   const user = await loginIfNeeded();
   const userDocRef = doc(db, "user_courses", user.uid);
   const snapshot = await getDoc(userDocRef);
@@ -63,19 +34,17 @@ async function loadCourses() {
     await setDoc(userDocRef, globalCoursesData);
   }
 
-  // render initial tab
   renderTab(currentTab);
 }
 
 // ===============================
-// Render only a single tab
+// Render a single tab
 // ===============================
 function renderTab(tabKey) {
   const container = document.getElementById(tabKey);
   container.innerHTML = "";
 
   const courses = globalCoursesData[tabKey] || [];
-
   if (courses.length === 0) {
     const msg = document.createElement("div");
     msg.className = "empty-msg";
@@ -113,21 +82,17 @@ function renderTab(tabKey) {
     // زر أكملت الدورة فقط للدورات الحالية
     if (tabKey === "current") {
       const completeBtn = document.createElement("button");
-      completeBtn.textContent = "أكملت هذه الدورة";
       completeBtn.className = "btn-complete";
+      completeBtn.textContent = "أكملت هذه الدورة";
       completeBtn.addEventListener("click", async () => {
         const uid = auth.currentUser.uid;
-
-        // نقل الدورة
         globalCoursesData.current = globalCoursesData.current.filter(c => c.id !== course.id);
         globalCoursesData.completed.push(course);
-
         await updateDoc(doc(db, "user_courses", uid), {
           current: globalCoursesData.current,
           completed: globalCoursesData.completed
         });
-
-        renderTab(currentTab); // تحديث التبويب الحالي فقط
+        renderTab(currentTab);
       });
       content.appendChild(document.createElement("br"));
       content.appendChild(completeBtn);
@@ -135,14 +100,13 @@ function renderTab(tabKey) {
 
     card.appendChild(content);
 
-    // زر المفضلة (toggle)
+    // زر المفضلة
     const favBtn = document.createElement("i");
     favBtn.className = "fa fa-heart favorite-btn";
     if (globalCoursesData.favorites.some(f => f.id === course.id)) favBtn.classList.add("favorited");
 
     favBtn.addEventListener("click", async () => {
       const uid = auth.currentUser.uid;
-
       if (favBtn.classList.contains("favorited")) {
         favBtn.classList.remove("favorited");
         await updateDoc(doc(db, "user_courses", uid), { favorites: arrayRemove(course) });
@@ -152,8 +116,7 @@ function renderTab(tabKey) {
         await updateDoc(doc(db, "user_courses", uid), { favorites: arrayUnion(course) });
         globalCoursesData.favorites.push(course);
       }
-
-      renderTab(currentTab); // تحديث التبويب الحالي فقط
+      renderTab(currentTab);
     });
 
     card.appendChild(favBtn);
@@ -162,6 +125,29 @@ function renderTab(tabKey) {
 }
 
 // ===============================
-// Initialize
+// Setup Tabs after DOM is ready
 // ===============================
-document.addEventListener("DOMContentLoaded", loadCourses);
+function setupTabs() {
+  const tabs = document.querySelectorAll(".tab-btn");
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+
+      currentTab = tab.dataset.tab;
+
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      document.getElementById(currentTab).classList.add("active");
+
+      renderTab(currentTab);
+    });
+  });
+}
+
+// ===============================
+// Initialize everything after DOMContentLoaded
+// ===============================
+document.addEventListener("DOMContentLoaded", async () => {
+  setupTabs();
+  await loadCourses();
+});
