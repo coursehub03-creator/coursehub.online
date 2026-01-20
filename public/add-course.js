@@ -1,54 +1,81 @@
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc
+} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+import {
+  getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider
+} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 
-// Firebase
+// -----------------------------
+// إعداد Firebase
+// -----------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+  authDomain: "coursehub-23ed2.firebaseapp.com",
+  projectId: "coursehub-23ed2",
+  storageBucket: "coursehub-23ed2.firebasestorage.app",
+  messagingSenderId: "367073521017",
+  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 const auth = getAuth();
-const db = getFirestore();
 
-// ضع UID حسابك هنا فقط (مسؤول الموقع)
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("UID الخاص بك:", user.uid);
-    alert("UID الخاص بك: " + user.uid);
-  }
-});
+// -----------------------------
+// قائمة المسؤولين (البريد الإلكتروني)
+// -----------------------------
+const ADMIN_EMAILS = ["admin@example.com", "boss@example.com"];
 
-// تحقق من صلاحية الدخول
+// -----------------------------
+// التحقق من المستخدم
+// -----------------------------
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } else if (user.uid !== ADMIN_UID) {
-    alert("غير مسموح لك بالدخول لهذه الصفحة");
-    window.location.href = "index.html"; // إعادة التوجيه للمستخدم العادي
+    const result = await signInWithPopup(auth, provider);
+    user = result.user;
+  }
+
+  if (!ADMIN_EMAILS.includes(user.email)) {
+    alert("غير مسموح لك بالدخول لهذه الصفحة!");
+    window.location.href = "index.html";
   }
 });
 
-// التعامل مع النموذج
-document.getElementById("addCourseForm").addEventListener("submit", async (e) => {
+// -----------------------------
+// حفظ الدورة
+// -----------------------------
+const form = document.getElementById("addCourseForm");
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const title = document.getElementById("title").value;
-  const description = document.getElementById("description").value;
-  const image = document.getElementById("image").value;
+  const title = document.getElementById("title").value.trim();
+  const instructor = document.getElementById("instructor").value.trim();
   const category = document.getElementById("category").value;
-  const content = document.getElementById("content").value.split("\n");
+  const image = document.getElementById("image").value.trim();
+  const description = document.getElementById("description").value.trim();
+
+  if (!title || !instructor || !category || !image || !description) {
+    alert("يرجى تعبئة جميع الحقول!");
+    return;
+  }
 
   try {
     await addDoc(collection(db, "courses"), {
       title,
-      description,
-      image,
+      instructor,
       category,
-      content,
-      rating: 0,
-      students: 0,
+      image,
+      description,
       createdAt: new Date().toISOString()
     });
-    alert("تمت إضافة الدورة بنجاح!");
-    document.getElementById("addCourseForm").reset();
-  } catch (err) {
-    console.error(err);
-    alert("حدث خطأ أثناء إضافة الدورة");
+
+    alert("تم إضافة الدورة بنجاح!");
+    form.reset();
+  } catch (error) {
+    console.error(error);
+    alert("حدث خطأ أثناء إضافة الدورة.");
   }
 });
