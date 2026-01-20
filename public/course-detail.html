@@ -14,13 +14,16 @@
     .course-detail { max-width: 900px; margin: auto; padding: 30px 20px; background: #fff; border-radius: 10px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
     .course-detail h2 { margin-top: 0; }
     .course-detail img { width: 100%; max-height: 300px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
-    .course-detail ul { list-style: disc; margin-left: 20px; }
+    .course-detail ul { list-style: disc; margin-left: 20px; padding-left: 0; }
+    .course-detail ul li { margin-bottom: 5px; }
     .course-detail .btn { display: inline-block; padding: 10px 20px; background: #1c3faa; color: #fff; border-radius: 6px; text-decoration: none; margin-top: 15px; }
     .course-detail .btn:hover { background: #1451a1; }
     .course-detail form { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-    .course-detail input, .course-detail button { padding: 10px; border-radius: 6px; border: 1px solid #ccc; }
+    .course-detail input, .course-detail button { padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
     .course-detail button { background: #1c3faa; color: #fff; border: none; cursor: pointer; transition: 0.3s; }
     .course-detail button:hover { background: #1451a1; }
+    .rating { font-size: 16px; color: #f1c40f; margin-bottom: 10px; }
+    .empty-msg { text-align: center; font-size: 16px; color: #666; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -47,10 +50,10 @@
 
   <div id="footer-placeholder"></div>
 
-  <!-- Firebase -->
+  <!-- Firebase + Load Course -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
@@ -75,31 +78,47 @@
     const joinBtn = document.getElementById("joinBtn");
 
     async function loadCourseDetail() {
-      const docRef = doc(db, "courses", courseId);
-      const snapshot = await getDoc(docRef);
-
-      if (!snapshot.exists()) {
-        courseDetail.innerHTML = "<p style='text-align:center;'>الدورة غير موجودة.</p>";
+      if (!courseId) {
+        courseDetail.innerHTML = "<p class='empty-msg'>لم يتم تحديد أي دورة.</p>";
         return;
       }
 
-      const course = snapshot.data();
-      courseDetail.querySelector('h2').textContent = course.title;
-      courseImage.src = course.image;
-      courseDesc.textContent = course.description;
-      courseRating.innerHTML = "★".repeat(Math.floor(course.rating)) + `<span>(${course.students} طالب)</span>`;
+      try {
+        const docRef = doc(db, "courses", courseId);
+        const snapshot = await getDoc(docRef);
 
-      courseContent.innerHTML = "";
-      course.content.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        courseContent.appendChild(li);
-      });
+        if (!snapshot.exists()) {
+          courseDetail.innerHTML = "<p class='empty-msg'>الدورة غير موجودة.</p>";
+          return;
+        }
 
-      joinBtn.href = `#`; // لاحقاً يمكن ربطها بعملية تسجيل المستخدم
+        const course = snapshot.data();
+        courseDetail.querySelector('h2').textContent = course.title || "دورة بدون عنوان";
+        courseImage.src = course.image || "images/default-course.jpg";
+        courseDesc.textContent = course.description || "لا يوجد وصف متاح.";
+        courseRating.innerHTML = "★".repeat(Math.floor(course.rating || 4)) + `<span> (${course.students || 0} طالب)</span>`;
+
+        courseContent.innerHTML = "";
+        if (course.content && course.content.length > 0) {
+          course.content.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            courseContent.appendChild(li);
+          });
+        } else {
+          courseContent.innerHTML = "<li>لا يوجد محتوى متاح.</li>";
+        }
+
+        joinBtn.href = "#"; // لاحقاً يمكن ربطه بعملية التسجيل
+      } catch (error) {
+        console.error("خطأ في تحميل الدورة:", error);
+        courseDetail.innerHTML = "<p class='empty-msg'>حدث خطأ أثناء تحميل الدورة.</p>";
+      }
     }
 
     loadCourseDetail();
   </script>
+
+  <script src="main.js" defer></script>
 </body>
 </html>
