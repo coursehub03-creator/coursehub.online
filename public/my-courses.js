@@ -12,7 +12,8 @@ tabs.forEach(tab => {
     tabs.forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
     contents.forEach(c => c.classList.remove("active"));
-    document.getElementById(tab.dataset.tab).classList.add("active");
+    const target = document.getElementById(tab.dataset.tab);
+    target.classList.add("active");
   });
 });
 
@@ -35,19 +36,20 @@ async function loginIfNeeded() {
 // ===============================
 // Load User Courses
 // ===============================
+let globalCoursesData = { current: [], completed: [], favorites: [] };
+
 async function loadCourses() {
   const user = await loginIfNeeded();
   const userDocRef = doc(db, "user_courses", user.uid);
   let snapshot = await getDoc(userDocRef);
 
-  let coursesData = { current: [], completed: [], favorites: [] };
   if (snapshot.exists()) {
-    coursesData = snapshot.data();
+    globalCoursesData = snapshot.data();
   } else {
-    await setDoc(userDocRef, coursesData);
+    await setDoc(userDocRef, globalCoursesData);
   }
 
-  renderCourses(coursesData);
+  renderCourses(globalCoursesData);
 }
 
 // ===============================
@@ -58,10 +60,10 @@ function renderCourses(data) {
     const container = document.getElementById(key);
     container.innerHTML = ""; // Clear old content
 
-    if (data[key].length === 0) {
-      const msg = document.createElement("p");
+    if (!data[key] || data[key].length === 0) {
+      const msg = document.createElement("div");
+      msg.className = "empty-msg";
       msg.textContent = "لا توجد دورات هنا.";
-      msg.style.textAlign = "center";
       container.appendChild(msg);
       return;
     }
@@ -107,7 +109,7 @@ function renderCourses(data) {
             current: data.current,
             completed: data.completed
           });
-          renderCourses(data); // إعادة رسم البطاقة
+          renderCourses(data);
         });
         content.appendChild(document.createElement("br"));
         content.appendChild(completeBtn);
@@ -131,7 +133,7 @@ function renderCourses(data) {
           await updateDoc(doc(db, "user_courses", uid), { favorites: arrayUnion(course) });
           data.favorites.push(course);
         }
-        renderCourses(data); // إعادة رسم لتحديث التغييرات
+        renderCourses(data);
       });
 
       card.appendChild(favBtn);
