@@ -8,34 +8,31 @@ header {
   top: 0;
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  padding: 0 20px; /* مسافة من الأطراف */
+  padding: 0 20px;
 }
 
 /* Top Bar Container */
 .top-bar.container {
   display: flex;
-  justify-content: space-between; /* الشعار على اليسار وبقية العناصر على اليمين */
+  justify-content: space-between; /* الشعار على اليسار، باقي العناصر على اليمين */
   align-items: center;
-  padding: 12px 25px;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 /* Site Name */
 .site-name {
   font-size: 22px;
   font-weight: 700;
-  color: white;
 }
 
 .site-name a {
   text-decoration: none;
   color: white;
-  font-family: 'Inter', sans-serif;
 }
 
 /* Navigation Links */
 nav {
-  margin-left: auto; /* يضغط الروابط نحو اليمين */
   display: flex;
   align-items: center;
   gap: 20px;
@@ -65,7 +62,6 @@ nav a:hover {
   color: white;
   font-weight: 600;
   cursor: pointer;
-  position: relative;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -121,15 +117,10 @@ nav a:hover {
   gap: 10px;
   position: relative;
   cursor: pointer;
-  transition: transform 0.2s;
 }
 
 .user-info-container.active {
   display: flex;
-}
-
-.user-info-container:hover {
-  transform: scale(1.02);
 }
 
 .user-info-container img.user-pic {
@@ -142,7 +133,6 @@ nav a:hover {
 
 .user-info-container .user-name {
   font-weight: 600;
-  color: white;
 }
 
 .user-info-container .dropdown-menu {
@@ -174,37 +164,6 @@ nav a:hover {
 
 .user-info-container .dropdown-menu a:hover {
   background-color: #f0f0f0;
-}
-
-/* Language Selector */
-.language-selector {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-}
-
-.language-dropdown {
-  display: none;
-  position: absolute;
-  top: 35px;
-  right: 0;
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  overflow: hidden;
-  z-index: 1000;
-}
-
-.language-dropdown div {
-  padding: 10px 15px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.language-dropdown div:hover {
-  background: #f0f0f0;
 }
 
 /* Search Bar */
@@ -250,10 +209,7 @@ nav a:hover {
     width: 100%;
     margin-bottom: 10px;
   }
-  .search-bar input {
-    width: 100%;
-  }
-  .search-bar button {
+  .search-bar input, .search-bar button {
     width: 100%;
   }
 }
