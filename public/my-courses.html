@@ -17,45 +17,34 @@
 
   <style>
     header { direction: ltr !important; }
-    .top-bar.container { flex-direction: row !important; justify-content: space-between !important; }
-    .empty-msg {
-      text-align: center;
-      font-size: 16px;
-      color: #666;
-      padding: 30px 0;
-    }
-    .btn-complete {
-      margin-top: 8px;
-      padding: 6px 10px;
-      background: #1c3faa;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .btn-complete:hover {
-      background: #16468f;
+    .top-bar.container {
+      flex-direction: row !important;
+      justify-content: space-between !important;
     }
   </style>
 </head>
 <body>
+  <!-- Header Placeholder -->
   <div id="header-placeholder"></div>
 
+  <!-- Main Content -->
   <main class="courses-container">
     <h1 class="page-title">دوراتي</h1>
 
+    <!-- Tabs -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="current">دوراتي الحالية</button>
       <button class="tab-btn" data-tab="completed">دوراتي المنجزة</button>
       <button class="tab-btn" data-tab="favorites">دوراتي المفضلة</button>
     </div>
 
+    <!-- Tab Contents -->
     <div id="current" class="tab-content active"></div>
     <div id="completed" class="tab-content"></div>
     <div id="favorites" class="tab-content"></div>
   </main>
 
+  <!-- Footer Placeholder -->
   <div id="footer-placeholder"></div>
 
   <!-- JS -->
