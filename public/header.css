@@ -9,6 +9,7 @@ header {
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   padding: 0 20px;
+  direction: ltr; /* حل انعكاس الهيدر */
 }
 
 /* Top Bar Container */
@@ -19,7 +20,6 @@ header {
   gap: 20px;
   flex-wrap: wrap;
 }
-
 
 /* Site Name */
 .site-name {
