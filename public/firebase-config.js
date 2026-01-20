@@ -1,18 +1,9 @@
-```html
-<!-- firebase-config.js -->
-<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  onAuthStateChanged,
-  signOut,
-  RecaptchaVerifier,
-  signInWithPhoneNumber
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -28,17 +19,4 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-window.firebaseAuth = {
-  auth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  onAuthStateChanged,
-  signOut,
-  RecaptchaVerifier,
-  signInWithPhoneNumber
-};
-</script>
-```
+window.firebaseAuth = { auth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged };
