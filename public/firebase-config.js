@@ -1,9 +1,20 @@
 // firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } 
-    from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } 
-    from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  arrayUnion
+} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
@@ -11,8 +22,7 @@ const firebaseConfig = {
   projectId: "coursehub-23ed2",
   storageBucket: "coursehub-23ed2.firebasestorage.app",
   messagingSenderId: "367073521017",
-  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
-  measurementId: "G-NJ6E39V9NW"
+  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
 };
 
 const app = initializeApp(firebaseConfig);
