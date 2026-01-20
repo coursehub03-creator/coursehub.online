@@ -1,0 +1,91 @@
+* {
+  box-sizing: border-box;
+}
+body, html {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: #f4f6fb;
+  color: #1c1c1c;
+  overflow-x: hidden;
+}
+.courses-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px 20px;
+}
+.page-title {
+  color: #1c3faa;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.tab-btn {
+  background: #fff;
+  border: 2px solid #1c3faa;
+  color: #1c3faa;
+  padding: 8px 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.tab-btn.active {
+  background: #1c3faa;
+  color: #fff;
+}
+
+/* Tab Contents */
+.tab-content {
+  display: none;
+  gap: 20px;
+}
+.tab-content.active {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* Course Card */
+.course-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  position: relative;
+}
+.course-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+.course-card .course-content {
+  padding: 15px;
+}
+.course-card h4 {
+  margin: 0 0 6px;
+  cursor: pointer;
+}
+.course-card span {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Favorite Icon */
+.course-card .favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  color: #ccc;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.course-card .favorite-btn.favorited {
+  color: #ff4b5c;
+}
