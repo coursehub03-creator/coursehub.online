@@ -23,13 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Summary ---
   const totalCourses = progress.completedCourses.length;
   const totalCertificates = progress.certificates.length;
-  const totalHours = progress.completedCourses.reduce(
-    (sum, c) => sum + (c.hours || 0), 0
-  );
 
   document.getElementById("completedCourses").textContent = totalCourses;
   document.getElementById("certificatesCount").textContent = totalCertificates;
-  document.getElementById("learningHours").textContent = totalHours;
 
   // --- Certificates ---
   const certList = document.getElementById("certificatesList");
@@ -39,15 +35,19 @@ document.addEventListener("DOMContentLoaded", () => {
     certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
   } else {
     progress.certificates.forEach(cert => {
-      certList.innerHTML += `
-        <div class="certificate-card">
-          <h4>${cert.title}</h4>
-          <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-          <button onclick="openCertificate('${cert.certificateUrl}')">
-            عرض الشهادة
-          </button>
-        </div>
+      const certCard = document.createElement("div");
+      certCard.className = "certificate-card";
+      certCard.innerHTML = `
+        <button class="download-btn" onclick="downloadCertificate('${cert.certificateUrl}')">
+          تحميل
+        </button>
+        <h4>${cert.title}</h4>
+        <span>تاريخ الإصدار: ${cert.issuedAt}</span>
+        <button onclick="openCertificate('${cert.certificateUrl}')">
+          عرض الشهادة
+        </button>
       `;
+      certList.appendChild(certCard);
     });
   }
 
@@ -59,21 +59,33 @@ document.addEventListener("DOMContentLoaded", () => {
     coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
   } else {
     progress.completedCourses.forEach(course => {
-      coursesList.innerHTML += `
-        <div class="course-card">
-          <img src="${course.image}" alt="${course.title}">
-          <div class="course-content">
-            <h4>${course.title}</h4>
-            <span>المدرب: ${course.instructor}</span><br>
-            <span>أكملت في: ${course.completedAt}</span>
-          </div>
+      const courseCard = document.createElement("div");
+      courseCard.className = "course-card";
+      courseCard.innerHTML = `
+        <img src="${course.image}" alt="${course.title}">
+        <div class="course-content">
+          <h4>
+            <a href="${course.pageUrl}" target="_blank">${course.title}</a>
+          </h4>
+          <span>المدرب: ${course.instructor}</span><br>
+          <span>أكملت في: ${course.completedAt}</span>
         </div>
       `;
+      coursesList.appendChild(courseCard);
     });
   }
 
 });
 
+// فتح الشهادة في نافذة جديدة
 function openCertificate(url) {
   window.open(url, "_blank");
+}
+
+// تحميل الشهادة
+function downloadCertificate(url) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = url.split("/").pop(); // اسم الملف من الرابط
+  link.click();
 }
