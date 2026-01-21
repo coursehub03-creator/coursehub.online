@@ -10,14 +10,14 @@
 
     async function loadHeaderFooter(){
       try{
-        const headerRes = await fetch("../partials/header.html");
+        const headerRes = await fetch("partials/header.html");
         const headerHTML = await headerRes.text();
         document.body.insertAdjacentHTML("afterbegin", headerHTML);
         loadCSS("header.css");
       }catch(err){ console.error(err); }
 
       try{
-        const footerRes = await fetch("../partials/footer.html");
+        const footerRes = await fetch("partials/footer.html");
         const footerHTML = await footerRes.text();
         document.body.insertAdjacentHTML("beforeend", footerHTML);
         loadCSS("footer.css");
