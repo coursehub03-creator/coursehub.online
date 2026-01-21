@@ -54,10 +54,10 @@
 
   <div id="footer-placeholder"></div>
 
-  <!-- Firebase + Auth Script -->
+  <!-- Firebase + Auth + Header/Footer -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -73,78 +73,72 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    /* ===== Helpers ===== */
+    function saveUser(user) {
+      localStorage.setItem("coursehub_user", JSON.stringify(user));
+    }
+
+    function redirectUser(role) {
+      if(role === "admin") window.location.href = "admin/dashboard.html";
+      else window.location.href = "courses.html";
+    }
+
+    /* ===== Email Login ===== */
     const form = document.getElementById("loginForm");
     const errorMsg = document.getElementById("errorMsg");
 
-    // تسجيل الدخول بالبريد الإلكتروني
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    if(form){
+      form.addEventListener("submit", async e => {
+        e.preventDefault();
+        const emailInput = document.getElementById("email").value;
+        const passwordInput = document.getElementById("password").value;
 
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        try{
+          const cred = await signInWithEmailAndPassword(auth, emailInput, passwordInput);
+          const userRef = doc(db, "users", cred.user.uid);
+          const snap = await getDoc(userRef);
 
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if(userDoc.exists()){
-          const userData = userDoc.data();
-          localStorage.setItem("coursehub_user", JSON.stringify(userData));
+          if(!snap.exists()) throw new Error("المستخدم غير موجود");
 
-          if(userData.role === "admin") window.location.href = "dashboard.html";
-          else window.location.href = "courses.html";
-        } else {
-          errorMsg.textContent = "المستخدم غير موجود في قاعدة البيانات";
+          saveUser(snap.data());
+          redirectUser(snap.data().role);
+
+        }catch(err){
+          console.error(err);
+          errorMsg.textContent = "بيانات الدخول غير صحيحة";
         }
-      } catch(err){
-        errorMsg.textContent = "خطأ في تسجيل الدخول";
-        console.error(err);
-      }
-    });
+      });
+    }
 
-    // تسجيل الدخول عبر Google
-    window.handleGoogleLogin = async function(response) {
-      try {
-        const jwt = response.credential;
-        const payload = JSON.parse(atob(jwt.split('.')[1]));
+    /* ===== Google Login ===== */
+    window.handleGoogleLogin = async (res) => {
+      try{
+        const jwt = res.credential;
+        const payload = JSON.parse(atob(jwt.split(".")[1]));
+        const cred = GoogleAuthProvider.credential(jwt);
+        const userCred = await signInWithCredential(auth, cred);
 
-        const credential = GoogleAuthProvider.credential(jwt);
-        const userCredential = await signInWithCredential(auth, credential);
-        const user = userCredential.user;
+        const userRef = doc(db, "users", userCred.user.uid);
+        const snap = await getDoc(userRef);
 
-        const userRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userRef);
-
-        let role = "student"; 
-        if(!userDoc.exists()){
+        let role = "student";
+        if(!snap.exists()){
           await setDoc(userRef, {
             name: payload.name,
             email: payload.email,
             picture: payload.picture,
-            role
+            role,
+            createdAt: new Date()
           });
         } else {
-          role = userDoc.data().role;
+          role = snap.data().role;
         }
 
-        localStorage.setItem("coursehub_user", JSON.stringify({
-          name: payload.name,
-          email: payload.email,
-          picture: payload.picture,
-          role
-        }));
+        saveUser({...payload, role});
+        redirectUser(role);
 
-        if(role === "admin") window.location.href = "dashboard.html";
-        else window.location.href = "courses.html";
-
-      } catch (err) {
-        console.error("خطأ في تسجيل الدخول عبر Google:", err);
+      }catch(err){
+        console.error(err);
         alert("حدث خطأ أثناء تسجيل الدخول عبر Google");
       }
     };
-  </script>
-
-  <!-- تحميل الهيدر والفوتر -->
-  <script src="js/main.js" defer></script>
-</body>
-</html>
