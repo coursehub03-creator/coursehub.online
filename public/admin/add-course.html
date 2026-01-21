@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إضافة دورة | CourseHub</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="css/add-course.css">
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main class="container add-course-container">
+  <h1>إضافة دورة جديدة</h1>
+
+  <div id="notAuthorizedMsg" style="display:none; color:red; text-align:center; margin-bottom:20px;">
+    غير مسموح لك بالدخول إلى هذه الصفحة.
+  </div>
+
+  <form id="addCourseForm" style="display:none;">
+    <label for="title">عنوان الدورة</label>
+    <input type="text" id="title" placeholder="أدخل عنوان الدورة" required>
+
+    <label for="instructor">اسم المدرب</label>
+    <input type="text" id="instructor" placeholder="أدخل اسم المدرب" required>
+
+    <label for="category">الفئة</label>
+    <select id="category" required>
+      <option value="">اختر الفئة</option>
+      <option value="web">تطوير الويب</option>
+      <option value="ai">الذكاء الاصطناعي</option>
+      <option value="design">التصميم</option>
+    </select>
+
+    <label for="image">رابط صورة الدورة</label>
+    <input type="url" id="image" placeholder="أدخل رابط صورة الدورة" required>
+
+    <label for="description">وصف الدورة</label>
+    <textarea id="description" rows="5" placeholder="أدخل وصف الدورة" required></textarea>
+
+    <button type="submit" class="btn">إضافة الدورة</button>
+  </form>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<!-- Firebase + Add Course Script -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+    authDomain: "coursehub-23ed2.firebaseapp.com",
+    projectId: "coursehub-23ed2",
+    storageBucket: "coursehub-23ed2.appspot.com",
+    messagingSenderId: "367073521017",
+    appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const adminEmails = ["kaleadsalous30@gmail.com"]; // ضع البريد المسؤول هنا
+  const form = document.getElementById("addCourseForm");
+  const notAuthMsg = document.getElementById("notAuthorizedMsg");
+
+  onAuthStateChanged(auth, user => {
+    if (user && adminEmails.includes(user.email)) {
+      form.style.display = "block";
+      notAuthMsg.style.display = "none";
+    } else {
+      form.style.display = "none";
+      notAuthMsg.style.display = "block";
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const newCourse = {
+      title: document.getElementById("title").value,
+      instructor: document.getElementById("instructor").value,
+      category: document.getElementById("category").value,
+      image: document.getElementById("image").value,
+      description: document.getElementById("description").value,
+      rating: 4,
+      students: 0,
+      content: []
+    };
+
+    try {
+      await addDoc(collection(db, "courses"), newCourse);
+      alert("تمت إضافة الدورة بنجاح!");
+      form.reset();
+    } catch (error) {
+      console.error("خطأ أثناء إضافة الدورة:", error);
+      alert("حدث خطأ أثناء إضافة الدورة.");
+    }
+  });
+</script>
+
+<script src="js/main.js" defer></script>
+</body>
+</html>
