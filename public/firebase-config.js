@@ -1,20 +1,7 @@
 // firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  arrayUnion
-} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
@@ -25,19 +12,13 @@ const firebaseConfig = {
   appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
 };
 
+// تهيئة Firebase مرة واحدة فقط
 const app = initializeApp(firebaseConfig);
+
+// خدمات Firebase
 const auth = getAuth(app);
 const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
 
-window.firebaseAuth = {
-  auth,
-  db,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  arrayUnion
-};
+// تصديرها للاستعمال
+export { auth, db, googleProvider };
