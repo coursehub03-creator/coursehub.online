@@ -1,5 +1,3 @@
-
-```javascript
 const {
   auth,
   GoogleAuthProvider,
@@ -9,35 +7,69 @@ const {
   signInWithPhoneNumber
 } = window.firebaseAuth;
 
-// Email login
+// تعريف الحقول
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const phone = document.getElementById("phone");
+const code = document.getElementById("code");
+const sendCode = document.getElementById("sendCode");
+const verifyCode = document.getElementById("verifyCode");
+const phoneBox = document.getElementById("phoneBox"); // الحاوية لإدخال الرقم
+const errorMsg = document.getElementById("errorMsg");
+
+// =====================
+// تسجيل الدخول بالبريد الإلكتروني
+// =====================
 document.getElementById("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
   try {
-    await signInWithEmailAndPassword(
-      auth,
-      email.value,
-      password.value
-    );
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+    const user = userCredential.user;
+
+    // حفظ بيانات المستخدم محليًا
+    localStorage.setItem("coursehub_user", JSON.stringify({
+      email: user.email,
+      uid: user.uid,
+      role: "student" // لو عندك دور أدمن حدد هنا
+    }));
+
     window.location.href = "index.html";
   } catch (err) {
-    alert(err.message);
+    if(errorMsg) errorMsg.textContent = err.message;
+    else alert(err.message);
+    console.error(err);
   }
 });
 
-// Google login
+// =====================
+// تسجيل الدخول عبر Google
+// =====================
 document.getElementById("googleLogin").onclick = async () => {
   try {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    localStorage.setItem("coursehub_user", JSON.stringify({
+      email: user.email,
+      uid: user.uid,
+      role: "student"
+    }));
+
     window.location.href = "index.html";
   } catch (err) {
-    alert(err.message);
+    if(errorMsg) errorMsg.textContent = err.message;
+    else alert(err.message);
+    console.error(err);
   }
 };
 
-// Phone login
+// =====================
+// تسجيل الدخول برقم الهاتف
+// =====================
 document.getElementById("phoneLogin").onclick = () => {
-  phoneBox.style.display = "block";
+  if(phoneBox) phoneBox.style.display = "block";
+
   window.recaptchaVerifier = new RecaptchaVerifier(
     "recaptcha-container",
     {},
@@ -45,18 +77,28 @@ document.getElementById("phoneLogin").onclick = () => {
   );
 };
 
-sendCode.onclick = async () => {
-  window.confirmationResult = await signInWithPhoneNumber(
-    auth,
-    phone.value,
-    window.recaptchaVerifier
-  );
-  alert("تم إرسال الرمز");
-};
+// إرسال رمز التحقق
+if(sendCode){
+  sendCode.onclick = async () => {
+    try {
+      window.confirmationResult = await signInWithPhoneNumber(auth, phone.value, window.recaptchaVerifier);
+      alert("تم إرسال الرمز");
+    } catch(err){
+      console.error(err);
+      alert("فشل إرسال الرمز: " + err.message);
+    }
+  };
+}
 
-verifyCode.onclick = async () => {
-  await window.confirmationResult.confirm(code.value);
-  window.location.href = "index.html";
-};
-```
-
+// التحقق من الرمز
+if(verifyCode){
+  verifyCode.onclick = async () => {
+    try {
+      await window.confirmationResult.confirm(code.value);
+      window.location.href = "index.html";
+    } catch(err){
+      console.error(err);
+      alert("رمز التحقق غير صحيح: " + err.message);
+    }
+  };
+}
