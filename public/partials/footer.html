@@ -24,26 +24,99 @@
     <div class="footer-col">
       <h4>تابعنا</h4>
       <div class="social-icons">
-        <a href="#"><i class="fa fa-facebook"></i></a>
+        <a href="#"><i class="fa fa-facebook-f"></i></a>
         <a href="#"><i class="fa fa-twitter"></i></a>
         <a href="#"><i class="fa fa-youtube"></i></a>
-        <a href="#"><i class="fa fa-linkedin"></i></a>
+        <a href="#"><i class="fa fa-linkedin-in"></i></a>
       </div>
     </div>
+
+    <!-- رابط لوحة الإدارة للأدمن -->
     <div id="admin-link"></div>
-
-<script>
-  const user = JSON.parse(localStorage.getItem("coursehub_user"));
-  if (user?.role === "admin") {
-    document.getElementById("admin-link").innerHTML =
-      `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
-  }
-</script>
-
 
   </div>
 
   <div class="footer-bottom">
     © <span id="year"></span> CourseHub - جميع الحقوق محفوظة
   </div>
+
+  <script>
+    // ===============================
+    // إدارة حالة المستخدم مع دعم رابط الإدارة للأدمن
+    // ===============================
+    function setupUserState() {
+        const user = JSON.parse(localStorage.getItem("coursehub_user"));
+        const userContainer = document.getElementById("user-info");
+        const loginLink = document.getElementById("login-link");
+
+        // إدارة رابط الإدارة في الفوتر
+        const adminLink = document.getElementById("admin-link");
+
+        if (user) {
+            // إخفاء رابط تسجيل الدخول
+            if (loginLink) loginLink.style.display = "none";
+
+            // رابط الإدارة للأدمن
+            if (user.role === "admin" && adminLink) {
+                adminLink.innerHTML = `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
+            }
+
+            // تحديث Dropdown المستخدم إذا كان موجود
+            if (userContainer) {
+                userContainer.style.display = "flex";
+                userContainer.innerHTML = `
+                    <img src="${user.picture}" alt="${user.name}" class="user-pic">
+                    <span class="user-name">${user.name}</span>
+                    <div class="dropdown-menu">
+                        <a href="../profile.html">الملف الشخصي</a>
+                        <a href="../achievements.html">إنجازاتي</a>
+                        <a href="../my-courses.html">دوراتي</a>
+                        <a href="../settings.html">الإعدادات</a>
+                        <a href="#" id="logout-link">تسجيل الخروج</a>
+                    </div>
+                `;
+
+                const dropdown = userContainer.querySelector(".dropdown-menu");
+                const toggleDropdown = e => {
+                    e.stopPropagation();
+                    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+                };
+                userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
+                userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
+                document.addEventListener("click", () => { dropdown.style.display = "none"; });
+                dropdown.addEventListener("click", e => e.stopPropagation());
+
+                // تسجيل الخروج
+                const logoutLink = document.getElementById("logout-link");
+                if (logoutLink) {
+                    logoutLink.addEventListener("click", e => {
+                        e.preventDefault();
+                        localStorage.removeItem("coursehub_user");
+                        if (loginLink) loginLink.style.display = "block";
+                        userContainer.style.display = "none";
+                        if (adminLink) adminLink.innerHTML = "";
+                        window.location.href = "login.html";
+                    });
+                }
+            }
+
+        } else {
+            // حالة عدم تسجيل الدخول
+            if (loginLink) loginLink.style.display = "block";
+            if (userContainer) userContainer.style.display = "none";
+            if (adminLink) adminLink.innerHTML = "";
+        }
+    }
+
+    // تشغيل الدالة بعد تحميل DOM
+    document.addEventListener("DOMContentLoaded", setupUserState);
+
+    // ===============================
+    // تحديث سنة الحقوق تلقائيًا
+    // ===============================
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
+  <!-- تضمين Font Awesome للأيقونات -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </footer>
