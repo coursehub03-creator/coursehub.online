@@ -2,7 +2,6 @@
    Login Page Styling - CourseHub
    =============================== */
 
-
 .login-page {
   max-width: 420px;
   margin: 80px auto;
@@ -41,6 +40,13 @@
   border: 1px solid #d0d5dd;
   font-size: 15px;
   transition: all 0.3s ease;
+}
+
+/* Autofill Fix */
+.login-form input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  -webkit-text-fill-color: #000;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .login-form input:focus {
@@ -98,6 +104,7 @@
   display: flex;
   justify-content: center;
   margin-bottom: 15px;
+  width: 100%;
 }
 
 /* Links */
@@ -126,6 +133,9 @@
   .login-page h2 {
     font-size: 24px;
   }
+
+  .g_id_signin {
+    justify-content: center;
+    width: 100%;
+  }
 }
-
-
