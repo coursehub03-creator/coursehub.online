@@ -19,6 +19,7 @@
 </head>
 <body>
 
+  <!-- الهيدر سيتم تحميله تلقائياً -->
   <div id="header-placeholder"></div>
 
   <main class="login-page container">
@@ -52,9 +53,10 @@
     </div>
   </main>
 
+  <!-- الفوتر سيتم تحميله تلقائياً -->
   <div id="footer-placeholder"></div>
 
-  <!-- Firebase + Auth + Header/Footer -->
+  <!-- Firebase + Auth Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
@@ -142,3 +144,9 @@
         alert("حدث خطأ أثناء تسجيل الدخول عبر Google");
       }
     };
+  </script>
+
+  <!-- تحميل الهيدر والفوتر -->
+  <script type="module" src="js/main.js" defer></script>
+</body>
+</html>
