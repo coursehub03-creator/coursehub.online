@@ -8,15 +8,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <!-- شعار الموقع -->
         <div class="site-name">
-          <a href="index.html">CourseHub</a>
+          <a href="../index.html">CourseHub</a>
         </div>
 
         <!-- الروابط الرئيسية -->
         <nav>
-          <a href="index.html">الرئيسية</a>
-          <a href="courses.html">الدورات</a>
-          <a href="tests.html">الاختبارات</a>
-          <a href="certificates.html">الشهادات</a>
+          <a href="../index.html">الرئيسية</a>
+          <a href="../courses.html">الدورات</a>
+          <a href="../tests.html">الاختبارات</a>
+          <a href="../certificates.html">الشهادات</a>
         </nav>
 
         <!-- Search Bar -->
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <!-- User Info / Login -->
         <div id="user-info" class="user-info-container"></div>
-        <a href="login.html" id="login-link">تسجيل الدخول</a>
+        <a href="../login.html" id="login-link">تسجيل الدخول</a>
 
         <!-- Language Toggle -->
         <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
