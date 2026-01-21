@@ -25,7 +25,11 @@
 </div>
 
 <!-- Header Placeholder -->
-<div id="header-placeholder"></div>
+fetch("/partials/header.html")
+  .then(res => res.text())
+  .then(data => {
+    document.getElementById("header-placeholder").innerHTML = data;
+  });
 
 <!-- Hero Section -->
 <section class="hero">
