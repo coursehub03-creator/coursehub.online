@@ -37,7 +37,7 @@ async function loadHeaderFooter() {
 }
 
 // ===============================
-// إدارة حالة المستخدم + رابط الإدارة في الفوتر فقط
+// إدارة حالة المستخدم + رابط الإدارة في الفوتر فقط باستخدام البريد
 // ===============================
 function setupUserState() {
     const user = JSON.parse(localStorage.getItem("coursehub_user"));
@@ -45,15 +45,20 @@ function setupUserState() {
     const loginLink = document.getElementById("login-link");
     const adminLink = document.getElementById("admin-link"); // الفوتر فقط
 
+    // قائمة بريدية للأدمنين
+    const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
+
     if (user) {
         // إخفاء رابط تسجيل الدخول
         if (loginLink) loginLink.style.display = "none";
 
         // إظهار رابط الإدارة للأدمن فقط
-        if (user.role === "admin" && adminLink) {
-            adminLink.innerHTML = `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
-        } else if (adminLink) {
-            adminLink.innerHTML = "";
+        if (adminLink) {
+            if (adminEmails.includes(user.email)) {
+                adminLink.innerHTML = `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
+            } else {
+                adminLink.innerHTML = "";
+            }
         }
 
         // إدارة Dropdown المستخدم في Header
