@@ -24,10 +24,10 @@
     <div class="footer-col">
       <h4>تابعنا</h4>
       <div class="social-icons">
-        <a href="#"><i class="fa fa-facebook-f"></i></a>
-        <a href="#"><i class="fa fa-twitter"></i></a>
-        <a href="#"><i class="fa fa-youtube"></i></a>
-        <a href="#"><i class="fa fa-linkedin-in"></i></a>
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-youtube"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
       </div>
     </div>
 
@@ -42,26 +42,31 @@
 
   <script>
     // ===============================
-    // إدارة حالة المستخدم مع دعم رابط الإدارة للأدمن
+    // إدارة حالة المستخدم مع دعم رابط الإدارة للأدمن عبر البريد
     // ===============================
     function setupUserState() {
         const user = JSON.parse(localStorage.getItem("coursehub_user"));
         const userContainer = document.getElementById("user-info");
         const loginLink = document.getElementById("login-link");
-
-        // إدارة رابط الإدارة في الفوتر
         const adminLink = document.getElementById("admin-link");
+
+        // قائمة بريدية للأدمنين
+        const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
 
         if (user) {
             // إخفاء رابط تسجيل الدخول
             if (loginLink) loginLink.style.display = "none";
 
-            // رابط الإدارة للأدمن
-            if (user.role === "admin" && adminLink) {
-                adminLink.innerHTML = `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
+            // إظهار رابط الإدارة للأدمن فقط
+            if (adminLink) {
+                if (adminEmails.includes(user.email)) {
+                    adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
+                } else {
+                    adminLink.innerHTML = "";
+                }
             }
 
-            // تحديث Dropdown المستخدم إذا كان موجود
+            // إدارة Dropdown المستخدم في Header
             if (userContainer) {
                 userContainer.style.display = "flex";
                 userContainer.innerHTML = `
