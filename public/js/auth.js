@@ -31,8 +31,9 @@ if (form) {
     e.preventDefault();
 
     try {
-      const email = email.value;
-      const password = password.value;
+      // تصحيح تعريف العناصر
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const userRef = doc(db, "users", cred.user.uid);
@@ -43,7 +44,8 @@ if (form) {
       saveUser(snap.data());
       redirect(snap.data().role);
 
-    } catch {
+    } catch (err) {
+      console.error(err);
       errorMsg.textContent = "بيانات الدخول غير صحيحة";
     }
   });
@@ -51,29 +53,35 @@ if (form) {
 
 /* ============ Google Login ============ */
 window.handleGoogleLogin = async (res) => {
-  const jwt = res.credential;
-  const payload = JSON.parse(atob(jwt.split(".")[1]));
+  try {
+    const jwt = res.credential;
+    const payload = JSON.parse(atob(jwt.split(".")[1]));
 
-  const cred = GoogleAuthProvider.credential(jwt);
-  const userCred = await signInWithCredential(auth, cred);
+    const cred = GoogleAuthProvider.credential(jwt);
+    const userCred = await signInWithCredential(auth, cred);
 
-  const ref = doc(db, "users", userCred.user.uid);
-  const snap = await getDoc(ref);
+    const ref = doc(db, "users", userCred.user.uid);
+    const snap = await getDoc(ref);
 
-  let role = "student";
+    let role = "student";
 
-  if (!snap.exists()) {
-    await setDoc(ref, {
-      name: payload.name,
-      email: payload.email,
-      picture: payload.picture,
-      role: "student",
-      createdAt: new Date()
-    });
-  } else {
-    role = snap.data().role;
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture,
+        role: "student",
+        createdAt: new Date()
+      });
+    } else {
+      role = snap.data().role;
+    }
+
+    saveUser({ ...payload, role });
+    redirect(role);
+
+  } catch (err) {
+    console.error("خطأ في تسجيل الدخول عبر Google:", err);
+    alert("حدث خطأ أثناء تسجيل الدخول عبر Google");
   }
-
-  saveUser({ ...payload, role });
-  redirect(role);
 };
