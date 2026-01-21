@@ -1,103 +1,116 @@
 // auth.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+import { auth, db, googleProvider } from "./firebase-config.js";
 
-// =====================
-// إعداد Firebase
-// =====================
-const firebaseConfig = {
-  apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
-  authDomain: "coursehub-23ed2.firebaseapp.com",
-  projectId: "coursehub-23ed2",
-  storageBucket: "coursehub-23ed2.firebasestorage.app",
-  messagingSenderId: "367073521017",
-  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
-};
+import {
+  signInWithEmailAndPassword,
+  signInWithCredential,
+  GoogleAuthProvider
+} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import {
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
 // =====================
 // عناصر الصفحة
 // =====================
-const form = document.getElementById("loginForm");
+const form = document.getElementById("email-login-form");
 const errorMsg = document.getElementById("errorMsg");
 
 // =====================
-// تسجيل الدخول بالبريد الإلكتروني وكلمة المرور
+// Helper: حفظ المستخدم
 // =====================
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+function saveUserSession(userData) {
+  localStorage.setItem("coursehub_user", JSON.stringify(userData));
+}
 
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    if(userDoc.exists()){
-      const userData = userDoc.data();
-      localStorage.setItem("coursehub_user", JSON.stringify(userData));
-
-      // إعادة التوجيه حسب الدور
-      if(userData.role === "admin") window.location.href = "dashboard.html";
-      else window.location.href = "courses.html";
-    } else {
-      errorMsg.textContent = "المستخدم غير موجود في قاعدة البيانات";
-    }
-  } catch(err){
-    errorMsg.textContent = "خطأ في تسجيل الدخول";
-    console.error(err);
+// =====================
+// Helper: التوجيه حسب الدور
+// =====================
+function redirectByRole(role) {
+  if (role === "admin") {
+    window.location.href = "dashboard.html";
+  } else {
+    window.location.href = "courses.html";
   }
-});
+}
 
 // =====================
-// تسجيل الدخول عبر Google
+// Email & Password Login
 // =====================
-window.handleGoogleLogin = async function(response) {
+if (form) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        throw new Error("USER_NOT_FOUND");
+      }
+
+      const userData = userSnap.data();
+      saveUserSession(userData);
+      redirectByRole(userData.role);
+
+    } catch (err) {
+      console.error(err);
+      errorMsg.textContent = "بيانات الدخول غير صحيحة";
+    }
+  });
+}
+
+// =====================
+// Google Login (GSI)
+// =====================
+window.handleGoogleLogin = async function (response) {
   try {
     const jwt = response.credential;
-    const payload = JSON.parse(atob(jwt.split('.')[1]));
+    const payload = JSON.parse(atob(jwt.split(".")[1]));
 
-    console.log("Google User:", payload);
-
-    // تسجيل دخول Firebase باستخدام Google token
+    // تسجيل الدخول في Firebase
     const credential = GoogleAuthProvider.credential(jwt);
     const userCredential = await signInWithCredential(auth, credential);
     const user = userCredential.user;
 
-    // التحقق إذا كان المستخدم موجودًا في Firestore، وإن لم يكن، إضافته
     const userRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userRef);
+    const userSnap = await getDoc(userRef);
 
-    if(!userDoc.exists()){
-      // إضافة المستخدم مع الدور الافتراضي "student"
+    let role = "student";
+
+    if (!userSnap.exists()) {
+      // إنشاء مستخدم جديد
       await setDoc(userRef, {
         name: payload.name,
         email: payload.email,
         picture: payload.picture,
-        role: "student" // يمكنك تعديل الدور هنا
+        role: "student",
+        createdAt: new Date()
       });
+    } else {
+      role = userSnap.data().role;
     }
 
-    // حفظ بيانات المستخدم في localStorage
-    localStorage.setItem("coursehub_user", JSON.stringify({
+    saveUserSession({
       name: payload.name,
       email: payload.email,
       picture: payload.picture,
-      role: userDoc.exists() ? userDoc.data().role : "student"
-    }));
+      role
+    });
 
-    // إعادة التوجيه
-    const role = userDoc.exists() ? userDoc.data().role : "student";
-    if(role === "admin") window.location.href = "dashboard.html";
-    else window.location.href = "courses.html";
+    redirectByRole(role);
 
   } catch (err) {
-    console.error("خطأ في تسجيل الدخول عبر Google:", err);
-    alert("حدث خطأ أثناء تسجيل الدخول عبر Google");
+    console.error("Google Login Error:", err);
+    alert("فشل تسجيل الدخول عبر Google");
   }
 };
