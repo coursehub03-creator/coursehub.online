@@ -1,19 +1,24 @@
-<div id="header-placeholder"></div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة التحكم</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
 
-<main class="dashboard-container">
-  <h1>لوحة المسؤول</h1>
+<h1>لوحة تحكم المسؤول</h1>
 
-  <section class="dashboard-actions">
-    <a href="add-course.html" class="btn">إضافة دورة جديدة</a>
-    <a href="manage-users.html" class="btn">إدارة المستخدمين</a>
-  </section>
+<nav>
+  <a href="add-course.html">➕ إضافة دورة</a>
+  <a href="#">📚 إدارة الدورات</a>
+  <a href="#">👤 المستخدمين</a>
+</nav>
 
-  <section class="courses-list">
-    <h2>الدورات الحالية</h2>
-    <div id="coursesContainer"></div>
-  </section>
-</main>
+<script type="module">
+  import { requireAdmin } from "../js/auth-guard.js";
+  requireAdmin();
+</script>
 
-<div id="footer-placeholder"></div>
-<script type="module" src="js/dashboard.js"></script>
-<script src="js/main.js" defer></script>
+</body>
+</html>
