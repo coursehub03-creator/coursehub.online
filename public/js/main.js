@@ -37,55 +37,70 @@ async function loadHeaderFooter() {
 }
 
 // ===============================
-// إدارة حالة المستخدم
+// إدارة حالة المستخدم + رابط الإدارة في الفوتر فقط
 // ===============================
 function setupUserState() {
     const user = JSON.parse(localStorage.getItem("coursehub_user"));
     const userContainer = document.getElementById("user-info");
     const loginLink = document.getElementById("login-link");
+    const adminLink = document.getElementById("admin-link"); // الفوتر فقط
 
-    if (user && userContainer) {
+    if (user) {
+        // إخفاء رابط تسجيل الدخول
         if (loginLink) loginLink.style.display = "none";
 
-        userContainer.innerHTML = `
-            <img src="${user.picture}" alt="${user.name}" class="user-pic">
-            <span class="user-name">${user.name}</span>
-            <div class="dropdown-menu">
-                <a href="../profile.html">الملف الشخصي</a>
-                <a href="../achievements.html">إنجازاتي</a>
-                <a href="../my-courses.html">دوراتي</a>
-                <a href="../settings.html">الإعدادات</a>
-                <a href="#" id="logout-link">تسجيل الخروج</a>
-            </div>
-        `;
-        userContainer.style.display = "flex";
+        // إظهار رابط الإدارة للأدمن فقط
+        if (user.role === "admin" && adminLink) {
+            adminLink.innerHTML = `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
+        } else if (adminLink) {
+            adminLink.innerHTML = "";
+        }
 
-        const dropdown = userContainer.querySelector(".dropdown-menu");
-        const toggleDropdown = e => {
-            e.stopPropagation();
-            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-        };
+        // إدارة Dropdown المستخدم في Header
+        if (userContainer) {
+            userContainer.style.display = "flex";
+            userContainer.innerHTML = `
+                <img src="${user.picture}" alt="${user.name}" class="user-pic">
+                <span class="user-name">${user.name}</span>
+                <div class="dropdown-menu">
+                    <a href="../profile.html">الملف الشخصي</a>
+                    <a href="../achievements.html">إنجازاتي</a>
+                    <a href="../my-courses.html">دوراتي</a>
+                    <a href="../settings.html">الإعدادات</a>
+                    <a href="#" id="logout-link">تسجيل الخروج</a>
+                </div>
+            `;
 
-        userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
-        userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
+            const dropdown = userContainer.querySelector(".dropdown-menu");
+            const toggleDropdown = e => {
+                e.stopPropagation();
+                dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+            };
+            userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
+            userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
 
-        document.addEventListener("click", () => { dropdown.style.display = "none"; });
-        dropdown.addEventListener("click", e => e.stopPropagation());
+            document.addEventListener("click", () => { dropdown.style.display = "none"; });
+            dropdown.addEventListener("click", e => e.stopPropagation());
 
-        const logoutLink = document.getElementById("logout-link");
-        if (logoutLink) {
-            logoutLink.addEventListener("click", e => {
-                e.preventDefault();
-                localStorage.removeItem("coursehub_user");
-                if (loginLink) loginLink.style.display = "block";
-                userContainer.style.display = "none";
-                window.location.href = "login.html";
-            });
+            // تسجيل الخروج
+            const logoutLink = document.getElementById("logout-link");
+            if (logoutLink) {
+                logoutLink.addEventListener("click", e => {
+                    e.preventDefault();
+                    localStorage.removeItem("coursehub_user");
+                    if (loginLink) loginLink.style.display = "block";
+                    userContainer.style.display = "none";
+                    if (adminLink) adminLink.innerHTML = "";
+                    window.location.href = "login.html";
+                });
+            }
         }
 
     } else {
+        // حالة عدم تسجيل الدخول
         if (loginLink) loginLink.style.display = "block";
         if (userContainer) userContainer.style.display = "none";
+        if (adminLink) adminLink.innerHTML = "";
     }
 }
 
