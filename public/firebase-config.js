@@ -1,4 +1,3 @@
-// firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
@@ -12,13 +11,8 @@ const firebaseConfig = {
   appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
 };
 
-// تهيئة Firebase مرة واحدة فقط
 const app = initializeApp(firebaseConfig);
 
-// خدمات Firebase
-const auth = getAuth(app);
-const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
-
-// تصديرها للاستعمال
-export { auth, db, googleProvider };
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const googleProvider = new GoogleAuthProvider();
