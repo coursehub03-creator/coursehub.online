@@ -1,151 +1,134 @@
 // ===============================
-// تحميل CSS
+// تحميل CSS مرة واحدة فقط
 // ===============================
 function loadCSS(href) {
-  if (!document.querySelector(`link[href="${href}"]`)) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  }
+    if (!document.querySelector(`link[href="${href}"]`)) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = href;
+        document.head.appendChild(link);
+    }
 }
 
 // ===============================
-// تحميل Header و Footer من ملفات منفصلة
+// تحميل Header و Footer من ملفات خارجية
 // ===============================
 async function loadHeaderFooter() {
-  try {
-    const headerResp = await fetch("header.html");
-    const headerHTML = await headerResp.text();
-    document.body.insertAdjacentHTML("afterbegin", headerHTML);
-    loadCSS("header.css");
-  } catch (err) { console.error("فشل تحميل الهيدر:", err); }
+    // Header
+    try {
+        const headerResponse = await fetch("../partials/header.html");
+        const headerHTML = await headerResponse.text();
+        document.body.insertAdjacentHTML("afterbegin", headerHTML);
+        loadCSS("header.css");
+    } catch (err) { console.error("فشل تحميل الهيدر:", err); }
 
-  try {
-    const footerResp = await fetch("footer.html");
-    const footerHTML = await footerResp.text();
-    document.body.insertAdjacentHTML("beforeend", footerHTML);
-    loadCSS("footer.css");
-  } catch (err) { console.error("فشل تحميل الفوتر:", err); }
+    // Footer
+    try {
+        const footerResponse = await fetch("../partials/footer.html");
+        const footerHTML = await footerResponse.text();
+        document.body.insertAdjacentHTML("beforeend", footerHTML);
+        loadCSS("footer.css");
+    } catch (err) { console.error("فشل تحميل الفوتر:", err); }
 
-  setupUserState();
-  setupHeaderSearch();
-  setupLanguageToggle();
+    // إعدادات بعد التحميل
+    setupUserState();
+    setupHeaderSearch();
+    setupLanguageToggle();
 }
 
 // ===============================
 // إدارة حالة المستخدم
 // ===============================
 function setupUserState() {
-  const user = JSON.parse(localStorage.getItem("coursehub_user"));
-  const userContainer = document.getElementById("user-info");
-  const loginLink = document.getElementById("login-link");
+    const user = JSON.parse(localStorage.getItem("coursehub_user"));
+    const userContainer = document.getElementById("user-info");
+    const loginLink = document.getElementById("login-link");
 
-  if (!userContainer) return;
+    if (user && userContainer) {
+        if (loginLink) loginLink.style.display = "none";
 
-  if (user) {
-    if (loginLink) loginLink.style.display = "none";
-    userContainer.textContent = "";
-    userContainer.style.display = "flex";
+        userContainer.innerHTML = `
+            <img src="${user.picture}" alt="${user.name}" class="user-pic">
+            <span class="user-name">${user.name}</span>
+            <div class="dropdown-menu">
+                <a href="../profile.html">الملف الشخصي</a>
+                <a href="../achievements.html">إنجازاتي</a>
+                <a href="../my-courses.html">دوراتي</a>
+                <a href="../settings.html">الإعدادات</a>
+                <a href="#" id="logout-link">تسجيل الخروج</a>
+            </div>
+        `;
+        userContainer.style.display = "flex";
 
-    const img = document.createElement("img");
-    img.src = user.picture;
-    img.alt = user.name;
-    img.className = "user-pic";
+        const dropdown = userContainer.querySelector(".dropdown-menu");
+        const toggleDropdown = e => {
+            e.stopPropagation();
+            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+        };
 
-    const spanName = document.createElement("span");
-    spanName.className = "user-name";
-    spanName.textContent = user.name;
+        userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
+        userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
 
-    const dropdown = document.createElement("div");
-    dropdown.className = "dropdown-menu";
+        document.addEventListener("click", () => { dropdown.style.display = "none"; });
+        dropdown.addEventListener("click", e => e.stopPropagation());
 
-    const links = [
-      { href: "profile.html", text: "الملف الشخصي" },
-      { href: "achievements.html", text: "إنجازاتي" },
-      { href: "my-courses.html", text: "دوراتي" },
-      { href: "settings.html", text: "الإعدادات" },
-      { href: "#", text: "تسجيل الخروج", id: "logout-link" }
-    ];
+        const logoutLink = document.getElementById("logout-link");
+        if (logoutLink) {
+            logoutLink.addEventListener("click", e => {
+                e.preventDefault();
+                localStorage.removeItem("coursehub_user");
+                if (loginLink) loginLink.style.display = "block";
+                userContainer.style.display = "none";
+                window.location.href = "login.html";
+            });
+        }
 
-    links.forEach(linkData => {
-      const a = document.createElement("a");
-      a.href = linkData.href;
-      a.textContent = linkData.text;
-      if (linkData.id) a.id = linkData.id;
-      dropdown.appendChild(a);
-    });
-
-    userContainer.appendChild(img);
-    userContainer.appendChild(spanName);
-    userContainer.appendChild(dropdown);
-
-    const toggleDropdown = e => {
-      e.stopPropagation();
-      dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-    };
-    img.addEventListener("click", toggleDropdown);
-    spanName.addEventListener("click", toggleDropdown);
-
-    document.addEventListener("click", () => { dropdown.style.display = "none"; });
-    dropdown.addEventListener("click", e => e.stopPropagation());
-
-    const logoutLinkEl = document.getElementById("logout-link");
-    if (logoutLinkEl) {
-      logoutLinkEl.addEventListener("click", e => {
-        e.preventDefault();
-        localStorage.removeItem("coursehub_user");
+    } else {
         if (loginLink) loginLink.style.display = "block";
-        userContainer.style.display = "none";
-        window.location.href = "login.html";
-      });
+        if (userContainer) userContainer.style.display = "none";
     }
-
-  } else {
-    if (loginLink) loginLink.style.display = "block";
-    userContainer.style.display = "none";
-  }
 }
 
 // ===============================
-// البحث في الهيدر
+// شريط البحث
 // ===============================
 function setupHeaderSearch() {
-  const path = window.location.pathname.split("/").pop();
-  const searchBar = document.getElementById("headerSearchBar");
-  if (!searchBar) return;
+    const path = window.location.pathname.split("/").pop();
+    const searchBar = document.getElementById("headerSearchBar");
 
-  if (path === "" || path === "index.html" || path === "courses.html") {
-    searchBar.style.display = "flex";
-    const searchBtn = document.getElementById("searchBtn");
-    if (searchBtn) {
-      searchBtn.addEventListener("click", () => {
-        const query = document.getElementById("searchInput").value.trim();
-        if (query) alert(`بحث عن: ${query}`);
-      });
+    if (!searchBar) return;
+
+    if (path === "" || path === "index.html" || path === "courses.html") {
+        searchBar.style.display = "flex";
+        const searchBtn = document.getElementById("searchBtn");
+        if (searchBtn) {
+            searchBtn.addEventListener("click", () => {
+                const query = document.getElementById("searchInput").value.trim();
+                if (query) alert(`بحث عن: ${query}`);
+            });
+        }
+    } else {
+        searchBar.style.display = "none";
     }
-  } else {
-    searchBar.style.display = "none";
-  }
 }
 
 // ===============================
 // تبديل اللغة
 // ===============================
 function setupLanguageToggle() {
-  const langBtn = document.getElementById("langBtn");
-  if (!langBtn) return;
+    const langBtn = document.getElementById("langBtn");
+    if (!langBtn) return;
 
-  langBtn.addEventListener("click", e => {
-    e.stopPropagation();
-    const text = langBtn.textContent.trim();
-    if (text.includes("عربي")) langBtn.textContent = "English";
-    else if (text.includes("English")) langBtn.textContent = "Français";
-    else langBtn.textContent = "عربي";
-  });
+    langBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        const text = langBtn.textContent.trim();
+        if (text.includes("عربي")) langBtn.innerHTML = '<i class="fa fa-globe"></i> English';
+        else if (text.includes("English")) langBtn.innerHTML = '<i class="fa fa-globe"></i> Français';
+        else langBtn.innerHTML = '<i class="fa fa-globe"></i> عربي';
+    });
 }
 
 // ===============================
-// بدء التحميل بعد DOM
+// تشغيل كل شيء بعد تحميل DOM
 // ===============================
 document.addEventListener("DOMContentLoaded", loadHeaderFooter);
