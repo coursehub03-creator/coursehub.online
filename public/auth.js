@@ -1,5 +1,4 @@
-// auth.js
-import { auth, db, googleProvider } from "../js/firebase-config.js";
+import { auth, db } from "../js/firebase-config.js";
 
 import {
   signInWithEmailAndPassword,
@@ -13,104 +12,68 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
-// =====================
-// عناصر الصفحة
-// =====================
+/* ============ Helpers ============ */
+function saveUser(user) {
+  localStorage.setItem("coursehub_user", JSON.stringify(user));
+}
+
+function redirect(role) {
+  if (role === "admin") location.href = "admin/dashboard.html";
+  else location.href = "courses.html";
+}
+
+/* ============ Email Login ============ */
 const form = document.getElementById("email-login-form");
 const errorMsg = document.getElementById("errorMsg");
 
-// =====================
-// Helper: حفظ المستخدم
-// =====================
-function saveUserSession(userData) {
-  localStorage.setItem("coursehub_user", JSON.stringify(userData));
-}
-
-// =====================
-// Helper: التوجيه حسب الدور
-// =====================
-function redirectByRole(role) {
-  if (role === "admin") {
-    window.location.href = "dashboard.html";
-  } else {
-    window.location.href = "courses.html";
-  }
-}
-
-// =====================
-// Email & Password Login
-// =====================
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const email = email.value;
+      const password = password.value;
 
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const userRef = doc(db, "users", cred.user.uid);
+      const snap = await getDoc(userRef);
 
-      if (!userSnap.exists()) {
-        throw new Error("USER_NOT_FOUND");
-      }
+      if (!snap.exists()) throw "NO_USER";
 
-      const userData = userSnap.data();
-      saveUserSession(userData);
-      redirectByRole(userData.role);
+      saveUser(snap.data());
+      redirect(snap.data().role);
 
-    } catch (err) {
-      console.error(err);
+    } catch {
       errorMsg.textContent = "بيانات الدخول غير صحيحة";
     }
   });
 }
 
-// =====================
-// Google Login (GSI)
-// =====================
-window.handleGoogleLogin = async function (response) {
-  try {
-    const jwt = response.credential;
-    const payload = JSON.parse(atob(jwt.split(".")[1]));
+/* ============ Google Login ============ */
+window.handleGoogleLogin = async (res) => {
+  const jwt = res.credential;
+  const payload = JSON.parse(atob(jwt.split(".")[1]));
 
-    // تسجيل الدخول في Firebase
-    const credential = GoogleAuthProvider.credential(jwt);
-    const userCredential = await signInWithCredential(auth, credential);
-    const user = userCredential.user;
+  const cred = GoogleAuthProvider.credential(jwt);
+  const userCred = await signInWithCredential(auth, cred);
 
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
+  const ref = doc(db, "users", userCred.user.uid);
+  const snap = await getDoc(ref);
 
-    let role = "student";
+  let role = "student";
 
-    if (!userSnap.exists()) {
-      // إنشاء مستخدم جديد
-      await setDoc(userRef, {
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-        role: "student",
-        createdAt: new Date()
-      });
-    } else {
-      role = userSnap.data().role;
-    }
-
-    saveUserSession({
+  if (!snap.exists()) {
+    await setDoc(ref, {
       name: payload.name,
       email: payload.email,
       picture: payload.picture,
-      role
+      role: "student",
+      createdAt: new Date()
     });
-
-    redirectByRole(role);
-
-  } catch (err) {
-    console.error("Google Login Error:", err);
-    alert("فشل تسجيل الدخول عبر Google");
+  } else {
+    role = snap.data().role;
   }
+
+  saveUser({ ...payload, role });
+  redirect(role);
 };
