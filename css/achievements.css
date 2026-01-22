@@ -1,3 +1,4 @@
+/* ======= Start of original achievements.css ======= */
 * {
   box-sizing: border-box;
 }
@@ -156,4 +157,10 @@ body, html {
   .courses-list {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
+}
+/* ======= End of original achievements.css ======= */
+
+/* ======= تصحيحات إضافية لتجنب تضارب مع header/footer ======= */
+.achievements-container, .summary-cards, .certificates-list, .courses-list, .course-card, .certificate-card {
+  z-index: 1; /* يضمن عدم التداخل مع الهيدر والفوتر */
 }
