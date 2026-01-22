@@ -2,23 +2,33 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة التحكم</title>
-  <link rel="stylesheet" href="css/dashboard.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم - CourseHub</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/footer.css">
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
+  <div id="header-placeholder"></div>
 
-<h1>لوحة تحكم المسؤول</h1>
+  <main>
+    <h2>لوحة التحكم</h2>
+    <div id="admin-dashboard-content"></div>
+  </main>
 
-<nav>
-  <a href="add-course.html">➕ إضافة دورة</a>
-  <a href="#">📚 إدارة الدورات</a>
-  <a href="#">👤 المستخدمين</a>
-</nav>
+  <div id="footer-placeholder"></div>
 
-<script type="module">
-  import { requireAdmin } from "../js/auth-guard.js";
-  requireAdmin();
-</script>
-
+  <script src="../js/main.js"></script>
+  <script>
+    // حماية صفحة المسؤول
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = JSON.parse(localStorage.getItem("coursehub_user"));
+      if (!user || user.role !== "admin") {
+        window.location.href = "../login.html";
+      }
+    });
+  </script>
+  <script src="../js/dashboard.js"></script>
 </body>
 </html>
