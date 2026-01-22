@@ -1,8 +1,127 @@
 <footer>
-  <p>جميع الحقوق محفوظة &copy; 2026 CourseHub</p>
-  <nav class="footer-nav">
-    <a href="about.html">عن الموقع</a> |
-    <a href="contact.html">اتصل بنا</a> |
-    <a href="privacy.html">سياسة الخصوصية</a>
-  </nav>
+  <div class="footer-container container">
+
+    <div class="footer-col">
+      <h4>CourseHub</h4>
+      <p>منصة تعليمية عربية تقدم دورات، اختبارات وشهادات باحترافية عالية.</p>
+    </div>
+
+    <div class="footer-col">
+      <h4>روابط سريعة</h4>
+      <a href="../index.html">الرئيسية</a>
+      <a href="../courses.html">الدورات</a>
+      <a href="../tests.html">الاختبارات</a>
+      <a href="../certificates.html">الشهادات</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>الحساب</h4>
+      <a href="../login.html">تسجيل الدخول</a>
+      <a href="../register.html">إنشاء حساب</a>
+      <a href="../my-courses.html">دوراتي</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>تابعنا</h4>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-youtube"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+
+    <!-- رابط لوحة الإدارة للأدمن -->
+    <div id="admin-link"></div>
+
+  </div>
+
+  <div class="footer-bottom">
+    © <span id="year"></span> CourseHub - جميع الحقوق محفوظة
+  </div>
+
+  <script>
+    // ===============================
+    // إدارة حالة المستخدم مع دعم رابط الإدارة للأدمن عبر البريد
+    // ===============================
+    function setupUserState() {
+        const user = JSON.parse(localStorage.getItem("coursehub_user"));
+        const userContainer = document.getElementById("user-info");
+        const loginLink = document.getElementById("login-link");
+        const adminLink = document.getElementById("admin-link");
+
+        // قائمة بريدية للأدمنين
+        const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
+
+        if (user) {
+            // إخفاء رابط تسجيل الدخول
+            if (loginLink) loginLink.style.display = "none";
+
+            // إظهار رابط الإدارة للأدمن فقط
+            if (adminLink) {
+                if (adminEmails.includes(user.email)) {
+                    adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
+                } else {
+                    adminLink.innerHTML = "";
+                }
+            }
+
+            // إدارة Dropdown المستخدم في Header
+            if (userContainer) {
+                userContainer.style.display = "flex";
+                userContainer.innerHTML = `
+                    <img src="${user.picture}" alt="${user.name}" class="user-pic">
+                    <span class="user-name">${user.name}</span>
+                    <div class="dropdown-menu">
+                        <a href="../profile.html">الملف الشخصي</a>
+                        <a href="../achievements.html">إنجازاتي</a>
+                        <a href="../my-courses.html">دوراتي</a>
+                        <a href="../settings.html">الإعدادات</a>
+                        <a href="#" id="logout-link">تسجيل الخروج</a>
+                    </div>
+                `;
+
+                const dropdown = userContainer.querySelector(".dropdown-menu");
+                const toggleDropdown = e => {
+                    e.stopPropagation();
+                    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+                };
+                userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
+                userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
+                document.addEventListener("click", () => { dropdown.style.display = "none"; });
+                dropdown.addEventListener("click", e => e.stopPropagation());
+
+                // تسجيل الخروج
+                const logoutLink = document.getElementById("logout-link");
+                if (logoutLink) {
+                    logoutLink.addEventListener("click", e => {
+                        e.preventDefault();
+                        localStorage.removeItem("coursehub_user");
+                        if (loginLink) loginLink.style.display = "block";
+                        userContainer.style.display = "none";
+                        if (adminLink) adminLink.innerHTML = "";
+                        window.location.href = "login.html";
+                    });
+                }
+            }
+
+        } else {
+            // حالة عدم تسجيل الدخول
+            if (loginLink) loginLink.style.display = "block";
+            if (userContainer) userContainer.style.display = "none";
+            if (adminLink) adminLink.innerHTML = "";
+        }
+    }
+
+    // تشغيل الدالة بعد تحميل DOM
+    document.addEventListener("DOMContentLoaded", setupUserState);
+
+    // ===============================
+    // تحديث سنة الحقوق تلقائيًا
+    // ===============================
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
+  <!-- تضمين Font Awesome للأيقونات -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </footer>
