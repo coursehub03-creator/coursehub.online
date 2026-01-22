@@ -10,10 +10,10 @@ function loadCSS(href) {
 
 async function loadHeaderFooter() {
   try {
-    const headerHTML = await (await fetch("./partials/header.html")).text();
+    const headerHTML = await (await fetch("partials/header.html")).text();
     document.getElementById("header-placeholder").innerHTML = headerHTML;
 
-    const footerHTML = await (await fetch("./partials/footer.html")).text();
+    const footerHTML = await (await fetch("partials/footer.html")).text();
     document.getElementById("footer-placeholder").innerHTML = footerHTML;
   } catch (err) {
     console.error("فشل تحميل الهيدر أو الفوتر:", err);
