@@ -1,3 +1,5 @@
+// js/main.js
+
 function loadCSS(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
@@ -35,7 +37,6 @@ function setupUserState() {
         <span>${user.name}</span>
       `;
     }
-
     if (adminLink && user.role === "admin") {
       adminLink.innerHTML = `<a href="admin/dashboard.html">لوحة التحكم</a>`;
     }
