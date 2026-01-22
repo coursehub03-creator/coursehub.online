@@ -26,7 +26,7 @@
     <h2>تسجيل الدخول</h2>
 
     <!-- Email Login Form -->
-    <form id="loginForm" class="login-form">
+    <form id="email-login-form" class="login-form">
       <label for="email">البريد الإلكتروني</label>
       <input type="email" id="email" name="email" placeholder="example@mail.com" autocomplete="email" required>
 
@@ -57,98 +57,10 @@
   <div id="footer-placeholder"></div>
 
   <!-- Firebase + Auth Script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
-      authDomain: "coursehub-23ed2.firebaseapp.com",
-      projectId: "coursehub-23ed2",
-      storageBucket: "coursehub-23ed2.firebasestorage.app",
-      messagingSenderId: "367073521017",
-      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    /* ===== Helpers ===== */
-    function saveUser(user) {
-      localStorage.setItem("coursehub_user", JSON.stringify(user));
-    }
-
-    function redirectUser(role) {
-      if(role === "admin") window.location.href = "admin/dashboard.html";
-      else window.location.href = "courses.html";
-    }
-
-    /* ===== Email Login ===== */
-    const form = document.getElementById("loginForm");
-    const errorMsg = document.getElementById("errorMsg");
-
-    if(form){
-      form.addEventListener("submit", async e => {
-        e.preventDefault();
-        const emailInput = document.getElementById("email").value;
-        const passwordInput = document.getElementById("password").value;
-
-        try{
-          const cred = await signInWithEmailAndPassword(auth, emailInput, passwordInput);
-          const userRef = doc(db, "users", cred.user.uid);
-          const snap = await getDoc(userRef);
-
-          if(!snap.exists()) throw new Error("المستخدم غير موجود");
-
-          saveUser(snap.data());
-          redirectUser(snap.data().role);
-
-        }catch(err){
-          console.error(err);
-          errorMsg.textContent = "بيانات الدخول غير صحيحة";
-        }
-      });
-    }
-
-    /* ===== Google Login ===== */
-    window.handleGoogleLogin = async (res) => {
-      try{
-        const jwt = res.credential;
-        const payload = JSON.parse(atob(jwt.split(".")[1]));
-        const cred = GoogleAuthProvider.credential(jwt);
-        const userCred = await signInWithCredential(auth, cred);
-
-        const userRef = doc(db, "users", userCred.user.uid);
-        const snap = await getDoc(userRef);
-
-        let role = "student";
-        if(!snap.exists()){
-          await setDoc(userRef, {
-            name: payload.name,
-            email: payload.email,
-            picture: payload.picture,
-            role,
-            createdAt: new Date()
-          });
-        } else {
-          role = snap.data().role;
-        }
-
-        saveUser({...payload, role});
-        redirectUser(role);
-
-      }catch(err){
-        console.error(err);
-        alert("حدث خطأ أثناء تسجيل الدخول عبر Google");
-      }
-    };
-  </script>
+  <script type="module" src="js/auth.js" defer></script>
 
   <!-- تحميل الهيدر والفوتر -->
-  <script type="module" src="js/main.js" defer>
-   
-  </script>
+  <script type="module" src="js/main.js" defer></script>
+
 </body>
 </html>
