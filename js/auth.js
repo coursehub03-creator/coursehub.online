@@ -4,31 +4,35 @@ import {
   signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// دالة لحفظ بيانات المستخدم في localStorage
+function saveUserAndRedirect(user) {
+  localStorage.setItem("coursehub_user", JSON.stringify({
+    name: user.displayName || "مستخدم",
+    email: user.email,
+    picture: user.photoURL || "",
+    role: "student"
+  }));
+  window.location.href = "index.html";
+}
+
 // تسجيل الدخول بالإيميل
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("emailInput").value;
-    const password = document.getElementById("passwordInput").value;
+    const emailInput = document.getElementById("emailInput");
+    const passwordInput = document.getElementById("passwordInput");
     const errorMsg = document.getElementById("errorMsg");
 
+    if (!emailInput || !passwordInput) return;
+
     try {
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      const user = res.user;
-
-      localStorage.setItem("coursehub_user", JSON.stringify({
-        name: user.displayName || "مستخدم",
-        email: user.email,
-        picture: user.photoURL || "",
-        role: "student"
-      }));
-
-      window.location.href = "index.html";
+      const res = await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+      saveUserAndRedirect(res.user);
     } catch (err) {
       if (errorMsg) errorMsg.textContent = "بيانات الدخول غير صحيحة";
-      console.error(err);
+      console.error("Login Error:", err);
     }
   });
 }
@@ -42,19 +46,10 @@ if (googleBtn) {
 
     try {
       const res = await signInWithPopup(auth, googleProvider);
-      const user = res.user;
-
-      localStorage.setItem("coursehub_user", JSON.stringify({
-        name: user.displayName || "مستخدم",
-        email: user.email,
-        picture: user.photoURL || "",
-        role: "student"
-      }));
-
-      window.location.href = "index.html";
+      saveUserAndRedirect(res.user);
     } catch (err) {
       if (errorMsg) errorMsg.textContent = "فشل تسجيل الدخول عبر Google";
-      console.error(err);
+      console.error("Google Login Error:", err);
     }
   });
 }
