@@ -1,6 +1,18 @@
+# Node modules
 node_modules/
+
+# Git files
 .git/
+
+# Cache folders
 .cache/
+
+# Build outputs
 dist/
 build/
-.github/workflows/*
+
+# GitHub workflows (يمكن استثناء هذا إذا تريد تتبعها)
+# .github/workflows/*
+
+# إذا كنت تستخدم GitHub Pages من مجلد root وليس public، تأكد من رفع الملفات هناك
+# public/  <-- احذف هذا السطر أو تأكد أن المجلد موجود قبل النشر
