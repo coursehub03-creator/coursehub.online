@@ -1,4 +1,3 @@
-// js/auth.js
 import { auth, googleProvider } from "./firebase-config.js";
 import {
   signInWithPopup,
@@ -28,7 +27,8 @@ if (loginForm) {
 
       window.location.href = "index.html";
     } catch (err) {
-      errorMsg.textContent = "بيانات الدخول غير صحيحة";
+      if (errorMsg) errorMsg.textContent = "بيانات الدخول غير صحيحة";
+      console.error(err);
     }
   });
 }
@@ -37,20 +37,23 @@ if (loginForm) {
 const googleBtn = document.getElementById("googleLoginBtn");
 if (googleBtn) {
   googleBtn.addEventListener("click", async () => {
+    const errorMsg = document.getElementById("errorMsg");
+    if (errorMsg) errorMsg.textContent = "";
+
     try {
       const res = await signInWithPopup(auth, googleProvider);
       const user = res.user;
 
       localStorage.setItem("coursehub_user", JSON.stringify({
-        name: user.displayName,
+        name: user.displayName || "مستخدم",
         email: user.email,
-        picture: user.photoURL,
+        picture: user.photoURL || "",
         role: "student"
       }));
 
       window.location.href = "index.html";
     } catch (err) {
-      alert("فشل تسجيل الدخول عبر Google");
+      if (errorMsg) errorMsg.textContent = "فشل تسجيل الدخول عبر Google";
       console.error(err);
     }
   });
