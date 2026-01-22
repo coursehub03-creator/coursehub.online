@@ -19,23 +19,13 @@
   <!-- Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Google Login -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-  <!-- Main JS (هو المسؤول عن تحميل الهيدر والفوتر) -->
+  <!-- Main JS (تحميل الهيدر والفوتر وإدارة حالة المستخدم) -->
   <script src="js/main.js" defer></script>
 </head>
 
 <body>
 
-  <!-- Google Login Init -->
-  <div id="g_id_onload"
-       data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
-       data-callback="handleGoogleLogin"
-       data-auto_prompt="false">
-  </div>
-
-  <!-- Header Placeholder -->
+  <!-- Header -->
   <div id="header-placeholder"></div>
 
   <!-- Hero Section -->
@@ -104,24 +94,8 @@
     </div>
   </section>
 
-  <!-- Footer Placeholder -->
+  <!-- Footer -->
   <div id="footer-placeholder"></div>
-
-  <!-- Google Login Handler -->
-  <script>
-    function handleGoogleLogin(response) {
-      const jwt = response.credential;
-      const payload = JSON.parse(atob(jwt.split('.')[1]));
-
-      localStorage.setItem("coursehub_user", JSON.stringify({
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture
-      }));
-
-      window.location.reload();
-    }
-  </script>
 
 </body>
 </html>
