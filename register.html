@@ -2,32 +2,32 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>إنشاء حساب - CourseHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل حساب جديد - CourseHub</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/login.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
 </head>
 <body>
+  <div id="header-placeholder"></div>
 
-<div id="header-placeholder"></div>
+  <main>
+    <h2>إنشاء حساب جديد</h2>
+    <form id="register-form">
+      <label for="name">الاسم الكامل</label>
+      <input type="text" name="name" id="name" required>
+      <label for="email">البريد الإلكتروني</label>
+      <input type="email" name="email" id="email" required>
+      <label for="password">كلمة المرور</label>
+      <input type="password" name="password" id="password" required>
+      <button type="submit">تسجيل</button>
+    </form>
+  </main>
 
-<main class="login-page container">
-  <h2>إنشاء حساب جديد</h2>
+  <div id="footer-placeholder"></div>
 
-  <form id="registerForm">
-    <input id="regEmail" type="email" placeholder="البريد الإلكتروني" required>
-    <input id="regPassword" type="password" placeholder="كلمة المرور" required>
-    <button type="submit">إنشاء الحساب</button>
-  </form>
-
-  <p class="login-links">
-    <a href="login.html">تسجيل الدخول</a>
-  </p>
-</main>
-
-<div id="footer-placeholder"></div>
-
-<script type="module" src="js/auth.js"></script>
-<script src="js/main.js" defer></script>
-
+  <script src="js/main.js"></script>
+  <script src="js/register.js"></script>
 </body>
 </html>
