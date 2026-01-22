@@ -1,54 +1,57 @@
 // js/auth.js
 import { auth, googleProvider } from "./firebase-config.js";
-import { signInWithEmailAndPassword, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+import {
+  signInWithPopup,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* ===== Helpers ===== */
-function saveUser(user) {
-  localStorage.setItem("coursehub_user", JSON.stringify(user));
-}
-
-function redirect(role) {
-  window.location.href = role === "admin" ? "admin/dashboard.html" : "index.html";
-}
-
-/* ===== Email Login ===== */
-const form = document.getElementById("loginForm");
-const errorMsg = document.getElementById("errorMsg");
-
-if (form) {
-  form.addEventListener("submit", async e => {
+// تسجيل الدخول بالإيميل
+const loginForm = document.getElementById("loginForm");
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    try {
-      const email = document.getElementById("emailInput").value.trim();
-      const password = document.getElementById("passwordInput").value.trim();
 
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      saveUser({ email: cred.user.email, uid: cred.user.uid, role: "student" });
-      redirect("student");
+    const email = document.getElementById("emailInput").value;
+    const password = document.getElementById("passwordInput").value;
+    const errorMsg = document.getElementById("errorMsg");
+
+    try {
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      const user = res.user;
+
+      localStorage.setItem("coursehub_user", JSON.stringify({
+        name: user.displayName || "مستخدم",
+        email: user.email,
+        picture: user.photoURL || "",
+        role: "student"
+      }));
+
+      window.location.href = "index.html";
     } catch (err) {
-      console.error(err);
-      if (errorMsg) errorMsg.textContent = "بيانات الدخول غير صحيحة";
+      errorMsg.textContent = "بيانات الدخول غير صحيحة";
     }
   });
 }
 
-/* ===== Google Login ===== */
+// تسجيل الدخول عبر Google
 const googleBtn = document.getElementById("googleLoginBtn");
 if (googleBtn) {
   googleBtn.addEventListener("click", async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      saveUser({
+      const res = await signInWithPopup(auth, googleProvider);
+      const user = res.user;
+
+      localStorage.setItem("coursehub_user", JSON.stringify({
         name: user.displayName,
         email: user.email,
         picture: user.photoURL,
         role: "student"
-      });
-      redirect("student");
+      }));
+
+      window.location.href = "index.html";
     } catch (err) {
+      alert("فشل تسجيل الدخول عبر Google");
       console.error(err);
-      alert("فشل تسجيل الدخول عبر Google: " + err.message);
     }
   });
 }
