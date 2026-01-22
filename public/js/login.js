@@ -95,7 +95,7 @@ if(verifyCode){
   verifyCode.onclick = async () => {
     try {
       await window.confirmationResult.confirm(code.value);
-      window.location.href = "../index.html";
+      window.location.href = "index.html";
     } catch(err){
       console.error(err);
       alert("رمز التحقق غير صحيح: " + err.message);
