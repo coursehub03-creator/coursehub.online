@@ -1,1 +1,38 @@
 
+/* لوحة الإدارة */
+main {
+  padding: 20px;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+#users-list, #admin-dashboard-content, #add-course-form {
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+form label {
+  display: block;
+  margin-top: 10px;
+}
+
+form input, form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+form button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #0a74da;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+}
