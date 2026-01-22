@@ -3,52 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <title>تسجيل الدخول - CourseHub</title>
-
-  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/header.css">
-  <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
-
-  <!-- Firebase CDN (Compat version) -->
-  <script src="https://www.gstatic.com/firebasejs/10.16.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.16.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore-compat.js"></script>
 </head>
-
 <body>
-<div id="header-placeholder"></div>
+  <div id="header-placeholder"></div>
 
-<main class="login-page container">
-  <h2>تسجيل الدخول</h2>
+  <main class="login-page container">
+    <h2>تسجيل الدخول</h2>
 
-  <!-- Email Login -->
-  <form id="loginForm">
-    <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
-    <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
-    <button type="submit">تسجيل الدخول</button>
-    <div id="errorMsg" class="error-msg"></div>
-  </form>
+    <form id="loginForm">
+      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
+      <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
+      <button type="submit">تسجيل الدخول</button>
+      <div id="errorMsg" class="error-msg"></div>
+    </form>
 
-  <p>أو</p>
+    <p>أو</p>
 
-  <!-- Google Login -->
-  <button id="googleLoginBtn" class="google-btn">
-    تسجيل الدخول باستخدام Google
-  </button>
+    <button id="googleLoginBtn" class="google-btn">
+      تسجيل الدخول باستخدام Google
+    </button>
+  </main>
 
-  <!-- Password Reset -->
-  <div class="reset-password">
-    <input id="resetEmail" type="email" placeholder="أدخل بريدك لإعادة التعيين">
-    <button id="resetBtn">إعادة تعيين كلمة المرور</button>
-  </div>
-</main>
+  <div id="footer-placeholder"></div>
 
-<div id="footer-placeholder"></div>
-
-<!-- JS -->
-<script src="js/firebase-config.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/main.js" defer></script>
+  <script type="module" src="js/auth.js"></script>
+  <script src="js/main.js" defer></script>
 </body>
 </html>
