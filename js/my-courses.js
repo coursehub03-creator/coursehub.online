@@ -1,23 +1,71 @@
-// js/my-courses.js
+import { firebaseAuth } from '../js/firebase-config.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("my-courses-list");
-  if (!container) return;
+const db = getFirestore(firebaseAuth.auth.app);
 
-  const user = JSON.parse(localStorage.getItem("coursehub_user"));
-  if (!user) return;
+const tabs = document.querySelectorAll(".tab-btn");
+const contents = document.querySelectorAll(".tab-content");
 
-  const courses = JSON.parse(localStorage.getItem("courses") || "[]");
-  if (courses.length === 0) {
-    container.innerHTML = "<p>لم يتم التسجيل في أي دورة بعد.</p>";
-    return;
+tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    tabs.forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    contents.forEach(c => c.classList.remove("active"));
+    document.getElementById(tab.dataset.tab).classList.add("active");
+  });
+});
+
+// جلب الدورات من Firestore وعرضها
+async function loadCourses() {
+  let user = firebaseAuth.auth.currentUser;
+  if (!user) {
+    const provider = new firebaseAuth.GoogleAuthProvider();
+    const result = await firebaseAuth.signInWithPopup(firebaseAuth.auth, provider);
+    user = result.user;
   }
 
-  container.innerHTML = courses.map(c => `
-    <div class="course-item">
-      <h3>${c.title}</h3>
-      <p>${c.description}</p>
-      <a href="course-detail.html?id=${c.id}">عرض الدورة</a>
-    </div>
-  `).join("");
-});
+  const userDocRef = doc(db, "user_courses", user.uid);
+  let snapshot = await getDoc(userDocRef);
+
+  let coursesData = { current: [], completed: [], favorites: [] };
+  if (snapshot.exists()) coursesData = snapshot.data();
+  else await setDoc(userDocRef, coursesData);
+
+  renderCourses(coursesData);
+}
+
+function renderCourses(data) {
+  const tabsMap = { current: "current", completed: "completed", favorites: "favorites" };
+
+  for (const key in tabsMap) {
+    const container = document.getElementById(key);
+    container.innerHTML = "";
+
+    data[key].forEach(course => {
+      const card = document.createElement("div");
+      card.className = "course-card";
+      card.innerHTML = `
+        <img src="${course.image}" alt="${course.title}">
+        <div class="course-content">
+          <h4 onclick="window.location.href='course.html?id=${course.id}'">${course.title}</h4>
+          <span>المدرب: ${course.instructor}</span>
+        </div>
+        <i class="fa fa-heart favorite-btn ${data.favorites.some(f => f.id === course.id) ? 'favorited' : ''}"></i>
+      `;
+      // زر المفضلة
+      card.querySelector(".favorite-btn").addEventListener("click", async e => {
+        const fav = e.target;
+        const uid = firebaseAuth.auth.currentUser.uid;
+        if (!fav.classList.contains("favorited")) {
+          fav.classList.add("favorited");
+          await updateDoc(doc(db, "user_courses", uid), {
+            favorites: arrayUnion(course)
+          });
+        }
+      });
+      container.appendChild(card);
+    });
+  }
+}
+
+firebaseAuth.onAuthStateChanged(firebaseAuth.auth, loadCourses);
