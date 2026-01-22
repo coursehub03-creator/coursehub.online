@@ -1,43 +1,33 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <link rel="stylesheet" href="css/header.css">
-
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>إنشاء حساب - CourseHub</title>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <title>إنشاء حساب - CourseHub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
 
-<!-- Header Placeholder -->
 <div id="header-placeholder"></div>
 
-<!-- Main Section -->
-<section class="course-detail">
+<main class="login-page container">
   <h2>إنشاء حساب جديد</h2>
 
   <form id="registerForm">
-    <input type="email" id="email" placeholder="البريد الإلكتروني" required>
-    <input type="password" id="password" placeholder="كلمة المرور" required>
-    <button class="btn">إنشاء الحساب</button>
+    <input id="regEmail" type="email" placeholder="البريد الإلكتروني" required>
+    <input id="regPassword" type="password" placeholder="كلمة المرور" required>
+    <button type="submit">إنشاء الحساب</button>
   </form>
 
-  <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
-</section>
+  <p class="login-links">
+    <a href="login.html">تسجيل الدخول</a>
+  </p>
+</main>
 
-<!-- Footer Placeholder -->
 <div id="footer-placeholder"></div>
 
-<!-- Main JS لاستدعاء الهيدر والفوتر -->
-<script src="js/main.js"></script>
-
-<!-- ملفات تسجيل الحساب -->
-<script src="js/firebase-config.js"></script>
-<script src="js/register.js"></script>
-  <link rel="stylesheet" href="css/footer.css">
+<script type="module" src="js/auth.js"></script>
+<script src="js/main.js" defer></script>
 
 </body>
 </html>
