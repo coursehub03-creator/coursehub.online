@@ -1,14 +1,6 @@
 // js/auth.js
-import { auth, db, googleProvider } from "./firebase-config.js";
-import {
-  signInWithEmailAndPassword,
-  signInWithPopup
-} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
-import {
-  doc,
-  getDoc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+import { auth, googleProvider } from "./firebase-config.js";
+import { signInWithEmailAndPassword, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 
 /* ===== Helpers ===== */
 function saveUser(user) {
@@ -16,31 +8,35 @@ function saveUser(user) {
 }
 
 function redirect(role) {
-  window.location.href =
-    role === "admin" ? "admin/dashboard.html" : "courses.html";
+  window.location.href = role === "admin" ? "admin/dashboard.html" : "index.html";
 }
 
 /* ===== Email Login ===== */
 const form = document.getElementById("loginForm");
 const errorMsg = document.getElementById("errorMsg");
+const emailInput = document.getElementById("emailInput");
+const passwordInput = document.getElementById("passwordInput");
 
 if (form) {
-  form.addEventListener("submit", async (e) => {
+  form.addEventListener("submit", async e => {
     e.preventDefault();
 
-    const email = document.getElementById("emailInput").value.trim();
-    const password = document.getElementById("passwordInput").value.trim();
-
     try {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      const ref = doc(db, "users", cred.user.uid);
-      const snap = await getDoc(ref);
 
-      if (!snap.exists()) throw new Error("USER_NOT_FOUND");
+      // بيانات المستخدم
+      const user = cred.user;
+      saveUser({
+        name: user.displayName || "طالب جديد",
+        email: user.email,
+        uid: user.uid,
+        role: "student" // يمكن تغييره حسب الحاجة
+      });
 
-      const data = snap.data();
-      saveUser(data);
-      redirect(data.role);
+      redirect("student");
 
     } catch (err) {
       console.error(err);
@@ -58,35 +54,17 @@ if (googleBtn) {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-
-      let role = "student";
-
-      if (!snap.exists()) {
-        await setDoc(ref, {
-          name: user.displayName,
-          email: user.email,
-          picture: user.photoURL,
-          role,
-          createdAt: new Date()
-        });
-      } else {
-        role = snap.data().role;
-      }
-
       saveUser({
         name: user.displayName,
         email: user.email,
-        picture: user.photoURL,
-        role
+        uid: user.uid,
+        role: "student"
       });
 
-      redirect(role);
-
+      redirect("student");
     } catch (err) {
       console.error(err);
-      alert("فشل تسجيل الدخول باستخدام Google");
+      alert("فشل تسجيل الدخول عبر Google");
     }
   });
 }
