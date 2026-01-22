@@ -1,4 +1,6 @@
+/* ======= Start of original my-courses.css ======= */
 * { box-sizing: border-box; }
+
 body, html {
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -6,11 +8,13 @@ body, html {
   color: #1c1c1c;
   overflow-x: hidden;
 }
+
 .courses-container {
   max-width: 1200px;
   margin: auto;
   padding: 30px 20px;
 }
+
 .page-title {
   color: #1c3faa;
   margin-bottom: 20px;
@@ -86,4 +90,12 @@ body, html {
 }
 .course-card .favorite-btn.favorited {
   color: #ff4b5c;
+}
+/* ======= End of original my-courses.css ======= */
+
+/* ======= تصحيحات إضافية ======= */
+/* لضمان عدم تضارب الـ containers مع header/footer أو partials */
+.courses-container, .tabs, .tab-content, .course-card {
+  z-index: 1;
+  position: relative;
 }
