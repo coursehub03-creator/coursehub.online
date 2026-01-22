@@ -2,7 +2,7 @@
 import { auth, db, googleProvider } from "./firebase-config.js";
 import {
   signInWithEmailAndPassword,
-  signInWithCredential
+  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 import {
   doc,
@@ -11,14 +11,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
 /* ===== Helpers ===== */
-function saveUserLocally(user) {
-  // تخزين نسخة صغيرة محليًا لتحديث الهيدر والفوتر بسرعة
+function saveUser(user) {
   localStorage.setItem("coursehub_user", JSON.stringify(user));
 }
 
-function redirectUser(role) {
-  if (role === "admin") window.location.href = "admin/dashboard.html";
-  else window.location.href = "courses.html";
+function redirect(role) {
+  window.location.href =
+    role === "admin" ? "admin/dashboard.html" : "courses.html";
 }
 
 /* ===== Email Login ===== */
@@ -26,81 +25,68 @@ const form = document.getElementById("loginForm");
 const errorMsg = document.getElementById("errorMsg");
 
 if (form) {
-  form.addEventListener("submit", async (e) => {
+  form.addEventListener("submit", async e => {
     e.preventDefault();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
 
     try {
-      // تسجيل الدخول عبر Firebase Auth
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
       const cred = await signInWithEmailAndPassword(auth, email, password);
+      const ref = doc(db, "users", cred.user.uid);
+      const snap = await getDoc(ref);
 
-      // جلب بيانات المستخدم من Firestore
-      const userRef = doc(db, "users", cred.user.uid);
-      const snap = await getDoc(userRef);
+      if (!snap.exists()) throw new Error("user-not-found");
 
-      if (!snap.exists()) throw new Error("المستخدم غير موجود");
-
-      const userData = snap.data();
-
-      // حفظ نسخة صغيرة محليًا لتحديث الهيدر بسرعة
-      saveUserLocally({
-        name: userData.name,
-        email: userData.email,
-        picture: userData.picture || "default-avatar.png",
-        role: userData.role
-      });
-
-      redirectUser(userData.role);
+      const data = snap.data();
+      saveUser(data);
+      redirect(data.role);
 
     } catch (err) {
-      console.error("خطأ في تسجيل الدخول:", err);
+      console.error(err);
       errorMsg.textContent = "بيانات الدخول غير صحيحة";
     }
   });
 }
 
 /* ===== Google Login ===== */
-window.handleGoogleLogin = async (res) => {
-  try {
-    const jwt = res.credential;
-    const payload = JSON.parse(atob(jwt.split(".")[1]));
+const googleBtn = document.getElementById("googleLoginBtn");
 
-    // تسجيل الدخول عبر Firebase Credential
-    const cred = googleProvider.credential(jwt);
-    const userCred = await signInWithCredential(auth, cred);
+if (googleBtn) {
+  googleBtn.addEventListener("click", async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
 
-    // مرجع المستخدم في Firestore
-    const userRef = doc(db, "users", userCred.user.uid);
-    const snap = await getDoc(userRef);
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
 
-    let role = "student"; // القيمة الافتراضية
+      let role = "student";
 
-    if (!snap.exists()) {
-      // إنشاء مستخدم جديد في Firestore
-      await setDoc(userRef, {
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-        role,
-        createdAt: new Date()
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          name: user.displayName,
+          email: user.email,
+          picture: user.photoURL,
+          role,
+          createdAt: new Date()
+        });
+      } else {
+        role = snap.data().role;
+      }
+
+      saveUser({
+        name: user.displayName,
+        email: user.email,
+        picture: user.photoURL,
+        role
       });
-    } else {
-      role = snap.data().role;
+
+      redirect(role);
+
+    } catch (err) {
+      console.error(err);
+      alert("فشل تسجيل الدخول عبر Google");
     }
-
-    // حفظ نسخة صغيرة محليًا لتحديث الهيدر بسرعة
-    saveUserLocally({
-      name: payload.name,
-      email: payload.email,
-      picture: payload.picture,
-      role
-    });
-
-    redirectUser(role);
-
-  } catch (err) {
-    console.error("خطأ في تسجيل الدخول عبر Google:", err);
-    alert("حدث خطأ أثناء تسجيل الدخول عبر Google");
-  }
-};
+  });
+}
