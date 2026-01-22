@@ -3,37 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <title>تسجيل الدخول - CourseHub</title>
+
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
 </head>
+
 <body>
+  <div id="header-placeholder"></div>
 
-<div id="header-placeholder"></div>
+  <main class="login-page container">
+    <h2>تسجيل الدخول</h2>
 
-<main class="login-page container">
-  <h2>تسجيل الدخول</h2>
+    <form id="loginForm">
+      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
+      <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
+      <button type="submit">تسجيل الدخول</button>
+      <div id="errorMsg" class="error-msg"></div>
+    </form>
 
-  <form id="loginForm">
-    <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
-    <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
-    <button type="submit">تسجيل الدخول</button>
-    <div id="errorMsg" class="error-msg"></div>
-  </form>
+    <p>أو</p>
 
-  <p>أو</p>
+    <button id="googleLoginBtn" class="google-btn">
+      تسجيل الدخول باستخدام Google
+    </button>
+  </main>
 
-  <button id="googleLoginBtn" class="google-btn">تسجيل الدخول باستخدام Google</button>
+  <div id="footer-placeholder"></div>
 
-  <p class="login-links">
-    <a href="register.html">إنشاء حساب جديد</a> | 
-    <a href="forgot-password.html">نسيت كلمة المرور؟</a>
-  </p>
-</main>
-
-<div id="footer-placeholder"></div>
-
-<script type="module" src="js/auth.js"></script>
-<script src="js/main.js" defer></script>
-
+  <script type="module" src="js/auth.js"></script>
+  <script src="js/main.js" defer></script>
 </body>
 </html>
