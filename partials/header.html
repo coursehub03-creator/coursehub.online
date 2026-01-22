@@ -1,30 +1,27 @@
 <header>
-  <div class="top-bar container">
-    <!-- شعار الموقع -->
-    <div class="site-name">
-      <a href="../index.html">CourseHub</a>
+  <div class="logo">
+    <a href="index.html">CourseHub</a>
+  </div>
+
+  <nav class="nav-links">
+    <a href="index.html">الرئيسية</a>
+    <a href="courses.html">الدورات</a>
+    <a href="tests.html">الاختبارات</a>
+    <a href="certificates.html">الشهادات</a>
+    <a href="achievements.html">إنجازاتي</a>
+  </nav>
+
+  <div class="user-actions">
+    <div id="login-link">
+      <a href="login.html">تسجيل الدخول</a>
     </div>
 
-    <!-- Navigation -->
-    <nav>
-      <a href="../index.html">الرئيسية</a>
-      <a href="../courses.html">الدورات</a>
-      <a href="../tests.html">الاختبارات</a>
-      <a href="../certificates.html">الشهادات</a>
-    </nav>
-
-    <!-- Search Bar -->
-    <div id="headerSearchBar" class="search-bar">
-      <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
-      <button id="searchBtn"><i class="fa fa-search"></i></button>
+    <div id="user-info" style="display:none;">
+      <!-- سيتم ملؤه ديناميكيًا بواسطة main.js -->
     </div>
 
-    <!-- Header Actions -->
-    <div class="header-actions">
-      <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
-      <button id="notifBtn"><i class="fa fa-bell"></i><span class="notification-badge" id="notifBadge">3</span></button>
-      <a href="../login.html" id="login-link">تسجيل الدخول</a>
-      <div id="user-info" class="user-info-container"></div>
+    <div id="admin-link">
+      <!-- سيتم ملؤه ديناميكيًا إذا كان user.role === 'admin' -->
     </div>
   </div>
 </header>
