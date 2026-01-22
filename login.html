@@ -2,57 +2,39 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول | CourseHub</title>
+  <title>تسجيل الدخول - CourseHub</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
 
+  <script src="js/main.js" defer></script>
 </head>
 
 <body>
 
-<button id="googleLoginBtn">تسجيل الدخول عبر Google</button>
+  <div id="header-placeholder"></div>
 
-<!-- Firebase + Login -->
-<script type="module">
-  // ✅ استيراد Firebase (Module)
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+  <main class="login-page container">
+    <h2>تسجيل الدخول</h2>
 
-  // ✅ إعدادات Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
-    authDomain: "coursehub-23ed2.firebaseapp.com",
-    projectId: "coursehub-23ed2",
-    storageBucket: "coursehub-23ed2.appspot.com",
-    messagingSenderId: "367073521017",
-    appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
-  };
+    <form id="loginForm">
+      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
+      <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
+      <button type="submit">تسجيل الدخول</button>
+      <div id="errorMsg" class="error-msg"></div>
+    </form>
 
-  // ✅ تهيئة Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
+    <p>أو</p>
 
-  // ✅ زر تسجيل الدخول
-  document.getElementById("googleLoginBtn").addEventListener("click", async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+    <button id="googleLoginBtn" class="google-btn">
+      تسجيل الدخول باستخدام Google
+    </button>
+  </main>
 
-      localStorage.setItem("coursehub_user", JSON.stringify({
-        uid: user.uid,
-        name: user.displayName,
-        email: user.email,
-        photo: user.photoURL
-      }));
+  <div id="footer-placeholder"></div>
 
-      window.location.href = "index.html";
-    } catch (e) {
-      alert("فشل تسجيل الدخول: " + e.message);
-      console.error(e);
-    }
-  });
-</script>
-
+  <script type="module" src="js/auth.js"></script>
 </body>
 </html>
