@@ -3,24 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>دوراتي - CourseHub</title>
+  <title>دوراتي | CourseHub</title>
+
+  <!-- Styles -->
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/my-courses.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
-  <link rel="stylesheet" href="css/my-courses.css">
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    header { direction: ltr !important; }
+    .top-bar.container {
+      flex-direction: row !important;
+      justify-content: space-between !important;
+    }
+  </style>
 </head>
 <body>
+  <!-- Header Placeholder -->
   <div id="header-placeholder"></div>
 
-  <main>
-    <h2>دوراتي</h2>
-    <div id="my-courses-list"></div>
+  <!-- Main Content -->
+  <main class="courses-container">
+    <h1 class="page-title">دوراتي</h1>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="current">دوراتي الحالية</button>
+      <button class="tab-btn" data-tab="completed">دوراتي المنجزة</button>
+      <button class="tab-btn" data-tab="favorites">دوراتي المفضلة</button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div id="current" class="tab-content active"></div>
+    <div id="completed" class="tab-content"></div>
+    <div id="favorites" class="tab-content"></div>
   </main>
 
+  <!-- Footer Placeholder -->
   <div id="footer-placeholder"></div>
 
-  <script src="js/main.js"></script>
-  <script src="js/auth-guard.js"></script>
-  <script src="js/my-courses.js"></script>
+  <!-- JS -->
+  <script src="js/main.js" defer></script>
+  <script type="module" src="js/my-courses.js"></script>
 </body>
 </html>
