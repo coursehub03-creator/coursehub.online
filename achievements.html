@@ -3,23 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إنجازاتي - CourseHub</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>إنجازاتي | CourseHub</title>
+
+  <!-- Header & Footer Styles -->
   <link rel="stylesheet" href="css/header.css">
-  <link rel="stylesheet" href="css/footer.css">
+
+  <!-- Font & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Page Styles -->
   <link rel="stylesheet" href="css/achievements.css">
+
+  <style>
+    header {
+      direction: ltr !important;
+    }
+    .top-bar.container {
+      flex-direction: row !important;
+      justify-content: space-between !important;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Header Placeholder -->
   <div id="header-placeholder"></div>
 
-  <main>
-    <h2>إنجازاتي</h2>
-    <div id="achievements-list"></div>
+  <!-- Main Content -->
+  <main class="achievements-container">
+    <h1 class="page-title">إنجازاتي</h1>
+
+    <!-- Summary -->
+    <section class="summary-cards">
+      <div class="summary-card">
+        <i class="fa fa-graduation-cap"></i>
+        <h3>الدورات المكتملة</h3>
+        <span id="completedCourses">0</span>
+      </div>
+
+      <div class="summary-card">
+        <i class="fa fa-certificate"></i>
+        <h3>الشهادات</h3>
+        <span id="certificatesCount">0</span>
+      </div>
+    </section>
+
+    <!-- Certificates -->
+    <section class="section-block">
+      <h2>الشهادات</h2>
+      <div class="certificates-list" id="certificatesList"></div>
+    </section>
+
+    <!-- Completed Courses -->
+    <section class="section-block">
+      <h2>الدورات المكتملة</h2>
+      <div class="courses-list" id="coursesList"></div>
+    </section>
   </main>
 
+  <!-- Footer Placeholder -->
   <div id="footer-placeholder"></div>
 
-  <script src="js/main.js"></script>
-  <script src="js/achievements.js"></script>
+  <!-- Firebase SDKs + App Scripts -->
+  <script type="module">
+    import { firebaseAuth } from '/js/firebase-config.js';
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
+
+    const db = getFirestore(firebaseAuth.auth.app);
+
+    // تسجيل الدخول إذا لم يكن موجود
+    firebaseAuth.onAuthStateChanged(firebaseAuth.auth, async (user) => {
+      if (!user) {
+        await firebaseAuth.signInWithPopup(firebaseAuth.auth, new firebaseAuth.GoogleAuthProvider());
+        return;
+      }
+
+      const userDocRef = doc(db, "users", user.uid);
+      let userDocSnap = await getDoc(userDocRef);
+      let progressData;
+
+      if (!userDocSnap.exists()) {
+        // إنشاء مستند جديد إذا لم يكن موجودًا
+        progressData = { completedCourses: [], certificates: [] };
+        await setDoc(userDocRef, progressData);
+      } else {
+        progressData = userDocSnap.data();
+      }
+
+      // --- Summary ---
+      document.getElementById("completedCourses").textContent = progressData.completedCourses.length;
+      document.getElementById("certificatesCount").textContent = progressData.certificates.length;
+
+      // --- Certificates ---
+      const certList = document.getElementById("certificatesList");
+      certList.innerHTML = "";
+      if (progressData.certificates.length === 0) {
+        certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
+      } else {
+        progressData.certificates.forEach(cert => {
+          certList.innerHTML += `
+            <div class="certificate-card">
+              <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
+              <h4>${cert.title}</h4>
+              <span>تاريخ الإصدار: ${cert.issuedAt}</span>
+              <button onclick="window.open('${cert.certificateUrl}', '_blank')">
+                عرض الشهادة
+              </button>
+            </div>
+          `;
+        });
+      }
+
+      // --- Completed Courses ---
+      const coursesList = document.getElementById("coursesList");
+      coursesList.innerHTML = "";
+      if (progressData.completedCourses.length === 0) {
+        coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
+      } else {
+        progressData.completedCourses.forEach(course => {
+          coursesList.innerHTML += `
+            <div class="course-card">
+              <img src="${course.image}" alt="${course.title}">
+              <div class="course-content">
+                <h4>
+                  <a href="course.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                    ${course.title}
+                  </a>
+                </h4>
+                <span>المدرب: ${course.instructor}</span><br>
+                <span>أكملت في: ${course.completedAt}</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+    });
+  </script>
+<link rel="stylesheet" href="css/footer.css">
+  <script src="js/main.js" defer></script>
 </body>
 </html>
