@@ -4,21 +4,25 @@
   <meta charset="UTF-8">
   <title>تسجيل الدخول - CourseHub</title>
 
+  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
 
+  <!-- تحميل الهيدر والفوتر -->
   <script src="js/main.js" defer></script>
 </head>
 
 <body>
 
+  <!-- Header ديناميكي -->
   <div id="header-placeholder"></div>
 
   <main class="login-page container">
     <h2>تسجيل الدخول</h2>
 
+    <!-- تسجيل الدخول بالبريد -->
     <form id="loginForm">
       <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
       <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
@@ -28,13 +32,46 @@
 
     <p>أو</p>
 
+    <!-- تسجيل الدخول بـ Google -->
     <button id="googleLoginBtn" class="google-btn">
       تسجيل الدخول باستخدام Google
     </button>
   </main>
 
+  <!-- Footer ديناميكي -->
   <div id="footer-placeholder"></div>
 
-  <script type="module" src="js/auth.js"></script>
+  <!-- Firebase + Auth -->
+  <script type="module">
+    import { auth, googleProvider } from './js/firebase-config.js';
+
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const errorMsg = document.getElementById('errorMsg');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+
+    // تسجيل دخول بالبريد وكلمة المرور
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = '';
+      try {
+        await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
+        window.location.href = 'index.html'; // إعادة التوجيه بعد تسجيل الدخول
+      } catch (error) {
+        errorMsg.textContent = error.message;
+      }
+    });
+
+    // تسجيل دخول باستخدام Google
+    googleLoginBtn.addEventListener('click', async () => {
+      try {
+        await auth.signInWithPopup(googleProvider);
+        window.location.href = 'index.html';
+      } catch (error) {
+        errorMsg.textContent = error.message;
+      }
+    });
+  </script>
 </body>
 </html>
