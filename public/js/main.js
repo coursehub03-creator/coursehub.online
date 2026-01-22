@@ -10,18 +10,19 @@ function loadCSS(href){
 
 async function loadHeaderFooter(){
   try{
-    // تعديل المسار ليكون من الجذر
+    // تحميل الهيدر
     const headerRes = await fetch("partials/header.html");
     const headerHTML = await headerRes.text();
     document.body.insertAdjacentHTML("afterbegin", headerHTML);
-    loadCSS("header.css");
+    loadCSS("css/header.css");
   }catch(err){ console.error("فشل تحميل الهيدر:", err); }
 
   try{
+    // تحميل الفوتر
     const footerRes = await fetch("partials/footer.html");
     const footerHTML = await footerRes.text();
     document.body.insertAdjacentHTML("beforeend", footerHTML);
-    loadCSS("footer.css");
+    loadCSS("css/footer.css");
   }catch(err){ console.error("فشل تحميل الفوتر:", err); }
 
   // إعدادات بعد التحميل
@@ -30,6 +31,7 @@ async function loadHeaderFooter(){
   setupLanguageToggle();
 }
 
+/* ===== User State ===== */
 function setupUserState(){
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
   const userContainer = document.getElementById("user-info");
@@ -61,7 +63,10 @@ function setupUserState(){
       `;
 
       const dropdown = userContainer.querySelector(".dropdown-menu");
-      const toggleDropdown = e => { e.stopPropagation(); dropdown.style.display = dropdown.style.display === "block" ? "none" : "block"; };
+      const toggleDropdown = e => {
+        e.stopPropagation();
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      };
       userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
       userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
       document.addEventListener("click", ()=>{ dropdown.style.display="none"; });
@@ -86,12 +91,13 @@ function setupUserState(){
   }
 }
 
+/* ===== Header Search ===== */
 function setupHeaderSearch(){
   const path = window.location.pathname.split("/").pop();
   const searchBar = document.getElementById("headerSearchBar");
   if(!searchBar) return;
-  if(path==="" || path==="index.html" || path==="courses.html"){
-    searchBar.style.display="flex";
+  if(path === "" || path === "index.html" || path === "courses.html"){
+    searchBar.style.display = "flex";
     const searchBtn = document.getElementById("searchBtn");
     if(searchBtn) searchBtn.addEventListener("click", ()=>{
       const query = document.getElementById("searchInput").value.trim();
@@ -100,6 +106,7 @@ function setupHeaderSearch(){
   } else searchBar.style.display="none";
 }
 
+/* ===== Language Toggle ===== */
 function setupLanguageToggle(){
   const langBtn = document.getElementById("langBtn");
   if(!langBtn) return;
@@ -112,4 +119,5 @@ function setupLanguageToggle(){
   });
 }
 
+/* ===== Initialize on DOM Load ===== */
 document.addEventListener("DOMContentLoaded", loadHeaderFooter);
