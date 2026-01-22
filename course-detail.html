@@ -7,18 +7,115 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .course-detail { max-width: 900px; margin: auto; padding: 30px 20px; background: #fff; border-radius: 10px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+    .course-detail h2 { margin-top: 0; }
+    .course-detail img { width: 100%; max-height: 300px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
+    .course-detail ul { list-style: disc; margin-left: 20px; padding-left: 0; }
+    .course-detail ul li { margin-bottom: 5px; }
+    .course-detail .btn { display: inline-block; padding: 10px 20px; background: #1c3faa; color: #fff; border-radius: 6px; text-decoration: none; margin-top: 15px; }
+    .course-detail .btn:hover { background: #1451a1; }
+    .course-detail form { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .course-detail input, .course-detail button { padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
+    .course-detail button { background: #1c3faa; color: #fff; border: none; cursor: pointer; transition: 0.3s; }
+    .course-detail button:hover { background: #1451a1; }
+    .rating { font-size: 16px; color: #f1c40f; margin-bottom: 10px; }
+    .empty-msg { text-align: center; font-size: 16px; color: #666; margin-top: 20px; }
+  </style>
 </head>
 <body>
   <div id="header-placeholder"></div>
 
-  <main>
-    <h2>تفاصيل الدورة</h2>
-    <div id="course-detail-content"></div>
-  </main>
+  <section class="course-detail" id="courseDetail">
+    <h2>تحميل الدورة...</h2>
+    <img src="" alt="Course Image" id="courseImage">
+    <p id="courseDesc"></p>
+    <h3>محتوى الدورة</h3>
+    <ul id="courseContent"></ul>
+    <div class="rating" id="courseRating"></div>
+    <a href="#" class="btn" id="joinBtn">الانضمام للدورة</a>
+
+    <hr>
+
+    <h3>التسجيل / التواصل</h3>
+    <form id="registrationForm">
+      <input type="text" id="name" placeholder="أدخل اسمك الكامل" required>
+      <input type="email" id="email" placeholder="أدخل بريدك الإلكتروني" required>
+      <button type="submit">إرسال</button>
+    </form>
+  </section>
 
   <div id="footer-placeholder"></div>
 
-  <script src="js/main.js"></script>
-  <script src="js/auth-guard.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
+      authDomain: "coursehub-23ed2.firebaseapp.com",
+      projectId: "coursehub-23ed2",
+      storageBucket: "coursehub-23ed2.appspot.com",
+      messagingSenderId: "367073521017",
+      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get("id");
+
+    const courseDetail = document.getElementById("courseDetail");
+    const courseImage = document.getElementById("courseImage");
+    const courseDesc = document.getElementById("courseDesc");
+    const courseContent = document.getElementById("courseContent");
+    const courseRating = document.getElementById("courseRating");
+    const joinBtn = document.getElementById("joinBtn");
+
+    async function loadCourseDetail() {
+      if (!courseId) {
+        courseDetail.innerHTML = "<p class='empty-msg'>لم يتم تحديد أي دورة.</p>";
+        return;
+      }
+
+      try {
+        const docRef = doc(db, "courses", courseId);
+        const snapshot = await getDoc(docRef);
+
+        if (!snapshot.exists()) {
+          courseDetail.innerHTML = "<p class='empty-msg'>الدورة غير موجودة.</p>";
+          return;
+        }
+
+        const course = snapshot.data();
+        courseDetail.querySelector('h2').textContent = course.title || "دورة بدون عنوان";
+        courseImage.src = course.image || "/public/assets/images/course1.jpg";
+        courseDesc.textContent = course.description || "لا يوجد وصف متاح.";
+        courseRating.innerHTML = "★".repeat(Math.floor(course.rating || 4)) + `<span> (${course.students || 0} طالب)</span>`;
+
+        courseContent.innerHTML = "";
+        if (course.content && course.content.length > 0) {
+          course.content.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            courseContent.appendChild(li);
+          });
+        } else {
+          courseContent.innerHTML = "<li>لا يوجد محتوى متاح.</li>";
+        }
+
+        joinBtn.href = "#"; // لاحقاً يمكن ربطه بعملية التسجيل
+      } catch (error) {
+        console.error("خطأ في تحميل الدورة:", error);
+        courseDetail.innerHTML = "<p class='empty-msg'>حدث خطأ أثناء تحميل الدورة.</p>";
+      }
+    }
+
+    loadCourseDetail();
+  </script>
+
+  <script src="main.js" defer></script>
 </body>
 </html>
