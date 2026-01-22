@@ -10,7 +10,7 @@ function loadCSS(href) {
 
 async function loadHeaderFooter() {
   try {
-    const header = await fetch("partials/header.html");
+    const header = await fetch("./partials/header.html");
     document.getElementById("header-placeholder").innerHTML =
       await header.text();
     loadCSS("css/header.css");
@@ -19,7 +19,7 @@ async function loadHeaderFooter() {
   }
 
   try {
-    const footer = await fetch("partials/footer.html");
+    const footer = await fetch("./partials/footer.html");
     document.getElementById("footer-placeholder").innerHTML =
       await footer.text();
     loadCSS("css/footer.css");
