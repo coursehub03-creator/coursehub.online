@@ -28,25 +28,12 @@
   text-align: right;
 }
 
-.login-form label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #444;
-}
-
 .login-form input {
   padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid #d0d5dd;
   font-size: 15px;
   transition: all 0.3s ease;
-}
-
-/* Autofill Fix */
-.login-form input:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 1000px #fff inset;
-  -webkit-text-fill-color: #000;
-  transition: background-color 5000s ease-in-out 0s;
 }
 
 .login-form input:focus {
@@ -74,15 +61,15 @@
 }
 
 /* Divider */
-.login-page .divider {
+.divider {
   margin: 25px 0 15px;
   font-size: 14px;
   color: #777;
   position: relative;
 }
 
-.login-page .divider::before,
-.login-page .divider::after {
+.divider::before,
+.divider::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -91,20 +78,42 @@
   background: #ddd;
 }
 
-.login-page .divider::before {
+.divider::before {
   right: 0;
 }
 
-.login-page .divider::after {
+.divider::after {
   left: 0;
 }
 
 /* Google Button */
-.g_id_signin {
+.google-btn {
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 15px;
-  width: 100%;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.google-btn:hover {
+  background: #f0f0f0;
+}
+
+.google-btn i {
+  font-size: 18px;
+}
+
+/* Error Message */
+.error-msg {
+  color: red;
+  margin-top: 5px;
+  font-size: 14px;
 }
 
 /* Links */
@@ -132,10 +141,5 @@
 
   .login-page h2 {
     font-size: 24px;
-  }
-
-  .g_id_signin {
-    justify-content: center;
-    width: 100%;
   }
 }
