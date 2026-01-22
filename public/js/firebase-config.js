@@ -1,6 +1,8 @@
 // js/firebase-config.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
-// إعداد Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
   authDomain: "coursehub-23ed2.firebaseapp.com",
@@ -10,13 +12,8 @@ const firebaseConfig = {
   appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
 };
 
-// Initialize Firebase (نسخة التوافق - compat)
-firebase.initializeApp(firebaseConfig);
-
-// Auth & Firestore
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-// Google Provider
-const googleProvider = new firebase.auth.GoogleAuthProvider();
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
