@@ -11,17 +11,22 @@ function loadCSS(href) {
 
 async function loadHeaderFooter() {
   try {
+    // تحميل الهيدر
     const headerHTML = await (await fetch("partials/header.html")).text();
-    document.getElementById("header-placeholder").innerHTML = headerHTML;
+    const headerEl = document.getElementById("header-placeholder");
+    if (headerEl) headerEl.innerHTML = headerHTML;
 
+    // تحميل الفوتر
     const footerHTML = await (await fetch("partials/footer.html")).text();
-    document.getElementById("footer-placeholder").innerHTML = footerHTML;
+    const footerEl = document.getElementById("footer-placeholder");
+    if (footerEl) footerEl.innerHTML = footerHTML;
+
   } catch (err) {
     console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
 }
 
-/* ===== User State ===== */
+/* ===== حالة المستخدم ===== */
 function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
   const loginLink = document.getElementById("login-link");
@@ -43,6 +48,7 @@ function setupUserState() {
   }
 }
 
+/* ===== تنفيذ بعد تحميل DOM ===== */
 document.addEventListener("DOMContentLoaded", async () => {
   await loadHeaderFooter();
   setupUserState();
