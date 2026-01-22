@@ -1,4 +1,3 @@
-// js/main.js
 function loadCSS(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
@@ -43,4 +42,7 @@ function setupUserState() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", loadHeaderFooter);
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadHeaderFooter();
+  setupUserState();
+});
