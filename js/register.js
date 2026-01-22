@@ -1,4 +1,4 @@
-// js/register.js
+// js/register.js - تسجيل المستخدم محلياً مع تحسينات
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("register-form");
@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   form.addEventListener("submit", e => {
     e.preventDefault();
+
     const name = form.name.value.trim();
     const email = form.email.value.trim();
     const password = form.password.value.trim();
@@ -15,17 +16,33 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // تحقق إذا المستخدم موجود مسبقًا
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    if (users.find(u => u.email === email)) {
-      alert("المستخدم موجود بالفعل");
-      return;
-    }
+    try {
+      // جلب المستخدمين الحاليين من localStorage
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
 
-    const newUser = { name, email, password, role: "user", picture: "assets/images/default-user.png" };
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("تم إنشاء الحساب بنجاح!");
-    window.location.href = "login.html";
+      // تحقق من وجود المستخدم مسبقًا
+      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        alert("المستخدم موجود بالفعل");
+        return;
+      }
+
+      const newUser = {
+        name,
+        email,
+        password,
+        role: "user",
+        picture: "assets/images/default-user.png"
+      };
+
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
+
+      alert("تم إنشاء الحساب بنجاح!");
+      window.location.href = "login.html";
+
+    } catch (err) {
+      console.error("خطأ أثناء تسجيل المستخدم:", err);
+      alert("حدث خطأ أثناء إنشاء الحساب، الرجاء المحاولة لاحقًا");
+    }
   });
 });
