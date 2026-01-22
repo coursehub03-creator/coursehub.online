@@ -1,18 +1,13 @@
-/* ===============================
-   Login Page Styling - CourseHub
-   =============================== */
-
 .login-page {
   max-width: 420px;
   margin: 80px auto;
   padding: 35px 30px;
-  background: #ffffff;
+  background: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   text-align: center;
 }
 
-/* Title */
 .login-page h2 {
   margin-bottom: 25px;
   font-size: 28px;
@@ -20,126 +15,44 @@
   font-weight: 700;
 }
 
-/* Form */
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  text-align: right;
-}
-
-.login-form input {
-  padding: 12px 14px;
+.login-page input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
   border-radius: 8px;
   border: 1px solid #d0d5dd;
   font-size: 15px;
-  transition: all 0.3s ease;
 }
 
-.login-form input:focus {
-  outline: none;
-  border-color: #1c3faa;
-  box-shadow: 0 0 0 2px rgba(28, 63, 170, 0.15);
-}
-
-/* Button */
-.login-form .btn {
-  margin-top: 10px;
+.login-page button {
+  width: 100%;
+  padding: 12px;
   background-color: #1c3faa;
   color: #fff;
-  padding: 12px;
   font-size: 16px;
   font-weight: 700;
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
 }
 
-.login-form .btn:hover {
+.login-page button:hover {
   background-color: #163488;
 }
 
-/* Divider */
-.divider {
-  margin: 25px 0 15px;
-  font-size: 14px;
-  color: #777;
-  position: relative;
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 30%;
-  height: 1px;
-  background: #ddd;
-}
-
-.divider::before {
-  right: 0;
-}
-
-.divider::after {
-  left: 0;
-}
-
-/* Google Button */
 .google-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  margin-top: 15px;
+  background-color: #db4437;
 }
 
 .google-btn:hover {
-  background: #f0f0f0;
+  background-color: #c33d2e;
 }
 
-.google-btn i {
-  font-size: 18px;
+.reset-password {
+  margin-top: 20px;
 }
 
-/* Error Message */
-.error-msg {
-  color: red;
-  margin-top: 5px;
-  font-size: 14px;
-}
-
-/* Links */
-.login-links {
-  margin-top: 15px;
-  font-size: 14px;
-}
-
-.login-links a {
-  color: #1c3faa;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.login-links a:hover {
-  text-decoration: underline;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  .login-page {
-    margin: 50px 15px;
-    padding: 25px 20px;
-  }
-
-  .login-page h2 {
-    font-size: 24px;
-  }
+.reset-password input {
+  margin-bottom: 10px;
 }
