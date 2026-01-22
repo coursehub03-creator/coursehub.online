@@ -1,6 +1,6 @@
-/* ===== Load Header/Footer ===== */
-function loadCSS(href){
-  if(!document.querySelector(`link[href="${href}"]`)){
+// js/main.js
+function loadCSS(href) {
+  if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = href;
@@ -8,116 +8,49 @@ function loadCSS(href){
   }
 }
 
-async function loadHeaderFooter(){
-  try{
-    // تحميل الهيدر
-    const headerRes = await fetch("partials/header.html");
-    const headerHTML = await headerRes.text();
-    document.body.insertAdjacentHTML("afterbegin", headerHTML);
+async function loadHeaderFooter() {
+  try {
+    const header = await fetch("partials/header.html");
+    document.getElementById("header-placeholder").innerHTML =
+      await header.text();
     loadCSS("css/header.css");
-  }catch(err){ console.error("فشل تحميل الهيدر:", err); }
+  } catch (e) {
+    console.error("Header error", e);
+  }
 
-  try{
-    // تحميل الفوتر
-    const footerRes = await fetch("partials/footer.html");
-    const footerHTML = await footerRes.text();
-    document.body.insertAdjacentHTML("beforeend", footerHTML);
+  try {
+    const footer = await fetch("partials/footer.html");
+    document.getElementById("footer-placeholder").innerHTML =
+      await footer.text();
     loadCSS("css/footer.css");
-  }catch(err){ console.error("فشل تحميل الفوتر:", err); }
+  } catch (e) {
+    console.error("Footer error", e);
+  }
 
-  // إعدادات بعد التحميل
   setupUserState();
-  setupHeaderSearch();
-  setupLanguageToggle();
 }
 
 /* ===== User State ===== */
-function setupUserState(){
+function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
-  const userContainer = document.getElementById("user-info");
   const loginLink = document.getElementById("login-link");
+  const userInfo = document.getElementById("user-info");
   const adminLink = document.getElementById("admin-link");
-  const adminEmails = ["kaleadsalous30@gmail.com","coursehub03@gmail.com"];
 
-  if(user){
-    if(loginLink) loginLink.style.display = "none";
-
-    if(adminLink){
-      if(user.role === "admin" || adminEmails.includes(user.email)){
-        adminLink.innerHTML = `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
-      } else adminLink.innerHTML = "";
-    }
-
-    if(userContainer){
-      userContainer.style.display = "flex";
-      userContainer.innerHTML = `
-        <img src="${user.picture}" alt="${user.name}" class="user-pic">
-        <span class="user-name">${user.name}</span>
-        <div class="dropdown-menu">
-          <a href="profile.html">الملف الشخصي</a>
-          <a href="achievements.html">إنجازاتي</a>
-          <a href="my-courses.html">دوراتي</a>
-          <a href="settings.html">الإعدادات</a>
-          <a href="#" id="logout-link">تسجيل الخروج</a>
-        </div>
+  if (user) {
+    if (loginLink) loginLink.style.display = "none";
+    if (userInfo) {
+      userInfo.style.display = "flex";
+      userInfo.innerHTML = `
+        <img src="${user.picture}" class="user-pic">
+        <span>${user.name}</span>
       `;
-
-      const dropdown = userContainer.querySelector(".dropdown-menu");
-      const toggleDropdown = e => {
-        e.stopPropagation();
-        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-      };
-      userContainer.querySelector(".user-pic").addEventListener("click", toggleDropdown);
-      userContainer.querySelector(".user-name").addEventListener("click", toggleDropdown);
-      document.addEventListener("click", ()=>{ dropdown.style.display="none"; });
-      dropdown.addEventListener("click", e=>e.stopPropagation());
-
-      const logoutLink = document.getElementById("logout-link");
-      if(logoutLink){
-        logoutLink.addEventListener("click", e=>{
-          e.preventDefault();
-          localStorage.removeItem("coursehub_user");
-          if(loginLink) loginLink.style.display="block";
-          userContainer.style.display="none";
-          if(adminLink) adminLink.innerHTML="";
-          window.location.href="login.html";
-        });
-      }
     }
-  } else {
-    if(loginLink) loginLink.style.display="block";
-    if(userContainer) userContainer.style.display="none";
-    if(adminLink) adminLink.innerHTML="";
+
+    if (adminLink && user.role === "admin") {
+      adminLink.innerHTML = `<a href="admin/dashboard.html">لوحة التحكم</a>`;
+    }
   }
 }
 
-/* ===== Header Search ===== */
-function setupHeaderSearch(){
-  const path = window.location.pathname.split("/").pop();
-  const searchBar = document.getElementById("headerSearchBar");
-  if(!searchBar) return;
-  if(path === "" || path === "index.html" || path === "courses.html"){
-    searchBar.style.display = "flex";
-    const searchBtn = document.getElementById("searchBtn");
-    if(searchBtn) searchBtn.addEventListener("click", ()=>{
-      const query = document.getElementById("searchInput").value.trim();
-      if(query) alert(`بحث عن: ${query}`);
-    });
-  } else searchBar.style.display="none";
-}
-
-/* ===== Language Toggle ===== */
-function setupLanguageToggle(){
-  const langBtn = document.getElementById("langBtn");
-  if(!langBtn) return;
-  langBtn.addEventListener("click", e=>{
-    e.stopPropagation();
-    const text = langBtn.textContent.trim();
-    if(text.includes("عربي")) langBtn.innerHTML='<i class="fa fa-globe"></i> English';
-    else if(text.includes("English")) langBtn.innerHTML='<i class="fa fa-globe"></i> Français';
-    else langBtn.innerHTML='<i class="fa fa-globe"></i> عربي';
-  });
-}
-
-/* ===== Initialize on DOM Load ===== */
 document.addEventListener("DOMContentLoaded", loadHeaderFooter);
