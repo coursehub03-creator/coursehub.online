@@ -1,6 +1,7 @@
+// footer.js - تحميل Footer ديناميكياً
 document.addEventListener("DOMContentLoaded", () => {
   const footerPlaceholder = document.getElementById("footer-placeholder");
-  if(!footerPlaceholder) return;
+  if (!footerPlaceholder) return;
 
   footerPlaceholder.innerHTML = `
     <footer>
@@ -37,8 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
 
   // تحديث السنة تلقائياً
-  const yearSpan = document.getElementById("year");
-  if(yearSpan){
+  const yearSpan = footerPlaceholder.querySelector("#year");
+  if (yearSpan) {
     yearSpan.textContent = new Date().getFullYear();
   }
 });
