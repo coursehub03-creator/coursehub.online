@@ -1,5 +1,3 @@
-// js/main.js
-
 function loadCSS(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
@@ -11,22 +9,17 @@ function loadCSS(href) {
 
 async function loadHeaderFooter() {
   try {
-    // تحميل الهيدر
     const headerHTML = await (await fetch("partials/header.html")).text();
-    const headerEl = document.getElementById("header-placeholder");
-    if (headerEl) headerEl.innerHTML = headerHTML;
+    document.getElementById("header-placeholder").innerHTML = headerHTML;
 
-    // تحميل الفوتر
     const footerHTML = await (await fetch("partials/footer.html")).text();
-    const footerEl = document.getElementById("footer-placeholder");
-    if (footerEl) footerEl.innerHTML = footerHTML;
-
+    document.getElementById("footer-placeholder").innerHTML = footerHTML;
   } catch (err) {
     console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
 }
 
-/* ===== حالة المستخدم ===== */
+/* ===== User State ===== */
 function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
   const loginLink = document.getElementById("login-link");
@@ -42,13 +35,13 @@ function setupUserState() {
         <span>${user.name}</span>
       `;
     }
+
     if (adminLink && user.role === "admin") {
       adminLink.innerHTML = `<a href="admin/dashboard.html">لوحة التحكم</a>`;
     }
   }
 }
 
-/* ===== تنفيذ بعد تحميل DOM ===== */
 document.addEventListener("DOMContentLoaded", async () => {
   await loadHeaderFooter();
   setupUserState();
