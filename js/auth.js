@@ -1,31 +1,60 @@
-// js/auth.js
+import { auth, googleProvider } from "./firebase-config.js";
+import {
+  signInWithPopup,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-async function login(email, password) {
-  try {
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find(u => u.email === email && u.password === password);
+// تسجيل الدخول بالإيميل
+const loginForm = document.getElementById("loginForm");
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    if (!user) {
-      alert("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      return;
+    const email = document.getElementById("emailInput").value;
+    const password = document.getElementById("passwordInput").value;
+    const errorMsg = document.getElementById("errorMsg");
+
+    try {
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      const user = res.user;
+
+      localStorage.setItem("coursehub_user", JSON.stringify({
+        name: user.displayName || "مستخدم",
+        email: user.email,
+        picture: user.photoURL || "",
+        role: "student"
+      }));
+
+      window.location.href = "index.html";
+    } catch (err) {
+      if (errorMsg) errorMsg.textContent = "بيانات الدخول غير صحيحة";
+      console.error(err);
     }
-
-    localStorage.setItem("coursehub_user", JSON.stringify(user));
-    window.location.href = "index.html"; // بعد تسجيل الدخول
-  } catch (err) {
-    console.error("خطأ في تسجيل الدخول:", err);
-  }
+  });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("login-form");
-  if (!form) return;
+// تسجيل الدخول عبر Google
+const googleBtn = document.getElementById("googleLoginBtn");
+if (googleBtn) {
+  googleBtn.addEventListener("click", async () => {
+    const errorMsg = document.getElementById("errorMsg");
+    if (errorMsg) errorMsg.textContent = "";
 
-  form.addEventListener("submit", e => {
-    e.preventDefault();
-    const email = form.email.value;
-    const password = form.password.value;
-    login(email, password);
+    try {
+      const res = await signInWithPopup(auth, googleProvider);
+      const user = res.user;
+
+      localStorage.setItem("coursehub_user", JSON.stringify({
+        name: user.displayName || "مستخدم",
+        email: user.email,
+        picture: user.photoURL || "",
+        role: "student"
+      }));
+
+      window.location.href = "index.html";
+    } catch (err) {
+      if (errorMsg) errorMsg.textContent = "فشل تسجيل الدخول عبر Google";
+      console.error(err);
+    }
   });
-});
-
+}
