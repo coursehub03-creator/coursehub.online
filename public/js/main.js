@@ -10,24 +10,14 @@ function loadCSS(href) {
 
 async function loadHeaderFooter() {
   try {
-    const header = await fetch("./partials/header.html");
-    document.getElementById("header-placeholder").innerHTML =
-      await header.text();
-    loadCSS("css/header.css");
-  } catch (e) {
-    console.error("Header error", e);
-  }
+    const headerHTML = await (await fetch("./partials/header.html")).text();
+    document.getElementById("header-placeholder").innerHTML = headerHTML;
 
-  try {
-    const footer = await fetch("./partials/footer.html");
-    document.getElementById("footer-placeholder").innerHTML =
-      await footer.text();
-    loadCSS("css/footer.css");
-  } catch (e) {
-    console.error("Footer error", e);
+    const footerHTML = await (await fetch("./partials/footer.html")).text();
+    document.getElementById("footer-placeholder").innerHTML = footerHTML;
+  } catch (err) {
+    console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
-
-  setupUserState();
 }
 
 /* ===== User State ===== */
