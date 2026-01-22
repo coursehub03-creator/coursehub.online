@@ -2,65 +2,39 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول - CourseHub</title>
 
-  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
-
-  <!-- Fonts & Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- Google Identity -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
+
 <body>
 
-  <!-- الهيدر سيتم تحميله تلقائيًا -->
-  <div id="header-placeholder"></div>
+<div id="header-placeholder"></div>
 
-  <main class="login-page container">
-    <h2>تسجيل الدخول</h2>
+<main class="login-page container">
+  <h2>تسجيل الدخول</h2>
 
-    <!-- نموذج تسجيل الدخول -->
-    <form id="loginForm" class="login-form">
-      <label for="email">البريد الإلكتروني</label>
-      <input type="email" id="email" name="email" placeholder="example@mail.com" autocomplete="email" required>
+  <form id="loginForm">
+    <input id="emailInput" type="email" required>
+    <input id="passwordInput" type="password" required>
+    <button type="submit">تسجيل الدخول</button>
+    <div id="errorMsg"></div>
+  </form>
 
-      <label for="password">كلمة المرور</label>
-      <input type="password" id="password" name="password" placeholder="********" autocomplete="current-password" required>
+  <p>أو</p>
 
-      <button type="submit" class="btn">تسجيل الدخول</button>
-      <div id="errorMsg" class="error-msg"></div>
-    </form>
+  <button id="googleLoginBtn" class="google-btn">
+    تسجيل الدخول باستخدام Google
+  </button>
+</main>
 
-    <p class="divider">أو سجل الدخول بواسطة</p>
+<div id="footer-placeholder"></div>
 
-    <!-- Google Login -->
-    <div id="g_id_onload"
-         data-client_id="367073521017-na5sqgdpp98hqrd6us63l4117l4vbacm.apps.googleusercontent.com"
-         data-callback="handleGoogleLogin"
-         data-auto_prompt="false">
-    </div>
-    <div class="g_id_signin" data-type="standard" data-size="large"></div>
-
-    <div class="login-links">
-      <p><a href="forgot-password.html">نسيت كلمة المرور؟</a></p>
-      <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
-    </div>
-  </main>
-
-  <!-- الفوتر سيتم تحميله تلقائيًا -->
-  <div id="footer-placeholder"></div>
-
-  <!-- استدعاء سكريبت Firebase و Auth -->
-  <script type="module" src="js/auth.js" defer></script>
-
-  <!-- تحميل الهيدر والفوتر -->
-  <script type="module" src="js/main.js" defer></script>
+<script type="module" src="js/auth.js"></script>
+<script src="js/main.js" defer></script>
 
 </body>
 </html>
