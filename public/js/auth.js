@@ -25,18 +25,18 @@ const form = document.getElementById("loginForm");
 const errorMsg = document.getElementById("errorMsg");
 
 if (form) {
-  form.addEventListener("submit", async e => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    try {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
+    const email = document.getElementById("emailInput").value.trim();
+    const password = document.getElementById("passwordInput").value.trim();
 
+    try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const ref = doc(db, "users", cred.user.uid);
       const snap = await getDoc(ref);
 
-      if (!snap.exists()) throw new Error("user-not-found");
+      if (!snap.exists()) throw new Error("USER_NOT_FOUND");
 
       const data = snap.data();
       saveUser(data);
@@ -86,7 +86,7 @@ if (googleBtn) {
 
     } catch (err) {
       console.error(err);
-      alert("فشل تسجيل الدخول عبر Google");
+      alert("فشل تسجيل الدخول باستخدام Google");
     }
   });
 }
