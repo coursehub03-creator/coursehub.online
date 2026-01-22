@@ -1,4 +1,4 @@
-/* css/style.css */
+/* أساسي للمشروع */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
@@ -11,4 +11,8 @@ body {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+button {
+  cursor: pointer;
 }
