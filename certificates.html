@@ -1,50 +1,24 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-
-
-<link rel="stylesheet" href="css/header.css">
-  
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الشهادات - CourseHub</title>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="js/main.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الشهادات - CourseHub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
 </head>
 <body>
+  <div id="header-placeholder"></div>
 
-<!-- Header سيتم تحميله تلقائياً عبر main.js -->
-<div id="header-placeholder"></div>
+  <main>
+    <h2>شهاداتي</h2>
+    <div id="certificates-list"></div>
+  </main>
 
-<section>
-  <h2>الشهادات الخاصة بك</h2>
-  <div class="courses-grid">
-    <div class="card">
-      <img src="/public/assets/images/certificate.jpg" alt="Certificate">
-      <div class="card-content">
-        <h3>شهادة تطوير الويب</h3>
-        <p>تم إكمال الدورة بنجاح.</p>
-        <a href="/public/assets/images/certificate.jpg" class="btn" download>تحميل الشهادة</a>
-      </div>
-    </div>
-    <div class="card">
-      <img src="/public/assets/images/certificate.jpg" alt="Certificate">
-      <div class="card-content">
-        <h3>شهادة الذكاء الاصطناعي</h3>
-        <p>تم إكمال الدورة بنجاح.</p>
-        <a href="/public/assets/images/certificate.jpg" class="btn" download>تحميل الشهادة</a>
-      </div>
-    </div>
-  </div>
-</section>
+  <div id="footer-placeholder"></div>
 
-<link rel="stylesheet" href="css/footer.css">
-<div id="footer-placeholder"></div>
-
-<script>
-
-
-
+  <script src="js/main.js"></script>
+  <script src="js/auth-guard.js"></script>
 </body>
 </html>
