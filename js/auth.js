@@ -1,3 +1,4 @@
+// js/auth.js
 import { auth, googleProvider } from "./firebase-config.js";
 import {
   signInWithPopup,
