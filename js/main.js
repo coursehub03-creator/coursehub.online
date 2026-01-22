@@ -1,3 +1,6 @@
+// main.js - تحميل CSS, Header/Footer, وإعداد حالة المستخدم
+
+// تحميل ملف CSS إذا لم يكن موجوداً مسبقاً
 function loadCSS(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
@@ -7,19 +10,22 @@ function loadCSS(href) {
   }
 }
 
+// تحميل الهيدر والفوتر ديناميكياً
 async function loadHeaderFooter() {
   try {
     const headerHTML = await (await fetch("partials/header.html")).text();
-    document.getElementById("header-placeholder").innerHTML = headerHTML;
+    const headerPlaceholder = document.getElementById("header-placeholder");
+    if (headerPlaceholder) headerPlaceholder.innerHTML = headerHTML;
 
     const footerHTML = await (await fetch("partials/footer.html")).text();
-    document.getElementById("footer-placeholder").innerHTML = footerHTML;
+    const footerPlaceholder = document.getElementById("footer-placeholder");
+    if (footerPlaceholder) footerPlaceholder.innerHTML = footerHTML;
   } catch (err) {
     console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
 }
 
-/* ===== User State ===== */
+// إعداد حالة المستخدم بعد تحميل الصفحة
 function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
   const loginLink = document.getElementById("login-link");
@@ -31,8 +37,8 @@ function setupUserState() {
     if (userInfo) {
       userInfo.style.display = "flex";
       userInfo.innerHTML = `
-        <img src="${user.picture}" class="user-pic">
-        <span>${user.name}</span>
+        <img src="${user.picture || ''}" class="user-pic" alt="صورة المستخدم">
+        <span>${user.name || 'مستخدم'}</span>
       `;
     }
 
@@ -42,6 +48,7 @@ function setupUserState() {
   }
 }
 
+// عند تحميل DOM
 document.addEventListener("DOMContentLoaded", async () => {
   await loadHeaderFooter();
   setupUserState();
