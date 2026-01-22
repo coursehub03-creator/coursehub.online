@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول - CourseHub</title>
 
   <!-- CSS -->
@@ -10,14 +9,20 @@
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
-</head>
-<body>
 
+  <!-- Firebase CDN (Compat version) -->
+  <script src="https://www.gstatic.com/firebasejs/10.16.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.16.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
 <div id="header-placeholder"></div>
 
 <main class="login-page container">
   <h2>تسجيل الدخول</h2>
 
+  <!-- Email Login -->
   <form id="loginForm">
     <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
     <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
@@ -27,81 +32,23 @@
 
   <p>أو</p>
 
+  <!-- Google Login -->
   <button id="googleLoginBtn" class="google-btn">
     تسجيل الدخول باستخدام Google
   </button>
+
+  <!-- Password Reset -->
+  <div class="reset-password">
+    <input id="resetEmail" type="email" placeholder="أدخل بريدك لإعادة التعيين">
+    <button id="resetBtn">إعادة تعيين كلمة المرور</button>
+  </div>
 </main>
 
 <div id="footer-placeholder"></div>
 
-<!-- Firebase + Auth -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCagdZU_eAHebBGCmG5W4FFTcDZIH4wOp0",
-    authDomain: "coursehub-23ed2.firebaseapp.com",
-    projectId: "coursehub-23ed2",
-    storageBucket: "coursehub-23ed2.appspot.com",
-    messagingSenderId: "367073521017",
-    appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const googleProvider = new GoogleAuthProvider();
-  googleProvider.setCustomParameters({ prompt: "select_account" });
-
-  // Google Login
-  const googleBtn = document.getElementById("googleLoginBtn");
-  googleBtn.addEventListener("click", async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-
-      localStorage.setItem("coursehub_user", JSON.stringify({
-        name: user.displayName,
-        email: user.email,
-        picture: user.photoURL,
-        role: "student"
-      }));
-
-      window.location.href = "index.html";
-    } catch (err) {
-      console.error(err);
-      alert("فشل تسجيل الدخول عبر Google: " + err.message);
-    }
-  });
-
-  // Email Login
-  const form = document.getElementById("loginForm");
-  const emailInput = document.getElementById("emailInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const errorMsg = document.getElementById("errorMsg");
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    try {
-      const cred = await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-      const user = cred.user;
-
-      localStorage.setItem("coursehub_user", JSON.stringify({
-        email: user.email,
-        uid: user.uid,
-        role: "student"
-      }));
-
-      window.location.href = "index.html";
-    } catch (err) {
-      console.error(err);
-      errorMsg.textContent = "بيانات الدخول غير صحيحة";
-    }
-  });
-</script>
-
+<!-- JS -->
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/main.js" defer></script>
 </body>
 </html>
