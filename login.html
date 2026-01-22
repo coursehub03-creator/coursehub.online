@@ -44,6 +44,7 @@
   <!-- Firebase + Auth -->
   <script type="module">
     import { auth, googleProvider } from './js/firebase-config.js';
+    import { signInWithEmailAndPassword, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('emailInput');
@@ -56,7 +57,7 @@
       e.preventDefault();
       errorMsg.textContent = '';
       try {
-        await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
+        await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
         window.location.href = 'index.html'; // إعادة التوجيه بعد تسجيل الدخول
       } catch (error) {
         errorMsg.textContent = error.message;
@@ -65,8 +66,9 @@
 
     // تسجيل دخول باستخدام Google
     googleLoginBtn.addEventListener('click', async () => {
+      errorMsg.textContent = '';
       try {
-        await auth.signInWithPopup(googleProvider);
+        await signInWithPopup(auth, googleProvider);
         window.location.href = 'index.html';
       } catch (error) {
         errorMsg.textContent = error.message;
