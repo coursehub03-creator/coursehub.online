@@ -1,6 +1,5 @@
 // main.js - تحميل CSS ووظائف عامة
 
-// تحميل ملف CSS إذا لم يكن موجوداً مسبقاً
 function loadCSS(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
