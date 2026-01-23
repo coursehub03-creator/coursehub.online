@@ -1,55 +1,40 @@
-import { auth, googleProvider } from "./firebase-config.js";
-import {
-  signInWithPopup,
-  signInWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { auth, googleProvider } from './firebase-config.js';
+import { signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// دالة لحفظ بيانات المستخدم في localStorage
-function saveUserAndRedirect(user) {
-  localStorage.setItem("coursehub_user", JSON.stringify({
-    name: user.displayName || "مستخدم",
-    email: user.email,
-    picture: user.photoURL || "",
-    role: "student"
-  }));
-  window.location.href = "index.html";
-}
-
-// تسجيل الدخول بالإيميل
+// --- زر تسجيل الدخول بالبريد ---
 const loginForm = document.getElementById("loginForm");
-if (loginForm) {
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+const errorMsg = document.getElementById("errorMsg");
 
-    const emailInput = document.getElementById("emailInput");
-    const passwordInput = document.getElementById("passwordInput");
-    const errorMsg = document.getElementById("errorMsg");
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("emailInput").value;
+  const password = document.getElementById("passwordInput").value;
 
-    if (!emailInput || !passwordInput) return;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    window.location.href = "index.html"; // بعد تسجيل الدخول
+  } catch (error) {
+    console.error("Login Error:", error);
+    errorMsg.textContent = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+  }
+});
 
-    try {
-      const res = await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-      saveUserAndRedirect(res.user);
-    } catch (err) {
-      if (errorMsg) errorMsg.textContent = "بيانات الدخول غير صحيحة";
-      console.error("Login Error:", err);
-    }
-  });
-}
-
-// تسجيل الدخول عبر Google
+// --- زر تسجيل الدخول بـ Google ---
 const googleBtn = document.getElementById("googleLoginBtn");
-if (googleBtn) {
-  googleBtn.addEventListener("click", async () => {
-    const errorMsg = document.getElementById("errorMsg");
-    if (errorMsg) errorMsg.textContent = "";
+googleBtn.addEventListener("click", async () => {
+  try {
+    await signInWithPopup(auth, googleProvider);
+    window.location.href = "index.html"; // بعد تسجيل الدخول
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    errorMsg.textContent = "فشل تسجيل الدخول بحساب Google.";
+  }
+});
 
-    try {
-      const res = await signInWithPopup(auth, googleProvider);
-      saveUserAndRedirect(res.user);
-    } catch (err) {
-      if (errorMsg) errorMsg.textContent = "فشل تسجيل الدخول عبر Google";
-      console.error("Google Login Error:", err);
-    }
-  });
-}
+// --- مراقبة حالة تسجيل الدخول ---
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // إذا المستخدم مسجل الدخول مسبقًا يتم إعادة توجيه مباشرة
+    window.location.href = "index.html";
+  }
+});
