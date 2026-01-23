@@ -1,5 +1,4 @@
-// main.js - تحميل CSS ووظائف عامة
-
+// main.js - تحميل CSS وميزات عامة
 function loadCSS(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
@@ -9,7 +8,7 @@ function loadCSS(href) {
   }
 }
 
-// تحميل ملفات CSS الأساسية
+// تحميل CSS الأساسي
 loadCSS("css/header.css");
 loadCSS("css/footer.css");
 loadCSS("css/style.css");
