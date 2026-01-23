@@ -27,11 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <!-- User Info / Login -->
-        <div id="user-info" class="user-info-container"></div>
-        <a href="login.html" id="login-link">تسجيل الدخول</a>
-
-        <!-- Language Toggle -->
-        <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
+        <div class="header-actions">
+          <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
+          <a href="login.html" id="login-link">تسجيل الدخول</a>
+          <div id="user-info" class="user-info-container"></div>
+        </div>
 
       </div>
     </header>
@@ -52,12 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
   setupUserState();
 });
 
-// عرض اسم المستخدم وصورته إذا سجل الدخول
 function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
   const loginLink = document.getElementById("login-link");
   const userInfo = document.getElementById("user-info");
-  const adminLink = document.getElementById("admin-link");
 
   if (user) {
     if (loginLink) loginLink.style.display = "none";
@@ -68,10 +66,6 @@ function setupUserState() {
         <img src="${user.picture || 'assets/images/default-user.png'}" class="user-pic" alt="صورة المستخدم">
         <span>${user.name || 'مستخدم'}</span>
       `;
-    }
-
-    if (adminLink && user.role === "admin") {
-      adminLink.innerHTML = `<a href="admin/dashboard.html">لوحة التحكم</a>`;
     }
   }
 }
