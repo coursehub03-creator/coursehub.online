@@ -1,55 +1,34 @@
 // header.js - تحميل Header ديناميكياً وعرض حالة المستخدم
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const headerPlaceholder = document.getElementById("header-placeholder");
-  if (!headerPlaceholder) return;
+  const footerPlaceholder = document.getElementById("footer-placeholder");
+  if (!headerPlaceholder || !footerPlaceholder) return;
 
-  headerPlaceholder.innerHTML = `
-    <header>
-      <div class="top-bar container">
+  try {
+    // تحميل الهيدر والفوتر من partials
+    const headerHTML = await (await fetch("partials/header.html")).text();
+    headerPlaceholder.innerHTML = headerHTML;
 
-        <!-- شعار الموقع -->
-        <div class="site-name">
-          <a href="index.html">CourseHub</a>
-        </div>
+    const footerHTML = await (await fetch("partials/footer.html")).text();
+    footerPlaceholder.innerHTML = footerHTML;
 
-        <!-- الروابط الرئيسية -->
-        <nav>
-          <a href="index.html">الرئيسية</a>
-          <a href="courses.html">الدورات</a>
-          <a href="tests.html">الاختبارات</a>
-          <a href="certificates.html">الشهادات</a>
-        </nav>
+    // بعد تحميل الهيدر، إعداد حالة المستخدم
+    setupUserState();
 
-        <!-- Search Bar -->
-        <div id="headerSearchBar" class="search-bar">
-          <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
-          <button id="searchBtn"><i class="fa fa-search"></i></button>
-        </div>
-
-        <!-- User Info / Login -->
-        <div class="header-actions">
-          <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
-          <a href="login.html" id="login-link">تسجيل الدخول</a>
-          <div id="user-info" class="user-info-container"></div>
-        </div>
-
-      </div>
-    </header>
-  `;
-
-  // إظهار Search Bar فقط في index.html و courses.html
-  const path = window.location.pathname.split("/").pop();
-  const searchBar = headerPlaceholder.querySelector("#headerSearchBar");
-  if (searchBar) {
-    if (path === "index.html" || path === "courses.html") {
-      searchBar.style.display = "flex";
-    } else {
-      searchBar.style.display = "none";
+    // Search Bar يظهر فقط في index و courses
+    const path = window.location.pathname.split("/").pop();
+    const searchBar = headerPlaceholder.querySelector("#headerSearchBar");
+    if (searchBar) {
+      if (path === "index.html" || path === "courses.html") {
+        searchBar.style.display = "flex";
+      } else {
+        searchBar.style.display = "none";
+      }
     }
-  }
 
-  // بعد تحميل الهيدر، إعداد حالة المستخدم
-  setupUserState();
+  } catch (err) {
+    console.error("فشل تحميل الهيدر أو الفوتر:", err);
+  }
 });
 
 function setupUserState() {
