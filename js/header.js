@@ -1,13 +1,13 @@
-// header.js - تحميل Header وفحص المستخدم
+// header.js - تحميل Header والفوتر وإظهار حالة المستخدم
 document.addEventListener("DOMContentLoaded", async () => {
   const headerPlaceholder = document.getElementById("header-placeholder");
   const footerPlaceholder = document.getElementById("footer-placeholder");
 
-  // تأكد من وجود العناصر قبل التنفيذ
   if (!headerPlaceholder) console.warn("header-placeholder غير موجود");
   if (!footerPlaceholder) console.warn("footer-placeholder غير موجود");
 
   try {
+    // تحميل الهيدر والفوتر
     if (headerPlaceholder) {
       const headerHTML = await (await fetch("partials/header.html")).text();
       headerPlaceholder.innerHTML = headerHTML;
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // عرض حالة المستخدم بعد تحميل الهيدر
     setupUserState();
 
-    // Search Bar يظهر فقط في index.html و courses.html
+    // إظهار Search Bar فقط في index.html و courses.html
     const path = window.location.pathname.split("/").pop();
     const searchBar = headerPlaceholder?.querySelector("#headerSearchBar");
     if (searchBar) {
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-function setupUserState() {
+export function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
   const loginLink = document.getElementById("login-link");
   const userInfo = document.getElementById("user-info");
@@ -53,5 +53,9 @@ function setupUserState() {
     if (adminLink && user.role === "admin") {
       adminLink.innerHTML = `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
     }
+  } else {
+    if (loginLink) loginLink.style.display = "block";
+    if (userInfo) userInfo.style.display = "none";
+    if (adminLink) adminLink.innerHTML = "";
   }
 }
