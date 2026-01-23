@@ -1,4 +1,4 @@
-import { auth, googleProvider } from 'firebase-config.js';
+import { auth, googleProvider } from './firebase-config.js';
 import { signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // --- زر تسجيل الدخول بالبريد ---
