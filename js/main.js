@@ -1,6 +1,4 @@
-// main.js - تحميل CSS, Header/Footer, وإعداد حالة المستخدم
-
-// تحميل ملف CSS إذا لم يكن موجوداً مسبقاً
+// تحميل CSS إذا لم يكن موجوداً مسبقاً
 function loadCSS(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
@@ -20,6 +18,20 @@ async function loadHeaderFooter() {
     const footerHTML = await (await fetch("partials/footer.html")).text();
     const footerPlaceholder = document.getElementById("footer-placeholder");
     if (footerPlaceholder) footerPlaceholder.innerHTML = footerHTML;
+
+    // بعد تحميل الهيدر والفوتر، إعداد حالة المستخدم
+    setupUserState();
+
+    // بعد تحميل الهيدر، ضبط Search Bar حسب الصفحة
+    const path = window.location.pathname.split("/").pop();
+    const searchBar = headerPlaceholder.querySelector("#headerSearchBar");
+    if (searchBar) {
+      if (path === "index.html" || path === "courses.html") {
+        searchBar.style.display = "flex";
+      } else {
+        searchBar.style.display = "none";
+      }
+    }
   } catch (err) {
     console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
@@ -51,5 +63,4 @@ function setupUserState() {
 // عند تحميل DOM
 document.addEventListener("DOMContentLoaded", async () => {
   await loadHeaderFooter();
-  setupUserState();
 });
