@@ -1,6 +1,7 @@
+// header.js - تحميل Header ديناميكياً
 document.addEventListener("DOMContentLoaded", () => {
   const headerPlaceholder = document.getElementById("header-placeholder");
-  if(!headerPlaceholder) return;
+  if (!headerPlaceholder) return;
 
   headerPlaceholder.innerHTML = `
     <header>
@@ -38,10 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Search Bar يظهر فقط في index و courses
   const path = window.location.pathname.split("/").pop();
-  const searchBar = document.getElementById("headerSearchBar");
-  if(path === "index.html" || path === "courses.html") {
-    searchBar.style.display = "flex";
-  } else {
-    searchBar.style.display = "none";
+  const searchBar = headerPlaceholder.querySelector("#headerSearchBar");
+  if (searchBar) {
+    if (path === "index.html" || path === "courses.html") {
+      searchBar.style.display = "flex";
+    } else {
+      searchBar.style.display = "none";
+    }
   }
 });
