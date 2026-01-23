@@ -1,30 +1,47 @@
-// js/main.js
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
-import { app } from "./firebase-config.js";
-
-const auth = getAuth(app);
-
 document.addEventListener("DOMContentLoaded", () => {
-  onAuthStateChanged(auth, (user) => {
-    const loginBtn = document.getElementById("login-btn");
-    const userBox = document.getElementById("user-box");
-    const userName = document.getElementById("user-name");
-    const userAvatar = document.getElementById("user-avatar");
+  const headerPlaceholder = document.getElementById("header-placeholder");
+  if(!headerPlaceholder) return;
 
-    if (!loginBtn || !userBox) return;
+  headerPlaceholder.innerHTML = `
+    <header>
+      <div class="top-bar container">
 
-    if (user) {
-      // إخفاء زر تسجيل الدخول
-      loginBtn.style.display = "none";
+        <!-- شعار الموقع -->
+        <div class="site-name">
+          <a href="index.html">CourseHub</a>
+        </div>
 
-      // إظهار بيانات المستخدم
-      userBox.style.display = "flex";
-      userName.textContent = user.displayName || "مستخدم";
-      userAvatar.src = user.photoURL || "img/default-avatar.png";
-    } else {
-      // العكس
-      loginBtn.style.display = "inline-block";
-      userBox.style.display = "none";
-    }
-  });
+        <!-- الروابط الرئيسية -->
+        <nav>
+          <a href="index.html">الرئيسية</a>
+          <a href="courses.html">الدورات</a>
+          <a href="tests.html">الاختبارات</a>
+          <a href="certificates.html">الشهادات</a>
+        </nav>
+
+        <!-- Search Bar -->
+        <div id="headerSearchBar" class="search-bar">
+          <input type="text" id="searchInput" placeholder="ابحث عن دورة...">
+          <button id="searchBtn"><i class="fa fa-search"></i></button>
+        </div>
+
+        <!-- User Info / Login -->
+        <div id="user-info" class="user-info-container"></div>
+        <a href="login.html" id="login-link">تسجيل الدخول</a>
+
+        <!-- Language Toggle -->
+        <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
+
+      </div>
+    </header>
+  `;
+
+  // Search Bar يظهر فقط في index و courses
+  const path = window.location.pathname.split("/").pop();
+  const searchBar = document.getElementById("headerSearchBar");
+  if(path === "index.html" || path === "courses.html") {
+    searchBar.style.display = "flex";
+  } else {
+    searchBar.style.display = "none";
+  }
 });
