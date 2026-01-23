@@ -9,12 +9,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     // تحميل الهيدر والفوتر
     if (headerPlaceholder) {
-      const headerHTML = await (await fetch("partials/header.html")).text();
+      const headerHTML = await (await fetch("/partials/header.html")).text();
       headerPlaceholder.innerHTML = headerHTML;
     }
 
     if (footerPlaceholder) {
-      const footerHTML = await (await fetch("partials/footer.html")).text();
+      const footerHTML = await (await fetch("/partials/footer.html")).text();
       footerPlaceholder.innerHTML = footerHTML;
     }
 
