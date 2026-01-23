@@ -7,6 +7,7 @@
 
   <!-- Header & Footer Styles -->
   <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
 
   <!-- Font & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,13 +17,8 @@
   <link rel="stylesheet" href="css/achievements.css">
 
   <style>
-    header {
-      direction: ltr !important;
-    }
-    .top-bar.container {
-      flex-direction: row !important;
-      justify-content: space-between !important;
-    }
+    header { direction: ltr !important; }
+    .top-bar.container { flex-direction: row !important; justify-content: space-between !important; }
   </style>
 </head>
 <body>
@@ -67,15 +63,16 @@
 
   <!-- Firebase SDKs + App Scripts -->
   <script type="module">
-    import { firebaseAuth } from '/js/firebase-config.js';
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
+    import { app, auth, googleProvider } from '/js/firebase-config.js';
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+    import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-auth.js";
 
-    const db = getFirestore(firebaseAuth.auth.app);
+    const db = getFirestore(app);
 
-    // تسجيل الدخول إذا لم يكن موجود
-    firebaseAuth.onAuthStateChanged(firebaseAuth.auth, async (user) => {
+    // التحقق من تسجيل الدخول
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        await firebaseAuth.signInWithPopup(firebaseAuth.auth, new firebaseAuth.GoogleAuthProvider());
+        await signInWithPopup(auth, googleProvider);
         return;
       }
 
@@ -107,9 +104,7 @@
               <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
               <h4>${cert.title}</h4>
               <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-              <button onclick="window.open('${cert.certificateUrl}', '_blank')">
-                عرض الشهادة
-              </button>
+              <button onclick="window.open('${cert.certificateUrl}', '_blank')">عرض الشهادة</button>
             </div>
           `;
         });
@@ -140,7 +135,7 @@
       }
     });
   </script>
-<link rel="stylesheet" href="css/footer.css">
+
   <script src="js/main.js" defer></script>
 </body>
 </html>
