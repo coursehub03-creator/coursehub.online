@@ -9,7 +9,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase
 
 // إعدادات Firebase لمشروعك
 const firebaseConfig = {
- apiKey: "AIzaSyDTW6hv7_PqPUb8NytYXVkkrVwwE9ACY0I",
+  apiKey: "AIzaSyDTW6hv7_PqPUb8NytYXVkkrVwwE9ACY0I", // ✅ استخدم المفتاح الجديد فقط
   authDomain: "coursehub-23ed2.firebaseapp.com",
   projectId: "coursehub-23ed2",
   storageBucket: "coursehub-23ed2.firebasestorage.app",
@@ -26,7 +26,7 @@ export const auth = getAuth(app);
 
 // Google Sign-In
 export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
+googleProvider.setCustomParameters({ prompt: "select_account" }); // ✅ يفرض اختيار الحساب عند تسجيل الدخول
 
 // Firestore
 export const db = getFirestore(app);
@@ -34,8 +34,9 @@ export const db = getFirestore(app);
 // Analytics (اختياري)
 export const analytics = getAnalytics(app);
 
-// ✅ ملاحظة مهمة:
-// عند استخدام Google Sign-In، تأكد أن هذا Client ID موجود في Google Cloud Console
-// وأنك أضفت origin و redirect URI الصحيحين:
-// مثال أثناء التطوير: http://localhost:5500
-// مثال عند النشر: https://yourdomain.com
+// ✅ ملاحظة:
+// - لا تضع مفاتيح API قديمة.
+// - تأكد من أن Authorized domains تشمل:
+//    http://localhost:5500 (للتطوير المحلي)
+//    https://coursehub.online (للنشر)
+// - Client ID الخاص بـ Google Sign-In يجب إضافته في Google Cloud Console.
