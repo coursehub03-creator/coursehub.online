@@ -14,7 +14,6 @@ loadCSS("css/header.css");
 loadCSS("css/footer.css");
 loadCSS("css/style.css");
 
-// عند تحميل DOM، يمكن إضافة أي وظائف عامة أخرى هنا
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Main JS جاهز!");
 });
