@@ -10,7 +10,7 @@ import {
 // إعداد Firebase
 // -----------------------------
 const firebaseConfig = {
- apiKey: "AIzaSyDTW6hv7_PqPUb8NytYXVkkrVwwE9ACY0I",
+  apiKey: "AIzaSyDV9DaGphy6cyNt1UEITkQDlTim1w8vm8M",
   authDomain: "coursehub-23ed2.firebaseapp.com",
   projectId: "coursehub-23ed2",
   storageBucket: "coursehub-23ed2.firebasestorage.app",
