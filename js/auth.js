@@ -1,10 +1,10 @@
 import { auth, googleProvider } from './firebase-config.js';
 import { signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// --- تسجيل الدخول بالإيميل ---
 const loginForm = document.getElementById("loginForm");
 const errorMsg = document.getElementById("errorMsg");
 
+// تسجيل الدخول بالإيميل
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -15,7 +15,6 @@ if (loginForm) {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // حفظ بيانات المستخدم في localStorage
       localStorage.setItem("coursehub_user", JSON.stringify({
         name: user.displayName || user.email.split("@")[0],
         email: user.email,
@@ -32,7 +31,7 @@ if (loginForm) {
   });
 }
 
-// --- تسجيل الدخول بحساب Google ---
+// تسجيل الدخول بحساب Google
 const googleBtn = document.getElementById("googleLoginBtn");
 if (googleBtn) {
   googleBtn.addEventListener("click", async () => {
@@ -40,7 +39,6 @@ if (googleBtn) {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // حفظ بيانات المستخدم مباشرة من حساب Google
       localStorage.setItem("coursehub_user", JSON.stringify({
         name: user.displayName,
         email: user.email,
@@ -57,7 +55,7 @@ if (googleBtn) {
   });
 }
 
-// --- مراقبة حالة تسجيل الدخول ---
+// مراقبة حالة تسجيل الدخول
 onAuthStateChanged(auth, (user) => {
   if (user) {
     const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
