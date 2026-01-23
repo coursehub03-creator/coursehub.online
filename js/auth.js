@@ -11,7 +11,18 @@ loginForm.addEventListener("submit", async (e) => {
   const password = document.getElementById("passwordInput").value;
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // حفظ بيانات المستخدم في localStorage
+    localStorage.setItem("coursehub_user", JSON.stringify({
+      name: user.displayName || user.email.split("@")[0],
+      email: user.email,
+      picture: user.photoURL || "assets/images/default-user.png",
+      uid: user.uid,
+      role: "user" // يمكن تعديل الدور حسب احتياجك
+    }));
+
     window.location.href = "index.html"; // بعد تسجيل الدخول
   } catch (error) {
     console.error("Login Error:", error);
@@ -23,7 +34,18 @@ loginForm.addEventListener("submit", async (e) => {
 const googleBtn = document.getElementById("googleLoginBtn");
 googleBtn.addEventListener("click", async () => {
   try {
-    await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+
+    // حفظ بيانات المستخدم في localStorage
+    localStorage.setItem("coursehub_user", JSON.stringify({
+      name: user.displayName || user.email.split("@")[0],
+      email: user.email,
+      picture: user.photoURL || "assets/images/default-user.png",
+      uid: user.uid,
+      role: "user"
+    }));
+
     window.location.href = "index.html"; // بعد تسجيل الدخول
   } catch (error) {
     console.error("Google Login Error:", error);
@@ -35,6 +57,16 @@ googleBtn.addEventListener("click", async () => {
 onAuthStateChanged(auth, (user) => {
   if (user) {
     // إذا المستخدم مسجل الدخول مسبقًا يتم إعادة توجيه مباشرة
-    window.location.href = "index.html";
+    // لكن يمكن حفظ بياناته في localStorage أيضًا
+    const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
+    if (!storedUser) {
+      localStorage.setItem("coursehub_user", JSON.stringify({
+        name: user.displayName || user.email.split("@")[0],
+        email: user.email,
+        picture: user.photoURL || "assets/images/default-user.png",
+        uid: user.uid,
+        role: "user"
+      }));
+    }
   }
 });
