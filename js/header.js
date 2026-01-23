@@ -42,8 +42,8 @@ function setupUserState() {
     if (userInfo) {
       userInfo.style.display = "flex";
       userInfo.innerHTML = `
-        <img src="${user.picture || 'assets/images/default-user.png'}" class="user-pic" alt="صورة المستخدم">
-        <span>${user.name || 'مستخدم'}</span>
+        <img src="${user.picture}" class="user-pic" alt="صورة المستخدم">
+        <span>${user.name}</span>
       `;
     }
   }
