@@ -1,29 +1,31 @@
-// header.js - تحميل Header ديناميكياً وعرض حالة المستخدم
+// header.js - تحميل Header وفحص المستخدم
 document.addEventListener("DOMContentLoaded", async () => {
   const headerPlaceholder = document.getElementById("header-placeholder");
   const footerPlaceholder = document.getElementById("footer-placeholder");
-  if (!headerPlaceholder || !footerPlaceholder) return;
+
+  // تأكد من وجود العناصر قبل التنفيذ
+  if (!headerPlaceholder) console.warn("header-placeholder غير موجود");
+  if (!footerPlaceholder) console.warn("footer-placeholder غير موجود");
 
   try {
-    // تحميل الهيدر والفوتر من partials
-    const headerHTML = await (await fetch("partials/header.html")).text();
-    headerPlaceholder.innerHTML = headerHTML;
+    if (headerPlaceholder) {
+      const headerHTML = await (await fetch("partials/header.html")).text();
+      headerPlaceholder.innerHTML = headerHTML;
+    }
 
-    const footerHTML = await (await fetch("partials/footer.html")).text();
-    footerPlaceholder.innerHTML = footerHTML;
+    if (footerPlaceholder) {
+      const footerHTML = await (await fetch("partials/footer.html")).text();
+      footerPlaceholder.innerHTML = footerHTML;
+    }
 
-    // بعد تحميل الهيدر، إعداد حالة المستخدم
+    // عرض حالة المستخدم بعد تحميل الهيدر
     setupUserState();
 
-    // Search Bar يظهر فقط في index و courses
+    // Search Bar يظهر فقط في index.html و courses.html
     const path = window.location.pathname.split("/").pop();
-    const searchBar = headerPlaceholder.querySelector("#headerSearchBar");
+    const searchBar = headerPlaceholder?.querySelector("#headerSearchBar");
     if (searchBar) {
-      if (path === "index.html" || path === "courses.html") {
-        searchBar.style.display = "flex";
-      } else {
-        searchBar.style.display = "none";
-      }
+      searchBar.style.display = (path === "index.html" || path === "courses.html") ? "flex" : "none";
     }
 
   } catch (err) {
@@ -35,6 +37,7 @@ function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
   const loginLink = document.getElementById("login-link");
   const userInfo = document.getElementById("user-info");
+  const adminLink = document.getElementById("admin-link");
 
   if (user) {
     if (loginLink) loginLink.style.display = "none";
@@ -42,9 +45,13 @@ function setupUserState() {
     if (userInfo) {
       userInfo.style.display = "flex";
       userInfo.innerHTML = `
-        <img src="${user.picture}" class="user-pic" alt="صورة المستخدم">
+        <img src="${user.picture}" class="user-pic" alt="${user.name}">
         <span>${user.name}</span>
       `;
+    }
+
+    if (adminLink && user.role === "admin") {
+      adminLink.innerHTML = `<a href="/admin/dashboard.html">لوحة التحكم</a>`;
     }
   }
 }
