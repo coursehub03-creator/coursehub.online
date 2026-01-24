@@ -6,51 +6,72 @@
 
   <title>إضافة دورة جديدة - لوحة التحكم | CourseHub</title>
 
-  <!-- CSS الأساسي -->
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/header.css">
-  <link rel="stylesheet" href="../css/footer.css">
-  <link rel="stylesheet" href="css-admin/admin.css">
+  <!-- CSS الموقع العام -->
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+
+  <!-- CSS الأدمن -->
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 
 <body>
 
-  <!-- Header (تحميل ديناميكي) -->
-  <div id="header-placeholder"></div>
+<!-- Header -->
+<div id="header-placeholder"></div>
 
-  <!-- المحتوى -->
-  <main class="container">
-    <h2>إضافة دورة جديدة</h2>
+<!-- محتوى الأدمن -->
+<main class="admin-wrapper">
+  <div class="admin-layout">
 
-    <form id="add-course-form" class="admin-form">
-      <div class="form-group">
-        <label for="title">عنوان الدورة</label>
-        <input type="text" id="title" name="title" required>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
+    </aside>
+
+    <!-- Main -->
+    <section class="admin-main">
+
+      <!-- Topbar -->
+      <div id="topbar-placeholder"></div>
+
+      <!-- Content -->
+      <div class="admin-content">
+        <h1>إضافة دورة جديدة</h1>
+
+        <form id="add-course-form" class="admin-form">
+          <div class="form-group">
+            <label for="title">عنوان الدورة</label>
+            <input type="text" id="title" name="title" required>
+          </div>
+
+          <div class="form-group">
+            <label for="description">وصف الدورة</label>
+            <textarea id="description" name="description" rows="5" required></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary">إضافة الدورة</button>
+        </form>
+
+        <div id="feedback-message" class="feedback"></div>
       </div>
 
-      <div class="form-group">
-        <label for="description">وصف الدورة</label>
-        <textarea id="description" name="description" rows="5" required></textarea>
-      </div>
+    </section>
+  </div>
+</main>
 
-      <button type="submit" class="btn-primary">إضافة الدورة</button>
-    </form>
-  </main>
+<!-- Footer -->
+<div id="footer-placeholder"></div>
 
-  <!-- Footer (تحميل ديناميكي) -->
-  <div id="footer-placeholder"></div>
+<!-- JS الموقع -->
+<script type="module" src="/js/main.js"></script>
+<script type="module" src="/js/header.js"></script>
+<script type="module" src="/js/footer.js"></script>
 
-  <!-- JS الأساسي (تحميل الهيدر والفوتر + CSS) -->
-  <script type="module" src="../js/main.js" defer></script>
-
-  <!-- Header logic (حالة المستخدم + زر الأدمن) -->
-  <script type="module" src="../js/header.js" defer></script>
-
-  <!-- حماية صفحة الأدمن (موحدة) -->
-  <script type="module" src="../js/auth-guard.js" defer></script>
-
-  <!-- منطق إضافة الدورة -->
-  <script type="module" src="../js/add-course.js" defer></script>
+<!-- JS الأدمن -->
+<script type="module" src="js/admin-guard.js"></script>
+<script type="module" src="js/admin-layout.js"></script>
+<script type="module" src="js/add-course.js"></script>
 
 </body>
 </html>
