@@ -6,21 +6,16 @@
 
   <title>إضافة دورة جديدة - لوحة التحكم | CourseHub</title>
 
-  <!-- CSS الموقع العام -->
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
-
-  <!-- CSS الأدمن -->
   <link rel="stylesheet" href="css-admin/admin.css">
 </head>
-
 <body>
 
 <!-- Header -->
 <div id="header-placeholder"></div>
 
-<!-- محتوى الأدمن -->
 <main class="admin-wrapper">
   <div class="admin-layout">
 
@@ -31,11 +26,8 @@
 
     <!-- Main -->
     <section class="admin-main">
-
-      <!-- Topbar -->
       <div id="topbar-placeholder"></div>
 
-      <!-- Content -->
       <div class="admin-content">
         <h1>إضافة دورة جديدة</h1>
 
@@ -50,25 +42,40 @@
             <textarea id="description" name="description" rows="5" required></textarea>
           </div>
 
+          <div class="form-group">
+            <label for="type">نوع الدورة</label>
+            <select id="type" name="type" required>
+              <option value="">اختر نوع الدورة</option>
+              <option value="video">دورة فيديو</option>
+              <option value="slides">دورة سلايدات</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="image">صورة الغلاف</label>
+            <input type="file" id="image" accept="image/*" required>
+          </div>
+
+          <div class="form-group">
+            <label>الدروس</label>
+            <div id="lessons-wrapper"></div>
+            <button type="button" id="add-lesson-btn" class="btn-secondary">إضافة درس جديد</button>
+          </div>
+
           <button type="submit" class="btn-primary">إضافة الدورة</button>
         </form>
 
         <div id="feedback-message" class="feedback"></div>
       </div>
-
     </section>
   </div>
 </main>
 
-<!-- Footer -->
 <div id="footer-placeholder"></div>
 
-<!-- JS الموقع -->
 <script type="module" src="/js/main.js"></script>
 <script type="module" src="/js/header.js"></script>
 <script type="module" src="/js/footer.js"></script>
-
-<!-- JS الأدمن -->
 <script type="module" src="js-admin/admin-guard.js"></script>
 <script type="module" src="js-admin/admin-layout.js"></script>
 <script type="module" src="js-admin/add-course.js"></script>
