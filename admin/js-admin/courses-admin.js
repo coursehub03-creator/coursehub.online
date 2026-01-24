@@ -26,7 +26,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const tbody = document.getElementById("courses-table-body");
   const addBtn = document.getElementById("add-course-btn");
-  addBtn.addEventListener("click", () => window.location.href = "add-course.html");
+
+  // تأكد من وجود الزر قبل إضافة الحدث
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      try {
+        window.location.href = "add-course.html"; // إذا كانت في نفس المجلد
+      } catch (err) {
+        console.error("فشل الانتقال لصفحة إضافة الدورة:", err);
+      }
+    });
+  }
 
   async function loadCourses() {
     tbody.innerHTML = "<tr><td colspan='3'>جارٍ التحميل...</td></tr>";
