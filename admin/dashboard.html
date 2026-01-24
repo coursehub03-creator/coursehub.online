@@ -6,16 +6,18 @@
 
   <title>لوحة التحكم - CourseHub</title>
 
-  <!-- CSS الأساسي -->
+  <!-- CSS العام -->
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/header.css">
   <link rel="stylesheet" href="../css/footer.css">
-  <link rel="stylesheet" href="dashboard.css">
+
+  <!-- CSS خاص بلوحة التحكم -->
+  <link rel="stylesheet" href="./dashboard.css">
 </head>
 
 <body>
 
-  <!-- Header (يتم تحميله ديناميكيًا) -->
+  <!-- Header يتم تحميله ديناميكيًا -->
   <div id="header-placeholder"></div>
 
   <!-- محتوى لوحة التحكم -->
@@ -27,20 +29,20 @@
     </div>
   </main>
 
-  <!-- Footer (يتم تحميله ديناميكيًا) -->
+  <!-- Footer يتم تحميله ديناميكيًا -->
   <div id="footer-placeholder"></div>
 
-  <!-- JS الأساسي (تحميل الهيدر والفوتر + CSS) -->
-  <script type="module" src="../js/main.js" defer></script>
+  <!-- تحميل الهيدر والفوتر (partials) -->
+  <script type="module" src="../js/main.js"></script>
 
-  <!-- Header logic (إظهار المستخدم + زر الأدمن) -->
-  <script type="module" src="../js/header.js" defer></script>
+  <!-- منطق الهيدر (المستخدم + زر لوحة التحكم) -->
+  <script type="module" src="../js/header.js"></script>
 
-  <!-- حماية صفحة الأدمن (الأهم) -->
-  <script type="module" src="../js/auth-guard.js" defer></script>
+  <!-- حماية صفحات الأدمن -->
+  <script type="module" src="../js/auth-guard.js"></script>
 
   <!-- منطق لوحة التحكم -->
-  <script type="module" src="dashboard.js" defer></script>
+  <script type="module" src="./dashboard.js"></script>
 
 </body>
 </html>
