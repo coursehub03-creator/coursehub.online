@@ -7,14 +7,21 @@ const db = getFirestore();
 document.addEventListener("DOMContentLoaded", () => {
   protectAdmin();
 
-  const form = document.getElementById("add-course-form");
-  const feedback = document.getElementById("feedback-message");
+  const form = document.getElementById("add-course-form"); 
+  let feedback = document.getElementById("feedback-message");
+
+  if (!feedback) {
+    feedback = document.createElement("p");
+    feedback.id = "feedback-message";
+    form.appendChild(feedback);
+  }
 
   if (!form) return;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     feedback.textContent = "";
+    feedback.className = "";
 
     const title = form.title.value.trim();
     const description = form.description.value.trim();
@@ -33,9 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       feedback.textContent = "تمت إضافة الدورة بنجاح!";
-      feedback.classList.remove("error");
       feedback.classList.add("success");
-
       form.reset();
     } catch (err) {
       console.error("فشل إضافة الدورة:", err);
