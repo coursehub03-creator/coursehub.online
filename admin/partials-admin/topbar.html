@@ -1,0 +1,63 @@
+<!-- topbar.html -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button id="sidebar-toggle" class="sidebar-toggle">☰</button>
+    <h1 class="topbar-title">لوحة الإدارة</h1>
+  </div>
+
+  <div class="topbar-right">
+    <!-- البحث -->
+    <div class="topbar-search">
+      <input type="text" id="adminSearchInput" placeholder="ابحث...">
+      <button id="adminSearchBtn"><i class="fa fa-search"></i></button>
+    </div>
+
+    <!-- الإشعارات -->
+    <div class="topbar-notifications">
+      <button id="notifBtn"><i class="fa fa-bell"></i>
+        <span class="notification-badge" id="notifBadge">0</span>
+      </button>
+    </div>
+
+    <!-- معلومات الأدمن -->
+    <div class="topbar-user">
+      <span id="adminName">Admin</span>
+      <img src="/images/admin-avatar.png" alt="Admin" class="user-pic">
+      <div class="dropdown-menu">
+        <a href="settings-admin.html">الإعدادات</a>
+        <a href="#" id="admin-logout">تسجيل الخروج</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // فتح/إغلاق Dropdown المستخدم
+  document.addEventListener("DOMContentLoaded", () => {
+    const userContainer = document.querySelector(".topbar-user");
+    const dropdown = userContainer.querySelector(".dropdown-menu");
+
+    userContainer.addEventListener("click", e => {
+      e.stopPropagation();
+      dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    });
+
+    document.addEventListener("click", () => {
+      dropdown.style.display = "none";
+    });
+
+    // تسجيل خروج الأدمن
+    const logoutBtn = document.getElementById("admin-logout");
+    logoutBtn.addEventListener("click", e => {
+      e.preventDefault();
+      localStorage.removeItem("coursehub_user");
+      window.location.href = "/login.html";
+    });
+
+    // زر Sidebar toggle
+    const sidebarToggle = document.getElementById("sidebar-toggle");
+    sidebarToggle.addEventListener("click", () => {
+      document.querySelector(".admin-layout").classList.toggle("collapsed");
+    });
+  });
+</script>
