@@ -1,51 +1,42 @@
-// dashboard.js
-import { db, auth } from "./firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// js/firebase-config.js
+// ====================
+// إعداد Firebase الأساسي لجميع الصفحات
+// ====================
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    alert("يرجى تسجيل الدخول أولاً");
-    window.location.href = "/login.html";
-    return;
-  }
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
-  let userData = null;
-  try {
-    const rawData = localStorage.getItem("coursehub_user");
-    if (rawData) userData = JSON.parse(rawData);
-  } catch (err) {
-    console.error("خطأ في قراءة بيانات المستخدم من localStorage:", err);
-  }
+// إعدادات Firebase لمشروعك
+const firebaseConfig = {
+  apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
+  authDomain: "coursehub-23ed2.firebaseapp.com",
+  projectId: "coursehub-23ed2",
+  storageBucket: "coursehub-23ed2.firebasestorage.app",
+  messagingSenderId: "367073521017",
+  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
+  measurementId: "G-NJ6E39V9NW"
+};
 
-  if (!userData || userData.role !== "admin") {
-    alert("غير مسموح بالدخول إلى هذه الصفحة");
-    window.location.href = "/index.html";
-    return;
-  }
+// تهيئة التطبيق إذا لم يتم تهيئته مسبقاً
+export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
-  await loadDashboardStats();
-});
+// Authentication
+export const auth = getAuth(app);
 
-async function loadDashboardStats() {
-  try {
-    const usersSnap = await getDocs(collection(db, "users"));
-    const usersCard = document.querySelector("#usersCard span");
-    if (usersCard) usersCard.textContent = usersSnap.size;
+// Google Sign-In
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" }); // يفرض اختيار الحساب عند تسجيل الدخول
 
-    const coursesSnap = await getDocs(collection(db, "courses"));
-    const coursesCard = document.querySelector("#coursesCard span");
-    if (coursesCard) coursesCard.textContent = coursesSnap.size;
+// Firestore
+export const db = getFirestore(app);
 
-    const certSnap = await getDocs(collection(db, "certificates"));
-    const certificatesCard = document.querySelector("#certificatesCard span");
-    if (certificatesCard) certificatesCard.textContent = certSnap.size;
+// Analytics (اختياري)
+export const analytics = getAnalytics(app);
 
-    const testsSnap = await getDocs(collection(db, "tests"));
-    const testsCard = document.querySelector("#testsCard span");
-    if (testsCard) testsCard.textContent = testsSnap.size;
-
-  } catch (err) {
-    console.error("فشل تحميل إحصاءات لوحة التحكم:", err);
-  }
-}
+// ✅ ملاحظات:
+// - تأكد أن Authorized domains تشمل:
+//    http://localhost:5500 (للتطوير المحلي)
+//    https://coursehub.online (للنشر)
+// - هذا الملف الآن جاهز للاستخدام في dashboard.js, courses-admin.js, add-course.js
