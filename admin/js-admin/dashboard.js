@@ -1,31 +1,12 @@
 // dashboard.js
-import { db, auth } from "/js/firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { db } from "/js/firebase-config.js";
+import { protectAdmin } from "./admin-guard.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ==============================
-// التحقق من الأدمن
-// ==============================
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    alert("يرجى تسجيل الدخول أولاً");
-    window.location.href = "/login.html";
-    return;
-  }
-
-  let userData = null;
-  try {
-    const rawData = localStorage.getItem("coursehub_user");
-    if (rawData) userData = JSON.parse(rawData);
-  } catch (err) {
-    console.error("خطأ في قراءة بيانات المستخدم من localStorage:", err);
-  }
-
-  if (!userData || userData.role !== "admin") {
-    alert("غير مسموح بالدخول إلى هذه الصفحة");
-    window.location.href = "/index.html";
-    return;
-  }
+document.addEventListener("DOMContentLoaded", async () => {
+  // ✅ التحقق من الأدمن باستخدام Google Auth فقط
+  const adminUser = await protectAdmin();
+  console.log("المستخدم الأدمن:", adminUser.email);
 
   // بعد التأكد من الأدمن، تحميل الإحصاءات
   await loadDashboardStats();
