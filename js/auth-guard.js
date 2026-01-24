@@ -1,22 +1,21 @@
-// admin-guard.js
-export function requireAdmin() {
-  try {
-    const userStr = localStorage.getItem("coursehub_user");
-    if (!userStr) throw new Error("لا يوجد مستخدم مسجّل الدخول");
+// auth-guard.js - حماية صفحات الإدارة
+document.addEventListener("DOMContentLoaded", () => {
+  const user = JSON.parse(localStorage.getItem("coursehub_user"));
 
-    const user = JSON.parse(userStr);
+  // صفحات الإدارة
+  const adminPages = ["/admin/dashboard.html", "/admin/manage-users.html", "/admin/add-course.html"];
 
-    if (!user || user.role !== "admin") {
-      alert("غير مصرح لك بالدخول");
-      location.href = "../login.html";
-      return false;
+  const path = window.location.pathname;
+
+  if (adminPages.includes(path)) {
+    // السماح فقط للأدمن
+    const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
+    if (!user || !adminEmails.includes(user.email)) {
+      // إذا لم يكن المستخدم أدمن، تحويله لصفحة تسجيل الدخول
+      window.location.href = "/login.html";
     }
-
-    return true;
-  } catch (err) {
-    console.error("Error in requireAdmin:", err);
-    alert("حدث خطأ أثناء التحقق من صلاحيات المستخدم. سيتم إعادة توجيهك لتسجيل الدخول.");
-    location.href = "../login.html";
-    return false;
   }
-}
+
+  // مثال: صفحات عامة يمكن إضافة فحص تسجيل الدخول إذا أردت
+  // if (userPages.includes(path) && !user) window.location.href = "/login.html";
+});
