@@ -24,6 +24,7 @@
     input, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
     button { background: #1c3faa; color: #fff; border: none; cursor: pointer; transition: 0.3s; }
     button:hover { background: #1451a1; }
+    .rating { font-size: 16px; color: #f1c40f; margin-bottom: 10px; }
     .empty-msg { text-align: center; font-size: 16px; color: #666; margin-top: 20px; }
   </style>
 </head>
@@ -34,16 +35,26 @@
     <h2>تحميل الدورة...</h2>
     <img src="" alt="Course Image" id="courseImage">
     <p id="courseDesc"></p>
+    <div class="rating" id="courseRating"></div>
 
     <h3>محتوى الدورة</h3>
-    <div id="courseContent"></div>
+    <ul id="courseContent"></ul>
 
-    <a class="btn" id="joinBtn">ابدأ الدورة</a>
+    <a href="#" class="btn" id="joinBtn">ابدأ / انضم للدورة</a>
+
+    <hr>
+
+    <h3>التسجيل / التواصل</h3>
+    <form id="registrationForm">
+      <input type="text" id="name" placeholder="أدخل اسمك الكامل" required>
+      <input type="email" id="email" placeholder="أدخل بريدك الإلكتروني" required>
+      <button type="submit">إرسال</button>
+    </form>
   </section>
 
   <div id="footer-placeholder"></div>
 
-  <script type="module" src="/js/main.js"></script>
+  <!-- روابط JS -->
   <script type="module" src="/js/header.js"></script>
   <script type="module" src="/js/footer.js"></script>
   <script type="module" src="/js/course-detail.js"></script>
