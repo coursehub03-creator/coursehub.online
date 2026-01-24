@@ -1,0 +1,27 @@
+<!-- sidebar.html -->
+<nav class="sidebar-nav">
+  <div class="sidebar-header">
+    <h2>CourseHub Admin</h2>
+  </div>
+
+  <ul class="sidebar-menu">
+    <li><a href="dashboard.html" class="active">🏠 لوحة التحكم</a></li>
+    <li><a href="users.html">👤 المستخدمون</a></li>
+    <li><a href="courses-admin.html">📚 الدورات</a></li>
+    <li><a href="certificates-admin.html">🏆 الشهادات</a></li>
+    <li><a href="tests-admin.html">🧪 الاختبارات</a></li>
+    <li><a href="settings-admin.html">⚙️ الإعدادات</a></li>
+  </ul>
+
+  <div class="sidebar-footer">
+    <p>&copy; <span id="year-sidebar"></span> CourseHub</p>
+  </div>
+</nav>
+
+<script>
+  // تحديث سنة الحقوق Sidebar
+  document.addEventListener("DOMContentLoaded", () => {
+    const yearEl = document.getElementById("year-sidebar");
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+  });
+</script>
