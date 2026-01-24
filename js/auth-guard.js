@@ -1,21 +1,25 @@
-// auth-guard.js - حماية صفحات الإدارة
+// auth-guard.js
 document.addEventListener("DOMContentLoaded", () => {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
+  const path = window.location.pathname.toLowerCase();
 
-  // صفحات الإدارة
-  const adminPages = ["/admin/dashboard.html", "/admin/manage-users.html", "/admin/add-course.html"];
+  const adminPages = [
+    "dashboard.html",
+    "manage-users.html",
+    "add-course.html"
+  ];
 
-  const path = window.location.pathname;
+  const isAdminPage = adminPages.some(page => path.endsWith(page));
 
-  if (adminPages.includes(path)) {
-    // السماح فقط للأدمن
-    const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
+  const adminEmails = [
+    "kaleadsalous30@gmail.com",
+    "coursehub03@gmail.com"
+  ];
+
+  if (isAdminPage) {
     if (!user || !adminEmails.includes(user.email)) {
-      // إذا لم يكن المستخدم أدمن، تحويله لصفحة تسجيل الدخول
-      window.location.href = "/login.html";
+      // ⛔ مهم جدًا
+      window.location.replace("../login.html");
     }
   }
-
-  // مثال: صفحات عامة يمكن إضافة فحص تسجيل الدخول إذا أردت
-  // if (userPages.includes(path) && !user) window.location.href = "/login.html";
 });
