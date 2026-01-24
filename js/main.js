@@ -97,16 +97,16 @@ function setupUserState() {
       document.addEventListener("click", () => { dropdown.style.display = "none"; });
       dropdown.addEventListener("click", e => e.stopPropagation());
 
-      // تسجيل الخروج
+      // ===============================
+      // تسجيل الخروج (تحديث جميع الصفحات فورًا)
+      // ===============================
       const logoutLink = document.getElementById("logout-link");
       if (logoutLink) {
         logoutLink.addEventListener("click", e => {
           e.preventDefault();
           localStorage.removeItem("coursehub_user");
-          if (loginLink) loginLink.style.display = "block";
-          userInfo.style.display = "none";
-          if (adminLink) adminLink.innerHTML = "";
-          window.location.href = "/login.html";
+          // إعادة تحميل الصفحة لتحديث كل عناصر الهيدر والفوتر
+          window.location.reload();
         });
       }
     }
