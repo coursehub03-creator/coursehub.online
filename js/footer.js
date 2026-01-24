@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     if (footerPlaceholder) {
-      const footerHTML = await (await fetch("partials/footer.html")).text();
+      const footerHTML = await (await fetch("/partials/footer.html")).text();
       footerPlaceholder.innerHTML = footerHTML;
     }
 
