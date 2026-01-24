@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
 
   // صفحات الإدارة
-  const adminPages = ["/admin/dashboard.html", "/admin/manage-users.html", "/admin/add-course.html"];
+  const adminPages = ["admin/dashboard.html", "admin/manage-users.html", "admin/add-course.html"];
 
   const path = window.location.pathname;
 
