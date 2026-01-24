@@ -1,3 +1,4 @@
+cat > cors.json <<EOF
 [
   {
     "origin": ["https://coursehub.online"],
@@ -5,3 +6,4 @@
     "maxAgeSeconds": 3600
   }
 ]
+EOF
