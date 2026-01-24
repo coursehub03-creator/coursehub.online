@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>المستخدمون | لوحة التحكم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS الموقع -->
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+
+  <!-- CSS الأدمن -->
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main class="admin-wrapper">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
+    </aside>
+    <section class="admin-main">
+      <div id="topbar-placeholder"></div>
+      <div class="admin-content">
+        <h1>إدارة المستخدمين</h1>
+        <input type="text" id="user-search" placeholder="ابحث عن مستخدم..." />
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>البريد الإلكتروني</th>
+              <th>الدور</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="users-list">
+            <!-- سيتم تعبئتها ديناميكيًا بواسطة users.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script type="module" src="/js/main.js"></script>
+<script type="module" src="/js/header.js"></script>
+<script type="module" src="/js/footer.js"></script>
+
+<script type="module" src="js/admin-guard.js"></script>
+<script type="module" src="js/admin-layout.js"></script>
+<script type="module" src="js/users.js"></script>
+
+</body>
+</html>
