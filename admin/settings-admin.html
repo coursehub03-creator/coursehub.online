@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>الإعدادات | لوحة التحكم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main class="admin-wrapper">
+  <div class="admin-layout">
+    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
+    <section class="admin-main">
+      <div id="topbar-placeholder"></div>
+      <div class="admin-content">
+        <h1>إعدادات الأدمن</h1>
+        <form id="admin-settings-form">
+          <label for="site-name">اسم الموقع:</label>
+          <input type="text" id="site-name" name="site-name" placeholder="CourseHub" required>
+
+          <label for="default-language">اللغة الافتراضية:</label>
+          <select id="default-language" name="default-language">
+            <option value="ar">العربية</option>
+            <option value="en">الإنجليزية</option>
+          </select>
+
+          <label for="notification-email">البريد الإلكتروني للتنبيهات:</label>
+          <input type="email" id="notification-email" name="notification-email" placeholder="admin@example.com" required>
+
+          <button type="submit">حفظ الإعدادات</button>
+        </form>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script type="module" src="/js/main.js"></script>
+<script type="module" src="/js/header.js"></script>
+<script type="module" src="/js/footer.js"></script>
+
+<script type="module" src="js/admin-guard.js"></script>
+<script type="module" src="js/admin-layout.js"></script>
+<script type="module" src="js/settings-admin.js"></script>
+
+</body>
+</html>
