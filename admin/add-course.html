@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>إضافة دورة جديدة - لوحة التحكم | CourseHub</title>
 
+  <!-- CSS الموقع -->
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
@@ -13,25 +13,23 @@
 </head>
 <body>
 
-<!-- Header -->
 <div id="header-placeholder"></div>
 
 <main class="admin-wrapper">
   <div class="admin-layout">
 
-    <!-- Sidebar -->
     <aside class="admin-sidebar">
       <div id="sidebar-placeholder"></div>
     </aside>
 
-    <!-- Main -->
     <section class="admin-main">
+
       <div id="topbar-placeholder"></div>
 
       <div class="admin-content">
         <h1>إضافة دورة جديدة</h1>
 
-        <form id="add-course-form" class="admin-form">
+        <form id="addCourseForm" class="admin-form">
           <div class="form-group">
             <label for="title">عنوان الدورة</label>
             <input type="text" id="title" name="title" required>
@@ -43,30 +41,25 @@
           </div>
 
           <div class="form-group">
-            <label for="type">نوع الدورة</label>
-            <select id="type" name="type" required>
-              <option value="">اختر نوع الدورة</option>
-              <option value="video">دورة فيديو</option>
-              <option value="slides">دورة سلايدات</option>
-            </select>
+            <label for="category">تصنيف الدورة</label>
+            <input type="text" id="category" name="category" placeholder="مثلاً: برمجة، تصميم، تسويق">
           </div>
 
           <div class="form-group">
-            <label for="image">صورة الغلاف</label>
-            <input type="file" id="image" accept="image/*" required>
+            <label for="coverImage">صورة الغلاف</label>
+            <input type="file" id="coverImage" accept="image/*">
           </div>
 
-          <div class="form-group">
-            <label>الدروس</label>
-            <div id="lessons-wrapper"></div>
-            <button type="button" id="add-lesson-btn" class="btn-secondary">إضافة درس جديد</button>
-          </div>
+          <h3>الدروس</h3>
+          <div id="lessonsContainer"></div>
+          <button type="button" id="addLessonBtn" class="btn">إضافة درس جديد</button>
 
-          <button type="submit" class="btn-primary">إضافة الدورة</button>
+          <button type="submit" class="btn">حفظ الدورة</button>
         </form>
 
         <div id="feedback-message" class="feedback"></div>
       </div>
+
     </section>
   </div>
 </main>
@@ -76,8 +69,8 @@
 <script type="module" src="/js/main.js"></script>
 <script type="module" src="/js/header.js"></script>
 <script type="module" src="/js/footer.js"></script>
-<script type="module" src="js-admin/admin-guard.js"></script>
 <script type="module" src="js-admin/admin-layout.js"></script>
+<script type="module" src="js-admin/admin-guard.js"></script>
 <script type="module" src="js-admin/add-course.js"></script>
 
 </body>
