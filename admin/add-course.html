@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إضافة دورة جديدة - لوحة التحكم | CourseHub</title>
 
-  <!-- CSS الموقع -->
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
@@ -23,43 +22,47 @@
     </aside>
 
     <section class="admin-main">
-
       <div id="topbar-placeholder"></div>
 
       <div class="admin-content">
         <h1>إضافة دورة جديدة</h1>
 
         <form id="addCourseForm" class="admin-form">
+
           <div class="form-group">
-            <label for="title">عنوان الدورة</label>
-            <input type="text" id="title" name="title" required>
+            <label>عنوان الدورة</label>
+            <input type="text" id="title" required>
           </div>
 
           <div class="form-group">
-            <label for="description">وصف الدورة</label>
-            <textarea id="description" name="description" rows="5" required></textarea>
+            <label>وصف الدورة</label>
+            <textarea id="description" rows="5" required></textarea>
           </div>
 
           <div class="form-group">
-            <label for="category">تصنيف الدورة</label>
-            <input type="text" id="category" name="category" placeholder="مثلاً: برمجة، تصميم، تسويق">
+            <label>تصنيف الدورة</label>
+            <input type="text" id="category">
           </div>
 
           <div class="form-group">
-            <label for="coverImage">صورة الغلاف</label>
+            <label>صورة الغلاف</label>
             <input type="file" id="coverImage" accept="image/*">
           </div>
 
           <h3>الدروس</h3>
           <div id="lessonsContainer"></div>
-          <button type="button" id="addLessonBtn" class="btn">إضافة درس جديد</button>
 
-          <button type="submit" class="btn">حفظ الدورة</button>
+          <button type="button" id="addLessonBtn" class="btn">
+            إضافة درس جديد
+          </button>
+
+          <button type="submit" class="btn primary">
+            حفظ الدورة
+          </button>
+
         </form>
 
-        <div id="feedback-message" class="feedback"></div>
       </div>
-
     </section>
   </div>
 </main>
