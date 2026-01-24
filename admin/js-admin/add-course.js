@@ -1,5 +1,5 @@
 // add-course.js
-import { db } from "./firebase-config.js";
+import { db } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
 import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
