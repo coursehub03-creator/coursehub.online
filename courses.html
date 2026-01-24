@@ -45,7 +45,6 @@
   <!-- Footer Placeholder -->
   <div id="footer-placeholder"></div>
 
-  <!-- Firebase + Courses Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -56,8 +55,7 @@
       projectId: "coursehub-23ed2",
       storageBucket: "coursehub-23ed2.firebasestorage.app",
       messagingSenderId: "367073521017",
-      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
-      measurementId: "G-NJ6E39V9NW"
+      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -67,7 +65,6 @@
     const categoryButtons = document.querySelectorAll('.categories button');
     let allCourses = [];
 
-    // تحميل جميع الدورات من Firestore
     async function loadCourses() {
       try {
         const snapshot = await getDocs(collection(db, "courses"));
@@ -79,7 +76,6 @@
       }
     }
 
-    // عرض الدورات
     function renderCourses(courses) {
       coursesGrid.innerHTML = "";
       if (!courses || courses.length === 0) {
@@ -103,7 +99,6 @@
       });
     }
 
-    // تصفية حسب الفئة
     function filterCategory(cat) {
       categoryButtons.forEach(b => b.classList.remove('active'));
       document.querySelector(`[data-category="${cat}"]`).classList.add('active');
@@ -114,10 +109,7 @@
       btn.addEventListener('click', () => filterCategory(btn.dataset.category));
     });
 
-    // تحميل الدورات عند فتح الصفحة
     loadCourses();
   </script>
-
-  <script src="js/main.js" defer></script>
 </body>
 </html>
