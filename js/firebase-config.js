@@ -1,42 +1,51 @@
-// js/firebase-config.js
-// ====================
-// إعداد Firebase الأساسي لجميع الصفحات
+// dashboard.js
+import { db, auth } from "./firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    alert("يرجى تسجيل الدخول أولاً");
+    window.location.href = "/login.html";
+    return;
+  }
 
-// إعدادات Firebase لمشروعك
-const firebaseConfig = {
-apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
-  authDomain: "coursehub-23ed2.firebaseapp.com",
-  projectId: "coursehub-23ed2",
-  storageBucket: "coursehub-23ed2.firebasestorage.app",
-  messagingSenderId: "367073521017",
-  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
-  measurementId: "G-NJ6E39V9NW"
-};
+  let userData = null;
+  try {
+    const rawData = localStorage.getItem("coursehub_user");
+    if (rawData) userData = JSON.parse(rawData);
+  } catch (err) {
+    console.error("خطأ في قراءة بيانات المستخدم من localStorage:", err);
+  }
 
-// تهيئة Firebase
-export const app = initializeApp(firebaseConfig);
+  if (!userData || userData.role !== "admin") {
+    alert("غير مسموح بالدخول إلى هذه الصفحة");
+    window.location.href = "/index.html";
+    return;
+  }
 
-// Authentication
-export const auth = getAuth(app);
+  await loadDashboardStats();
+});
 
-// Google Sign-In
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" }); // ✅ يفرض اختيار الحساب عند تسجيل الدخول
+async function loadDashboardStats() {
+  try {
+    const usersSnap = await getDocs(collection(db, "users"));
+    const usersCard = document.querySelector("#usersCard span");
+    if (usersCard) usersCard.textContent = usersSnap.size;
 
-// Firestore
-export const db = getFirestore(app);
+    const coursesSnap = await getDocs(collection(db, "courses"));
+    const coursesCard = document.querySelector("#coursesCard span");
+    if (coursesCard) coursesCard.textContent = coursesSnap.size;
 
-// Analytics (اختياري)
-export const analytics = getAnalytics(app);
+    const certSnap = await getDocs(collection(db, "certificates"));
+    const certificatesCard = document.querySelector("#certificatesCard span");
+    if (certificatesCard) certificatesCard.textContent = certSnap.size;
 
-// ✅ ملاحظة:
-// - لا تضع مفاتيح API قديمة.
-// - تأكد من أن Authorized domains تشمل:
-//    http://localhost:5500 (للتطوير المحلي)
-//    https://coursehub.online (للنشر)
-// - Client ID الخاص بـ Google Sign-In يجب إضافته في Google Cloud Console.
+    const testsSnap = await getDocs(collection(db, "tests"));
+    const testsCard = document.querySelector("#testsCard span");
+    if (testsCard) testsCard.textContent = testsSnap.size;
+
+  } catch (err) {
+    console.error("فشل تحميل إحصاءات لوحة التحكم:", err);
+  }
+}
