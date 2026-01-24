@@ -37,7 +37,9 @@
       <button data-category="ai">الذكاء الاصطناعي</button>
       <button data-category="design">التصميم</button>
     </div>
-    <div class="courses-grid" id="coursesGrid"></div>
+    <div class="courses-grid" id="coursesGrid">
+      <div class="empty-msg">جارٍ تحميل الدورات...</div>
+    </div>
   </section>
 
   <!-- Footer Placeholder -->
@@ -49,13 +51,13 @@
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
 
     const firebaseConfig = {
-  apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
-  authDomain: "coursehub-23ed2.firebaseapp.com",
-  projectId: "coursehub-23ed2",
-  storageBucket: "coursehub-23ed2.firebasestorage.app",
-  messagingSenderId: "367073521017",
-  appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
-  measurementId: "G-NJ6E39V9NW"
+      apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
+      authDomain: "coursehub-23ed2.firebaseapp.com",
+      projectId: "coursehub-23ed2",
+      storageBucket: "coursehub-23ed2.firebasestorage.app",
+      messagingSenderId: "367073521017",
+      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8",
+      measurementId: "G-NJ6E39V9NW"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -65,6 +67,7 @@
     const categoryButtons = document.querySelectorAll('.categories button');
     let allCourses = [];
 
+    // تحميل جميع الدورات من Firestore
     async function loadCourses() {
       try {
         const snapshot = await getDocs(collection(db, "courses"));
@@ -76,19 +79,19 @@
       }
     }
 
+    // عرض الدورات
     function renderCourses(courses) {
       coursesGrid.innerHTML = "";
       if (!courses || courses.length === 0) {
         coursesGrid.innerHTML = "<div class='empty-msg'>لا توجد دورات حالياً.</div>";
         return;
       }
-
       courses.forEach(course => {
         const card = document.createElement("div");
         card.className = "card";
         card.dataset.category = course.category || "all";
         card.innerHTML = `
-          <img src="${course.image}" alt="${course.title}">
+          <img src="${course.image || 'assets/images/default-course.png'}" alt="${course.title}">
           <div class="card-content">
             <h3 onclick="window.location.href='course-detail.html?id=${course.id}'">${course.title}</h3>
             <div class="rating">${"★".repeat(course.rating || 4)} <span>(${course.students || 0} طالب)</span></div>
@@ -100,6 +103,7 @@
       });
     }
 
+    // تصفية حسب الفئة
     function filterCategory(cat) {
       categoryButtons.forEach(b => b.classList.remove('active'));
       document.querySelector(`[data-category="${cat}"]`).classList.add('active');
@@ -110,6 +114,7 @@
       btn.addEventListener('click', () => filterCategory(btn.dataset.category));
     });
 
+    // تحميل الدورات عند فتح الصفحة
     loadCourses();
   </script>
 
