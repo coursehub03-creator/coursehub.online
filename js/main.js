@@ -13,9 +13,9 @@ function loadCSS(href) {
 }
 
 // تحميل CSS الأساسي
-loadCSS("css/header.css");
-loadCSS("css/footer.css");
-loadCSS("css/style.css");
+loadCSS("/css/header.css");
+loadCSS("/css/footer.css");
+loadCSS("/css/style.css");
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("Main JS جاهز!");
