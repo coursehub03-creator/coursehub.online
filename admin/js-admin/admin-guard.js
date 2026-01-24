@@ -1,20 +1,24 @@
 // admin-guard.js
-// ===============================
-// حماية صفحات الأدمن - يجب أن يكون المستخدم أدمن
-// ===============================
+import { auth } from "./firebase-config.js";
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// دالة يمكن استدعاؤها من أي صفحة للتحقق من صلاحيات الأدمن
-export function protectAdmin() {
-  const user = JSON.parse(localStorage.getItem("coursehub_user"));
-  const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
+const ADMIN_EMAILS = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
 
-  if (!user || !adminEmails.includes(user.email)) {
-    alert("ليس لديك صلاحية الدخول إلى هذه الصفحة.");
-    window.location.href = "/login.html";
-  }
+export async function protectAdmin() {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        user = result.user;
+      }
+
+      if (!ADMIN_EMAILS.includes(user.email)) {
+        alert("ليس لديك صلاحية الدخول إلى هذه الصفحة.");
+        window.location.href = "/login.html";
+      } else {
+        resolve(user); // المستخدم أدمن
+      }
+    });
+  });
 }
-
-// تحقق تلقائي عند تحميل الصفحة
-document.addEventListener("DOMContentLoaded", () => {
-  protectAdmin();
-});
