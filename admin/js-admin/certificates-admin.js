@@ -1,6 +1,7 @@
 // certificate-admin.js
 document.addEventListener("DOMContentLoaded", () => {
   const pageContent = document.getElementById("page-content");
+    if (!pageContent) return;
   pageContent.innerHTML = `
     <table class="admin-table">
       <thead>
@@ -42,3 +43,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
