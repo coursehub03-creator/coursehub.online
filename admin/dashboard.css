@@ -1,38 +1,172 @@
+/* ===============================
+   Admin Dashboard - CourseHub
+   =============================== */
 
-/* لوحة الإدارة */
+/* مساحة المحتوى */
+main.container,
 main {
+  padding: 30px 20px;
+  min-height: 70vh;
+  background-color: #f5f7fb;
+}
+
+/* عنوان الصفحة */
+main h2 {
+  font-size: 22px;
+  margin-bottom: 25px;
+  color: #1f2937;
+  font-weight: 700;
+}
+
+/* ===============================
+   Card / Box (مشترك)
+   =============================== */
+.admin-card,
+#users-list,
+#admin-dashboard-content,
+#add-course-form {
+  background: #ffffff;
   padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  margin-bottom: 25px;
 }
 
-h2 {
-  margin-bottom: 20px;
+/* ===============================
+   Users List
+   =============================== */
+#users-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 15px;
 }
 
-#users-list, #admin-dashboard-content, #add-course-form {
-  background: #fff;
+.user-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  background: #fafafa;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.user-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.user-card h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #111827;
+}
+
+.user-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ===============================
+   Forms (Add Course / Admin)
+   =============================== */
 form label {
   display: block;
-  margin-top: 10px;
-}
-
-form input, form textarea {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-form button {
   margin-top: 15px;
-  padding: 10px 20px;
-  background-color: #0a74da;
-  color: #fff;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+form input,
+form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+form input:focus,
+form textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ===============================
+   Buttons
+   =============================== */
+form button,
+.admin-btn {
+  margin-top: 20px;
+  padding: 10px 22px;
+  background-color: #2563eb;
+  color: #ffffff;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+form button:hover,
+.admin-btn:hover {
+  background-color: #1e40af;
+  transform: translateY(-1px);
+}
+
+form button:active,
+.admin-btn:active {
+  transform: translateY(0);
+}
+
+/* ===============================
+   Dashboard Stats (جاهز للمستقبل)
+   =============================== */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: #ffffff;
+  padding: 18px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+}
+
+.stat-card h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.stat-card span {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+/* ===============================
+   Responsive
+   =============================== */
+@media (max-width: 768px) {
+  main {
+    padding: 20px 15px;
+  }
+
+  main h2 {
+    font-size: 20px;
+  }
 }
