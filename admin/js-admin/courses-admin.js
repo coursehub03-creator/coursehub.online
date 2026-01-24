@@ -4,7 +4,9 @@ import { protectAdmin } from "./admin-guard.js";
 import { collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await protectAdmin();
+  // التحقق من الأدمن والحصول على بياناته
+  const adminUser = await protectAdmin();
+  console.log("المستخدم الأدمن:", adminUser.email);
 
   const pageContent = document.getElementById("page-content");
   if (!pageContent) return;
@@ -75,4 +77,3 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadCourses();
 });
-
