@@ -2,7 +2,11 @@
 import { protectAdmin } from "./admin-guard.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // ✅ حماية الأدمن والتحقق من المستخدم
   const adminUser = await protectAdmin();
+  console.log("المستخدم الأدمن:", adminUser.email);
+
+  const pageContent = document.getElementById("page-content");
 
   // ✅ حماية: إذا الصفحة ليست صفحة الشهادات، نخرج بدون أخطاء
   if (!pageContent) return;
@@ -55,4 +59,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 });
-
