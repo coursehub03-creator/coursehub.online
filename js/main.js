@@ -105,8 +105,19 @@ function setupUserState() {
         logoutLink.addEventListener("click", e => {
           e.preventDefault();
           localStorage.removeItem("coursehub_user");
-          // إعادة تحميل الصفحة لتحديث كل عناصر الهيدر والفوتر
-          window.location.reload();
+
+          // إعادة تحميل الهيدر فقط
+          if (document.getElementById("header-placeholder")) {
+            fetch("/partials/header.html")
+              .then(res => res.text())
+              .then(html => {
+                document.getElementById("header-placeholder").innerHTML = html;
+                setupUserState(); // إعادة تهيئة الهيدر بعد تسجيل الخروج
+              });
+          }
+
+          // إذا أردت، يمكن إعادة توجيه المستخدم لصفحة تسجيل الدخول
+          // window.location.href = "/login.html";
         });
       }
     }
