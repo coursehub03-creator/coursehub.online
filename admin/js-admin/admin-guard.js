@@ -1,5 +1,5 @@
 // admin-guard.js
-import { auth } from "./firebase-config.js";
+import { auth } from "/js/firebase-config.js";
 import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const ADMIN_EMAILS = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
@@ -22,3 +22,4 @@ export async function protectAdmin() {
     });
   });
 }
+
