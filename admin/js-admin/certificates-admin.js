@@ -1,7 +1,8 @@
 // certificate-admin.js
+import { protectAdmin } from "./admin-guard.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const pageContent = document.getElementById("page-content");
+document.addEventListener("DOMContentLoaded", async () => {
+  const adminUser = await protectAdmin();
 
   // ✅ حماية: إذا الصفحة ليست صفحة الشهادات، نخرج بدون أخطاء
   if (!pageContent) return;
@@ -54,3 +55,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
