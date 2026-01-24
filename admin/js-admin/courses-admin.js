@@ -32,7 +32,7 @@ if (addBtn) {
   addBtn.addEventListener("click", () => {
     console.log("زر إضافة الدورة انضغط ✅");
     alert("زر إضافة الدورة انضغط");
-    window.location.href = "/admin/add-course.html";
+    window.location.href = "/add-course.html";
   });
 }
 
@@ -80,6 +80,7 @@ if (addBtn) {
 
   await loadCourses();
 });
+
 
 
 
