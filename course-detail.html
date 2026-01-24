@@ -12,23 +12,85 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-    .course-detail { max-width: 900px; margin: auto; padding: 30px 20px; background: #fff; border-radius: 10px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+    .course-detail {
+      max-width: 900px;
+      margin: auto;
+      padding: 30px 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    }
     .course-detail h2 { margin-top: 0; }
-    .course-detail img { width: 100%; max-height: 300px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
+    .course-detail img {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
     .lesson { margin-bottom: 20px; }
-    .lesson-progress-bar { width: 100%; background: #eee; border-radius: 6px; overflow: hidden; margin-top: 5px; }
-    .lesson-progress-bar-inner { height: 10px; width: 0%; background: #1c3faa; transition: 0.5s; }
-    .btn { display: inline-block; padding: 10px 20px; background: #1c3faa; color: #fff; border-radius: 6px; text-decoration: none; margin-top: 15px; cursor: pointer; }
+    .lesson-progress-bar {
+      width: 100%;
+      background: #eee;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+    .lesson-progress-bar-inner {
+      height: 10px;
+      width: 0%;
+      background: #1c3faa;
+      transition: 0.5s;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #1c3faa;
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-top: 15px;
+      cursor: pointer;
+    }
     .btn:hover { background: #1451a1; }
-    form { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-    input, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
-    button { background: #1c3faa; color: #fff; border: none; cursor: pointer; transition: 0.3s; }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    input, button, textarea {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: #1c3faa;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
     button:hover { background: #1451a1; }
-    .rating { font-size: 16px; color: #f1c40f; margin-bottom: 10px; }
-    .empty-msg { text-align: center; font-size: 16px; color: #666; margin-top: 20px; }
+    .rating {
+      font-size: 16px;
+      color: #f1c40f;
+      margin-bottom: 10px;
+    }
+    .empty-msg {
+      text-align: center;
+      font-size: 16px;
+      color: #666;
+      margin-top: 20px;
+    }
   </style>
 </head>
+
 <body>
+
+  <!-- Header -->
   <div id="header-placeholder"></div>
 
   <section class="course-detail" id="courseDetail">
@@ -52,11 +114,12 @@
     </form>
   </section>
 
+  <!-- Footer -->
   <div id="footer-placeholder"></div>
 
-  <!-- روابط JS -->
-  <script type="module" src="/js/header.js"></script>
-  <script type="module" src="/js/footer.js"></script>
+  <!-- JS -->
   <script type="module" src="/js/course-detail.js"></script>
+  <script type="module" src="/js/main.js" defer></script>
+
 </body>
 </html>
