@@ -65,7 +65,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
     });
 
-    joinBtn.onclick = () => startLesson(0);
+    // ✅ تعديل: التحقق من تسجيل الدخول عند الضغط على زر الانضمام
+    joinBtn.addEventListener("click", () => {
+      if (!currentUser) return alert("يرجى تسجيل الدخول لبدء الدورة.");
+      startLesson(0);
+    });
   }
 
   async function loadProgress() {
