@@ -1,40 +1,32 @@
-v// manage-users.js
-// إدارة المستخدمين (Static Version)
+// manage-users.js
+// ===============================
+// حماية صفحة الأدمن
+// ===============================
+import { protectAdmin } from "./admin-guard.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  protectAdminPage();
+  protectAdmin();
   renderUsers();
 });
 
-/* ===============================
-   حماية صفحة الأدمن
-================================ */
-function protectAdminPage() {
-  const user = JSON.parse(localStorage.getItem("coursehub_user"));
-  if (!user || user.role !== "admin") {
-    window.location.href = "../login.html";
-  }
-}
-
-/* ===============================
-   جلب المستخدمين
-   (حاليًا من localStorage)
-================================ */
+// ===============================
+// جلب المستخدمين
+// ===============================
 function getUsers() {
   const users = JSON.parse(localStorage.getItem("coursehub_users"));
   return Array.isArray(users) ? users : [];
 }
 
-/* ===============================
-   حفظ المستخدمين
-================================ */
+// ===============================
+// حفظ المستخدمين
+// ===============================
 function saveUsers(users) {
   localStorage.setItem("coursehub_users", JSON.stringify(users));
 }
 
-/* ===============================
-   عرض المستخدمين
-================================ */
+// ===============================
+// عرض المستخدمين
+// ===============================
 function renderUsers() {
   const container = document.getElementById("users-list");
   if (!container) return;
@@ -75,10 +67,10 @@ function renderUsers() {
   });
 }
 
-/* ===============================
-   حذف مستخدم
-================================ */
-function deleteUser(index) {
+// ===============================
+// حذف مستخدم
+// ===============================
+window.deleteUser = function(index) {
   const users = getUsers();
   const user = users[index];
 
@@ -87,13 +79,11 @@ function deleteUser(index) {
   users.splice(index, 1);
   saveUsers(users);
   renderUsers();
-}
+};
 
-/* ===============================
-   (اختياري) إضافة مستخدم تلقائيًا
-   لتجربة الصفحة
-================================ */
-// هذا الكود للتجربة فقط – احذفه لاحقًا
+// ===============================
+// إضافة مستخدمين تجريبيين (للتجربة فقط)
+// ===============================
 (function seedDemoUsers() {
   const existing = getUsers();
   if (existing.length > 0) return;
