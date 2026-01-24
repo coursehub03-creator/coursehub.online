@@ -1,11 +1,17 @@
-import { db, auth, storage } from "/js/firebase-config.js";
-import { doc, getDoc, updateDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { db, auth } from "/js/firebase-config.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  arrayUnion
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const courseId = urlParams.get("id");
-  if (!courseId) return alert("لم يتم تحديد أي دورة.");
+
+  const params = new URLSearchParams(window.location.search);
+  const courseId = params.get("id");
+  if (!courseId) return alert("لم يتم تحديد الدورة");
 
   const courseDetail = document.getElementById("courseDetail");
   const courseImage = document.getElementById("courseImage");
@@ -13,146 +19,159 @@ document.addEventListener("DOMContentLoaded", async () => {
   const courseContent = document.getElementById("courseContent");
   const joinBtn = document.getElementById("joinBtn");
 
-  let studentId = null;
-  auth.onAuthStateChanged(user => studentId = user ? user.uid : null);
+  let currentUser = null;
+  let courseData = null;
+
+  auth.onAuthStateChanged(user => {
+    currentUser = user;
+  });
 
   async function loadCourse() {
     const courseRef = doc(db, "courses", courseId);
-    const snapshot = await getDoc(courseRef);
-    if (!snapshot.exists()) {
-      courseDetail.innerHTML = "<p class='empty-msg'>الدورة غير موجودة.</p>";
+    const snap = await getDoc(courseRef);
+
+    if (!snap.exists()) {
+      courseDetail.innerHTML = "<p class='empty-msg'>الدورة غير موجودة</p>";
       return;
     }
 
-    const course = snapshot.data();
-    courseDetail.querySelector("h2").textContent = course.title || "دورة بدون عنوان";
-    courseImage.src = course.image || "/assets/images/course1.jpg";
-    courseDesc.textContent = course.description || "لا يوجد وصف متاح.";
+    courseData = snap.data();
 
-    // عرض قائمة الدروس
+    courseDetail.querySelector("h2").textContent = courseData.title;
+    courseImage.src = courseData.image || "/assets/images/course1.jpg";
+    courseDesc.textContent = courseData.description || "";
+
+    renderLessons();
+    await loadProgress();
+  }
+
+  function renderLessons() {
     courseContent.innerHTML = "";
-    course.lessons?.forEach((lesson, index) => {
+
+    courseData.lessons.forEach((lesson, index) => {
       const li = document.createElement("li");
-      li.classList.add("lesson");
+      li.className = "lesson";
       li.innerHTML = `
-        <span>${index + 1}. ${lesson.title}</span>
-        <button class="start-lesson-btn" data-index="${index}">ابدأ / تابع</button>
-        <div class="lesson-progress" id="lesson-progress-${index}">0%</div>
+        <strong>${index + 1}. ${lesson.title}</strong>
+        <button class="btn start-btn" data-index="${index}">ابدأ / تابع</button>
+        <div id="progress-${index}">0%</div>
       `;
       courseContent.appendChild(li);
     });
 
-    joinBtn.addEventListener("click", () => startLesson(0, course));
-    document.querySelectorAll(".start-lesson-btn").forEach(btn => {
-      btn.addEventListener("click", () => startLesson(Number(btn.dataset.index), course));
+    document.querySelectorAll(".start-btn").forEach(btn => {
+      btn.addEventListener("click", () =>
+        startLesson(Number(btn.dataset.index))
+      );
     });
 
-    await loadProgress(course.lessons?.length || 0);
+    joinBtn.onclick = () => startLesson(0);
   }
 
-  async function loadProgress(totalLessons) {
-    if (!studentId) return;
-    const studentRef = doc(db, "courses", courseId, "progress", studentId);
-    const snapshot = await getDoc(studentRef);
-    const completed = snapshot.exists() ? snapshot.data().completedLessons || [] : [];
+  async function loadProgress() {
+    if (!currentUser) return;
 
+    const ref = doc(db, "courses", courseId, "progress", currentUser.uid);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return;
+
+    const completed = snap.data().completedLessons || [];
     completed.forEach(i => {
-      const bar = document.getElementById(`lesson-progress-${i}`);
-      if (bar) bar.textContent = "100%";
+      const el = document.getElementById(`progress-${i}`);
+      if (el) el.textContent = "100%";
     });
-
-    if (completed.length < totalLessons) {
-      console.log(`تذكير: الطالب لم يكمل جميع الدروس بعد (${courseId})`);
-      // لاحقًا: إرسال إيميل أو إشعار
-    }
   }
 
-  async function startLesson(index, course) {
-    if (!studentId) return alert("يرجى تسجيل الدخول لبدء الدورة.");
+  async function startLesson(index) {
+    if (!currentUser) return alert("يرجى تسجيل الدخول أولًا");
 
-    const lesson = course.lessons[index];
-    const studentRef = doc(db, "courses", courseId, "progress", studentId);
-    const studentSnapshot = await getDoc(studentRef);
-    let completedLessons = studentSnapshot.exists() ? studentSnapshot.data().completedLessons || [] : [];
+    const progressRef = doc(
+      db,
+      "courses",
+      courseId,
+      "progress",
+      currentUser.uid
+    );
 
-    // منع الانتقال قبل اجتياز الدرس السابق
-    if (index > 0 && !completedLessons.includes(index - 1)) {
-      return alert("يرجى إتمام الدرس السابق أولاً.");
+    const snap = await getDoc(progressRef);
+    const completed = snap.exists() ? snap.data().completedLessons || [] : [];
+
+    if (index > 0 && !completed.includes(index - 1)) {
+      return alert("يجب إكمال الدرس السابق");
     }
 
-    // عرض محتوى الدرس
-    let contentHtml = `<h3>${lesson.title}</h3>`;
+    const lesson = courseData.lessons[index];
+    let html = `<h3>${lesson.title}</h3>`;
+
     if (lesson.type === "video") {
-      contentHtml += `<video src="${lesson.contentUrl}" controls width="100%" id="lesson-video"></video>`;
-    } else if (lesson.type === "slides") {
-      contentHtml += `<iframe src="${lesson.contentUrl}" width="100%" height="500px"></iframe>`;
+      html += `<video src="${lesson.contentUrl}" controls width="100%" id="lessonVideo"></video>`;
+    } else {
+      html += `<iframe src="${lesson.contentUrl}" width="100%" height="500"></iframe>`;
     }
 
-    // الموارد الإضافية
-    if (lesson.resources?.length > 0) {
-      contentHtml += `<h4>الموارد:</h4><ul>`;
-      for (const res of lesson.resources) {
-        let url = res.url;
-        if (res.storagePath) {
-          // إذا كان مخزن في Firebase Storage
-          url = await getDownloadURL(ref(storage, res.storagePath));
-        }
-        contentHtml += `<li><a href="${url}" target="_blank">${res.name}</a></li>`;
-      }
-      contentHtml += "</ul>";
+    if (lesson.resources?.length) {
+      html += "<h4>الموارد</h4><ul>";
+      lesson.resources.forEach(r => {
+        html += `<li><a href="${r.url}" target="_blank">${r.name}</a></li>`;
+      });
+      html += "</ul>";
     }
 
-    // اختبار MCQ
-    if (lesson.quiz?.length > 0) {
-      contentHtml += `<h4>الاختبار:</h4><form id="quizForm">`;
+    if (lesson.quiz?.length) {
+      html += `<form id="quizForm"><h4>الاختبار</h4>`;
       lesson.quiz.forEach((q, i) => {
-        contentHtml += `<p>${q.question}</p>`;
+        html += `<p>${q.question}</p>`;
         q.options.forEach(opt => {
-          contentHtml += `<label><input type="radio" name="q${i}" value="${opt}" required> ${opt}</label><br>`;
+          html += `
+            <label>
+              <input type="radio" name="q${i}" value="${opt}" required>
+              ${opt}
+            </label><br>
+          `;
         });
       });
-      contentHtml += `<button type="submit" class="btn">إرسال الإجابات</button></form>`;
+      html += `<button class="btn">إرسال</button></form>`;
     }
 
-    courseContent.innerHTML = contentHtml;
+    courseContent.innerHTML = html;
 
-    // متابعة الفيديو
-    if (lesson.type === "video") {
-      const video = document.getElementById("lesson-video");
-      video.addEventListener("ended", async () => markLessonCompleted(index));
+    const video = document.getElementById("lessonVideo");
+    if (video) {
+      video.onended = () => completeLesson(index);
     }
 
-    // متابعة الاختبارات
     const quizForm = document.getElementById("quizForm");
     if (quizForm) {
-      quizForm.addEventListener("submit", async e => {
+      quizForm.onsubmit = async e => {
         e.preventDefault();
         let passed = true;
+
         lesson.quiz.forEach((q, i) => {
-          const selected = quizForm[`q${i}`].value;
-          if (selected !== q.correctAnswer) passed = false;
+          if (quizForm[`q${i}`].value !== q.correctAnswer) passed = false;
         });
-        if (!passed) return alert("لم تجتاز الاختبار بعد، حاول مرة أخرى.");
-        await markLessonCompleted(index);
-      });
+
+        if (!passed) return alert("لم تنجح في الاختبار");
+        await completeLesson(index);
+      };
     }
   }
 
-  async function markLessonCompleted(index) {
-    const studentRef = doc(db, "courses", courseId, "progress", studentId);
-    await updateDoc(studentRef, {
-      completedLessons: arrayUnion(index),
-      lastUpdated: new Date().toISOString()
-    }).catch(async () => {
-      await setDoc(studentRef, {
-        completedLessons: [index],
-        lastUpdated: new Date().toISOString()
-      });
-    });
+  async function completeLesson(index) {
+    const ref = doc(db, "courses", courseId, "progress", currentUser.uid);
 
-    const bar = document.getElementById(`lesson-progress-${index}`);
-    if (bar) bar.textContent = "100%";
-    alert("تم إتمام الدرس! يمكنك الانتقال للدرس التالي.");
+    await setDoc(
+      ref,
+      {
+        completedLessons: arrayUnion(index),
+        updatedAt: new Date()
+      },
+      { merge: true }
+    );
+
+    alert("تم إكمال الدرس");
+    renderLessons();
+    loadProgress();
   }
 
   loadCourse();
