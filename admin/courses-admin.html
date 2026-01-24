@@ -16,13 +16,27 @@
 
 <main class="admin-wrapper">
   <div class="admin-layout">
-    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
+    </aside>
+
     <section class="admin-main">
       <div id="topbar-placeholder"></div>
+
       <div class="admin-content">
         <h1>إدارة الدورات</h1>
-        <button id="add-course-btn">➕ إضافة دورة جديدة</button>
-        <input type="text" id="course-search" placeholder="ابحث عن دورة..." />
+
+        <!-- ✅ زر موجود وثابت -->
+        <button type="button" id="add-course-btn">
+          ➕ إضافة دورة جديدة
+        </button>
+
+        <input
+          type="text"
+          id="course-search"
+          placeholder="ابحث عن دورة..."
+        />
+
         <table class="courses-table">
           <thead>
             <tr>
@@ -33,7 +47,7 @@
             </tr>
           </thead>
           <tbody id="courses-list">
-            <!-- سيتم تعبئتها ديناميكيًا بواسطة courses-admin.js -->
+            <!-- يتم تعبئتها من JS -->
           </tbody>
         </table>
       </div>
@@ -53,4 +67,3 @@
 
 </body>
 </html>
-
