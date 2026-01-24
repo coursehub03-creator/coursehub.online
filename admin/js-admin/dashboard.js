@@ -5,9 +5,6 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 const auth = getAuth();
 const db = getFirestore();
 
-// ===============================
-// التحقق من تسجيل الدخول وحقوق الأدمن
-// ===============================
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     alert("يرجى تسجيل الدخول أولاً");
@@ -29,31 +26,22 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // تحميل إحصاءات لوحة التحكم
   await loadDashboardStats();
 });
 
-// ===============================
-// تحميل إحصاءات لوحة التحكم
-// ===============================
 async function loadDashboardStats() {
   try {
-    // المستخدمون
     const usersSnap = await getDocs(collection(db, "users"));
     document.querySelector("#usersCard span").textContent = usersSnap.size;
 
-    // الدورات
     const coursesSnap = await getDocs(collection(db, "courses"));
     document.querySelector("#coursesCard span").textContent = coursesSnap.size;
 
-    // الشهادات
     const certSnap = await getDocs(collection(db, "certificates"));
     document.querySelector("#certificatesCard span").textContent = certSnap.size;
 
-    // الاختبارات
     const testsSnap = await getDocs(collection(db, "tests"));
     document.querySelector("#testsCard span").textContent = testsSnap.size;
-
   } catch (err) {
     console.error("فشل تحميل إحصاءات لوحة التحكم:", err);
   }
