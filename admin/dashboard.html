@@ -3,32 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>لوحة التحكم - CourseHub</title>
+
+  <!-- CSS الأساسي -->
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/header.css">
   <link rel="stylesheet" href="../css/footer.css">
   <link rel="stylesheet" href="dashboard.css">
 </head>
+
 <body>
+
+  <!-- Header (يتم تحميله ديناميكيًا) -->
   <div id="header-placeholder"></div>
 
-  <main>
+  <!-- محتوى لوحة التحكم -->
+  <main class="container">
     <h2>لوحة التحكم</h2>
-    <div id="admin-dashboard-content"></div>
+
+    <div id="admin-dashboard-content">
+      <p>مرحبًا بك في لوحة إدارة CourseHub.</p>
+    </div>
   </main>
 
+  <!-- Footer (يتم تحميله ديناميكيًا) -->
   <div id="footer-placeholder"></div>
 
-  <script src="../js/main.js"></script>
-  <script>
-    // حماية صفحة المسؤول
-    document.addEventListener("DOMContentLoaded", () => {
-      const user = JSON.parse(localStorage.getItem("coursehub_user"));
-      if (!user || user.role !== "admin") {
-        window.location.href = "../login.html";
-      }
-    });
-  </script>
-  <script src="../js/dashboard.js"></script>
+  <!-- JS الأساسي (تحميل الهيدر والفوتر + CSS) -->
+  <script type="module" src="../js/main.js" defer></script>
+
+  <!-- Header logic (إظهار المستخدم + زر الأدمن) -->
+  <script type="module" src="../js/header.js" defer></script>
+
+  <!-- حماية صفحة الأدمن (الأهم) -->
+  <script type="module" src="../js/auth-guard.js" defer></script>
+
+  <!-- منطق لوحة التحكم -->
+  <script type="module" src="../js/dashboard.js" defer></script>
+
 </body>
 </html>
