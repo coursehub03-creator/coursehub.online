@@ -1,7 +1,11 @@
 // certificate-admin.js
+
 document.addEventListener("DOMContentLoaded", () => {
   const pageContent = document.getElementById("page-content");
-    if (!pageContent) return;
+
+  // ✅ حماية: إذا الصفحة ليست صفحة الشهادات، نخرج بدون أخطاء
+  if (!pageContent) return;
+
   pageContent.innerHTML = `
     <table class="admin-table">
       <thead>
@@ -16,8 +20,11 @@ document.addEventListener("DOMContentLoaded", () => {
     </table>
   `;
 
-  const certificates = JSON.parse(localStorage.getItem("coursehub_certificates")) || [];
+  const certificates =
+    JSON.parse(localStorage.getItem("coursehub_certificates")) || [];
+
   const tbody = document.getElementById("certificates-table-body");
+  if (!tbody) return;
 
   certificates.forEach(cert => {
     const tr = document.createElement("tr");
@@ -35,12 +42,15 @@ document.addEventListener("DOMContentLoaded", () => {
   tbody.addEventListener("click", (e) => {
     if (e.target.classList.contains("delete-btn")) {
       const id = e.target.dataset.id;
+
       if (confirm("هل تريد حذف الشهادة؟")) {
         const updated = certificates.filter(c => c.id !== id);
-        localStorage.setItem("coursehub_certificates", JSON.stringify(updated));
+        localStorage.setItem(
+          "coursehub_certificates",
+          JSON.stringify(updated)
+        );
         window.location.reload();
       }
     }
   });
 });
-
