@@ -1,5 +1,5 @@
 import { db, auth, storage } from "/js/firebase-config.js";
-import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc, updateDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -14,30 +14,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   const joinBtn = document.getElementById("joinBtn");
 
   let studentId = null;
-  auth.onAuthStateChanged(user => {
-    if (user) studentId = user.uid;
-    else studentId = null;
-  });
+  auth.onAuthStateChanged(user => studentId = user ? user.uid : null);
 
   async function loadCourse() {
     const courseRef = doc(db, "courses", courseId);
     const snapshot = await getDoc(courseRef);
-
     if (!snapshot.exists()) {
       courseDetail.innerHTML = "<p class='empty-msg'>الدورة غير موجودة.</p>";
       return;
     }
 
     const course = snapshot.data();
-    courseDetail.querySelector("h2").textContent = course.title;
+    courseDetail.querySelector("h2").textContent = course.title || "دورة بدون عنوان";
     courseImage.src = course.image || "/assets/images/course1.jpg";
     courseDesc.textContent = course.description || "لا يوجد وصف متاح.";
 
+    // عرض قائمة الدروس
     courseContent.innerHTML = "";
     course.lessons?.forEach((lesson, index) => {
       const li = document.createElement("li");
+      li.classList.add("lesson");
       li.innerHTML = `
-        <span>${lesson.title}</span>
+        <span>${index + 1}. ${lesson.title}</span>
         <button class="start-lesson-btn" data-index="${index}">ابدأ / تابع</button>
         <div class="lesson-progress" id="lesson-progress-${index}">0%</div>
       `;
@@ -45,6 +43,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     joinBtn.addEventListener("click", () => startLesson(0, course));
+    document.querySelectorAll(".start-lesson-btn").forEach(btn => {
+      btn.addEventListener("click", () => startLesson(Number(btn.dataset.index), course));
+    });
+
+    await loadProgress(course.lessons?.length || 0);
+  }
+
+  async function loadProgress(totalLessons) {
+    if (!studentId) return;
+    const studentRef = doc(db, "courses", courseId, "progress", studentId);
+    const snapshot = await getDoc(studentRef);
+    const completed = snapshot.exists() ? snapshot.data().completedLessons || [] : [];
+
+    completed.forEach(i => {
+      const bar = document.getElementById(`lesson-progress-${i}`);
+      if (bar) bar.textContent = "100%";
+    });
+
+    if (completed.length < totalLessons) {
+      console.log(`تذكير: الطالب لم يكمل جميع الدروس بعد (${courseId})`);
+      // لاحقًا: إرسال إيميل أو إشعار
+    }
   }
 
   async function startLesson(index, course) {
@@ -71,13 +91,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     // الموارد الإضافية
     if (lesson.resources?.length > 0) {
       contentHtml += `<h4>الموارد:</h4><ul>`;
-      lesson.resources.forEach(res => {
-        contentHtml += `<li><a href="${res.url}" target="_blank">${res.name}</a></li>`;
-      });
+      for (const res of lesson.resources) {
+        let url = res.url;
+        if (res.storagePath) {
+          // إذا كان مخزن في Firebase Storage
+          url = await getDownloadURL(ref(storage, res.storagePath));
+        }
+        contentHtml += `<li><a href="${url}" target="_blank">${res.name}</a></li>`;
+      }
       contentHtml += "</ul>";
     }
 
-    // اختبار MCQ إن وجد
+    // اختبار MCQ
     if (lesson.quiz?.length > 0) {
       contentHtml += `<h4>الاختبار:</h4><form id="quizForm">`;
       lesson.quiz.forEach((q, i) => {
@@ -86,17 +111,15 @@ document.addEventListener("DOMContentLoaded", async () => {
           contentHtml += `<label><input type="radio" name="q${i}" value="${opt}" required> ${opt}</label><br>`;
         });
       });
-      contentHtml += `<button type="submit">إرسال الإجابات</button></form>`;
+      contentHtml += `<button type="submit" class="btn">إرسال الإجابات</button></form>`;
     }
 
     courseContent.innerHTML = contentHtml;
 
-    // متابعة تقدم الفيديو
+    // متابعة الفيديو
     if (lesson.type === "video") {
       const video = document.getElementById("lesson-video");
-      video.addEventListener("ended", async () => {
-        await markLessonCompleted(index);
-      });
+      video.addEventListener("ended", async () => markLessonCompleted(index));
     }
 
     // متابعة الاختبارات
@@ -104,13 +127,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (quizForm) {
       quizForm.addEventListener("submit", async e => {
         e.preventDefault();
-        let correct = true;
+        let passed = true;
         lesson.quiz.forEach((q, i) => {
           const selected = quizForm[`q${i}`].value;
-          if (selected !== q.correctAnswer) correct = false;
+          if (selected !== q.correctAnswer) passed = false;
         });
-        if (!correct) return alert("لم تجتاز الاختبار بعد، حاول مرة أخرى.");
-
+        if (!passed) return alert("لم تجتاز الاختبار بعد، حاول مرة أخرى.");
         await markLessonCompleted(index);
       });
     }
@@ -122,14 +144,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       completedLessons: arrayUnion(index),
       lastUpdated: new Date().toISOString()
     }).catch(async () => {
-      // إذا لم يكن المستند موجود، إنشاؤه
       await setDoc(studentRef, {
         completedLessons: [index],
         lastUpdated: new Date().toISOString()
       });
     });
 
-    document.getElementById(`lesson-progress-${index}`).textContent = "100%";
+    const bar = document.getElementById(`lesson-progress-${index}`);
+    if (bar) bar.textContent = "100%";
     alert("تم إتمام الدرس! يمكنك الانتقال للدرس التالي.");
   }
 
