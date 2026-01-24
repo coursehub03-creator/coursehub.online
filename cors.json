@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["https://coursehub.online"],
+    "method": ["GET", "POST", "PUT", "DELETE"],
+    "maxAgeSeconds": 3600
+  }
+]
