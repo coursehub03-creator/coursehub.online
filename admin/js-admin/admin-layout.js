@@ -8,11 +8,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sidebarPlaceholder = document.getElementById("sidebar-placeholder");
     const topbarPlaceholder = document.getElementById("topbar-placeholder");
 
+    // تحميل Sidebar
     if (sidebarPlaceholder) {
       const sidebarHTML = await (await fetch("partials-admin/sidebar.html")).text();
       sidebarPlaceholder.innerHTML = sidebarHTML;
     }
 
+    // تحميل Topbar
     if (topbarPlaceholder) {
       const topbarHTML = await (await fetch("partials-admin/topbar.html")).text();
       topbarPlaceholder.innerHTML = topbarHTML;
@@ -22,4 +24,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("فشل تحميل Sidebar أو Topbar:", err);
   }
 });
-
