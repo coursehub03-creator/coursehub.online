@@ -78,10 +78,10 @@ function setupUserState() {
         <img src="${user.picture}" class="user-pic" alt="${user.name}">
         <span class="user-name">${user.name}</span>
         <div class="dropdown-menu">
-          <a href="profile.html">الملف الشخصي</a>
-          <a href="achievements.html">إنجازاتي</a>
-          <a href="my-courses.html">دوراتي</a>
-          <a href="settings.html">الإعدادات</a>
+          <a href="/profile.html">الملف الشخصي</a>
+          <a href="/achievements.html">إنجازاتي</a>
+          <a href="/my-courses.html">دوراتي</a>
+          <a href="/settings.html">الإعدادات</a>
           <a href="#" id="logout-link">تسجيل الخروج</a>
         </div>
       `;
@@ -106,7 +106,7 @@ function setupUserState() {
           if (loginLink) loginLink.style.display = "block";
           userInfo.style.display = "none";
           if (adminLink) adminLink.innerHTML = "";
-          window.location.href = "login.html";
+          window.location.href = "/login.html";
         });
       }
     }
@@ -114,7 +114,7 @@ function setupUserState() {
     // رابط الإدارة للأدمن
     if (adminLink) {
       if (adminEmails.includes(user.email)) {
-        adminLink.innerHTML = `<a href="admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
+        adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
       } else {
         adminLink.innerHTML = "";
       }
