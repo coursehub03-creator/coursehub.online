@@ -6,58 +6,61 @@
 
   <title>إدارة المستخدمين - لوحة التحكم | CourseHub</title>
 
-  <!-- CSS الأساسي -->
+  <!-- CSS الموقع العام -->
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
-  <link rel="stylesheet" href="css-admin/admin.css">
+
+  <!-- CSS الأدمن -->
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 
 <body>
 
-  <!-- Header (تحميل ديناميكي) -->
-  <div id="header-placeholder"></div>
+<!-- ===== Header الموقع ===== -->
+<div id="header-placeholder"></div>
 
-  <!-- المحتوى -->
-  <main class="container">
-    <h2>إدارة المستخدمين</h2>
+<!-- ===== محتوى الأدمن ===== -->
+<main class="admin-wrapper">
+  <div class="admin-layout">
 
-    <div id="users-list" class="admin-users-list">
-      <!-- سيتم تعبئة المستخدمين ديناميكيًا -->
-    </div>
-  </main>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
+    </aside>
 
-  <!-- Footer (تحميل ديناميكي) -->
-  <div id="footer-placeholder"></div>
+    <!-- Main -->
+    <section class="admin-main">
 
-<script src="js-admin/manage-users.js"></script>
+      <!-- Topbar -->
+      <div id="topbar-placeholder"></div>
 
-  
-  <!-- JS الأساسي (تحميل الهيدر والفوتر + CSS العام) -->
-  <script type="module" src="../js/main.js" defer></script>
+      <!-- Content -->
+      <div class="admin-content">
+        <h1>إدارة المستخدمين</h1>
 
-  <!-- منطق الهيدر (حالة المستخدم + زر الأدمن) -->
-  <script type="module" src="../js/header.js" defer></script>
+        <div id="users-list" class="admin-users-list">
+          <!-- سيتم تعبئة المستخدمين ديناميكيًا -->
+        </div>
+      </div>
 
-  <!-- حماية صفحة الأدمن (موحدة واحترافية) -->
-  <script type="module" src="../js/auth-guard.js" defer></script>
+    </section>
 
-  <!-- منطق إدارة المستخدمين -->
-  <script type="module" src="js-admin/manage-users.js" defer></script>
+  </div>
+</main>
+
+<!-- ===== Footer الموقع ===== -->
+<div id="footer-placeholder"></div>
+
+<!-- ===== JS الموقع ===== -->
+<script type="module" src="/js/main.js"></script>
+<script type="module" src="/js/header.js"></script>
+<script type="module" src="/js/footer.js"></script>
+
+<!-- ===== JS الأدمن ===== -->
+<script type="module" src="js/admin-guard.js"></script>
+<script type="module" src="js/admin-layout.js"></script>
+<script type="module" src="js/manage-users.js"></script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
