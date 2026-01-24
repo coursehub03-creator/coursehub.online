@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (addBtn) {
     addBtn.addEventListener("click", () => {
-      window.location.href = "add-course.html";
+      window.location.href = "./add-course.html";
     });
   }
 
@@ -77,3 +77,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadCourses();
 });
+
