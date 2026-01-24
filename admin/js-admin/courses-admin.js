@@ -1,11 +1,10 @@
 // courses-admin.js
-import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { db } from "./firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
-
-const db = getFirestore();
+import { collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  protectAdmin();
+  await protectAdmin();
 
   const pageContent = document.getElementById("page-content");
   if (!pageContent) return;
@@ -27,14 +26,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const tbody = document.getElementById("courses-table-body");
   const addBtn = document.getElementById("add-course-btn");
 
-  // تأكد من وجود الزر قبل إضافة الحدث
   if (addBtn) {
     addBtn.addEventListener("click", () => {
-      try {
-        window.location.href = "add-course.html"; // إذا كانت في نفس المجلد
-      } catch (err) {
-        console.error("فشل الانتقال لصفحة إضافة الدورة:", err);
-      }
+      window.location.href = "add-course.html";
     });
   }
 
@@ -81,9 +75,3 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadCourses();
 });
-
-
-
-
-
-
