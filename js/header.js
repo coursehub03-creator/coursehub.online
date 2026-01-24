@@ -1,14 +1,21 @@
 // header.js - تحميل Header والفوتر وإظهار حالة المستخدم
 document.addEventListener("DOMContentLoaded", async () => {
   const headerPlaceholder = document.getElementById("header-placeholder");
+  const footerPlaceholder = document.getElementById("footer-placeholder");
 
   if (!headerPlaceholder) console.warn("header-placeholder غير موجود");
+  if (!footerPlaceholder) console.warn("footer-placeholder غير موجود");
 
   try {
-    // تحميل الهيدر من مجلد partials النسبي
+    // تحميل الهيدر والفوتر من partials
     if (headerPlaceholder) {
-      const headerHTML = await (await fetch("partials/header.html")).text();
+      const headerHTML = await (await fetch("/partials/header.html")).text();
       headerPlaceholder.innerHTML = headerHTML;
+    }
+
+    if (footerPlaceholder) {
+      const footerHTML = await (await fetch("/partials/footer.html")).text();
+      footerPlaceholder.innerHTML = footerHTML;
     }
 
     // عرض حالة المستخدم بعد تحميل الهيدر
@@ -22,12 +29,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
   } catch (err) {
-    console.error("فشل تحميل الهيدر:", err);
+    console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
 });
 
 // ===============================
-// إدارة حالة المستخدم في الهيدر
+// إدارة حالة المستخدم في الهيدر والفوتر
 // ===============================
 export function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
@@ -35,22 +42,25 @@ export function setupUserState() {
   const userInfo = document.getElementById("user-info");
   const adminLink = document.getElementById("admin-link");
 
+  // قائمة بريدية للأدمنين
   const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
 
   if (user) {
+    // إخفاء رابط تسجيل الدخول
     if (loginLink) loginLink.style.display = "none";
 
+    // عرض معلومات المستخدم في الهيدر
     if (userInfo) {
       userInfo.style.display = "flex";
       userInfo.innerHTML = `
         <img src="${user.picture}" class="user-pic" alt="${user.name}">
         <span class="user-name">${user.name}</span>
         <div class="dropdown-menu">
-          <a href="profile.html">الملف الشخصي</a>
-          <a href="achievements.html">إنجازاتي</a>
-          <a href="my-courses.html">دوراتي</a>
-          <a href="settings.html">الإعدادات</a>
-          <a href="#" id="logout-link">تسجيل الخروج</a>
+            <a href="/profile.html">الملف الشخصي</a>
+            <a href="/achievements.html">إنجازاتي</a>
+            <a href="/my-courses.html">دوراتي</a>
+            <a href="/settings.html">الإعدادات</a>
+            <a href="#" id="logout-link">تسجيل الخروج</a>
         </div>
       `;
 
@@ -59,7 +69,6 @@ export function setupUserState() {
         e.stopPropagation();
         dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
       };
-
       userInfo.querySelector(".user-pic").addEventListener("click", toggleDropdown);
       userInfo.querySelector(".user-name").addEventListener("click", toggleDropdown);
       document.addEventListener("click", () => { dropdown.style.display = "none"; });
@@ -74,15 +83,15 @@ export function setupUserState() {
           if (loginLink) loginLink.style.display = "block";
           userInfo.style.display = "none";
           if (adminLink) adminLink.innerHTML = "";
-          window.location.href = "login.html";
+          window.location.href = "/login.html";
         });
       }
     }
 
-    // رابط الإدارة للأدمن
+    // عرض رابط الإدارة فقط للأدمنين
     if (adminLink) {
       if (adminEmails.includes(user.email)) {
-        adminLink.innerHTML = `<a href="admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
+        adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
       } else {
         adminLink.innerHTML = "";
       }
