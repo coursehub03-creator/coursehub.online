@@ -1,114 +1,110 @@
-import { db, storage } from "/js/firebase-config.js";
+import { db, storage, auth } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await protectAdmin();
+  await protectAdmin(); // حماية الأدمن
 
-  const form = document.getElementById("add-course-form");
-  const lessonsWrapper = document.getElementById("lessons-wrapper");
-  const addLessonBtn = document.getElementById("add-lesson-btn");
+  const form = document.getElementById("addCourseForm");
+  const lessonsContainer = document.getElementById("lessonsContainer");
+  const addLessonBtn = document.getElementById("addLessonBtn");
 
-  let lessons = [];
-
-  function createLessonField(index) {
-    const div = document.createElement("div");
-    div.classList.add("lesson-block");
-    div.dataset.index = index;
-    div.innerHTML = `
-      <hr>
-      <label>عنوان الدرس ${index + 1}</label>
-      <input type="text" class="lesson-title" required>
-      <label>نوع الدرس</label>
-      <select class="lesson-type" required>
-        <option value="">اختر النوع</option>
-        <option value="video">فيديو</option>
-        <option value="slides">سلايد / PDF</option>
-      </select>
-      <label>ملف الدرس (فيديو / PDF)</label>
-      <input type="file" class="lesson-file" required>
-      <label>موارد إضافية (اختياري)</label>
-      <input type="file" class="lesson-resources" multiple>
-      <button type="button" class="remove-lesson-btn">حذف الدرس</button>
-    `;
-    lessonsWrapper.appendChild(div);
-
-    div.querySelector(".remove-lesson-btn").addEventListener("click", () => {
-      lessonsWrapper.removeChild(div);
-    });
-  }
-
+  // إضافة درس جديد
   addLessonBtn.addEventListener("click", () => {
-    createLessonField(lessonsWrapper.children.length);
+    const lessonIndex = lessonsContainer.children.length;
+    const lessonDiv = document.createElement("div");
+    lessonDiv.classList.add("lesson-block");
+    lessonDiv.innerHTML = `
+      <h4>درس ${lessonIndex + 1}</h4>
+      <label>عنوان الدرس:</label>
+      <input type="text" name="lessonTitle" required>
+      <label>نوع الدرس:</label>
+      <select name="lessonType">
+        <option value="video">فيديو</option>
+        <option value="slides">سلايدات / PDF</option>
+      </select>
+      <label>ملف الفيديو / السلايد:</label>
+      <input type="file" name="lessonFile" accept="video/*,application/pdf" required>
+      <label>الموارد الإضافية (اختياري، PDF / ZIP):</label>
+      <input type="file" name="lessonResources" accept=".pdf,.zip" multiple>
+      <label>اختبار الدرس (اختياري):</label>
+      <textarea name="lessonQuiz" placeholder='JSON مثال: [{"question":"سؤال؟","options":["أ","ب","ج"],"correctAnswer":"أ"}]'></textarea>
+      <hr>
+    `;
+    lessonsContainer.appendChild(lessonDiv);
   });
 
-  form.addEventListener("submit", async (e) => {
+  // رفع الدورة
+  form.addEventListener("submit", async e => {
     e.preventDefault();
-    try {
-      const title = document.getElementById("title").value.trim();
-      const description = document.getElementById("description").value.trim();
-      const type = document.getElementById("type").value;
-      const imageFile = document.getElementById("image").files[0];
 
-      if (!title || !description || !type || !imageFile) throw new Error("يرجى تعبئة جميع الحقول");
+    const title = form.title.value.trim();
+    const description = form.description.value.trim();
+    const category = form.category.value.trim();
+    const coverImageFile = form.coverImage.files[0];
 
-      // رفع صورة الغلاف
-      const imageRef = ref(storage, `courses/${Date.now()}_${imageFile.name}`);
-      await uploadBytes(imageRef, imageFile);
-      const imageUrl = await getDownloadURL(imageRef);
+    if (!title || !description) return alert("يرجى تعبئة العنوان والوصف.");
 
-      // تجهيز الدروس
-      const lessonDivs = lessonsWrapper.querySelectorAll(".lesson-block");
-      let lessonsData = [];
-      for (const div of lessonDivs) {
-        const lessonTitle = div.querySelector(".lesson-title").value.trim();
-        const lessonType = div.querySelector(".lesson-type").value;
-        const lessonFile = div.querySelector(".lesson-file").files[0];
-        const resourceFiles = div.querySelector(".lesson-resources").files;
+    let coverImageUrl = "";
+    if (coverImageFile) {
+      const coverRef = ref(storage, `courses/cover-images/${Date.now()}_${coverImageFile.name}`);
+      await uploadBytes(coverRef, coverImageFile);
+      coverImageUrl = await getDownloadURL(coverRef);
+    }
 
-        if (!lessonTitle || !lessonType || !lessonFile) throw new Error("يرجى تعبئة جميع بيانات الدرس");
+    const lessons = [];
+    for (let lessonDiv of lessonsContainer.children) {
+      const lessonTitle = lessonDiv.querySelector('input[name="lessonTitle"]').value.trim();
+      const lessonType = lessonDiv.querySelector('select[name="lessonType"]').value;
+      const lessonFile = lessonDiv.querySelector('input[name="lessonFile"]').files[0];
+      const resourcesFiles = lessonDiv.querySelector('input[name="lessonResources"]').files;
+      const quizText = lessonDiv.querySelector('textarea[name="lessonQuiz"]').value.trim();
 
-        // رفع ملف الدرس
-        const lessonRef = ref(storage, `lessons/${Date.now()}_${lessonFile.name}`);
-        await uploadBytes(lessonRef, lessonFile);
-        const lessonUrl = await getDownloadURL(lessonRef);
+      if (!lessonTitle || !lessonFile) continue;
 
-        // رفع الموارد
-        let resources = [];
-        for (const file of resourceFiles) {
-          const resRef = ref(storage, `lessons/resources/${Date.now()}_${file.name}`);
-          await uploadBytes(resRef, file);
-          const resUrl = await getDownloadURL(resRef);
-          resources.push({ name: file.name, url: resUrl });
-        }
+      // رفع الفيديو / السلايد
+      const lessonFileRef = ref(storage, `lessons/${Date.now()}_${lessonFile.name}`);
+      await uploadBytes(lessonFileRef, lessonFile);
+      const lessonContentUrl = await getDownloadURL(lessonFileRef);
 
-        lessonsData.push({
-          title: lessonTitle,
-          type: lessonType,
-          contentUrl: lessonUrl,
-          resources,
-          order: lessonsData.length,
-          createdAt: new Date().toISOString()
-        });
+      // رفع الموارد
+      const resources = [];
+      for (let file of resourcesFiles) {
+        const resRef = ref(storage, `lessons/resources/${Date.now()}_${file.name}`);
+        await uploadBytes(resRef, file);
+        const url = await getDownloadURL(resRef);
+        resources.push({ name: file.name, url });
       }
 
-      // إضافة الدورة إلى Firestore
+      // قراءة الاختبار (JSON)
+      let quiz = [];
+      if (quizText) {
+        try {
+          quiz = JSON.parse(quizText);
+        } catch {
+          console.warn(`خطأ في JSON للاختبار في درس: ${lessonTitle}`);
+        }
+      }
+
+      lessons.push({ title: lessonTitle, type: lessonType, contentUrl: lessonContentUrl, resources, quiz });
+    }
+
+    try {
       await addDoc(collection(db, "courses"), {
         title,
         description,
-        type,
-        image: imageUrl,
-        lessons: lessonsData,
-        createdAt: serverTimestamp()
+        category,
+        image: coverImageUrl,
+        lessons,
+        createdAt: Timestamp.now()
       });
-
       alert("تم إضافة الدورة بنجاح!");
       form.reset();
-      lessonsWrapper.innerHTML = "";
+      lessonsContainer.innerHTML = "";
     } catch (err) {
       console.error(err);
-      alert(err.message || "حدث خطأ أثناء إضافة الدورة.");
+      alert("حدث خطأ أثناء إضافة الدورة.");
     }
   });
 });
