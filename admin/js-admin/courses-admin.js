@@ -1,5 +1,5 @@
 // courses-admin.js
-import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.16.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { protectAdmin } from "./admin-guard.js";
 
 const db = getFirestore();
@@ -81,3 +81,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadCourses();
 });
+
