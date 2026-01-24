@@ -4,7 +4,10 @@ import { protectAdmin } from "./admin-guard.js";
 import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await protectAdmin();
+  const adminUser = await protectAdmin();
+  console.log("المستخدم الأدمن:", adminUser.email);
+  // هنا يمكنك متابعة تحميل البيانات أو تهيئة الصفحة
+});
 
   const form = document.getElementById("addCourseForm");
   if (!form) return;
