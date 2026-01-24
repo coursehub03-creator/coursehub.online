@@ -7,42 +7,30 @@
   <title>لوحة التحكم - CourseHub</title>
 
   <!-- CSS العام -->
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/header.css">
-  <link rel="stylesheet" href="../css/footer.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
 
-  <!-- CSS خاص بلوحة التحكم -->
-  <link rel="stylesheet" href="./dashboard.css">
+  <!-- CSS خاص بالأدمن -->
+  <link rel="stylesheet" href="/admin/dashboard.css">
 </head>
 
 <body>
 
-  <!-- Header يتم تحميله ديناميكيًا -->
   <div id="header-placeholder"></div>
 
-  <!-- محتوى لوحة التحكم -->
   <main class="container">
     <h2>لوحة التحكم</h2>
-
-    <div id="admin-dashboard-content">
-      <p>مرحبًا بك في لوحة إدارة CourseHub.</p>
-    </div>
+    <div id="admin-dashboard-content"></div>
   </main>
 
-  <!-- Footer يتم تحميله ديناميكيًا -->
   <div id="footer-placeholder"></div>
 
-  <!-- تحميل الهيدر والفوتر (partials) -->
-  <script type="module" src="../js/main.js"></script>
-
-  <!-- منطق الهيدر (المستخدم + زر لوحة التحكم) -->
-  <script type="module" src="../js/header.js"></script>
-
-  <!-- حماية صفحات الأدمن -->
-  <script type="module" src="../js/auth-guard.js"></script>
-
-  <!-- منطق لوحة التحكم -->
-  <script type="module" src="./dashboard.js"></script>
+  <!-- JS -->
+  <script type="module" src="/js/main.js"></script>
+  <script type="module" src="/js/header.js"></script>
+  <script type="module" src="/js/auth-guard.js"></script>
+  <script type="module" src="/admin/dashboard.js"></script>
 
 </body>
 </html>
