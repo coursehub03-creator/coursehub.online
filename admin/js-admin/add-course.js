@@ -1,10 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, addDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-  getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // -----------------------------
 // إعداد Firebase
@@ -41,42 +37,52 @@ onAuthStateChanged(auth, async (user) => {
   if (!ADMIN_EMAILS.includes(user.email)) {
     alert("غير مسموح لك بالدخول لهذه الصفحة!");
     window.location.href = "index.html";
-  }
-});
-
-// -----------------------------
-// حفظ الدورة
-// -----------------------------
-const form = document.getElementById("addCourseForm");
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const title = document.getElementById("title").value.trim();
-  const instructor = document.getElementById("instructor").value.trim();
-  const category = document.getElementById("category").value;
-  const image = document.getElementById("image").value.trim();
-  const description = document.getElementById("description").value.trim();
-
-  if (!title || !instructor || !category || !image || !description) {
-    alert("يرجى تعبئة جميع الحقول!");
     return;
   }
 
-  try {
-    await addDoc(collection(db, "courses"), {
-      title,
-      instructor,
-      category,
-      image,
-      description,
-      createdAt: new Date().toISOString()
+  // بعد التأكد من الأدمن، عرض زر إضافة الدورة إذا كان موجود
+  const addCourseBtn = document.getElementById("add-course-btn");
+  if (addCourseBtn) {
+    addCourseBtn.addEventListener("click", () => {
+      window.location.href = "add-course.html";
     });
+  }
 
-    alert("تم إضافة الدورة بنجاح!");
-    form.reset();
-  } catch (error) {
-    console.error(error);
-    alert("حدث خطأ أثناء إضافة الدورة.");
+  // -----------------------------
+  // حفظ الدورة (في صفحة add-course.html)
+  // -----------------------------
+  const form = document.getElementById("addCourseForm");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value.trim();
+      const instructor = document.getElementById("instructor").value.trim();
+      const category = document.getElementById("category").value;
+      const image = document.getElementById("image").value.trim();
+      const description = document.getElementById("description").value.trim();
+
+      if (!title || !instructor || !category || !image || !description) {
+        alert("يرجى تعبئة جميع الحقول!");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "courses"), {
+          title,
+          instructor,
+          category,
+          image,
+          description,
+          createdAt: new Date().toISOString()
+        });
+
+        alert("تم إضافة الدورة بنجاح!");
+        form.reset();
+      } catch (error) {
+        console.error(error);
+        alert("حدث خطأ أثناء إضافة الدورة.");
+      }
+    });
   }
 });
