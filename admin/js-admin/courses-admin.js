@@ -28,11 +28,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const tbody = document.getElementById("courses-table-body");
   const addBtn = document.getElementById("add-course-btn");
 
-  if (addBtn) {
-    addBtn.addEventListener("click", () => {
-      window.location.href = "/admin/add-course.html";
-    });
-  }
+if (addBtn) {
+  addBtn.addEventListener("click", () => {
+    console.log("زر إضافة الدورة انضغط ✅");
+    alert("زر إضافة الدورة انضغط");
+    window.location.href = "/admin/add-course.html";
+  });
+}
+
 
   async function loadCourses() {
     tbody.innerHTML = "<tr><td colspan='3'>جارٍ التحميل...</td></tr>";
@@ -77,6 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadCourses();
 });
+
 
 
 
