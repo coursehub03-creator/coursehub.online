@@ -1,4 +1,5 @@
-// courses-admin.js
+// js-admin/courses-admin.js
+
 import { db } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
 import {
@@ -9,52 +10,31 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // التحقق من الأدمن
+  // 🔐 حماية الأدمن
   const adminUser = await protectAdmin();
-  console.log("المستخدم الأدمن:", adminUser.email);
+  console.log("أدمن مسجل:", adminUser.email);
 
-  const pageContent = document.getElementById("page-content");
-  if (!pageContent) return;
-
-  // ⚠️ تحديد type="button" مهم جدًا
-  pageContent.innerHTML = `
-    <button
-      type="button"
-      id="add-course-btn"
-      class="admin-btn"
-    >
-      إضافة دورة جديدة
-    </button>
-
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>عنوان الدورة</th>
-          <th>الوصف</th>
-          <th>إجراءات</th>
-        </tr>
-      </thead>
-      <tbody id="courses-table-body"></tbody>
-    </table>
-  `;
-
-  const tbody = document.getElementById("courses-table-body");
   const addBtn = document.getElementById("add-course-btn");
+  const tbody = document.getElementById("courses-list");
 
-  // ✅ الانتقال الصحيح
-  if (addBtn) {
-    addBtn.addEventListener("click", (e) => {
-      e.preventDefault(); // 🔥 مهم
-      console.log("زر إضافة الدورة انضغط ✅");
-      window.location.href = "/admin/add-course.html";
-    });
+  if (!addBtn || !tbody) {
+    console.error("عناصر الصفحة غير موجودة");
+    return;
   }
+
+  // ✅ زر إضافة دورة
+  addBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    console.log("تم الضغط على زر إضافة دورة");
+    window.location.href = "/admin/add-course.html";
+  });
 
   // -----------------------------
   // تحميل الدورات
   // -----------------------------
   async function loadCourses() {
-    tbody.innerHTML = "<tr><td colspan='3'>جارٍ التحميل...</td></tr>";
+    tbody.innerHTML =
+      "<tr><td colspan='4'>جارٍ تحميل الدورات...</td></tr>";
 
     try {
       const snapshot = await getDocs(collection(db, "courses"));
@@ -62,22 +42,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (snapshot.empty) {
         tbody.innerHTML =
-          "<tr><td colspan='3'>لا توجد دورات حالياً.</td></tr>";
+          "<tr><td colspan='4'>لا توجد دورات حالياً</td></tr>";
         return;
       }
 
       snapshot.forEach((docSnap) => {
-        const course = { id: docSnap.id, ...docSnap.data() };
+        const course = docSnap.data();
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${course.title}</td>
-          <td>${course.description}</td>
+          <td>${course.title || "-"}</td>
+          <td>${course.description || "-"}</td>
+          <td>${course.studentsCount || 0}</td>
           <td>
             <button
               type="button"
               class="delete-btn"
-              data-id="${course.id}"
+              data-id="${docSnap.id}"
             >
               حذف
             </button>
@@ -87,9 +68,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         tbody.appendChild(tr);
       });
     } catch (err) {
-      console.error("فشل تحميل الدورات:", err);
+      console.error("خطأ في تحميل الدورات:", err);
       tbody.innerHTML =
-        "<tr><td colspan='3'>حدث خطأ أثناء تحميل الدورات.</td></tr>";
+        "<tr><td colspan='4'>حدث خطأ أثناء التحميل</td></tr>";
     }
   }
 
@@ -99,16 +80,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   tbody.addEventListener("click", async (e) => {
     if (!e.target.classList.contains("delete-btn")) return;
 
-    const id = e.target.dataset.id;
+    const courseId = e.target.dataset.id;
 
-    if (!confirm("هل تريد حذف هذه الدورة؟")) return;
+    if (!confirm("هل أنت متأكد من حذف الدورة؟")) return;
 
     try {
-      await deleteDoc(doc(db, "courses", id));
+      await deleteDoc(doc(db, "courses", courseId));
       await loadCourses();
     } catch (err) {
       console.error("فشل حذف الدورة:", err);
-      alert("حدث خطأ أثناء الحذف.");
+      alert("حدث خطأ أثناء الحذف");
     }
   });
 
