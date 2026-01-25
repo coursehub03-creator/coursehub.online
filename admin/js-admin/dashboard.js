@@ -1,47 +1,60 @@
 // dashboard.js
 import { db } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-document.addEventListener("adminLayoutLoaded", () => {
-  // كودك هنا بأمان
+import {
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// =====================================
+// تشغيل Dashboard بعد تحميل Layout
+// =====================================
+document.addEventListener("adminLayoutLoaded", initDashboard);
 
-document.addEventListener("DOMContentLoaded", async () => {
-  // ✅ التحقق من الأدمن باستخدام Google Auth فقط
-  const adminUser = await protectAdmin();
-  console.log("المستخدم الأدمن:", adminUser.email);
+async function initDashboard() {
+  try {
+    // ✅ التحقق من الأدمن
+    const adminUser = await protectAdmin();
+    console.log("المستخدم الأدمن:", adminUser.email);
 
-  // بعد التأكد من الأدمن، تحميل الإحصاءات
-  await loadDashboardStats();
-});
+    // تحميل الإحصاءات
+    await loadDashboardStats();
 
-// ==============================
+  } catch (err) {
+    console.error("❌ خطأ في تهيئة لوحة التحكم:", err);
+  }
+}
+
+// =====================================
 // تحميل إحصاءات لوحة التحكم
-// ==============================
+// =====================================
 async function loadDashboardStats() {
   try {
     // عدد المستخدمين
     const usersSnap = await getDocs(collection(db, "users"));
-    const usersCard = document.querySelector("#usersCard span");
-    if (usersCard) usersCard.textContent = usersSnap.size;
+    updateCard("#usersCard span", usersSnap.size);
 
     // عدد الدورات
     const coursesSnap = await getDocs(collection(db, "courses"));
-    const coursesCard = document.querySelector("#coursesCard span");
-    if (coursesCard) coursesCard.textContent = coursesSnap.size;
+    updateCard("#coursesCard span", coursesSnap.size);
 
     // عدد الشهادات
     const certSnap = await getDocs(collection(db, "certificates"));
-    const certificatesCard = document.querySelector("#certificatesCard span");
-    if (certificatesCard) certificatesCard.textContent = certSnap.size;
+    updateCard("#certificatesCard span", certSnap.size);
 
     // عدد الاختبارات
     const testsSnap = await getDocs(collection(db, "tests"));
-    const testsCard = document.querySelector("#testsCard span");
-    if (testsCard) testsCard.textContent = testsSnap.size;
+    updateCard("#testsCard span", testsSnap.size);
 
   } catch (err) {
-    console.error("فشل تحميل إحصاءات لوحة التحكم:", err);
+    console.error("❌ فشل تحميل إحصاءات لوحة التحكم:", err);
   }
 }
-  });
+
+// =====================================
+// أداة مساعدة لتحديث البطاقات
+// =====================================
+function updateCard(selector, value) {
+  const el = document.querySelector(selector);
+  if (el) el.textContent = value;
+}
