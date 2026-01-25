@@ -2,6 +2,9 @@
 import { db } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+document.addEventListener("adminLayoutLoaded", () => {
+  // كودك هنا بأمان
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   // ✅ التحقق من الأدمن باستخدام Google Auth فقط
@@ -41,3 +44,4 @@ async function loadDashboardStats() {
     console.error("فشل تحميل إحصاءات لوحة التحكم:", err);
   }
 }
+  });
