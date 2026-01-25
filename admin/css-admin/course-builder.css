@@ -1,0 +1,71 @@
+/* course-builder.css */
+
+.lesson-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #e5e7eb;
+}
+
+.lesson-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lesson-title {
+  flex: 1;
+  padding: 8px;
+  font-size: 1rem;
+}
+
+.lesson-body {
+  margin-top: 10px;
+}
+
+.slide-card {
+  border: 1px dashed #cbd5e1;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: #f9fafb;
+}
+
+.slide-card.dragging {
+  opacity: 0.5;
+}
+
+.slide-card textarea,
+.slide-card select {
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.quiz-card {
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.quiz-card input[type="text"] {
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.btn.outline {
+  background: transparent;
+  border: 1px dashed #2563eb;
+  color: #2563eb;
+}
+
+.btn.small {
+  padding: 5px 10px;
+  font-size: 0.85rem;
+}
+
+.btn.danger {
+  background: #ef4444;
+  color: #fff;
+}
