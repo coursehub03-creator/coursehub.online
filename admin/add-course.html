@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إضافة دورة جديدة - لوحة التحكم | CourseHub</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>إضافة دورة جديدة | CourseHub Admin</title>
 
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
-  <link rel="stylesheet" href="css-admin/admin.css">
+  <link rel="stylesheet" href="/css-admin/admin.css">
 </head>
 <body>
 
@@ -25,40 +25,53 @@
       <div id="topbar-placeholder"></div>
 
       <div class="admin-content">
-        <h1>إضافة دورة جديدة</h1>
+        <h1>منشئ الدورات (Course Builder)</h1>
 
-        <form id="addCourseForm" class="admin-form">
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="info">معلومات الدورة</button>
+          <button class="tab-btn" data-tab="lessons">الدروس</button>
+          <button class="tab-btn" data-tab="preview">المعاينة</button>
+          <button class="tab-btn" data-tab="publish">النشر</button>
+        </div>
 
-          <div class="form-group">
+        <form id="addCourseForm">
+
+          <!-- TAB 1: INFO -->
+          <div class="tab-content active" id="tab-info">
             <label>عنوان الدورة</label>
             <input type="text" id="title" required>
-          </div>
 
-          <div class="form-group">
             <label>وصف الدورة</label>
             <textarea id="description" rows="5" required></textarea>
-          </div>
 
-          <div class="form-group">
             <label>تصنيف الدورة</label>
             <input type="text" id="category">
-          </div>
 
-          <div class="form-group">
             <label>صورة الغلاف</label>
             <input type="file" id="coverImage" accept="image/*">
           </div>
 
-          <h3>الدروس</h3>
-          <div id="lessonsContainer"></div>
+          <!-- TAB 2: LESSONS -->
+          <div class="tab-content" id="tab-lessons">
+            <div id="lessonsContainer"></div>
 
-          <button type="button" id="addLessonBtn" class="btn">
-            إضافة درس جديد
-          </button>
+            <button type="button" id="addLessonBtn" class="btn outline">
+              ➕ إضافة درس
+            </button>
+          </div>
 
-          <button type="submit" class="btn primary">
-            حفظ الدورة
-          </button>
+          <!-- TAB 3: PREVIEW -->
+          <div class="tab-content" id="tab-preview">
+            <p>🔍 سيتم عرض معاينة الدورة هنا لاحقًا</p>
+          </div>
+
+          <!-- TAB 4: PUBLISH -->
+          <div class="tab-content" id="tab-publish">
+            <button type="submit" class="btn primary full">
+              🚀 نشر الدورة
+            </button>
+          </div>
 
         </form>
 
@@ -72,9 +85,10 @@
 <script type="module" src="/js/main.js"></script>
 <script type="module" src="/js/header.js"></script>
 <script type="module" src="/js/footer.js"></script>
-<script type="module" src="js-admin/admin-layout.js"></script>
-<script type="module" src="js-admin/admin-guard.js"></script>
-<script type="module" src="js-admin/add-course.js"></script>
+
+<script type="module" src="/js-admin/admin-layout.js"></script>
+<script type="module" src="/js-admin/admin-guard.js"></script>
+<script type="module" src="/js-admin/add-course.js"></script>
 
 </body>
 </html>
