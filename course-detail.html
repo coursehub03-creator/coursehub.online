@@ -23,61 +23,27 @@
     .course-detail h2 { margin-top: 0; }
     .course-detail img {
       width: 100%;
-      max-height: 300px;
+      max-height: 320px;
       object-fit: cover;
       border-radius: 10px;
-      margin-bottom: 15px;
-    }
-    .lesson { margin-bottom: 20px; }
-    .lesson-progress-bar {
-      width: 100%;
-      background: #eee;
-      border-radius: 6px;
-      overflow: hidden;
-      margin-top: 5px;
-    }
-    .lesson-progress-bar-inner {
-      height: 10px;
-      width: 0%;
-      background: #1c3faa;
-      transition: 0.5s;
+      margin-bottom: 20px;
     }
     .btn {
       display: inline-block;
-      padding: 10px 20px;
+      padding: 12px 24px;
       background: #1c3faa;
       color: #fff;
-      border-radius: 6px;
+      border-radius: 8px;
       text-decoration: none;
-      margin-top: 15px;
+      margin-top: 20px;
       cursor: pointer;
+      font-size: 16px;
     }
     .btn:hover { background: #1451a1; }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    input, button, textarea {
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    button {
-      background: #1c3faa;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover { background: #1451a1; }
     .rating {
       font-size: 16px;
       color: #f1c40f;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
     .empty-msg {
       text-align: center;
@@ -95,23 +61,17 @@
 
   <section class="course-detail" id="courseDetail">
     <h2>تحميل الدورة...</h2>
+
     <img src="" alt="Course Image" id="courseImage">
-    <p id="courseDesc"></p>
+
     <div class="rating" id="courseRating"></div>
 
-    <h3>محتوى الدورة</h3>
-    <ul id="courseContent"></ul>
+    <p id="courseDesc"></p>
 
-    <a href="#" class="btn" id="joinBtn">ابدأ / انضم للدورة</a>
-
-    <hr>
-
-    <h3>التسجيل / التواصل</h3>
-    <form id="registrationForm">
-      <input type="text" id="name" placeholder="أدخل اسمك الكامل" required>
-      <input type="email" id="email" placeholder="أدخل بريدك الإلكتروني" required>
-      <button type="submit">إرسال</button>
-    </form>
+    <!-- زر تشغيل المشغل -->
+    <a href="#" class="btn" id="joinBtn">
+      ▶️ ابدأ الدورة
+    </a>
   </section>
 
   <!-- Footer -->
