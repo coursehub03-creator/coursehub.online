@@ -3,8 +3,9 @@
   min-height: calc(100vh - 120px);
 }
 
+/* Sidebar */
 .player-sidebar {
-  width: 260px;
+  width: 280px;
   background: #f8fafc;
   padding: 20px;
   border-left: 1px solid #e5e7eb;
@@ -23,6 +24,7 @@
   padding: 10px;
   border-radius: 6px;
   cursor: pointer;
+  margin-bottom: 6px;
 }
 
 .player-sidebar li.active {
@@ -30,6 +32,11 @@
   color: #fff;
 }
 
+.player-sidebar li.completed {
+  background: #e0ecff;
+}
+
+/* Progress */
 .progress-box {
   margin-top: 20px;
 }
@@ -39,6 +46,7 @@
   border-radius: 6px;
   overflow: hidden;
   height: 8px;
+  margin-top: 6px;
 }
 
 .progress-bar div {
@@ -48,22 +56,38 @@
   transition: .3s;
 }
 
+/* Player */
 .player-content {
   flex: 1;
   padding: 30px;
 }
 
+.slide-container h2 {
+  margin-top: 0;
+}
+
+.slide-content {
+  margin-top: 15px;
+  line-height: 1.8;
+}
+
+/* Controls */
 .player-controls {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .player-controls button {
-  padding: 10px 20px;
+  padding: 10px 22px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
+}
+
+.player-controls button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
 }
 
 .player-controls .primary {
