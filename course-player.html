@@ -16,25 +16,34 @@
 <div id="header-placeholder"></div>
 
 <main class="player-wrapper">
+
+  <!-- Sidebar -->
   <aside class="player-sidebar">
-    <h3 id="courseTitle"></h3>
+    <h3 id="courseTitle">...</h3>
+
     <ul id="lessonsList"></ul>
+
     <div class="progress-box">
       <span>التقدم</span>
       <div class="progress-bar">
         <div id="courseProgress"></div>
       </div>
+      <small id="progressText">0%</small>
     </div>
   </aside>
 
+  <!-- Player -->
   <section class="player-content">
-    <div id="slideContainer"></div>
+    <div id="slideContainer" class="slide-container">
+      <p class="empty">اختر درسًا للبدء</p>
+    </div>
 
     <div class="player-controls">
-      <button id="prevBtn">السابق</button>
+      <button id="prevBtn" disabled>السابق</button>
       <button id="nextBtn" class="primary">التالي</button>
     </div>
   </section>
+
 </main>
 
 <div id="footer-placeholder"></div>
