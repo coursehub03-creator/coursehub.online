@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>مشغل الدورة | CourseHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/css/course-player.css">
+</head>
+
+<body>
+
+<div id="header-placeholder"></div>
+
+<main class="player-wrapper">
+  <aside class="player-sidebar">
+    <h3 id="courseTitle"></h3>
+    <ul id="lessonsList"></ul>
+    <div class="progress-box">
+      <span>التقدم</span>
+      <div class="progress-bar">
+        <div id="courseProgress"></div>
+      </div>
+    </div>
+  </aside>
+
+  <section class="player-content">
+    <div id="slideContainer"></div>
+
+    <div class="player-controls">
+      <button id="prevBtn">السابق</button>
+      <button id="nextBtn" class="primary">التالي</button>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script type="module" src="/js/main.js"></script>
+<script type="module" src="/js/course-player.js"></script>
+</body>
+</html>
