@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(window.location.search);
   const courseId = params.get("id");
   if (!courseId) {
+  alert("❌ courseId مفقود من الرابط");
+  throw new Error("Missing courseId");
+}
+  if (!courseId) {
     alert("لم يتم تحديد الدورة");
     return;
   }
