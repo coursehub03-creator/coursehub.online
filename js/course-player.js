@@ -1,4 +1,5 @@
-import { db, auth } from "/js/firebase-config.js";
+
+import { auth, db } from "/js/firebase-config.js";
 import {
   doc,
   getDoc,
@@ -222,17 +223,36 @@ async function completeLesson() {
   updateProgressUI();
 }
 
-async function saveResume() {
-  if (!user) return;
+async function saveResume(courseId, index) {
+  const user = auth.currentUser;
 
-  await updateDoc(
-    doc(db, "studentProgress", `${user.uid}_${courseId}`),
-    {
-      lastLessonIndex: currentLessonIndex,
-      lastSlideIndex: currentSlideIndex,
-      updatedAt: new Date()
-    }
-  );
+  if (!user) {
+    console.warn("❌ المستخدم غير مسجل دخول");
+    return;
+  }
+
+  try {
+    const progressRef = doc(
+      db,
+      "studentProgress",
+      `${user.uid}_${courseId}`
+    );
+
+    await setDoc(
+      progressRef,
+      {
+        userId: user.uid,
+        courseId: courseId,
+        lessonIndex: index,
+        updatedAt: new Date()
+      },
+      { merge: true } // مهم جداً
+    );
+
+    console.log("✅ تم حفظ التقدم بنجاح");
+  } catch (error) {
+    console.error("❌ خطأ أثناء حفظ التقدم:", error);
+  }
 }
 
 function updateProgressUI() {
