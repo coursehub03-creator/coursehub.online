@@ -12,10 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   alert("❌ courseId مفقود من الرابط");
   throw new Error("Missing courseId");
 }
-  if (!courseId) {
-    alert("لم يتم تحديد الدورة");
-    return;
-  }
+
 
   const courseDetail = document.getElementById("courseDetail");
   const courseImage = document.getElementById("courseImage");
