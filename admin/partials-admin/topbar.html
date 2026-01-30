@@ -1,65 +1,100 @@
-<!-- topbar.html -->
-<header class="topbar">
-  <div class="topbar-left">
-    <button id="sidebar-toggle" class="sidebar-toggle">☰</button>
-    <h1 class="topbar-title">لوحة الإدارة</h1>
-  </div>
-
-  <div class="topbar-right">
-    <!-- البحث -->
-    <div class="topbar-search">
-      <input type="text" id="adminSearchInput" placeholder="ابحث...">
-      <button id="adminSearchBtn"><i class="fa fa-search"></i></button>
-    </div>
-
-    <!-- الإشعارات -->
-    <div class="topbar-notifications">
-      <button id="notifBtn"><i class="fa fa-bell"></i>
-        <span class="notification-badge" id="notifBadge">0</span>
-      </button>
-    </div>
-
-    <!-- معلومات الأدمن -->
-    <div class="topbar-user">
-      <span id="adminName">Admin</span>
-      <img src="/assets/images/admin-avatar.png" alt="Admin" class="user-pic">
-      <div class="dropdown-menu">
-        <a href="settings-admin.html">الإعدادات</a>
-        <a href="#" id="admin-logout">تسجيل الخروج</a>
-      </div>
-    </div>
-  </div>
-</header>
-
-<script>
-  // فتح/إغلاق Dropdown المستخدم
-  document.addEventListener("DOMContentLoaded", () => {
-    const userContainer = document.querySelector(".topbar-user");
-    const dropdown = userContainer.querySelector(".dropdown-menu");
-
-    userContainer.addEventListener("click", e => {
-      e.stopPropagation();
-      dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-    });
-
-    document.addEventListener("click", () => {
-      dropdown.style.display = "none";
-    });
-
-    // تسجيل خروج الأدمن
-    const logoutBtn = document.getElementById("admin-logout");
-    logoutBtn.addEventListener("click", e => {
-      e.preventDefault();
-      localStorage.removeItem("coursehub_user");
-      window.location.href = "/login.html";
-    });
-
-    // زر Sidebar toggle
-    const sidebarToggle = document.getElementById("sidebar-toggle");
-    sidebarToggle.addEventListener("click", () => {
-      document.querySelector(".admin-layout").classList.toggle("collapsed");
-    });
-  });
-</script>
-
-
+diff --git a/admin/partials-admin/topbar.html b/admin/partials-admin/topbar.html
+index d03050f8afb7a6e3a7b6eff5bef7457d1c5a95a1..bfdc14dfbdf51286a67270a763acc7772cfc3228 100644
+--- a/admin/partials-admin/topbar.html
++++ b/admin/partials-admin/topbar.html
+@@ -1,63 +1,87 @@
+ <!-- topbar.html -->
+ <header class="topbar">
+   <div class="topbar-left">
+     <button id="sidebar-toggle" class="sidebar-toggle">☰</button>
+     <h1 class="topbar-title">لوحة الإدارة</h1>
+   </div>
+ 
+-  <div class="topbar-right">
++  <div class="topbar-right">
++    <button class="topbar-lang" id="adminLangToggle">
++      <i class="fa fa-globe"></i>
++      <span>AR</span>
++    </button>
+     <!-- البحث -->
+     <div class="topbar-search">
+       <input type="text" id="adminSearchInput" placeholder="ابحث...">
+       <button id="adminSearchBtn"><i class="fa fa-search"></i></button>
+     </div>
+ 
+     <!-- الإشعارات -->
+     <div class="topbar-notifications">
+       <button id="notifBtn"><i class="fa fa-bell"></i>
+         <span class="notification-badge" id="notifBadge">0</span>
+       </button>
+     </div>
+ 
+     <!-- معلومات الأدمن -->
+     <div class="topbar-user">
+       <span id="adminName">Admin</span>
+       <img src="/assets/images/admin-avatar.png" alt="Admin" class="user-pic">
+       <div class="dropdown-menu">
+         <a href="settings-admin.html">الإعدادات</a>
+         <a href="#" id="admin-logout">تسجيل الخروج</a>
+       </div>
+     </div>
+   </div>
+-</header>
+-
+-<script>
+-  // فتح/إغلاق Dropdown المستخدم
+-  document.addEventListener("DOMContentLoaded", () => {
+-    const userContainer = document.querySelector(".topbar-user");
+-    const dropdown = userContainer.querySelector(".dropdown-menu");
++</header>
++
++<script>
++  const setAdminDirection = (lang) => {
++    const isRtl = lang === "ar";
++    document.documentElement.setAttribute("dir", isRtl ? "rtl" : "ltr");
++    document.documentElement.setAttribute("lang", isRtl ? "ar" : "en");
++    const label = document.querySelector("#adminLangToggle span");
++    if (label) label.textContent = isRtl ? "AR" : "EN";
++  };
++
++  // فتح/إغلاق Dropdown المستخدم
++  document.addEventListener("DOMContentLoaded", () => {
++    const storedLang = localStorage.getItem("admin_lang") || "ar";
++    setAdminDirection(storedLang);
++
++    const langToggle = document.getElementById("adminLangToggle");
++    if (langToggle) {
++      langToggle.addEventListener("click", () => {
++        const nextLang = document.documentElement.getAttribute("lang") === "ar" ? "en" : "ar";
++        localStorage.setItem("admin_lang", nextLang);
++        setAdminDirection(nextLang);
++      });
++    }
++
++    const userContainer = document.querySelector(".topbar-user");
++    const dropdown = userContainer.querySelector(".dropdown-menu");
+ 
+     userContainer.addEventListener("click", e => {
+       e.stopPropagation();
+       dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+     });
+ 
+     document.addEventListener("click", () => {
+       dropdown.style.display = "none";
+     });
+ 
+     // تسجيل خروج الأدمن
+     const logoutBtn = document.getElementById("admin-logout");
+     logoutBtn.addEventListener("click", e => {
+       e.preventDefault();
+       localStorage.removeItem("coursehub_user");
+       window.location.href = "/login.html";
+     });
+ 
+     // زر Sidebar toggle
+     const sidebarToggle = document.getElementById("sidebar-toggle");
+     sidebarToggle.addEventListener("click", () => {
+       document.querySelector(".admin-layout").classList.toggle("collapsed");
+     });
+   });
+ </script>
