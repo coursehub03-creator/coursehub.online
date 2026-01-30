@@ -1,7 +1,8 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getFirestore,
-  enableIndexedDbPersistence
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -24,11 +25,11 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
-export const db = getFirestore(app);
-
-// ✅ Offline cache
-enableIndexedDbPersistence(db)
-  .catch(() => console.log("Offline cache unavailable"));
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentSingleTabManager()
+  })
+});
 
 export const storage = getStorage(app);
 export const analytics = getAnalytics(app);
