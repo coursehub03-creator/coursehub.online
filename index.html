@@ -1,100 +1,58 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>CourseHub - تعلم واحصل على شهادتك</title>
-  <meta name="description" content="CourseHub – تعلم أي مهارة، احصل على شهادتك، وابدأ رحلتك التعليمية الآن.">
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/header.css">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/footer.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
-      authDomain: "coursehub-23ed2.firebaseapp.com",
-      projectId: "coursehub-23ed2",
-      storageBucket: "coursehub-23ed2.firebasestorage.app",
-      messagingSenderId: "367073521017",
-      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // عرض أحدث 3 دورات
-    async function loadLatestCourses() {
-      try {
-        const q = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(3));
-        const snapshot = await getDocs(q);
-        const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const container = document.querySelector('.popular-courses .courses-grid');
-        container.innerHTML = "";
-        courses.forEach(course => {
-          const div = document.createElement('div');
-          div.className = 'card';
-          div.innerHTML = `
-            <img src="${course.image || 'assets/images/default-course.png'}" alt="${course.title}">
-            <div class="card-content">
-              <h3>${course.title}</h3>
-              <p>${course.description || ""}</p>
-              <a href="course-detail.html?id=${course.id}" class="btn btn-card">عرض الدورة</a>
-            </div>
-          `;
-          container.appendChild(div);
-        });
-      } catch (err) {
-        console.error("خطأ في تحميل أحدث الدورات:", err);
-      }
-    }
-
-    loadLatestCourses();
-  </script>
-</head>
-<script type="module" src="js/main.js" defer></script>
-<body>
-  <div id="header-placeholder"></div>
-
-  <section class="hero">
-    <div class="hero-content">
-      <h1>ابدأ رحلتك التعليمية الآن!</h1>
-      <p>انضم إلى آلاف الطلاب وطور مهاراتك بسرعة مع دوراتنا الاحترافية.</p>
-      <a href="courses.html" class="btn btn-hero">استكشف الدورات</a>
-    </div>
-  </section>
-
-  <section class="features container">
-    <div class="feature">
-      <i class="fa fa-users fa-2x"></i>
-      <h3>آلاف الطلاب</h3>
-      <p>انضم إلى مجتمع ضخم من المتعلمين حول العالم.</p>
-    </div>
-    <div class="feature">
-      <i class="fa fa-certificate fa-2x"></i>
-      <h3>شهادات معتمدة</h3>
-      <p>احصل على شهادة رسمية عند إتمام الدورة بنجاح.</p>
-    </div>
-    <div class="feature">
-      <i class="fa fa-laptop-code fa-2x"></i>
-      <h3>دورات احترافية</h3>
-      <p>تعلم من خبراء وابدأ مسارك المهني بسرعة.</p>
-    </div>
-  </section>
-
-  <section class="popular-courses container">
-    <h2>الدورات الأكثر شعبية</h2>
-    <div class="courses-grid">
-      <!-- سيتم ملؤها ديناميكيًا -->
-    </div>
-  </section>
-
-  <div id="footer-placeholder"></div>
-</body>
-</html>
+diff --git a/index.html b/index.html
+index efbb8c03716bc438268dcfba19a17bb494c07888..818866f862264c1711085fc17057f32229ab522d 100644
+--- a/index.html
++++ b/index.html
+@@ -35,52 +35,52 @@
+         const q = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(3));
+         const snapshot = await getDocs(q);
+         const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+         const container = document.querySelector('.popular-courses .courses-grid');
+         container.innerHTML = "";
+         courses.forEach(course => {
+           const div = document.createElement('div');
+           div.className = 'card';
+           div.innerHTML = `
+             <img src="${course.image || 'assets/images/default-course.png'}" alt="${course.title}">
+             <div class="card-content">
+               <h3>${course.title}</h3>
+               <p>${course.description || ""}</p>
+               <a href="course-detail.html?id=${course.id}" class="btn btn-card">عرض الدورة</a>
+             </div>
+           `;
+           container.appendChild(div);
+         });
+       } catch (err) {
+         console.error("خطأ في تحميل أحدث الدورات:", err);
+       }
+     }
+ 
+     loadLatestCourses();
+   </script>
++  <script type="module" src="js/main.js" defer></script>
+ </head>
+-<script type="module" src="js/main.js" defer></script>
+ <body>
+   <div id="header-placeholder"></div>
+ 
+   <section class="hero">
+     <div class="hero-content">
+       <h1>ابدأ رحلتك التعليمية الآن!</h1>
+       <p>انضم إلى آلاف الطلاب وطور مهاراتك بسرعة مع دوراتنا الاحترافية.</p>
+       <a href="courses.html" class="btn btn-hero">استكشف الدورات</a>
+     </div>
+   </section>
+ 
+   <section class="features container">
+     <div class="feature">
+       <i class="fa fa-users fa-2x"></i>
+       <h3>آلاف الطلاب</h3>
+       <p>انضم إلى مجتمع ضخم من المتعلمين حول العالم.</p>
+     </div>
+     <div class="feature">
+       <i class="fa fa-certificate fa-2x"></i>
+       <h3>شهادات معتمدة</h3>
+       <p>احصل على شهادة رسمية عند إتمام الدورة بنجاح.</p>
+     </div>
+     <div class="feature">
+       <i class="fa fa-laptop-code fa-2x"></i>
+       <h3>دورات احترافية</h3>
