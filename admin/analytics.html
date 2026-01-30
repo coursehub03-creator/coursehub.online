@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>التحليلات | لوحة التحكم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/admin/css-admin/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main class="admin-wrapper">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
+    </aside>
+
+    <section class="admin-main">
+      <div id="topbar-placeholder"></div>
+
+      <div class="admin-content">
+        <div class="page-header">
+          <div>
+            <h1>تحليلات الأداء</h1>
+            <p class="helper-text">نظرة عامة على أداء الدورات، التسجيلات، ونسب الإكمال.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn outline"><i class="fa-solid fa-filter"></i> فلترة</button>
+            <button class="btn"><i class="fa-solid fa-download"></i> تصدير التقرير</button>
+          </div>
+        </div>
+
+        <div class="admin-cards">
+          <div class="card">
+            <div class="card-title">التسجيلات الجديدة</div>
+            <div class="card-value">+1,284</div>
+            <span class="badge success">+12% هذا الأسبوع</span>
+          </div>
+          <div class="card">
+            <div class="card-title">نسبة الإكمال</div>
+            <div class="card-value">63%</div>
+            <span class="badge warning">-2% عن الأسبوع الماضي</span>
+          </div>
+          <div class="card">
+            <div class="card-title">الدورات النشطة</div>
+            <div class="card-value">128</div>
+            <span class="badge neutral">محدثة اليوم</span>
+          </div>
+          <div class="card">
+            <div class="card-title">متوسط التقييم</div>
+            <div class="card-value">4.6</div>
+            <span class="badge success">+0.2</span>
+          </div>
+        </div>
+
+        <div class="builder-card">
+          <div class="card-header">
+            <div>
+              <h2>أفضل الدورات أداءً</h2>
+              <p class="helper-text">حسب معدل الإكمال والتقييم.</p>
+            </div>
+            <span class="badge primary">تحديث فوري</span>
+          </div>
+          <div class="table-toolbar">
+            <div class="table-filters">
+              <select>
+                <option>آخر 7 أيام</option>
+                <option>آخر 30 يومًا</option>
+                <option>آخر 90 يومًا</option>
+              </select>
+              <select>
+                <option>الكل</option>
+                <option>تقنية</option>
+                <option>إدارة</option>
+                <option>تصميم</option>
+              </select>
+            </div>
+            <div class="table-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="ابحث عن دورة...">
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>الدورة</th>
+                <th>التسجيلات</th>
+                <th>نسبة الإكمال</th>
+                <th>التقييم</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>تحليل البيانات المتقدم</td>
+                <td>1,200</td>
+                <td>72%</td>
+                <td>4.8</td>
+                <td><span class="badge success">مستقرة</span></td>
+              </tr>
+              <tr>
+                <td>تصميم واجهات احترافية</td>
+                <td>980</td>
+                <td>65%</td>
+                <td>4.5</td>
+                <td><span class="badge warning">قيد التحسين</span></td>
+              </tr>
+              <tr>
+                <td>إدارة المنتجات الرقمية</td>
+                <td>860</td>
+                <td>59%</td>
+                <td>4.4</td>
+                <td><span class="badge neutral">جديد</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="builder-card">
+          <div class="card-header">
+            <div>
+              <h2>نقاط تحتاج تدخّل</h2>
+              <p class="helper-text">ملخص المخاطر لتسهيل تحسين الجودة.</p>
+            </div>
+          </div>
+          <div class="alert warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            توجد 12 دورة بنسب إكمال أقل من 40%. ينصح بتحديث المحتوى أو إعادة هيكلة الدروس.
+          </div>
+          <div class="alert info">
+            <i class="fa-solid fa-circle-info"></i>
+            3 دورات بحاجة مراجعة نهائية قبل النشر وفق معايير الجودة.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script type="module" src="/js/main.js" defer></script>
+<script type="module" src="/js/footer.js"></script>
+
+<script type="module" src="js-admin/admin-guard.js"></script>
+<script type="module" src="js-admin/admin-layout.js"></script>
+
+</body>
+</html>

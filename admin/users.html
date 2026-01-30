@@ -13,6 +13,7 @@
 
   <!-- CSS الأدمن -->
   <link rel="stylesheet" href="css-admin/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
@@ -26,8 +27,35 @@
     <section class="admin-main">
       <div id="topbar-placeholder"></div>
       <div class="admin-content">
-        <h1>إدارة المستخدمين</h1>
-        <input type="text" id="user-search" placeholder="ابحث عن مستخدم..." />
+        <div class="page-header">
+          <div>
+            <h1>إدارة المستخدمين</h1>
+            <p class="helper-text">فلترة حسب الدور والحالة وتحليل النشاط.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn outline"><i class="fa-solid fa-user-plus"></i> إضافة مستخدم</button>
+          </div>
+        </div>
+        <div class="table-toolbar">
+          <div class="table-filters">
+            <select id="user-role-filter">
+              <option value="all">كل الأدوار</option>
+              <option value="student">طالب</option>
+              <option value="instructor">مدرّس</option>
+              <option value="admin">مشرف</option>
+            </select>
+            <select id="user-status-filter">
+              <option value="all">كل الحالات</option>
+              <option value="active">نشط</option>
+              <option value="pending">بانتظار التفعيل</option>
+              <option value="blocked">محظور</option>
+            </select>
+          </div>
+          <div class="table-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="user-search" placeholder="ابحث عن مستخدم..." />
+          </div>
+        </div>
         <table class="users-table">
           <thead>
             <tr>
@@ -48,8 +76,7 @@
 
 <div id="footer-placeholder"></div>
 
-<script type="module" src="/js/main.js"></script>
-<script type="module" src="/js/header.js"></script>
+<script type="module" src="/js/main.js" defer></script>
 <script type="module" src="/js/footer.js"></script>
 
 <script type="module" src="js-admin/admin-guard.js"></script>
@@ -58,5 +85,4 @@
 
 </body>
 </html>
-
 

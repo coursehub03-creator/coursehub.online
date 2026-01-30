@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
   <link rel="stylesheet" href="css-admin/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
@@ -25,52 +26,163 @@
       <div id="topbar-placeholder"></div>
 
       <div class="admin-content">
-        <h1>منشئ الدورات (Course Builder)</h1>
+        <div class="builder-header">
+          <h1>منشئ الدورات الاحترافي</h1>
+          <p>صمم تجربة تعلم عالمية على نمط Coursera: محتوى غني، سلايدات تفاعلية، ومعاينة فورية قبل النشر.</p>
+        </div>
 
         <!-- Tabs -->
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="info">معلومات الدورة</button>
-          <button class="tab-btn" data-tab="lessons">الدروس</button>
-          <button class="tab-btn" data-tab="preview">المعاينة</button>
-          <button class="tab-btn" data-tab="publish">النشر</button>
+        <div class="builder-tabs">
+          <button class="tab-btn active" data-tab="info">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>معلومات الدورة</span>
+          </button>
+          <button class="tab-btn" data-tab="lessons">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>الدروس</span>
+          </button>
+          <button class="tab-btn" data-tab="preview">
+            <i class="fa-solid fa-eye"></i>
+            <span>المعاينة</span>
+          </button>
+          <button class="tab-btn" data-tab="publish">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>النشر</span>
+          </button>
         </div>
 
         <form id="addCourseForm">
+          <input type="hidden" id="courseStatus" value="draft">
 
           <!-- TAB 1: INFO -->
           <div class="tab-content active" id="tab-info">
-            <label>عنوان الدورة</label>
-            <input type="text" id="title" required>
+            <div class="builder-card">
+              <div class="form-grid">
+                <div class="field-group">
+                  <label>عنوان الدورة</label>
+                  <input type="text" id="title" required placeholder="مثال: مقدمة في الذكاء الاصطناعي">
+                  <span class="field-help">اختر عنوانًا واضحًا وجذابًا.</span>
+                </div>
+                <div class="field-group">
+                  <label>تصنيف الدورة</label>
+                  <input type="text" id="category" placeholder="مثال: الذكاء الاصطناعي">
+                </div>
+                <div class="field-group">
+                  <label>مستوى الدورة</label>
+                  <select id="level">
+                    <option value="مبتدئ">مبتدئ</option>
+                    <option value="متوسط">متوسط</option>
+                    <option value="متقدم">متقدم</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label>لغة المحتوى</label>
+                  <select id="language">
+                    <option value="العربية">العربية</option>
+                    <option value="English">English</option>
+                    <option value="Français">Français</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label>مدة الدورة (ساعات)</label>
+                  <input type="number" id="duration" min="1" placeholder="مثال: 12">
+                </div>
+                <div class="field-group">
+                  <label>عدد المستويات</label>
+                  <input type="number" id="modules" min="1" placeholder="مثال: 5">
+                </div>
+              </div>
+              <div class="field-group">
+                <label>وصف الدورة</label>
+                <textarea id="description" rows="5" required placeholder="اكتب وصفًا احترافيًا يوضح أهداف الدورة والفائدة للطالب"></textarea>
+              </div>
+            </div>
 
-            <label>وصف الدورة</label>
-            <textarea id="description" rows="5" required></textarea>
-
-            <label>تصنيف الدورة</label>
-            <input type="text" id="category">
-
-            <label>صورة الغلاف</label>
-            <input type="file" id="coverImage" accept="image/*">
+            <div class="builder-card">
+              <div class="form-grid">
+                <div class="field-group">
+                  <label>صورة الغلاف</label>
+                  <input type="file" id="coverImage" accept="image/*">
+                  <span class="field-help">ينصح بنسبة أبعاد 16:9 وجودة عالية.</span>
+                </div>
+                <div class="cover-preview">
+                  <p class="helper-text">معاينة الغلاف</p>
+                  <img id="coverPreview" src="/assets/images/default-course.png" alt="معاينة الغلاف">
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- TAB 2: LESSONS -->
           <div class="tab-content" id="tab-lessons">
-            <div id="lessonsContainer"></div>
+            <div class="builder-card">
+              <div class="builder-header">
+                <h2>بناء الدروس والسلايدات</h2>
+                <p>أضف محتوى السلايدات (نصوص + صور + فيديو) مع ضبط الخطوط والألوان وترتيب العناصر داخل كل سلايد.</p>
+              </div>
 
-            <button type="button" id="addLessonBtn" class="btn outline">
-              ➕ إضافة درس
-            </button>
+              <div id="lessonsContainer"></div>
+              <div id="lessonsEmpty" class="empty-state">
+                لم تتم إضافة أي درس بعد.
+              </div>
+
+              <button type="button" id="addLessonBtn" class="btn outline">
+                <i class="fa-solid fa-plus"></i>
+                إضافة درس
+              </button>
+            </div>
           </div>
 
           <!-- TAB 3: PREVIEW -->
           <div class="tab-content" id="tab-preview">
-            <p>🔍 سيتم عرض معاينة الدورة هنا لاحقًا</p>
+            <div class="preview-pane">
+              <div>
+                <span class="pill"><i class="fa-solid fa-eye"></i> معاينة مباشرة</span>
+              </div>
+              <img id="previewCover" class="preview-cover" src="/assets/images/default-course.png" alt="غلاف الدورة">
+              <div>
+                <h2 id="previewTitle">عنوان الدورة</h2>
+                <p id="previewDescription" class="helper-text">سيظهر وصف الدورة هنا بعد إدخاله.</p>
+              </div>
+              <div class="form-grid">
+                <div class="pill" id="previewCategory">تصنيف</div>
+                <div class="pill" id="previewLevel">المستوى</div>
+                <div class="pill" id="previewLanguage">اللغة</div>
+                <div class="pill" id="previewDuration">المدة</div>
+              </div>
+              <div id="previewLessons"></div>
+            </div>
           </div>
 
           <!-- TAB 4: PUBLISH -->
           <div class="tab-content" id="tab-publish">
-            <button type="submit" class="btn primary full">
-              🚀 نشر الدورة
-            </button>
+            <div class="builder-card">
+              <h2>النشر</h2>
+              <p class="helper-text">راجع المعاينة جيدًا قبل نشر الدورة عالميًا.</p>
+              <div class="builder-card">
+                <h3>قائمة المراجعة قبل النشر</h3>
+                <div class="review-checklist">
+                  <label><input type="checkbox" class="review-check"> تمت مراجعة العنوان والوصف.</label>
+                  <label><input type="checkbox" class="review-check"> تم فحص جودة الغلاف والوسائط.</label>
+                  <label><input type="checkbox" class="review-check"> تم التأكد من اكتمال الدروس والسلايدات.</label>
+                  <label><input type="checkbox" class="review-check"> تمت تجربة المعاينة النهائية.</label>
+                </div>
+              </div>
+              <div class="publish-actions">
+                <button type="button" class="btn outline" data-course-status="draft">
+                  <i class="fa-solid fa-file-arrow-down"></i>
+                  حفظ كمسودة
+                </button>
+                <button type="button" class="btn" data-course-status="review">
+                  <i class="fa-solid fa-user-check"></i>
+                  إرسال للمراجعة
+                </button>
+                <button type="submit" class="btn success" data-course-status="published">
+                  <i class="fa-solid fa-rocket"></i>
+                  نشر الدورة الآن
+                </button>
+              </div>
+            </div>
           </div>
 
         </form>
@@ -82,8 +194,7 @@
 
 <div id="footer-placeholder"></div>
 
-<script type="module" src="/js/main.js"></script>
-<script type="module" src="/js/header.js"></script>
+<script type="module" src="/js/main.js" defer></script>
 <script type="module" src="/js/footer.js"></script>
 
 <script type="module" src="js-admin/admin-layout.js"></script>

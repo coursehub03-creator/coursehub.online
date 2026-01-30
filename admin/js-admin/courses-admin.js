@@ -16,6 +16,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const addBtn = document.getElementById("add-course-btn");
   const tbody = document.getElementById("courses-list");
+  const statusFilter = document.getElementById("course-status-filter");
+  const searchInput = document.getElementById("course-search");
+  const categoryFilter = document.getElementById("course-category-filter");
 
   if (!addBtn || !tbody) {
     console.error("عناصر الصفحة غير موجودة");
@@ -32,45 +35,77 @@ document.addEventListener("DOMContentLoaded", async () => {
   // -----------------------------
   // تحميل الدورات
   // -----------------------------
+  let allCourses = [];
+
+  const statusBadge = (status) => {
+    if (status === "published") return "<span class='badge success'>منشورة</span>";
+    if (status === "review") return "<span class='badge warning'>قيد المراجعة</span>";
+    return "<span class='badge neutral'>مسودة</span>";
+  };
+
+  const renderCourses = (courses) => {
+    tbody.innerHTML = "";
+
+    if (!courses.length) {
+      tbody.innerHTML =
+        "<tr><td colspan='5'>لا توجد دورات حالياً</td></tr>";
+      return;
+    }
+
+    courses.forEach(({ id, data }) => {
+      const course = data;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${course.title || "-"}</td>
+        <td>${course.description || "-"}</td>
+        <td>${statusBadge(course.status)}</td>
+        <td>${course.studentsCount || 0}</td>
+        <td>
+          <button
+            type="button"
+            class="delete-btn"
+            data-id="${id}"
+          >
+            حذف
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  };
+
+  const applyFilters = () => {
+    const statusValue = statusFilter?.value || "all";
+    const categoryValue = categoryFilter?.value || "all";
+    const query = searchInput?.value.toLowerCase().trim() || "";
+
+    const filtered = allCourses.filter(({ data }) => {
+      const statusMatch = statusValue === "all" || data.status === statusValue;
+      const categoryMatch = categoryValue === "all" || data.category === categoryValue;
+      const searchMatch = !query || (data.title || "").toLowerCase().includes(query);
+      return statusMatch && categoryMatch && searchMatch;
+    });
+
+    renderCourses(filtered);
+  };
+
   async function loadCourses() {
     tbody.innerHTML =
-      "<tr><td colspan='4'>جارٍ تحميل الدورات...</td></tr>";
+      "<tr><td colspan='5'>جارٍ تحميل الدورات...</td></tr>";
 
     try {
       const snapshot = await getDocs(collection(db, "courses"));
-      tbody.innerHTML = "";
+      allCourses = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        data: docSnap.data()
+      }));
 
-      if (snapshot.empty) {
-        tbody.innerHTML =
-          "<tr><td colspan='4'>لا توجد دورات حالياً</td></tr>";
-        return;
-      }
-
-      snapshot.forEach((docSnap) => {
-        const course = docSnap.data();
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${course.title || "-"}</td>
-          <td>${course.description || "-"}</td>
-          <td>${course.studentsCount || 0}</td>
-          <td>
-            <button
-              type="button"
-              class="delete-btn"
-              data-id="${docSnap.id}"
-            >
-              حذف
-            </button>
-          </td>
-        `;
-
-        tbody.appendChild(tr);
-      });
+      applyFilters();
     } catch (err) {
       console.error("خطأ في تحميل الدورات:", err);
       tbody.innerHTML =
-        "<tr><td colspan='4'>حدث خطأ أثناء التحميل</td></tr>";
+        "<tr><td colspan='5'>حدث خطأ أثناء التحميل</td></tr>";
     }
   }
 
@@ -94,4 +129,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   await loadCourses();
+
+  statusFilter?.addEventListener("change", applyFilters);
+  categoryFilter?.addEventListener("change", applyFilters);
+  searchInput?.addEventListener("input", applyFilters);
 });

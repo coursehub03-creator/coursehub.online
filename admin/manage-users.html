@@ -13,6 +13,7 @@
 
   <!-- CSS الأدمن -->
   <link rel="stylesheet" href="css-admin/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
@@ -37,7 +38,37 @@
 
       <!-- Content -->
       <div class="admin-content">
-        <h1>إدارة المستخدمين</h1>
+        <div class="page-header">
+          <div>
+            <h1>إدارة المستخدمين</h1>
+            <p class="helper-text">إدارة الصلاحيات والحالة مع فلاتر متقدمة.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn outline"><i class="fa-solid fa-file-export"></i> تصدير</button>
+            <button class="btn"><i class="fa-solid fa-user-plus"></i> إضافة مستخدم</button>
+          </div>
+        </div>
+
+        <div class="table-toolbar">
+          <div class="table-filters">
+            <select id="manage-role-filter">
+              <option value="all">كل الأدوار</option>
+              <option value="student">طلاب</option>
+              <option value="instructor">مدرّسون</option>
+              <option value="admin">مشرفون</option>
+            </select>
+            <select id="manage-status-filter">
+              <option value="all">كل الحالات</option>
+              <option value="active">نشط</option>
+              <option value="pending">بانتظار التفعيل</option>
+              <option value="blocked">محظور</option>
+            </select>
+          </div>
+          <div class="table-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="manage-user-search" placeholder="ابحث عن مستخدم...">
+          </div>
+        </div>
 
         <div id="users-list" class="admin-users-list">
           <!-- سيتم تعبئة المستخدمين ديناميكيًا -->
@@ -53,8 +84,7 @@
 <div id="footer-placeholder"></div>
 
 <!-- ===== JS الموقع ===== -->
-<script type="module" src="/js/main.js"></script>
-<script type="module" src="/js/header.js"></script>
+<script type="module" src="/js/main.js" defer></script>
 <script type="module" src="/js/footer.js"></script>
 
 <!-- ===== JS الأدمن ===== -->
@@ -64,4 +94,3 @@
 
 </body>
 </html>
-
