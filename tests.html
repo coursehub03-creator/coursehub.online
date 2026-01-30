@@ -23,32 +23,17 @@
   <!-- Main Section -->
   <section class="container">
     <h2>اختبارات الدورات</h2>
+    <p class="section-subtitle">اختر دورة تحتوي على اختبارات وابدأ التقييم مباشرة.</p>
 
-    <div class="courses-grid">
-      <div class="card">
-        <h3>اختبار HTML & CSS</h3>
-        <p>قم بإكمال الاختبار لمعرفة مستواك.</p>
-        <a href="#" class="btn">ابدأ الاختبار</a>
-      </div>
-
-      <div class="card">
-        <h3>اختبار JavaScript</h3>
-        <p>قم بإكمال الاختبار لمعرفة مستواك.</p>
-        <a href="#" class="btn">ابدأ الاختبار</a>
-      </div>
-
-      <div class="card">
-        <h3>اختبار الذكاء الاصطناعي</h3>
-        <p>قم بإكمال الاختبار لمعرفة مستواك.</p>
-        <a href="#" class="btn">ابدأ الاختبار</a>
-      </div>
-    </div>
+    <div class="courses-grid" id="testsGrid"></div>
+    <div class="empty-state" id="testsEmptyState">لا توجد اختبارات متاحة حاليًا.</div>
   </section>
 
   <!-- Footer -->
   <div id="footer-placeholder"></div>
   <!-- Main JS لاستدعاء الهيدر والفوتر -->
   <script src="js/main.js" defer></script>
+  <script type="module" src="js/tests.js"></script>
 
 </body>
 </html>

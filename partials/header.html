@@ -11,7 +11,7 @@
       <a href="/index.html">الرئيسية</a>
       <a href="/courses.html">الدورات</a>
       <a href="/tests.html">الاختبارات</a>
-      <a href="/certificates.html">الشهادات</a>
+      <a href="/achievements.html">إنجازاتي</a>
     </nav>
 
     <!-- Search Bar -->
@@ -23,9 +23,16 @@
     <!-- Header Actions -->
     <div class="header-actions">
       <button id="langBtn"><i class="fa fa-globe"></i> عربي</button>
-      <button id="notifBtn"><i class="fa fa-bell"></i>
-        <span class="notification-badge" id="notifBadge">0</span>
-      </button>
+      <div class="notification-wrapper">
+        <button id="notifBtn" aria-label="الإشعارات"><i class="fa fa-bell"></i>
+          <span class="notification-badge" id="notifBadge">0</span>
+        </button>
+        <div class="notification-menu" id="notificationMenu">
+          <div class="notification-title">الإشعارات</div>
+          <div class="notification-items" id="notificationItems"></div>
+          <a class="notification-footer" href="/notifications.html">عرض كل الإشعارات</a>
+        </div>
+      </div>
       <a href="login.html" id="login-link">تسجيل الدخول</a>
       <div id="user-info" class="user-info-container"></div>
     </div>
