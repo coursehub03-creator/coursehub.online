@@ -13,7 +13,6 @@ let currentLesson = 0;
 let currentSlide = 0;
 
 document.addEventListener("DOMContentLoaded", async () => {
-
   const params = new URLSearchParams(window.location.search);
   courseId = params.get("id");
 
@@ -60,6 +59,19 @@ function renderSidebar() {
 
     if (i === currentLesson) li.classList.add("active");
 
+    // ✅ منع تخطي الدروس
+    li.onclick = () => {
+      if (i > currentLesson) {
+        alert("يجب إكمال الدرس الحالي أولاً");
+        return;
+      }
+
+      currentLesson = i;
+      currentSlide = 0;
+      renderSidebar();
+      renderSlide();
+    };
+
     ul.appendChild(li);
   });
 }
@@ -76,18 +88,34 @@ function renderSlide() {
     <div>${slide.content}</div>
   `;
 
+  updateButtons();
   updateProgressBar();
-  saveResume(); // 🔥 حفظ تلقائي كل سلايد
+  saveResume();
+}
+
+function updateButtons() {
+  document.getElementById("prevBtn").disabled =
+    currentSlide === 0 && currentLesson === 0;
 }
 
 document.getElementById("nextBtn").onclick = () => {
-
   const lesson = course.lessons[currentLesson];
 
   if (currentSlide < lesson.slides.length - 1) {
     currentSlide++;
-  } else if (currentLesson < course.lessons.length - 1) {
-    currentLesson++;
+    renderSlide();
+  } else if (lesson.quiz?.length) {
+    renderQuiz(lesson);
+  } else {
+    nextLesson();
+  }
+};
+
+document.getElementById("prevBtn").onclick = () => {
+  if (currentSlide > 0) {
+    currentSlide--;
+  } else if (currentLesson > 0) {
+    currentLesson--;
     currentSlide = 0;
   }
 
@@ -95,15 +123,83 @@ document.getElementById("nextBtn").onclick = () => {
   renderSlide();
 };
 
-document.getElementById("prevBtn").onclick = () => {
-  if (currentSlide > 0) {
-    currentSlide--;
+function renderQuiz(lesson) {
+  const box = document.getElementById("slideContainer");
+
+  box.innerHTML = `<h2>اختبار الدرس</h2>`;
+
+  lesson.quiz.forEach((q, i) => {
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <p>${q.question}</p>
+      ${q.options.map((opt, j) => `
+        <label>
+          <input type="radio" name="q${i}" value="${j}">
+          ${opt}
+        </label><br>
+      `).join("")}
+      <hr>
+    `;
+
+    box.appendChild(div);
+  });
+
+  const btn = document.createElement("button");
+  btn.textContent = "إرسال الاختبار";
+  btn.onclick = () => submitQuiz(lesson);
+
+  box.appendChild(btn);
+}
+
+function submitQuiz(lesson) {
+  let score = 0;
+
+  lesson.quiz.forEach((q, i) => {
+    const selected = document.querySelector(`input[name=q${i}]:checked`);
+    if (selected && Number(selected.value) === q.correct) score++;
+  });
+
+  const percent = (score / lesson.quiz.length) * 100;
+
+  if (percent >= 80) {
+    alert("✅ نجحت في الاختبار");
+    nextLesson();
+  } else {
+    alert("❌ يجب تحقيق 80% لإكمال الدرس");
   }
-  renderSlide();
-};
+}
+
+function nextLesson() {
+  if (currentLesson < course.lessons.length - 1) {
+    currentLesson++;
+    currentSlide = 0;
+    renderSidebar();
+    renderSlide();
+  } else {
+    completeCourse();
+  }
+}
+
+async function completeCourse() {
+  alert("🎉 تم إكمال الدورة!");
+
+  const certId = `${user.uid}_${courseId}`;
+
+  await setDoc(
+    doc(db, "certificates", certId),
+    {
+      userId: user.uid,
+      courseId,
+      completedAt: new Date()
+    }
+  );
+}
 
 async function saveResume() {
   try {
+    if (!user || !courseId) return;
+
     const docId = `${user.uid}_${courseId}`;
 
     await setDoc(
@@ -149,4 +245,5 @@ function updateProgressBar() {
   const percent = Math.floor((passedSlides / totalSlides) * 100);
 
   document.getElementById("courseProgress").style.width = percent + "%";
+  document.getElementById("progressText").textContent = percent + "%";
 }
