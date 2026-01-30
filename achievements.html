@@ -104,7 +104,11 @@
               <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
               <h4>${cert.title}</h4>
               <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-              <button onclick="window.open('${cert.certificateUrl}', '_blank')">عرض الشهادة</button>
+              ${cert.verificationCode ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>` : ""}
+              <div class="certificate-actions">
+                <button onclick="window.open('${cert.certificateUrl}', '_blank')">عرض الشهادة</button>
+                ${cert.verificationCode ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>` : ""}
+              </div>
             </div>
           `;
         });

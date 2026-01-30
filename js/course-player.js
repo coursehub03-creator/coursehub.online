@@ -3,6 +3,10 @@ import {
   doc,
   getDoc,
   setDoc,
+  arrayUnion,
+  addDoc,
+  collection,
+  serverTimestamp
   arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -195,6 +199,15 @@ function renderQuizQuestion() {
   const selectedValue = quizState.answers[quizState.questionIndex];
   const isLast = quizState.questionIndex === lesson.quiz.length - 1;
 
+
+function renderQuizQuestion() {
+  const box = document.getElementById("slideContainer");
+  const lesson = quizState.lesson;
+  const question = lesson.quiz[quizState.questionIndex];
+
+  const selectedValue = quizState.answers[quizState.questionIndex];
+  const isLast = quizState.questionIndex === lesson.quiz.length - 1;
+
   box.innerHTML = `
     <div class="quiz-shell">
       <div class="quiz-header">
@@ -270,6 +283,22 @@ function submitQuiz(lesson) {
     passed
   });
 
+  saveQuizAttempt(lesson, score, percent);
+  });
+
+  const percent = Math.round((score / lesson.quiz.length) * 100);
+  const passed = percent >= 80;
+
+  quizSummary.totalQuestions += lesson.quiz.length;
+  quizSummary.correctAnswers += score;
+  quizSummary.lessons.push({
+    title: lesson.title,
+    score,
+    total: lesson.quiz.length,
+    percent,
+    passed
+  });
+
   const box = document.getElementById("slideContainer");
   box.innerHTML = `
     <div class="quiz-result ${passed ? "passed" : "failed"}">
@@ -320,13 +349,16 @@ async function completeCourse() {
     : 100;
 
   const certId = `${user.uid}_${courseId}`;
+  const verificationCode = generateVerificationCode();
 
   await setDoc(
     doc(db, "certificates", certId),
     {
       userId: user.uid,
       courseId,
-      completedAt: new Date()
+      courseTitle: course.title,
+      completedAt: new Date(),
+      verificationCode
     }
   );
 
@@ -343,6 +375,8 @@ async function completeCourse() {
       certificates: arrayUnion({
         title: course.title,
         issuedAt: new Date().toLocaleDateString("ar-EG"),
+        certificateUrl: course.certificateUrl || "/assets/images/certificate.jpg",
+        verificationCode
         certificateUrl: course.certificateUrl || "/assets/images/certificate.jpg"
       })
     },
@@ -350,6 +384,7 @@ async function completeCourse() {
   );
 
   saveCompletionState();
+  pushCourseNotification({
   pushLocalNotification({
     title: "تم إنهاء الدورة بنجاح",
     message: `تهانينا! أكملت دورة "${course.title}" بنجاح.`,
@@ -409,6 +444,12 @@ function updateProgressBar() {
     currentSteps = course.lessons[currentLesson].slides.length + 1;
   }
 
+
+  let currentSteps = currentSlide + 1;
+  if (isQuizActive) {
+    currentSteps = course.lessons[currentLesson].slides.length + 1;
+  }
+
   const percent = Math.min(100, Math.floor(((completedLessonsSteps + currentSteps) / totalSteps) * 100));
 
   document.getElementById("courseProgress").style.width = percent + "%";
@@ -462,6 +503,23 @@ function pushLocalNotification({ title, message, link }) {
   localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(notifications));
 }
 
+async function pushCourseNotification({ title, message, link }) {
+  pushLocalNotification({ title, message, link });
+
+  try {
+    await addDoc(collection(db, "notifications"), {
+      userId: user.uid,
+      title,
+      message,
+      link,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error("تعذر إرسال الإشعار:", error);
+  }
+}
+
 function getStoredNotifications() {
   try {
     const stored = JSON.parse(localStorage.getItem(NOTIFICATION_KEY));
@@ -485,6 +543,7 @@ function notifyIncompleteCourse() {
   progressStore[courseId] = currentProgress;
   localStorage.setItem(INCOMPLETE_KEY, JSON.stringify(progressStore));
 
+  pushCourseNotification({
   pushLocalNotification({
     title: "لم تُكمل الدورة بعد",
     message: `لم تكمل دورة "${course.title}" بعد، ننتظرك للمتابعة!`,
@@ -518,4 +577,24 @@ function getCompletedCourses() {
   } catch (error) {
     return {};
   }
+}
+
+async function saveQuizAttempt(lesson, score, percent) {
+  try {
+    await addDoc(collection(db, "quizAttempts"), {
+      userId: user.uid,
+      courseId,
+      courseTitle: course.title,
+      lessonTitle: lesson.title,
+      score,
+      percent,
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error("تعذر حفظ نتيجة الاختبار:", error);
+  }
+}
+
+function generateVerificationCode() {
+  return `CH-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 }

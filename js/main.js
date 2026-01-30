@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // إدارة حالة المستخدم في Header
     // ===============================
     setupUserState();
+    setupLanguageToggle();
     setupNotifications();
 
     // Search Bar يظهر فقط في index.html و courses.html
@@ -78,6 +79,8 @@ function saveStoredNotifications(notifications) {
   localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(notifications));
 }
 
+function formatNotificationTime(dateValue) {
+  const date = dateValue?.toDate ? dateValue.toDate() : new Date(dateValue);
 function markNotificationRead(notificationId) {
   const notifications = getStoredNotifications();
   const updated = notifications.map((item) =>
@@ -118,6 +121,26 @@ function setupNotifications() {
 
   if (!notifBtn || !notifBadge || !notifMenu || !notifItems) return;
 
+  loadNotifications(userId).then((notifications) => {
+    const unreadCount = notifications.filter((item) => !item.read).length;
+
+    notifBadge.textContent = unreadCount;
+    notifBadge.style.display = unreadCount ? "inline-flex" : "none";
+
+    if (!notifications.length) {
+      notifItems.innerHTML = `<div class="notification-empty">لا توجد إشعارات بعد.</div>`;
+    } else {
+      notifItems.innerHTML = notifications.slice(0, 5).map((item) => `
+        <a class="notification-item ${item.read ? "" : "unread"}"
+           href="${item.link}"
+           data-id="${item.id}">
+          <strong>${item.title}</strong>
+          <span class="notification-message">${item.message}</span>
+          <span class="notification-time">${formatNotificationTime(item.createdAt)}</span>
+        </a>
+      `).join("");
+    }
+  });
   const notifications = getUserNotifications(userId);
   const unreadCount = notifications.filter((item) => !item.read).length;
 
@@ -148,6 +171,7 @@ function setupNotifications() {
     if (!target) return;
     const id = target.dataset.id;
     if (id) {
+      markNotificationRead(userId, id);
       markNotificationRead(id);
     }
   });
@@ -163,6 +187,38 @@ function setupNotifications() {
 }
 
 function renderNotificationsPage(listContainer, userId) {
+  const countEl = document.getElementById("notificationsCount");
+  const markAllBtn = document.getElementById("markAllReadBtn");
+
+  loadNotifications(userId).then((notifications) => {
+    if (countEl) {
+      countEl.textContent = `${notifications.length} إشعار`;
+    }
+
+    if (!notifications.length) {
+      listContainer.innerHTML = `<div class="notification-empty-state">لا توجد إشعارات جديدة حتى الآن.</div>`;
+    } else {
+      listContainer.innerHTML = notifications.map((item) => `
+        <div class="notification-card ${item.read ? "" : "unread"}">
+          <h3>${item.title}</h3>
+          <p>${item.message}</p>
+          <div class="notification-meta">
+            <span>${formatNotificationTime(item.createdAt)}</span>
+            <span>${item.read ? "مقروء" : "غير مقروء"}</span>
+          </div>
+          <a class="notification-action" href="${item.link}" data-id="${item.id}">
+            فتح الإشعار
+          </a>
+        </div>
+      `).join("");
+    }
+  });
+
+  if (markAllBtn) {
+    markAllBtn.onclick = () => {
+      markAllNotificationsRead(userId).then(() => {
+        renderNotificationsPage(listContainer, userId);
+      });
   const notifications = getUserNotifications(userId);
   const countEl = document.getElementById("notificationsCount");
   const markAllBtn = document.getElementById("markAllReadBtn");
@@ -201,6 +257,115 @@ function renderNotificationsPage(listContainer, userId) {
     if (!actionLink) return;
     const id = actionLink.dataset.id;
     if (id) {
+      markNotificationRead(userId, id);
+    }
+  };
+}
+
+async function loadNotifications(userId) {
+  try {
+    const { db } = await import("/js/firebase-config.js");
+    const {
+      collection,
+      getDocs,
+      query,
+      where,
+      orderBy
+    } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+
+    const q = query(
+      collection(db, "notifications"),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc")
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  } catch (error) {
+    console.error("تعذر تحميل الإشعارات من Firestore:", error);
+    return getUserNotifications(userId);
+  }
+}
+
+async function markNotificationRead(userId, notificationId) {
+  try {
+    const { db } = await import("/js/firebase-config.js");
+    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    await updateDoc(doc(db, "notifications", notificationId), { read: true });
+  } catch (error) {
+    console.error("تعذر تحديث الإشعار:", error);
+    const notifications = getUserNotifications(userId);
+    const updated = notifications.map((item) =>
+      item.id === notificationId ? { ...item, read: true } : item
+    );
+    saveStoredNotifications(updated);
+  }
+}
+
+async function markAllNotificationsRead(userId) {
+  try {
+    const { db } = await import("/js/firebase-config.js");
+    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const notifications = await loadNotifications(userId);
+    await Promise.all(
+      notifications.map((item) => updateDoc(doc(db, "notifications", item.id), { read: true }))
+    );
+  } catch (error) {
+    console.error("تعذر تحديث كل الإشعارات:", error);
+    markAllNotificationsReadLocal(userId);
+  }
+}
+
+function markAllNotificationsReadLocal(userId) {
+  const notifications = getStoredNotifications();
+  const updated = notifications.map((item) =>
+    item.userId === userId ? { ...item, read: true } : item
+  );
+  saveStoredNotifications(updated);
+}
+
+function setupLanguageToggle() {
+  const langBtn = document.getElementById("langBtn");
+  if (!langBtn) return;
+
+  const currentLang = localStorage.getItem("coursehub_lang") || "ar";
+  applyTranslations(currentLang);
+
+  langBtn.addEventListener("click", () => {
+    const nextLang = (localStorage.getItem("coursehub_lang") || "ar") === "ar" ? "en" : "ar";
+    localStorage.setItem("coursehub_lang", nextLang);
+    applyTranslations(nextLang);
+  });
+}
+
+function applyTranslations(lang) {
+  const translations = {
+    ar: {
+      nav_home: "الرئيسية",
+      nav_courses: "الدورات",
+      nav_tests: "الاختبارات",
+      nav_achievements: "إنجازاتي",
+      nav_paths: "المسارات",
+      lang: "عربي"
+    },
+    en: {
+      nav_home: "Home",
+      nav_courses: "Courses",
+      nav_tests: "Tests",
+      nav_achievements: "Achievements",
+      nav_paths: "Paths",
+      lang: "English"
+    }
+  };
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    if (translations[lang]?.[key]) {
+      el.textContent = translations[lang][key];
+    }
+  });
+
+  document.documentElement.setAttribute("lang", lang);
+  document.documentElement.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
       markNotificationRead(id);
     }
   };
