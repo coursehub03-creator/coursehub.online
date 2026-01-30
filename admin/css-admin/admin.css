@@ -65,7 +65,7 @@
   font-size: 1.4rem;
   font-weight: bold;
   text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-menu {
@@ -94,7 +94,7 @@
   font-size: 0.85rem;
   color: #cbd5e1;
   text-align: center;
-  border-top: 1px solid rgba(255,255,255,0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* ============================= */
@@ -206,7 +206,7 @@
   background-color: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 5px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   min-width: 150px;
   z-index: 1000;
   flex-direction: column;
@@ -241,7 +241,8 @@
   margin: 0 auto;
 }
 
-.admin-content h1, .admin-content h2 {
+.admin-content h1,
+.admin-content h2 {
   margin-bottom: 20px;
   color: var(--admin-accent);
 }
@@ -828,7 +829,8 @@
     font-size: 0.9rem;
   }
 
-  .topbar-left, .topbar-right {
+  .topbar-left,
+  .topbar-right {
     flex-direction: column;
     align-items: flex-start;
   }

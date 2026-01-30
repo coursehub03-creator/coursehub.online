@@ -10,6 +10,7 @@
       <i class="fa fa-globe"></i>
       <span>AR</span>
     </button>
+
     <!-- البحث -->
     <div class="topbar-search">
       <input type="text" id="adminSearchInput" placeholder="ابحث...">
@@ -18,7 +19,8 @@
 
     <!-- الإشعارات -->
     <div class="topbar-notifications">
-      <button id="notifBtn"><i class="fa fa-bell"></i>
+      <button id="notifBtn">
+        <i class="fa fa-bell"></i>
         <span class="notification-badge" id="notifBadge">0</span>
       </button>
     </div>
@@ -44,14 +46,14 @@
     if (label) label.textContent = isRtl ? "AR" : "EN";
   };
 
-  // فتح/إغلاق Dropdown المستخدم
   document.addEventListener("DOMContentLoaded", () => {
     const storedLang = localStorage.getItem("admin_lang") || "ar";
     setAdminDirection(storedLang);
 
     const langToggle = document.getElementById("adminLangToggle");
     if (langToggle) {
-      langToggle.addEventListener("click", () => {
+      langToggle.addEventListener("click", (e) => {
+        e.stopPropagation(); // يمنع فتح dropdown المستخدم بالخطأ
         const nextLang = document.documentElement.getAttribute("lang") === "ar" ? "en" : "ar";
         localStorage.setItem("admin_lang", nextLang);
         setAdminDirection(nextLang);
@@ -59,31 +61,35 @@
     }
 
     const userContainer = document.querySelector(".topbar-user");
-    const dropdown = userContainer.querySelector(".dropdown-menu");
+    const dropdown = userContainer?.querySelector(".dropdown-menu");
 
-    userContainer.addEventListener("click", e => {
-      e.stopPropagation();
-      dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-    });
+    if (userContainer && dropdown) {
+      userContainer.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      });
 
-    document.addEventListener("click", () => {
-      dropdown.style.display = "none";
-    });
+      document.addEventListener("click", () => {
+        dropdown.style.display = "none";
+      });
+    }
 
     // تسجيل خروج الأدمن
     const logoutBtn = document.getElementById("admin-logout");
-    logoutBtn.addEventListener("click", e => {
-      e.preventDefault();
-      localStorage.removeItem("coursehub_user");
-      window.location.href = "/login.html";
-    });
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        localStorage.removeItem("coursehub_user");
+        window.location.href = "/login.html";
+      });
+    }
 
     // زر Sidebar toggle
     const sidebarToggle = document.getElementById("sidebar-toggle");
-    sidebarToggle.addEventListener("click", () => {
-      document.querySelector(".admin-layout").classList.toggle("collapsed");
-    });
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener("click", () => {
+        document.querySelector(".admin-layout")?.classList.toggle("collapsed");
+      });
+    }
   });
 </script>
-
-

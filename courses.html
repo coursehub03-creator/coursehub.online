@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>الدورات - CourseHub</title>
+
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
@@ -24,6 +25,7 @@
     .btn:hover { background: #1451a1; }
     .empty-msg { text-align: center; font-size: 16px; color: #666; margin-top: 20px; }
   </style>
+
   <script type="module" src="js/main.js" defer></script>
 </head>
 
@@ -33,12 +35,14 @@
 
   <section class="container">
     <h2>جميع الدورات</h2>
+
     <div class="categories">
       <button class="active" data-category="all">الكل</button>
       <button data-category="web">تطوير الويب</button>
       <button data-category="ai">الذكاء الاصطناعي</button>
       <button data-category="design">التصميم</button>
     </div>
+
     <div class="courses-grid" id="coursesGrid">
       <div class="empty-msg">جارٍ تحميل الدورات...</div>
     </div>
@@ -63,14 +67,14 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const coursesGrid = document.getElementById('coursesGrid');
-    const categoryButtons = document.querySelectorAll('.categories button');
+    const coursesGrid = document.getElementById("coursesGrid");
+    const categoryButtons = document.querySelectorAll(".categories button");
     let allCourses = [];
 
     async function loadCourses() {
       try {
         const snapshot = await getDocs(collection(db, "courses"));
-        allCourses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allCourses = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         renderCourses(allCourses);
       } catch (error) {
         console.error("خطأ في تحميل الدورات:", error);
@@ -80,16 +84,19 @@
 
     function renderCourses(courses) {
       coursesGrid.innerHTML = "";
+
       if (!courses || courses.length === 0) {
         coursesGrid.innerHTML = "<div class='empty-msg'>لا توجد دورات حالياً.</div>";
         return;
       }
-      courses.forEach(course => {
+
+      courses.forEach((course) => {
         const card = document.createElement("div");
         card.className = "card";
         card.dataset.category = course.category || "all";
+
         card.innerHTML = `
-          <img src="${course.image || 'assets/images/default-course.png'}" alt="${course.title}">
+          <img src="${course.image || "assets/images/default-course.png"}" alt="${course.title}">
           <div class="card-content">
             <h3 onclick="window.location.href='course-detail.html?id=${course.id}'">${course.title}</h3>
             <div class="rating">${"★".repeat(course.rating || 4)} <span>(${course.students || 0} طالب)</span></div>
@@ -97,18 +104,21 @@
             <a href="course-detail.html?id=${course.id}" class="btn">عرض الدورة</a>
           </div>
         `;
+
         coursesGrid.appendChild(card);
       });
     }
 
     function filterCategory(cat) {
-      categoryButtons.forEach(b => b.classList.remove('active'));
-      document.querySelector(`[data-category="${cat}"]`).classList.add('active');
-      renderCourses(cat === "all" ? allCourses : allCourses.filter(c => c.category === cat));
+      categoryButtons.forEach((b) => b.classList.remove("active"));
+      const activeBtn = document.querySelector(`[data-category="${cat}"]`);
+      if (activeBtn) activeBtn.classList.add("active");
+
+      renderCourses(cat === "all" ? allCourses : allCourses.filter((c) => c.category === cat));
     }
 
-    categoryButtons.forEach(btn => {
-      btn.addEventListener('click', () => filterCategory(btn.dataset.category));
+    categoryButtons.forEach((btn) => {
+      btn.addEventListener("click", () => filterCategory(btn.dataset.category));
     });
 
     loadCourses();

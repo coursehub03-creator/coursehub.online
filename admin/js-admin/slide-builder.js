@@ -182,6 +182,7 @@ export class SlideBuilder {
       slide.type = e.target.value;
       updatePreview();
     };
+
     templateSelect.onchange = e => {
       const template = e.target.value;
       if (template === "coursera") {
@@ -206,19 +207,23 @@ export class SlideBuilder {
       fontWeightSelect.value = slide.fontWeight;
       updatePreview();
     };
+
     titleInput.oninput = e => {
       slide.title = e.target.value;
       updatePreview();
     };
+
     textInput.oninput = e => {
       slide.text = e.target.value;
       updatePreview();
     };
+
     mediaUrlInput.oninput = e => {
       slide.mediaUrl = e.target.value;
       slide.mediaPreview = e.target.value;
       updatePreview();
     };
+
     mediaFileInput.onchange = e => {
       const file = e.target.files[0];
       slide.mediaFile = file || null;
@@ -227,26 +232,32 @@ export class SlideBuilder {
       }
       updatePreview();
     };
+
     layoutSelect.onchange = e => {
       slide.layout = e.target.value;
       updatePreview();
     };
+
     alignSelect.onchange = e => {
       slide.textAlign = e.target.value;
       updatePreview();
     };
+
     fontSizeInput.oninput = e => {
       slide.fontSize = Number(e.target.value);
       updatePreview();
     };
+
     fontWeightSelect.onchange = e => {
       slide.fontWeight = Number(e.target.value);
       updatePreview();
     };
+
     textColorInput.oninput = e => {
       slide.textColor = e.target.value;
       updatePreview();
     };
+
     bgColorInput.oninput = e => {
       slide.backgroundColor = e.target.value;
       updatePreview();

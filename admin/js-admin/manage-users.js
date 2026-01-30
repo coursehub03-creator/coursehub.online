@@ -1,113 +1,168 @@
-// manage-users.js
-// ===============================
-// حماية صفحة الأدمن
-// ===============================
-import { protectAdmin } from "./admin-guard.js";
-
-document.addEventListener("DOMContentLoaded", () => {
-  protectAdmin();
-  renderUsers();
-});
-
-// ===============================
-// جلب المستخدمين
-// ===============================
-function getUsers() {
-  const users = JSON.parse(localStorage.getItem("coursehub_users"));
-  return Array.isArray(users) ? users : [];
-}
-
-// ===============================
-// حفظ المستخدمين
-// ===============================
-function saveUsers(users) {
-  localStorage.setItem("coursehub_users", JSON.stringify(users));
-}
-
-// ===============================
-// عرض المستخدمين
-// ===============================
-function renderUsers() {
-  const container = document.getElementById("users-list");
-  if (!container) return;
-
-  const users = getUsers();
-
-  if (users.length === 0) {
-    container.innerHTML = `<p>لا يوجد مستخدمون حاليًا.</p>`;
-    return;
-  }
-
-  container.innerHTML = "";
-
-  users.forEach((user, index) => {
-    const card = document.createElement("div");
-    card.className = "user-card";
-
-    card.innerHTML = `
-      <div class="user-info">
-        <img src="${user.picture || "../assets/images/default-user.png"}" alt="user">
-        <div>
-          <strong>${user.name}</strong>
-          <p>${user.email}</p>
-          <span class="role ${user.role}">${user.role === "admin" ? "أدمن" : "مستخدم"}</span>
-        </div>
-      </div>
-
-      <div class="user-actions">
-        ${
-          user.role !== "admin"
-            ? `<button class="danger" onclick="deleteUser(${index})">حذف</button>`
-            : `<span class="locked">🔒 لا يمكن حذف الأدمن</span>`
-        }
-      </div>
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-// ===============================
-// حذف مستخدم
-// ===============================
-window.deleteUser = function(index) {
-  const users = getUsers();
-  const user = users[index];
-
-  if (!confirm(`هل أنت متأكد من حذف المستخدم: ${user.name}؟`)) return;
-
-  users.splice(index, 1);
-  saveUsers(users);
-  renderUsers();
-};
-
-// ===============================
-// إضافة مستخدمين تجريبيين (للتجربة فقط)
-// ===============================
-(function seedDemoUsers() {
-  const existing = getUsers();
-  if (existing.length > 0) return;
-
-  const demoUsers = [
-    {
-      name: "Admin User",
-      email: "admin@coursehub.com",
-      role: "admin",
-      picture: "https://i.pravatar.cc/150?img=1"
-    },
-    {
-      name: "Ahmed Ali",
-      email: "ahmed@mail.com",
-      role: "user",
-      picture: "https://i.pravatar.cc/150?img=2"
-    },
-    {
-      name: "Sara Mohamed",
-      email: "sara@mail.com",
-      role: "user",
-      picture: "https://i.pravatar.cc/150?img=3"
-    }
-  ];
-
-  saveUsers(demoUsers);
-})();
+diff --git a/admin/manage-users.html b/admin/manage-users.html
+index 49c02351f34632ecd76eba03757b10c64f58bde7..67171f8ae3085b11add156682c87d95d42dc2240 100644
+--- a/admin/manage-users.html
++++ b/admin/manage-users.html
+@@ -1,67 +1,96 @@
+-<!DOCTYPE html>
+-<html lang="ar" dir="rtl">
+-<head>
+-  <meta charset="UTF-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-
+-  <title>إدارة المستخدمين - لوحة التحكم | CourseHub</title>
+-
+-  <!-- CSS الموقع العام -->
+-  <link rel="stylesheet" href="/css/style.css">
+-  <link rel="stylesheet" href="/css/header.css">
+-  <link rel="stylesheet" href="/css/footer.css">
+-
+-  <!-- CSS الأدمن -->
+-  <link rel="stylesheet" href="css-admin/admin.css">
+-</head>
+-
+-<body>
+-
+-<!-- ===== Header الموقع ===== -->
+-<div id="header-placeholder"></div>
+-
+-<!-- ===== محتوى الأدمن ===== -->
+-<main class="admin-wrapper">
+-  <div class="admin-layout">
+-
+-    <!-- Sidebar -->
+-    <aside class="admin-sidebar">
+-      <div id="sidebar-placeholder"></div>
+-    </aside>
+-
+-    <!-- Main -->
+-    <section class="admin-main">
+-
+-      <!-- Topbar -->
+-      <div id="topbar-placeholder"></div>
+-
+-      <!-- Content -->
+-      <div class="admin-content">
+-        <h1>إدارة المستخدمين</h1>
+-
+-        <div id="users-list" class="admin-users-list">
+-          <!-- سيتم تعبئة المستخدمين ديناميكيًا -->
+-        </div>
+-      </div>
+-
+-    </section>
+-
+-  </div>
+-</main>
+-
+-<!-- ===== Footer الموقع ===== -->
+-<div id="footer-placeholder"></div>
+-
+-<!-- ===== JS الموقع ===== -->
+-<script type="module" src="/js/main.js"></script>
+-<script type="module" src="/js/header.js"></script>
+-<script type="module" src="/js/footer.js"></script>
+-
+-<!-- ===== JS الأدمن ===== -->
+-<script type="module" src="js-admin/admin-guard.js"></script>
+-<script type="module" src="js-admin/admin-layout.js"></script>
+-<script type="module" src="js-admin/manage-users.js"></script>
+-
+-</body>
+-</html>
+-
++<!DOCTYPE html>
++<html lang="ar" dir="rtl">
++<head>
++  <meta charset="UTF-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1.0">
++
++  <title>إدارة المستخدمين - لوحة التحكم | CourseHub</title>
++
++  <!-- CSS الموقع العام -->
++  <link rel="stylesheet" href="/css/style.css">
++  <link rel="stylesheet" href="/css/header.css">
++  <link rel="stylesheet" href="/css/footer.css">
++
++  <!-- CSS الأدمن -->
++  <link rel="stylesheet" href="css-admin/admin.css">
++  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
++</head>
++
++<body>
++
++<!-- ===== Header الموقع ===== -->
++<div id="header-placeholder"></div>
++
++<!-- ===== محتوى الأدمن ===== -->
++<main class="admin-wrapper">
++  <div class="admin-layout">
++
++    <!-- Sidebar -->
++    <aside class="admin-sidebar">
++      <div id="sidebar-placeholder"></div>
++    </aside>
++
++    <!-- Main -->
++    <section class="admin-main">
++
++      <!-- Topbar -->
++      <div id="topbar-placeholder"></div>
++
++      <!-- Content -->
++      <div class="admin-content">
++        <div class="page-header">
++          <div>
++            <h1>إدارة المستخدمين</h1>
++            <p class="helper-text">إدارة الصلاحيات والحالة مع فلاتر متقدمة.</p>
++          </div>
++          <div class="page-actions">
++            <button class="btn outline"><i class="fa-solid fa-file-export"></i> تصدير</button>
++            <button class="btn"><i class="fa-solid fa-user-plus"></i> إضافة مستخدم</button>
++          </div>
++        </div>
++
++        <div class="table-toolbar">
++          <div class="table-filters">
++            <select id="manage-role-filter">
++              <option value="all">كل الأدوار</option>
++              <option value="student">طلاب</option>
++              <option value="instructor">مدرّسون</option>
++              <option value="admin">مشرفون</option>
++            </select>
++            <select id="manage-status-filter">
++              <option value="all">كل الحالات</option>
++              <option value="active">نشط</option>
++              <option value="pending">بانتظار التفعيل</option>
++              <option value="blocked">محظور</option>
++            </select>
++          </div>
++          <div class="table-search">
++            <i class="fa-solid fa-magnifying-glass"></i>
++            <input type="text" id="manage-user-search" placeholder="ابحث عن مستخدم...">
++          </div>
++        </div>
++
++        <div id="users-list" class="admin-users-list">
++          <!-- سيتم تعبئة المستخدمين ديناميكيًا -->
++        </div>
++      </div>
++
++    </section>
++
++  </div>
++</main>
++
++<!-- ===== Footer الموقع ===== -->
++<div id="footer-placeholder"></div>
++
++<!-- ===== JS الموقع ===== -->
++<script type="module" src="/js/main.js" defer></script>
++<script type="module" src="/js/footer.js"></script>
++
++<!-- ===== JS الأدمن ===== -->
++<script type="module" src="js-admin/admin-guard.js"></script>
++<script type="module" src="js-admin/admin-layout.js"></script>
++<script type="module" src="js-admin/manage-users.js"></script>
++
++</body>
++</html>

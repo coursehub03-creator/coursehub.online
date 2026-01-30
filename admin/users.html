@@ -5,7 +5,6 @@
   <title>المستخدمون | لوحة التحكم</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  
   <!-- CSS الموقع -->
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
@@ -24,8 +23,10 @@
     <aside class="admin-sidebar">
       <div id="sidebar-placeholder"></div>
     </aside>
+
     <section class="admin-main">
       <div id="topbar-placeholder"></div>
+
       <div class="admin-content">
         <div class="page-header">
           <div>
@@ -33,9 +34,13 @@
             <p class="helper-text">فلترة حسب الدور والحالة وتحليل النشاط.</p>
           </div>
           <div class="page-actions">
-            <button class="btn outline"><i class="fa-solid fa-user-plus"></i> إضافة مستخدم</button>
+            <button class="btn outline">
+              <i class="fa-solid fa-user-plus"></i>
+              إضافة مستخدم
+            </button>
           </div>
         </div>
+
         <div class="table-toolbar">
           <div class="table-filters">
             <select id="user-role-filter">
@@ -44,6 +49,7 @@
               <option value="instructor">مدرّس</option>
               <option value="admin">مشرف</option>
             </select>
+
             <select id="user-status-filter">
               <option value="all">كل الحالات</option>
               <option value="active">نشط</option>
@@ -51,11 +57,17 @@
               <option value="blocked">محظور</option>
             </select>
           </div>
+
           <div class="table-search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="user-search" placeholder="ابحث عن مستخدم..." />
+            <input
+              type="text"
+              id="user-search"
+              placeholder="ابحث عن مستخدم..."
+            />
           </div>
         </div>
+
         <table class="users-table">
           <thead>
             <tr>
@@ -85,4 +97,3 @@
 
 </body>
 </html>
-
