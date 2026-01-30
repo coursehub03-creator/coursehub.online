@@ -1,38 +1,42 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>إضافة دورة جديدة | CourseHub Admin</title>
 
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/header.css">
-  <link rel="stylesheet" href="/css/footer.css">
-  <link rel="stylesheet" href="css-admin/admin.css">
+ <!DOCTYPE html>
+ <html lang="ar" dir="rtl">
+ <head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+   <title>إضافة دورة جديدة | CourseHub Admin</title>
+ 
+   <link rel="stylesheet" href="/css/style.css">
+   <link rel="stylesheet" href="/css/header.css">
+   <link rel="stylesheet" href="/css/footer.css">
+   <link rel="stylesheet" href="css-admin/admin.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
-<body>
+ </head>
+ <body>
+ 
+ <div id="header-placeholder"></div>
+ 
+ <main class="admin-wrapper">
+   <div class="admin-layout">
+ 
+     <aside class="admin-sidebar">
+       <div id="sidebar-placeholder"></div>
+     </aside>
+ 
+     <section class="admin-main">
+       <div id="topbar-placeholder"></div>
+ 
+       <div class="admin-content">
 
-<div id="header-placeholder"></div>
-
-<main class="admin-wrapper">
-  <div class="admin-layout">
-
-    <aside class="admin-sidebar">
-      <div id="sidebar-placeholder"></div>
-    </aside>
-
-    <section class="admin-main">
-      <div id="topbar-placeholder"></div>
-
-      <div class="admin-content">
-        <div class="builder-header">
-          <h1>منشئ الدورات الاحترافي</h1>
+       <div class="builder-header">
+         <h1>منشئ الدورات الاحترافي</h1>
           <p>صمم تجربة تعلم عالمية على نمط Coursera: محتوى غني، سلايدات تفاعلية، ومعاينة فورية قبل النشر.</p>
         </div>
+ 
+         <!-- Tabs -->
 
-        <!-- Tabs -->
-        <div class="builder-tabs">
+
+       <div class="builder-tabs">
           <button class="tab-btn active" data-tab="info">
             <i class="fa-solid fa-circle-info"></i>
             <span>معلومات الدورة</span>
@@ -49,18 +53,19 @@
             <i class="fa-solid fa-paper-plane"></i>
             <span>النشر</span>
           </button>
-        </div>
-
-        <form id="addCourseForm">
+         </div>
+ 
+       <form id="addCourseForm" novalidate>
           <input type="hidden" id="courseStatus" value="draft">
+ 
+           <!-- TAB 1: INFO -->
+           <div class="tab-content active" id="tab-info">
 
-          <!-- TAB 1: INFO -->
-          <div class="tab-content active" id="tab-info">
             <div class="builder-card">
               <div class="form-grid">
                 <div class="field-group">
                   <label>عنوان الدورة</label>
-                  <input type="text" id="title" required placeholder="مثال: مقدمة في الذكاء الاصطناعي">
+                  <input type="text" id="title" name="title" required placeholder="مثال: مقدمة في الذكاء الاصطناعي">
                   <span class="field-help">اختر عنوانًا واضحًا وجذابًا.</span>
                 </div>
                 <div class="field-group">
@@ -94,7 +99,7 @@
               </div>
               <div class="field-group">
                 <label>وصف الدورة</label>
-                <textarea id="description" rows="5" required placeholder="اكتب وصفًا احترافيًا يوضح أهداف الدورة والفائدة للطالب"></textarea>
+                <textarea id="description" name="description" rows="5" required placeholder="اكتب وصفًا احترافيًا يوضح أهداف الدورة والفائدة للطالب"></textarea>
               </div>
             </div>
 
@@ -111,10 +116,11 @@
                 </div>
               </div>
             </div>
-          </div>
+           </div>
+ 
+           <!-- TAB 2: LESSONS -->
+           <div class="tab-content" id="tab-lessons">
 
-          <!-- TAB 2: LESSONS -->
-          <div class="tab-content" id="tab-lessons">
             <div class="builder-card">
               <div class="builder-header">
                 <h2>بناء الدروس والسلايدات</h2>
@@ -131,10 +137,11 @@
                 إضافة درس
               </button>
             </div>
-          </div>
+           </div>
+ 
+           <!-- TAB 3: PREVIEW -->
+           <div class="tab-content" id="tab-preview">
 
-          <!-- TAB 3: PREVIEW -->
-          <div class="tab-content" id="tab-preview">
             <div class="preview-pane">
               <div>
                 <span class="pill"><i class="fa-solid fa-eye"></i> معاينة مباشرة</span>
@@ -152,14 +159,14 @@
               </div>
               <div id="previewLessons"></div>
             </div>
-          </div>
+           </div>
+ 
+           <!-- TAB 4: PUBLISH -->
+           <div class="tab-content" id="tab-publish">
 
-          <!-- TAB 4: PUBLISH -->
-          <div class="tab-content" id="tab-publish">
             <div class="builder-card">
               <h2>النشر</h2>
               <p class="helper-text">راجع المعاينة جيدًا قبل نشر الدورة عالميًا.</p>
-
               <div class="builder-card">
                 <h3>قائمة المراجعة قبل النشر</h3>
                 <div class="review-checklist">
@@ -169,7 +176,6 @@
                   <label><input type="checkbox" class="review-check"> تمت تجربة المعاينة النهائية.</label>
                 </div>
               </div>
-
               <div class="publish-actions">
                 <button type="button" class="btn outline" data-course-status="draft">
                   <i class="fa-solid fa-file-arrow-down"></i>
@@ -185,24 +191,24 @@
                 </button>
               </div>
             </div>
-          </div>
+           </div>
+ 
+         </form>
+ 
+       </div>
+     </section>
+   </div>
+ </main>
+ 
+ <div id="footer-placeholder"></div>
+ 
 
-        </form>
-
-      </div>
-    </section>
-  </div>
-</main>
-
-<div id="footer-placeholder"></div>
-
-<!-- حمّل main مرة واحدة فقط -->
 <script type="module" src="/js/main.js" defer></script>
-<script type="module" src="/js/footer.js"></script>
-
-<script type="module" src="js-admin/admin-layout.js"></script>
-<script type="module" src="js-admin/admin-guard.js"></script>
-<script type="module" src="js-admin/add-course.js"></script>
-
-</body>
-</html>
+ <script type="module" src="/js/footer.js"></script>
+ 
+ <script type="module" src="js-admin/admin-layout.js"></script>
+ <script type="module" src="js-admin/admin-guard.js"></script>
+ <script type="module" src="js-admin/add-course.js"></script>
+ 
+ </body>
+ </html>
