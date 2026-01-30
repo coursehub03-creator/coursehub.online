@@ -1,58 +1,121 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <title>الشهادات | لوحة التحكم</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/header.css">
-  <link rel="stylesheet" href="/css/footer.css">
-  <link rel="stylesheet" href="css-admin/admin.css">
-</head>
-<body>
-
-<div id="header-placeholder"></div>
-
-<main class="admin-wrapper">
-  <div class="admin-layout">
-    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
-    <section class="admin-main">
-      <div id="topbar-placeholder"></div>
-      <div class="admin-content">
-        <h1>إدارة الشهادات</h1>
-        <button id="add-certificate-btn">➕ إضافة شهادة جديدة</button>
-        <input type="text" id="certificate-search" placeholder="ابحث عن شهادة..." />
-        <table class="certificates-table">
-          <thead>
-            <tr>
-              <th>اسم الشهادة</th>
-              <th>الدورة المرتبطة</th>
-              <th>الطالب</th>
-              <th>تاريخ الإصدار</th>
-              <th>الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="certificates-list">
-            <!-- سيتم تعبئتها ديناميكيًا بواسطة certificate-admin.js -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-</main>
-
-<div id="footer-placeholder"></div>
-
-<script type="module" src="/js/main.js"></script>
-<script type="module" src="/js/header.js"></script>
-<script type="module" src="/js/footer.js"></script>
-
-<script type="module" src="js-admin/admin-guard.js"></script>
-<script type="module" src="js-admin/admin-layout.js"></script>
-<script type="module" src="js-admin/certificates-admin.js"></script>
-
-</body>
-</html>
-
-
+diff --git a/admin/certificates-admin.html b/admin/certificates-admin.html
+index 2f5c7f8eb76f980baf92a2f7f9f592a327f7003b..c9cda55d700f281545279527ac5347747a35eec8 100644
+--- a/admin/certificates-admin.html
++++ b/admin/certificates-admin.html
+@@ -1,58 +1,58 @@
+-<!DOCTYPE html>
+-<html lang="ar" dir="rtl">
+-<head>
+-  <meta charset="UTF-8">
+-  <title>الشهادات | لوحة التحكم</title>
+-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-
+-  <link rel="stylesheet" href="/css/style.css">
+-  <link rel="stylesheet" href="/css/header.css">
+-  <link rel="stylesheet" href="/css/footer.css">
+-  <link rel="stylesheet" href="css-admin/admin.css">
+-</head>
+-<body>
+-
+-<div id="header-placeholder"></div>
+-
+-<main class="admin-wrapper">
+-  <div class="admin-layout">
+-    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
+-    <section class="admin-main">
+-      <div id="topbar-placeholder"></div>
+-      <div class="admin-content">
+-        <h1>إدارة الشهادات</h1>
+-        <button id="add-certificate-btn">➕ إضافة شهادة جديدة</button>
+-        <input type="text" id="certificate-search" placeholder="ابحث عن شهادة..." />
+-        <table class="certificates-table">
+-          <thead>
+-            <tr>
+-              <th>اسم الشهادة</th>
+-              <th>الدورة المرتبطة</th>
+-              <th>الطالب</th>
+-              <th>تاريخ الإصدار</th>
+-              <th>الإجراءات</th>
+-            </tr>
+-          </thead>
+-          <tbody id="certificates-list">
+-            <!-- سيتم تعبئتها ديناميكيًا بواسطة certificate-admin.js -->
+-          </tbody>
+-        </table>
+-      </div>
+-    </section>
+-  </div>
+-</main>
+-
+-<div id="footer-placeholder"></div>
+-
+-<script type="module" src="/js/main.js"></script>
+-<script type="module" src="/js/header.js"></script>
+-<script type="module" src="/js/footer.js"></script>
+-
+-<script type="module" src="js-admin/admin-guard.js"></script>
+-<script type="module" src="js-admin/admin-layout.js"></script>
+-<script type="module" src="js-admin/certificates-admin.js"></script>
+-
+-</body>
+-</html>
+-
+-
++<!DOCTYPE html>
++<html lang="ar" dir="rtl">
++<head>
++  <meta charset="UTF-8">
++  <title>الشهادات | لوحة التحكم</title>
++  <meta name="viewport" content="width=device-width, initial-scale=1.0">
++
++  <link rel="stylesheet" href="/css/style.css">
++  <link rel="stylesheet" href="/css/header.css">
++  <link rel="stylesheet" href="/css/footer.css">
++  <link rel="stylesheet" href="css-admin/admin.css">
++  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
++</head>
++<body>
++
++<div id="header-placeholder"></div>
++
++<main class="admin-wrapper">
++  <div class="admin-layout">
++    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
++    <section class="admin-main">
++      <div id="topbar-placeholder"></div>
++      <div class="admin-content">
++        <h1>إدارة الشهادات</h1>
++        <button id="add-certificate-btn">➕ إضافة شهادة جديدة</button>
++        <input type="text" id="certificate-search" placeholder="ابحث عن شهادة..." />
++        <table class="certificates-table">
++          <thead>
++            <tr>
++              <th>اسم الشهادة</th>
++              <th>الدورة المرتبطة</th>
++              <th>الطالب</th>
++              <th>تاريخ الإصدار</th>
++              <th>الإجراءات</th>
++            </tr>
++          </thead>
++          <tbody id="certificates-list">
++            <!-- سيتم تعبئتها ديناميكيًا بواسطة certificate-admin.js -->
++          </tbody>
++        </table>
++      </div>
++    </section>
++  </div>
++</main>
++
++<div id="footer-placeholder"></div>
++
++<script type="module" src="/js/main.js" defer></script>
++<script type="module" src="/js/footer.js"></script>
++
++<script type="module" src="js-admin/admin-guard.js"></script>
++<script type="module" src="js-admin/admin-layout.js"></script>
++<script type="module" src="js-admin/certificates-admin.js"></script>
++
++</body>
++</html>
++
++
