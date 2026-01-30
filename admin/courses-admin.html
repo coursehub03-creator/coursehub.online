@@ -1,170 +1,91 @@
-diff --git a/admin/courses-admin.html b/admin/courses-admin.html
-index 4ab158c294c5bb12ff5ace4c7b2545316f03e7dd..8e3a5474b7bf34786bd11b16d224e6fc152d5a36 100644
---- a/admin/courses-admin.html
-+++ b/admin/courses-admin.html
-@@ -1,70 +1,95 @@
--<!DOCTYPE html>
--<html lang="ar" dir="rtl">
--<head>
--  <meta charset="UTF-8">
--  <title>الدورات | لوحة التحكم</title>
--  <meta name="viewport" content="width=device-width, initial-scale=1.0">
--
--  <link rel="stylesheet" href="/css/style.css">
--  <link rel="stylesheet" href="/css/header.css">
--  <link rel="stylesheet" href="/css/footer.css">
--  <link rel="stylesheet" href="/admin/css-admin/admin.css">
--</head>
--<body>
--
--<div id="header-placeholder"></div>
--
--<main class="admin-wrapper">
--  <div class="admin-layout">
--    <aside class="admin-sidebar">
--      <div id="sidebar-placeholder"></div>
--    </aside>
--
--    <section class="admin-main">
--      <div id="topbar-placeholder"></div>
--
--      <div class="admin-content">
--        <h1>إدارة الدورات</h1>
--
--        <!-- ✅ زر موجود وثابت -->
--        <button type="button" id="add-course-btn">
--          ➕ إضافة دورة جديدة
--        </button>
--
--        <input
--          type="text"
--          id="course-search"
--          placeholder="ابحث عن دورة..."
--        />
--
--        <table class="courses-table">
--          <thead>
--            <tr>
--              <th>عنوان الدورة</th>
--              <th>الوصف</th>
--              <th>عدد الطلاب</th>
--              <th>الإجراءات</th>
--            </tr>
--          </thead>
--          <tbody id="courses-list">
--            <!-- يتم تعبئتها من JS -->
--          </tbody>
--        </table>
--      </div>
--    </section>
--  </div>
--</main>
--
--<div id="footer-placeholder"></div>
--
--<script type="module" src="/js/main.js"></script>
--<script type="module" src="/js/header.js"></script>
--<script type="module" src="/js/footer.js"></script>
--
--<script type="module" src="/admin/js-admin/admin-guard.js"></script>
--<script type="module" src="/admin/js-admin/admin-layout.js"></script>
--<script type="module" src="/admin/js-admin/courses-admin.js"></script>
--
--</body>
--</html>
--
-+<!DOCTYPE html>
-+<html lang="ar" dir="rtl">
-+<head>
-+  <meta charset="UTF-8">
-+  <title>الدورات | لوحة التحكم</title>
-+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-+
-+  <link rel="stylesheet" href="/css/style.css">
-+  <link rel="stylesheet" href="/css/header.css">
-+  <link rel="stylesheet" href="/css/footer.css">
-+  <link rel="stylesheet" href="/admin/css-admin/admin.css">
-+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-+</head>
-+<body>
-+
-+<div id="header-placeholder"></div>
-+
-+<main class="admin-wrapper">
-+  <div class="admin-layout">
-+    <aside class="admin-sidebar">
-+      <div id="sidebar-placeholder"></div>
-+    </aside>
-+
-+    <section class="admin-main">
-+      <div id="topbar-placeholder"></div>
-+
-+      <div class="admin-content">
-+        <div class="page-header">
-+          <div>
-+            <h1>إدارة الدورات</h1>
-+            <p class="helper-text">تتبّع الحالات (مسودة، قيد المراجعة، منشورة) والتحكم بجودة المحتوى.</p>
-+          </div>
-+          <div class="page-actions">
-+            <button type="button" id="add-course-btn" class="btn">
-+              <i class="fa-solid fa-plus"></i>
-+              إضافة دورة جديدة
-+            </button>
-+          </div>
-+        </div>
-+
-+        <div class="table-toolbar">
-+          <div class="table-filters">
-+            <select id="course-status-filter">
-+              <option value="all">كل الحالات</option>
-+              <option value="draft">مسودة</option>
-+              <option value="review">قيد المراجعة</option>
-+              <option value="published">منشورة</option>
-+            </select>
-+            <select id="course-category-filter">
-+              <option value="all">كل التصنيفات</option>
-+              <option value="tech">تقنية</option>
-+              <option value="design">تصميم</option>
-+              <option value="business">أعمال</option>
-+            </select>
-+          </div>
-+          <div class="table-search">
-+            <i class="fa-solid fa-magnifying-glass"></i>
-+            <input
-+              type="text"
-+              id="course-search"
-+              placeholder="ابحث عن دورة..."
-+            />
-+          </div>
-+        </div>
-+
-+        <table class="courses-table">
-+          <thead>
-+            <tr>
-+              <th>عنوان الدورة</th>
-+              <th>الوصف</th>
-+              <th>الحالة</th>
-+              <th>عدد الطلاب</th>
-+              <th>الإجراءات</th>
-+            </tr>
-+          </thead>
-+          <tbody id="courses-list">
-+            <!-- يتم تعبئتها من JS -->
-+          </tbody>
-+        </table>
-+      </div>
-+    </section>
-+  </div>
-+</main>
-+
-+<div id="footer-placeholder"></div>
-+
-+<script type="module" src="/js/main.js" defer></script>
-+<script type="module" src="/js/footer.js"></script>
-+
-+<script type="module" src="/admin/js-admin/admin-guard.js"></script>
-+<script type="module" src="/admin/js-admin/admin-layout.js"></script>
-+<script type="module" src="/admin/js-admin/courses-admin.js"></script>
-+
-+</body>
-+</html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>الدورات | لوحة التحكم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/admin/css-admin/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main class="admin-wrapper">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
+    </aside>
+
+    <section class="admin-main">
+      <div id="topbar-placeholder"></div>
+
+      <div class="admin-content">
+        <div class="page-header">
+          <div>
+            <h1>إدارة الدورات</h1>
+            <p class="helper-text">تتبّع الحالات (مسودة، قيد المراجعة، منشورة) والتحكم بجودة المحتوى.</p>
+          </div>
+          <div class="page-actions">
+            <button type="button" id="add-course-btn" class="btn">
+              <i class="fa-solid fa-plus"></i>
+              إضافة دورة جديدة
+            </button>
+          </div>
+        </div>
+
+        <div class="table-toolbar">
+          <div class="table-filters">
+            <select id="course-status-filter">
+              <option value="all">كل الحالات</option>
+              <option value="draft">مسودة</option>
+              <option value="review">قيد المراجعة</option>
+              <option value="published">منشورة</option>
+            </select>
+            <select id="course-category-filter">
+              <option value="all">كل التصنيفات</option>
+              <option value="tech">تقنية</option>
+              <option value="design">تصميم</option>
+              <option value="business">أعمال</option>
+            </select>
+          </div>
+          <div class="table-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="course-search" placeholder="ابحث عن دورة..." />
+          </div>
+        </div>
+
+        <table class="courses-table">
+          <thead>
+            <tr>
+              <th>عنوان الدورة</th>
+              <th>الوصف</th>
+              <th>الحالة</th>
+              <th>عدد الطلاب</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="courses-list">
+            <!-- يتم تعبئتها من JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script type="module" src="/js/main.js" defer></script>
+<script type="module" src="/js/footer.js"></script>
+
+<script type="module" src="/admin/js-admin/admin-guard.js"></script>
+<script type="module" src="/admin/js-admin/admin-layout.js"></script>
+<script type="module" src="/admin/js-admin/courses-admin.js"></script>
+
+</body>
+</html>

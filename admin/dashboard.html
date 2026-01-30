@@ -1,77 +1,70 @@
-diff --git a/admin/dashboard.html b/admin/dashboard.html
-index 73ddb3b0aa2f51bef39b03f5ab368e353aeaa248..e77de748ef6f03ca89f33d62d85cf436c8c51f95 100644
---- a/admin/dashboard.html
-+++ b/admin/dashboard.html
-@@ -1,70 +1,70 @@
- <!DOCTYPE html>
- <html lang="ar" dir="rtl">
- <head>
-   <meta charset="UTF-8">
-   <title>لوحة التحكم | CourseHub</title>
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
- 
-   <!-- CSS الموقع العام -->
-   <link rel="stylesheet" href="/css/style.css">
-   <link rel="stylesheet" href="/css/header.css">
-   <link rel="stylesheet" href="/css/footer.css">
- 
-   <!-- CSS الأدمن -->
-   <link rel="stylesheet" href="css-admin/admin.css">
-+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
- </head>
- 
- <body>
- 
- <!-- ===== Header الموقع ===== -->
- <div id="header-placeholder"></div>
- 
- <!-- ===== محتوى الأدمن ===== -->
- <main class="admin-wrapper">
- 
-   <div class="admin-layout">
- 
-     <!-- Sidebar -->
-     <aside class="admin-sidebar">
-       <div id="sidebar-placeholder"></div>
-     </aside>
- 
-     <!-- Main -->
-     <section class="admin-main">
- 
-       <!-- Topbar -->
-       <div id="topbar-placeholder"></div>
- 
-       <!-- Content -->
-       <div class="admin-content">
-         <h1>لوحة التحكم</h1>
- 
-         <div class="admin-cards">
-           <div class="card" id="usersCard">👤 المستخدمون: <span>0</span></div>
-           <div class="card" id="coursesCard">📚 الدورات: <span>0</span></div>
-           <div class="card" id="certificatesCard">🏆 الشهادات: <span>0</span></div>
-           <div class="card" id="testsCard">🧪 الاختبارات: <span>0</span></div>
-         </div>
-       </div>
- 
-     </section>
- 
-   </div>
- 
- </main>
- 
- <!-- ===== Footer الموقع ===== -->
- <div id="footer-placeholder"></div>
- 
- <!-- ===== JS الموقع ===== -->
--<script type="module" src="/js/main.js"></script>
--<script type="module" src="/js/header.js"></script>
-+<script type="module" src="/js/main.js" defer></script>
- <script type="module" src="/js/footer.js"></script>
- 
- <!-- ===== JS الأدمن ===== -->
- <script type="module" src="js-admin/admin-guard.js"></script>
- <script type="module" src="js-admin/admin-layout.js"></script>
- <script type="module" src="js-admin/dashboard.js"></script>
- 
- </body>
- </html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة التحكم | CourseHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS الموقع العام -->
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+
+  <!-- CSS الأدمن -->
+  <link rel="stylesheet" href="css-admin/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- ===== Header الموقع ===== -->
+<div id="header-placeholder"></div>
+
+<!-- ===== محتوى الأدمن ===== -->
+<main class="admin-wrapper">
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
+    </aside>
+
+    <!-- Main -->
+    <section class="admin-main">
+
+      <!-- Topbar -->
+      <div id="topbar-placeholder"></div>
+
+      <!-- Content -->
+      <div class="admin-content">
+        <h1>لوحة التحكم</h1>
+
+        <div class="admin-cards">
+          <div class="card" id="usersCard">👤 المستخدمون: <span>0</span></div>
+          <div class="card" id="coursesCard">📚 الدورات: <span>0</span></div>
+          <div class="card" id="certificatesCard">🏆 الشهادات: <span>0</span></div>
+          <div class="card" id="testsCard">🧪 الاختبارات: <span>0</span></div>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+</main>
+
+<!-- ===== Footer الموقع ===== -->
+<div id="footer-placeholder"></div>
+
+<!-- ===== JS الموقع ===== -->
+<script type="module" src="/js/main.js" defer></script>
+<script type="module" src="/js/footer.js"></script>
+
+<!-- ===== JS الأدمن ===== -->
+<script type="module" src="js-admin/admin-guard.js"></script>
+<script type="module" src="js-admin/admin-layout.js"></script>
+<script type="module" src="js-admin/dashboard.js"></script>
+
+</body>
+</html>

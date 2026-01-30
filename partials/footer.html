@@ -1,39 +1,131 @@
-diff --git a/partials/footer.html b/partials/footer.html
-index a52687add34a6d44ff83748222cf7d5851596204..0b436dc1977882e523220050a94bf3fc142c5cd3 100644
---- a/partials/footer.html
-+++ b/partials/footer.html
-@@ -18,33 +18,27 @@
-       <h4>الحساب</h4>
-       <a href="/login.html">تسجيل الدخول</a>
-       <a href="/register.html">إنشاء حساب</a>
-       <a href="/my-courses.html">دوراتي</a>
-     </div>
- 
-     <div class="footer-col">
-       <h4>تابعنا</h4>
-       <div class="social-icons">
-         <a href="#"><i class="fab fa-facebook-f"></i></a>
-         <a href="#"><i class="fab fa-twitter"></i></a>
-         <a href="#"><i class="fab fa-youtube"></i></a>
-         <a href="#"><i class="fab fa-linkedin-in"></i></a>
-       </div>
-     </div>
- 
-     <!-- رابط لوحة الإدارة للأدمن -->
-     <div id="admin-link"></div>
- 
-   </div>
- 
-   <div class="footer-bottom">
-     © <span id="year"></span> CourseHub - جميع الحقوق محفوظة
-   </div>
- 
--  <script>
--    // تحديث سنة الحقوق تلقائيًا
--    document.getElementById("year").textContent = new Date().getFullYear();
--  </script>
--
--  <!-- Font Awesome للأيقونات -->
--  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-+  <!-- Year updated via main.js -->
- </footer>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - CourseHub</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="css/login.css">
+
+  <!-- JS عام (تحميل الهيدر/الفوتر وحالة المستخدم) -->
+  <script type="module" src="js/main.js" defer></script>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <main class="login-page container">
+    <h2>تسجيل الدخول</h2>
+
+    <!-- تسجيل الدخول بالبريد -->
+    <form id="loginForm">
+      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
+      <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
+      <button type="submit">تسجيل الدخول</button>
+      <div id="errorMsg" class="error-msg"></div>
+    </form>
+
+    <p>أو</p>
+
+    <!-- تسجيل الدخول بـ Google -->
+    <button id="googleLoginBtn" class="google-btn">
+      تسجيل الدخول باستخدام Google
+    </button>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Firebase Auth -->
+  <script type="module">
+    import { auth, googleProvider } from './js/firebase-config.js';
+    import {
+      signInWithPopup,
+      signInWithEmailAndPassword,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const loginForm = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+
+    // تسجيل الدخول بالإيميل
+    if (loginForm) {
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById("emailInput").value;
+        const password = document.getElementById("passwordInput").value;
+
+        try {
+          const userCredential =
+            await signInWithEmailAndPassword(auth, email, password);
+
+          const user = userCredential.user;
+
+          localStorage.setItem("coursehub_user", JSON.stringify({
+            name: user.displayName || user.email.split("@")[0],
+            email: user.email,
+            picture: user.photoURL,
+            uid: user.uid,
+            role: "user"
+          }));
+
+          window.location.href = "index.html";
+
+        } catch (error) {
+          console.error("Login Error:", error);
+          errorMsg.textContent = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+        }
+      });
+    }
+
+    // تسجيل الدخول بـ Google
+    const googleBtn = document.getElementById("googleLoginBtn");
+    if (googleBtn) {
+      googleBtn.addEventListener("click", async () => {
+        try {
+          const result = await signInWithPopup(auth, googleProvider);
+          const user = result.user;
+
+          localStorage.setItem("coursehub_user", JSON.stringify({
+            name: user.displayName,
+            email: user.email,
+            picture: user.photoURL,
+            uid: user.uid,
+            role: "user"
+          }));
+
+          window.location.href = "index.html";
+
+        } catch (error) {
+          console.error("Google Login Error:", error);
+          errorMsg.textContent = "فشل تسجيل الدخول بحساب Google.";
+        }
+      });
+    }
+
+    // مراقبة حالة تسجيل الدخول
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const storedUser = localStorage.getItem("coursehub_user");
+        if (!storedUser) {
+          localStorage.setItem("coursehub_user", JSON.stringify({
+            name: user.displayName,
+            email: user.email,
+            picture: user.photoURL,
+            uid: user.uid,
+            role: "user"
+          }));
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>

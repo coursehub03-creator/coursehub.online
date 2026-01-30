@@ -1,39 +1,127 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/login.html b/login.html
-index bbe8b2abc33af35b9b1062276842b82a7d7d135a..a68b5c2c4022e9feff87d82897d84af10f8b514b 100644
---- a/login.html
-+++ b/login.html
-@@ -101,30 +101,27 @@
- 
-         } catch (error) {
-           console.error("Google Login Error:", error);
-           if (errorMsg) errorMsg.textContent = "فشل تسجيل الدخول بحساب Google.";
-         }
-       });
-     }
- 
-     // --- مراقبة حالة تسجيل الدخول ---
-     onAuthStateChanged(auth, (user) => {
-       if (user) {
-         const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
-         if (!storedUser) {
-           localStorage.setItem("coursehub_user", JSON.stringify({
-             name: user.displayName,
-             email: user.email,
-             picture: user.photoURL,
-             uid: user.uid,
-             role: "user"
-           }));
-         }
-       }
-     });
-   </script>
- 
--  <!-- Header loader + user state -->
--  <script type="module" src="js/header.js" defer></script>
--
- </body>
- </html>
- 
-EOF
-)
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - CourseHub</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="css/login.css">
+
+  <!-- CSS وميزات عامة -->
+  <script type="module" src="js/main.js" defer></script>
+</head>
+
+<body>
+
+  <!-- Header والفوتر سيتم تحميلهما ديناميكيًا -->
+  <div id="header-placeholder"></div>
+
+  <main class="login-page container">
+    <h2>تسجيل الدخول</h2>
+
+    <!-- تسجيل الدخول بالبريد -->
+    <form id="loginForm">
+      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
+      <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
+      <button type="submit">تسجيل الدخول</button>
+      <div id="errorMsg" class="error-msg"></div>
+    </form>
+
+    <p>أو</p>
+
+    <!-- تسجيل الدخول بـ Google -->
+    <button id="googleLoginBtn" class="google-btn">
+      تسجيل الدخول باستخدام Google
+    </button>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- Firebase Auth -->
+  <script type="module">
+    import { auth, googleProvider } from './js/firebase-config.js';
+    import { signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const loginForm = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+
+    // --- تسجيل الدخول بالإيميل ---
+    if (loginForm) {
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("emailInput").value;
+        const password = document.getElementById("passwordInput").value;
+
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          // حفظ بيانات المستخدم في localStorage
+          localStorage.setItem("coursehub_user", JSON.stringify({
+            name: user.displayName || user.email.split("@")[0],
+            email: user.email,
+            picture: user.photoURL,
+            uid: user.uid,
+            role: "user"
+          }));
+
+          // إعادة التوجيه للصفحة الرئيسية
+          window.location.href = "index.html";
+
+        } catch (error) {
+          console.error("Login Error:", error);
+          if (errorMsg) errorMsg.textContent = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+        }
+      });
+    }
+
+    // --- تسجيل الدخول بحساب Google ---
+    const googleBtn = document.getElementById("googleLoginBtn");
+    if (googleBtn) {
+      googleBtn.addEventListener("click", async () => {
+        try {
+          const result = await signInWithPopup(auth, googleProvider);
+          const user = result.user;
+
+          // حفظ بيانات المستخدم في localStorage
+          localStorage.setItem("coursehub_user", JSON.stringify({
+            name: user.displayName,
+            email: user.email,
+            picture: user.photoURL,
+            uid: user.uid,
+            role: "user"
+          }));
+
+          // إعادة التوجيه للصفحة الرئيسية
+          window.location.href = "index.html";
+
+        } catch (error) {
+          console.error("Google Login Error:", error);
+          if (errorMsg) errorMsg.textContent = "فشل تسجيل الدخول بحساب Google.";
+        }
+      });
+    }
+
+    // --- مراقبة حالة تسجيل الدخول ---
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
+        if (!storedUser) {
+          localStorage.setItem("coursehub_user", JSON.stringify({
+            name: user.displayName,
+            email: user.email,
+            picture: user.photoURL,
+            uid: user.uid,
+            role: "user"
+          }));
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>

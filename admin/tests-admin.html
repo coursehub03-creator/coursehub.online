@@ -1,119 +1,63 @@
-diff --git a/admin/tests-admin.html b/admin/tests-admin.html
-index 066d5483dd9394e8b42206b1823489e5560c2fb1..66ddc31f07c97242abe6985a540c3daea515a4e2 100644
---- a/admin/tests-admin.html
-+++ b/admin/tests-admin.html
-@@ -1,57 +1,57 @@
--<!DOCTYPE html>
--<html lang="ar" dir="rtl">
--<head>
--  <meta charset="UTF-8">
--  <title>الاختبارات | لوحة التحكم</title>
--  <meta name="viewport" content="width=device-width, initial-scale=1.0">
--
--  <link rel="stylesheet" href="/css/style.css">
--  <link rel="stylesheet" href="/css/header.css">
--  <link rel="stylesheet" href="/css/footer.css">
--  <link rel="stylesheet" href="css-admin/admin.css">
--</head>
--<body>
--
--<div id="header-placeholder"></div>
--
--<main class="admin-wrapper">
--  <div class="admin-layout">
--    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
--    <section class="admin-main">
--      <div id="topbar-placeholder"></div>
--      <div class="admin-content">
--        <h1>إدارة الاختبارات</h1>
--        <button id="add-test-btn">➕ إضافة اختبار جديد</button>
--        <input type="text" id="test-search" placeholder="ابحث عن اختبار..." />
--        <table class="tests-table">
--          <thead>
--            <tr>
--              <th>عنوان الاختبار</th>
--              <th>الدورة المرتبطة</th>
--              <th>عدد الأسئلة</th>
--              <th>تاريخ الإنشاء</th>
--              <th>الإجراءات</th>
--            </tr>
--          </thead>
--          <tbody id="tests-list">
--            <!-- سيتم تعبئتها ديناميكيًا بواسطة tests-admin.js -->
--          </tbody>
--        </table>
--      </div>
--    </section>
--  </div>
--</main>
--
--<div id="footer-placeholder"></div>
--
--<script type="module" src="/js/main.js"></script>
--<script type="module" src="/js/header.js"></script>
--<script type="module" src="/js/footer.js"></script>
--
--<script type="module" src="js-admin/admin-guard.js"></script>
--<script type="module" src="js-admin/admin-layout.js"></script>
--<script type="module" src="js-admin/tests-admin.js"></script>
--
--</body>
--</html>
--
-+<!DOCTYPE html>
-+<html lang="ar" dir="rtl">
-+<head>
-+  <meta charset="UTF-8">
-+  <title>الاختبارات | لوحة التحكم</title>
-+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-+
-+  <link rel="stylesheet" href="/css/style.css">
-+  <link rel="stylesheet" href="/css/header.css">
-+  <link rel="stylesheet" href="/css/footer.css">
-+  <link rel="stylesheet" href="css-admin/admin.css">
-+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-+</head>
-+<body>
-+
-+<div id="header-placeholder"></div>
-+
-+<main class="admin-wrapper">
-+  <div class="admin-layout">
-+    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
-+    <section class="admin-main">
-+      <div id="topbar-placeholder"></div>
-+      <div class="admin-content">
-+        <h1>إدارة الاختبارات</h1>
-+        <button id="add-test-btn">➕ إضافة اختبار جديد</button>
-+        <input type="text" id="test-search" placeholder="ابحث عن اختبار..." />
-+        <table class="tests-table">
-+          <thead>
-+            <tr>
-+              <th>عنوان الاختبار</th>
-+              <th>الدورة المرتبطة</th>
-+              <th>عدد الأسئلة</th>
-+              <th>تاريخ الإنشاء</th>
-+              <th>الإجراءات</th>
-+            </tr>
-+          </thead>
-+          <tbody id="tests-list">
-+            <!-- سيتم تعبئتها ديناميكيًا بواسطة tests-admin.js -->
-+          </tbody>
-+        </table>
-+      </div>
-+    </section>
-+  </div>
-+</main>
-+
-+<div id="footer-placeholder"></div>
-+
-+<script type="module" src="/js/main.js" defer></script>
-+<script type="module" src="/js/footer.js"></script>
-+
-+<script type="module" src="js-admin/admin-guard.js"></script>
-+<script type="module" src="js-admin/admin-layout.js"></script>
-+<script type="module" src="js-admin/tests-admin.js"></script>
-+
-+</body>
-+</html>
-+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>الاختبارات | لوحة التحكم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="css-admin/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main class="admin-wrapper">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
+    </aside>
+
+    <section class="admin-main">
+      <div id="topbar-placeholder"></div>
+
+      <div class="admin-content">
+        <h1>إدارة الاختبارات</h1>
+
+        <button id="add-test-btn">➕ إضافة اختبار جديد</button>
+
+        <input type="text" id="test-search" placeholder="ابحث عن اختبار..." />
+
+        <table class="tests-table">
+          <thead>
+            <tr>
+              <th>عنوان الاختبار</th>
+              <th>الدورة المرتبطة</th>
+              <th>عدد الأسئلة</th>
+              <th>تاريخ الإنشاء</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="tests-list">
+            <!-- سيتم تعبئتها ديناميكيًا بواسطة tests-admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script type="module" src="/js/main.js" defer></script>
+<script type="module" src="/js/footer.js"></script>
+
+<script type="module" src="js-admin/admin-guard.js"></script>
+<script type="module" src="js-admin/admin-layout.js"></script>
+<script type="module" src="js-admin/tests-admin.js"></script>
+
+</body>
+</html>

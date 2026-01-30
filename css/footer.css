@@ -1,58 +1,103 @@
-diff --git a/css/footer.css b/css/footer.css
-index 281e605f4ea11aa6cdfb6617048d2246c3dbc953..ebe063d487bc6d56c7ad5194c4e4789d1fd0e662 100644
---- a/css/footer.css
-+++ b/css/footer.css
-@@ -1,26 +1,25 @@
--<style>
- footer {
-   background-color: #0f1f4d;
-   color: #ffffff;
-   font-family: 'Inter', sans-serif;
-   margin-top: 60px;
- }
- 
- .footer-container {
-   display: grid;
-   grid-template-columns: repeat(4, 1fr);
-   gap: 30px;
-   padding: 50px 20px;
- }
- 
- .footer-col h4 {
-   font-size: 18px;
-   margin-bottom: 15px;
-   color: #ffcc00;
- }
- 
- .footer-col p {
-   line-height: 1.7;
-   font-size: 14px;
-   color: #d0d6f0;
- }
-@@ -80,26 +79,25 @@ footer {
-   font-weight: 600;
-   transition: background 0.3s;
- }
- 
- .admin-btn:hover {
-   background: #c0392b;
- }
- 
- /* Responsive */
- @media (max-width: 900px) {
-   .footer-container {
-     grid-template-columns: repeat(2, 1fr);
-   }
- }
- 
- @media (max-width: 600px) {
-   .footer-container {
-     grid-template-columns: 1fr;
-     text-align: center;
-   }
- 
-   .social-icons {
-     justify-content: center;
-   }
- }
--</style>
+footer {
+  background-color: #0f1f4d;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  margin-top: 60px;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding: 50px 20px;
+}
+
+.footer-col h4 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #ffcc00;
+}
+
+.footer-col p {
+  line-height: 1.7;
+  font-size: 14px;
+  color: #d0d6f0;
+}
+
+.footer-col a {
+  display: block;
+  color: #d0d6f0;
+  text-decoration: none;
+  margin-bottom: 10px;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.footer-col a:hover {
+  color: #ffcc00;
+}
+
+.social-icons {
+  display: flex;
+  gap: 12px;
+}
+
+.social-icons a {
+  width: 36px;
+  height: 36px;
+  background-color: #1c3faa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #ffffff;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.social-icons a:hover {
+  background-color: #ffcc00;
+  color: #1c3faa;
+  transform: translateY(-3px);
+}
+
+.footer-bottom {
+  background-color: #0b1638;
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  color: #c0c6e8;
+}
+
+/* زر المسؤول */
+.admin-btn {
+  display: inline-block;
+  padding: 8px 15px;
+  background: #e74c3c;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.admin-btn:hover {
+  background: #c0392b;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .social-icons {
+    justify-content: center;
+  }
+}
