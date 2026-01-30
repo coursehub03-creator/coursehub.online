@@ -19,21 +19,33 @@
 
   <!-- Sidebar -->
   <aside class="player-sidebar">
-    <h3 id="courseTitle">...</h3>
+    <h3 id="courseTitleSidebar">...</h3>
 
     <ul id="lessonsList"></ul>
 
-    <div class="progress-box">
-      <span>التقدم</span>
-      <div class="progress-bar">
-        <div id="courseProgress"></div>
-      </div>
-      <small id="progressText">0%</small>
-    </div>
   </aside>
 
   <!-- Player -->
   <section class="player-content">
+    <div class="course-hero">
+      <div class="course-hero-info">
+        <span class="course-badge">مسار احترافي</span>
+        <h1 id="courseTitle">...</h1>
+        <p id="courseSubtitle"></p>
+        <div class="course-meta">
+          <span id="courseInstructor"></span>
+          <span id="courseLevel"></span>
+          <span id="courseDuration"></span>
+        </div>
+      </div>
+      <div class="course-hero-progress">
+        <span>تقدم الدورة</span>
+        <div class="progress-bar">
+          <div id="courseProgress"></div>
+        </div>
+        <small id="progressText">0%</small>
+      </div>
+    </div>
     <div id="slideContainer" class="slide-container">
       <p class="empty">اختر درسًا للبدء</p>
     </div>

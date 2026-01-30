@@ -55,9 +55,13 @@ onAuthStateChanged(auth, async (user) => {
             <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
             <h4>${cert.title}</h4>
             <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-            <button onclick="openCertificate('${cert.certificateUrl}')">
-              عرض الشهادة
-            </button>
+            ${cert.verificationCode ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>` : ""}
+            <div class="certificate-actions">
+              <button onclick="openCertificate('${cert.certificateUrl}')">
+                عرض الشهادة
+              </button>
+              ${cert.verificationCode ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>` : ""}
+            </div>
           </div>
         `;
       });
@@ -75,7 +79,7 @@ onAuthStateChanged(auth, async (user) => {
             <img src="${course.image}" alt="${course.title}">
             <div class="course-content">
               <h4>
-                <a href="course.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
                   ${course.title}
                 </a>
               </h4>
