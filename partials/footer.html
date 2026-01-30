@@ -1,33 +1,46 @@
-diff --git a/partials/footer.html b/partials/footer.html
-index a52687add34a6d44ff83748222cf7d5851596204..0b436dc1977882e523220050a94bf3fc142c5cd3 100644
---- a/partials/footer.html
-+++ b/partials/footer.html
-@@ -18,33 +18,27 @@
-       <h4>الحساب</h4>
-       <a href="/login.html">تسجيل الدخول</a>
-       <a href="/register.html">إنشاء حساب</a>
-       <a href="/my-courses.html">دوراتي</a>
-     </div>
- 
-     <div class="footer-col">
-       <h4>تابعنا</h4>
-       <div class="social-icons">
-         <a href="#"><i class="fab fa-facebook-f"></i></a>
-         <a href="#"><i class="fab fa-twitter"></i></a>
-         <a href="#"><i class="fab fa-youtube"></i></a>
-         <a href="#"><i class="fab fa-linkedin-in"></i></a>
-       </div>
-     </div>
- 
-     <!-- رابط لوحة الإدارة للأدمن -->
-     <div id="admin-link"></div>
- 
-   </div>
- 
-   <div class="footer-bottom">
-     © <span id="year"></span> CourseHub - جميع الحقوق محفوظة
-   </div>
- 
+<footer>
+  <div class="footer-container">
 
-  <!-- Year updated via main.js -->
- </footer>
+    <div class="footer-col">
+      <h4>CourseHub</h4>
+      <p>
+        منصتك التعليمية لتعلّم أحدث المهارات والحصول على شهادات معتمدة.
+      </p>
+    </div>
+
+    <div class="footer-col">
+      <h4>روابط سريعة</h4>
+      <a href="/index.html">الرئيسية</a>
+      <a href="/courses.html">الدورات</a>
+      <a href="/tests.html">الاختبارات</a>
+      <a href="/contact.html">تواصل معنا</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>الحساب</h4>
+      <a href="/login.html">تسجيل الدخول</a>
+      <a href="/register.html">إنشاء حساب</a>
+      <a href="/my-courses.html">دوراتي</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>تابعنا</h4>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-youtube"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+
+    <!-- رابط لوحة الإدارة (يتم حقنه ديناميكيًا من main.js) -->
+    <div id="admin-link"></div>
+
+  </div>
+
+  <div class="footer-bottom">
+    © <span id="year"></span> CourseHub - جميع الحقوق محفوظة
+  </div>
+
+  <!-- Year & admin link handled via main.js -->
+</footer>
