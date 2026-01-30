@@ -306,6 +306,7 @@ export class SlideBuilder {
         type: slide.type,
         title: slide.title,
         text: slide.text,
+        content: slide.text,
         mediaUrl: finalMediaUrl || "",
         style: {
           textColor: slide.textColor,
