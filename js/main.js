@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // إدارة حالة المستخدم في Header
     // ===============================
     setupUserState();
+    setupNotifications();
 
     // Search Bar يظهر فقط في index.html و courses.html
     const path = window.location.pathname.split("/").pop();
@@ -57,6 +58,153 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
 });
+
+// ===============================
+// إشعارات داخلية (LocalStorage)
+// ===============================
+const NOTIFICATION_KEY = "coursehub_notifications";
+
+function getStoredNotifications() {
+  try {
+    const data = JSON.parse(localStorage.getItem(NOTIFICATION_KEY));
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.warn("تعذر قراءة الإشعارات:", error);
+    return [];
+  }
+}
+
+function saveStoredNotifications(notifications) {
+  localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(notifications));
+}
+
+function markNotificationRead(notificationId) {
+  const notifications = getStoredNotifications();
+  const updated = notifications.map((item) =>
+    item.id === notificationId ? { ...item, read: true } : item
+  );
+  saveStoredNotifications(updated);
+}
+
+function markAllNotificationsRead(userId) {
+  const notifications = getStoredNotifications();
+  const updated = notifications.map((item) =>
+    item.userId === userId ? { ...item, read: true } : item
+  );
+  saveStoredNotifications(updated);
+}
+
+function formatNotificationTime(dateValue) {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("ar-EG", { hour12: true });
+}
+
+function getUserNotifications(userId) {
+  return getStoredNotifications()
+    .filter((item) => item.userId === userId)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function setupNotifications() {
+  const user = JSON.parse(localStorage.getItem("coursehub_user"));
+  const userId = user?.uid;
+  if (!userId) return;
+
+  const notifBtn = document.getElementById("notifBtn");
+  const notifBadge = document.getElementById("notifBadge");
+  const notifMenu = document.getElementById("notificationMenu");
+  const notifItems = document.getElementById("notificationItems");
+
+  if (!notifBtn || !notifBadge || !notifMenu || !notifItems) return;
+
+  const notifications = getUserNotifications(userId);
+  const unreadCount = notifications.filter((item) => !item.read).length;
+
+  notifBadge.textContent = unreadCount;
+  notifBadge.style.display = unreadCount ? "inline-flex" : "none";
+
+  if (!notifications.length) {
+    notifItems.innerHTML = `<div class="notification-empty">لا توجد إشعارات بعد.</div>`;
+  } else {
+    notifItems.innerHTML = notifications.slice(0, 5).map((item) => `
+      <a class="notification-item ${item.read ? "" : "unread"}"
+         href="${item.link}"
+         data-id="${item.id}">
+        <strong>${item.title}</strong>
+        <span class="notification-message">${item.message}</span>
+        <span class="notification-time">${formatNotificationTime(item.createdAt)}</span>
+      </a>
+    `).join("");
+  }
+
+  notifBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    notifMenu.classList.toggle("active");
+  });
+
+  notifMenu.addEventListener("click", (event) => {
+    const target = event.target.closest(".notification-item");
+    if (!target) return;
+    const id = target.dataset.id;
+    if (id) {
+      markNotificationRead(id);
+    }
+  });
+
+  document.addEventListener("click", () => {
+    notifMenu.classList.remove("active");
+  });
+
+  const listContainer = document.getElementById("notificationsList");
+  if (listContainer) {
+    renderNotificationsPage(listContainer, userId);
+  }
+}
+
+function renderNotificationsPage(listContainer, userId) {
+  const notifications = getUserNotifications(userId);
+  const countEl = document.getElementById("notificationsCount");
+  const markAllBtn = document.getElementById("markAllReadBtn");
+
+  if (countEl) {
+    countEl.textContent = `${notifications.length} إشعار`;
+  }
+
+  if (!notifications.length) {
+    listContainer.innerHTML = `<div class="notification-empty-state">لا توجد إشعارات جديدة حتى الآن.</div>`;
+  } else {
+    listContainer.innerHTML = notifications.map((item) => `
+      <div class="notification-card ${item.read ? "" : "unread"}">
+        <h3>${item.title}</h3>
+        <p>${item.message}</p>
+        <div class="notification-meta">
+          <span>${formatNotificationTime(item.createdAt)}</span>
+          <span>${item.read ? "مقروء" : "غير مقروء"}</span>
+        </div>
+        <a class="notification-action" href="${item.link}" data-id="${item.id}">
+          فتح الإشعار
+        </a>
+      </div>
+    `).join("");
+  }
+
+  if (markAllBtn) {
+    markAllBtn.onclick = () => {
+      markAllNotificationsRead(userId);
+      renderNotificationsPage(listContainer, userId);
+    };
+  }
+
+  listContainer.onclick = (event) => {
+    const actionLink = event.target.closest(".notification-action");
+    if (!actionLink) return;
+    const id = actionLink.dataset.id;
+    if (id) {
+      markNotificationRead(id);
+    }
+  };
+}
 
 // ===============================
 // إدارة حالة المستخدم (مشترك مع header.js)

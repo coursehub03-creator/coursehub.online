@@ -1,0 +1,115 @@
+.notifications-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+
+.notifications-header {
+  background: linear-gradient(135deg, #1c3faa, #15357f);
+  color: #fff;
+  padding: 28px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 24px rgba(28, 63, 170, 0.25);
+}
+
+.notifications-header h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.notifications-header p {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.9;
+}
+
+.notifications-panel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+}
+
+.notifications-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.secondary-btn {
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #1f2937;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notification-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff;
+}
+
+.notification-card.unread {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.notification-card h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.notification-card p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.notification-card .notification-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.notification-card .notification-action {
+  align-self: flex-start;
+  text-decoration: none;
+  color: #1c3faa;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.notification-empty-state {
+  text-align: center;
+  color: #6b7280;
+  padding: 30px 0;
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .notifications-toolbar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}
