@@ -85,7 +85,7 @@ function renderSlide() {
   box.innerHTML = `
     <h2>${lesson.title}</h2>
     <h3>${slide.title || ""}</h3>
-    <div>${slide.content}</div>
+    <div>${slide.content ?? slide.text ?? ""}</div>
   `;
 
   updateButtons();
