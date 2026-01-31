@@ -18,7 +18,6 @@ let currentSlide = 0;
 let isQuizActive = false;
 let quizState = null;
 let courseCompleted = false;
-
 const quizSummary = {
   totalQuestions: 0,
   correctAnswers: 0,
@@ -68,33 +67,22 @@ async function loadCourse() {
   }
 
   course = snap.data();
-
-  // ✅ دعم اللغة (AR/EN)
-  const lang = localStorage.getItem("coursehub_lang") || "ar";
-  const titleText = lang === "en" ? course.titleEn || course.title : course.title;
-  const descriptionText = lang === "en" ? course.descriptionEn || course.description : course.description;
-
   const title = document.getElementById("courseTitle");
-  if (title) title.textContent = titleText;
-
+  if (title) title.textContent = course.title;
   const sidebarTitle = document.getElementById("courseTitleSidebar");
-  if (sidebarTitle) sidebarTitle.textContent = titleText;
-
+  if (sidebarTitle) sidebarTitle.textContent = course.title;
   const subtitle = document.getElementById("courseSubtitle");
   if (subtitle) {
-    subtitle.textContent = descriptionText || "تابع هذه الدورة خطوة بخطوة بإشراف خبراء.";
+    subtitle.textContent = course.description || "تابع هذه الدورة خطوة بخطوة بإشراف خبراء.";
   }
-
   const instructor = document.getElementById("courseInstructor");
   if (instructor) {
     instructor.textContent = course.instructor ? `المدرب: ${course.instructor}` : "";
   }
-
   const level = document.getElementById("courseLevel");
   if (level) {
     level.textContent = course.level ? `المستوى: ${course.level}` : "المستوى: جميع المستويات";
   }
-
   const duration = document.getElementById("courseDuration");
   if (duration) {
     duration.textContent = course.duration ? `المدة: ${course.duration}` : "";
@@ -133,7 +121,6 @@ function renderSlide() {
   isQuizActive = false;
   const playerContent = document.querySelector(".player-content");
   if (playerContent) playerContent.classList.remove("is-quiz");
-
   const lesson = course.lessons[currentLesson];
   const slide = lesson.slides[currentSlide];
 
@@ -192,7 +179,6 @@ function renderQuiz(lesson) {
   isQuizActive = true;
   const playerContent = document.querySelector(".player-content");
   if (playerContent) playerContent.classList.add("is-quiz");
-
   quizState = {
     lessonIndex: currentLesson,
     questionIndex: 0,
@@ -334,16 +320,12 @@ function nextLesson() {
 
 async function completeCourse() {
   courseCompleted = true;
-
   const finalScore = quizSummary.totalQuestions
     ? Math.round((quizSummary.correctAnswers / quizSummary.totalQuestions) * 100)
     : 100;
 
   const certId = `${user.uid}_${courseId}`;
   const verificationCode = generateVerificationCode();
-
-  // ✅ إنشاء شهادة كصورة (DataURL)
-  const certificateUrl = await generateCertificateUrl();
 
   await setDoc(
     doc(db, "certificates", certId),
@@ -352,8 +334,7 @@ async function completeCourse() {
       courseId,
       courseTitle: course.title,
       completedAt: new Date(),
-      verificationCode,
-      certificateUrl
+      verificationCode
     }
   );
 
@@ -370,7 +351,7 @@ async function completeCourse() {
       certificates: arrayUnion({
         title: course.title,
         issuedAt: new Date().toLocaleDateString("ar-EG"),
-        certificateUrl: certificateUrl || course.certificateUrl || "/assets/images/certificate.jpg",
+        certificateUrl: course.certificateUrl || "/assets/images/certificate.jpg",
         verificationCode
       })
     },
@@ -378,7 +359,6 @@ async function completeCourse() {
   );
 
   saveCompletionState();
-
   pushCourseNotification({
     title: "تم إنهاء الدورة بنجاح",
     message: `تهانينا! أكملت دورة "${course.title}" بنجاح.`,
@@ -405,6 +385,7 @@ async function saveResume() {
       },
       { merge: true }
     );
+
   } catch (err) {
     console.error("❌ خطأ أثناء حفظ التقدم:", err);
   }
@@ -417,6 +398,7 @@ async function loadResume() {
   if (!snap.exists()) return;
 
   const data = snap.data();
+
   currentLesson = data.lesson || 0;
   currentSlide = data.slide || 0;
 }
@@ -436,10 +418,7 @@ function updateProgressBar() {
     currentSteps = course.lessons[currentLesson].slides.length + 1;
   }
 
-  const percent = Math.min(
-    100,
-    Math.floor(((completedLessonsSteps + currentSteps) / totalSteps) * 100)
-  );
+  const percent = Math.min(100, Math.floor(((completedLessonsSteps + currentSteps) / totalSteps) * 100));
 
   document.getElementById("courseProgress").style.width = percent + "%";
   document.getElementById("progressText").textContent = percent + "%";
@@ -447,31 +426,23 @@ function updateProgressBar() {
 
 function showCourseCompletion(finalScore) {
   const box = document.getElementById("slideContainer");
-  const summaryItems = quizSummary.lessons
-    .map(
-      (lesson) => `
+  const summaryItems = quizSummary.lessons.map((lesson) => `
     <li>
       <strong>${lesson.title}</strong>
       <span>${lesson.score}/${lesson.total} (${lesson.percent}%)</span>
     </li>
-  `
-    )
-    .join("");
+  `).join("");
 
   box.innerHTML = `
     <div class="course-finish">
       <h2>🎉 تم إنهاء الدورة بنجاح</h2>
       <p>نتيجتك الإجمالية في الاختبارات: ${finalScore}%</p>
-      ${
-        quizSummary.lessons.length
-          ? `
+      ${quizSummary.lessons.length ? `
         <div class="course-finish-results">
           <h3>تفاصيل نتائج الاختبارات</h3>
           <ul>${summaryItems}</ul>
         </div>
-      `
-          : `<p>لا توجد اختبارات لهذه الدورة.</p>`
-      }
+      ` : `<p>لا توجد اختبارات لهذه الدورة.</p>`}
       <button class="primary" id="goAchievementsBtn">عرض شهادتي</button>
     </div>
   `;
@@ -528,7 +499,6 @@ function getStoredNotifications() {
 
 function notifyIncompleteCourse() {
   if (!user || !courseId || !course) return;
-
   const completedCourses = getCompletedCourses();
   if (completedCourses[courseId]) return;
   if (currentLesson === 0 && currentSlide === 0) return;
@@ -593,60 +563,5 @@ async function saveQuizAttempt(lesson, score, percent) {
 }
 
 function generateVerificationCode() {
-  return `CH-${Date.now().toString(36).toUpperCase()}-${Math.random()
-    .toString(36)
-    .slice(2, 6)
-    .toUpperCase()}`;
-}
-
-async function generateCertificateUrl() {
-  try {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1200;
-    canvas.height = 850;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return "";
-
-    const template = await loadImage("/assets/images/certificate.jpg");
-    ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
-
-    const lang = localStorage.getItem("coursehub_lang") || "ar";
-    const studentName = user?.displayName || user?.email || "طالب CourseHub";
-
-    const courseTitle =
-      lang === "en" ? course.titleEn || course.title : course.title;
-
-    const date = new Date().toLocaleDateString(
-      lang === "en" ? "en-US" : "ar-EG"
-    );
-
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#1c3faa";
-    ctx.font = "bold 40px 'Inter', sans-serif";
-    ctx.fillText(studentName, canvas.width / 2, 420);
-
-    ctx.fillStyle = "#111827";
-    ctx.font = "bold 30px 'Inter', sans-serif";
-    ctx.fillText(courseTitle, canvas.width / 2, 480);
-
-    ctx.fillStyle = "#6b7280";
-    ctx.font = "20px 'Inter', sans-serif";
-    ctx.fillText(date, canvas.width / 2, 540);
-
-    return canvas.toDataURL("image/png");
-  } catch (error) {
-    console.error("تعذر إنشاء الشهادة:", error);
-    return "";
-  }
-}
-
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
+  return `CH-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 }

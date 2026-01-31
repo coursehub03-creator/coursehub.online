@@ -39,23 +39,23 @@
         <div class="admin-cards">
           <div class="card">
             <div class="card-title">التسجيلات الجديدة</div>
-            <div class="card-value" id="analyticsEnrollments">0</div>
-            <span class="badge success">مباشر</span>
+            <div class="card-value">+1,284</div>
+            <span class="badge success">+12% هذا الأسبوع</span>
           </div>
           <div class="card">
             <div class="card-title">نسبة الإكمال</div>
-            <div class="card-value" id="analyticsCompletionRate">0%</div>
-            <span class="badge warning">آخر تحديث</span>
+            <div class="card-value">63%</div>
+            <span class="badge warning">-2% عن الأسبوع الماضي</span>
           </div>
           <div class="card">
             <div class="card-title">الدورات النشطة</div>
-            <div class="card-value" id="analyticsCourses">0</div>
+            <div class="card-value">128</div>
             <span class="badge neutral">محدثة اليوم</span>
           </div>
           <div class="card">
             <div class="card-title">متوسط التقييم</div>
-            <div class="card-value" id="analyticsRating">0.0</div>
-            <span class="badge success">مباشر</span>
+            <div class="card-value">4.6</div>
+            <span class="badge success">+0.2</span>
           </div>
         </div>
 
@@ -96,7 +96,29 @@
                 <th>الحالة</th>
               </tr>
             </thead>
-            <tbody id="analyticsTopCourses"></tbody>
+            <tbody>
+              <tr>
+                <td>تحليل البيانات المتقدم</td>
+                <td>1,200</td>
+                <td>72%</td>
+                <td>4.8</td>
+                <td><span class="badge success">مستقرة</span></td>
+              </tr>
+              <tr>
+                <td>تصميم واجهات احترافية</td>
+                <td>980</td>
+                <td>65%</td>
+                <td>4.5</td>
+                <td><span class="badge warning">قيد التحسين</span></td>
+              </tr>
+              <tr>
+                <td>إدارة المنتجات الرقمية</td>
+                <td>860</td>
+                <td>59%</td>
+                <td>4.4</td>
+                <td><span class="badge neutral">جديد</span></td>
+              </tr>
+            </tbody>
           </table>
         </div>
 
@@ -107,8 +129,14 @@
               <p class="helper-text">ملخص المخاطر لتسهيل تحسين الجودة.</p>
             </div>
           </div>
-          <div class="alert warning" id="analyticsLowCompletion"></div>
-          <div class="alert info" id="analyticsPendingReview"></div>
+          <div class="alert warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            توجد 12 دورة بنسب إكمال أقل من 40%. ينصح بتحديث المحتوى أو إعادة هيكلة الدروس.
+          </div>
+          <div class="alert info">
+            <i class="fa-solid fa-circle-info"></i>
+            3 دورات بحاجة مراجعة نهائية قبل النشر وفق معايير الجودة.
+          </div>
         </div>
       </div>
     </section>
@@ -122,7 +150,6 @@
 
 <script type="module" src="js-admin/admin-guard.js"></script>
 <script type="module" src="js-admin/admin-layout.js"></script>
-<script type="module" src="js-admin/analytics.js"></script>
 
 </body>
 </html>

@@ -36,8 +36,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // تحميل الدورات
   // -----------------------------
   let allCourses = [];
-  let enrollmentsMap = new Map();
-  let completionsMap = new Map();
 
   const statusBadge = (status) => {
     if (status === "published") return "<span class='badge success'>منشورة</span>";
@@ -50,25 +48,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!courses.length) {
       tbody.innerHTML =
-        "<tr><td colspan='7'>لا توجد دورات حالياً</td></tr>";
+        "<tr><td colspan='5'>لا توجد دورات حالياً</td></tr>";
       return;
     }
 
     courses.forEach(({ id, data }) => {
       const course = data;
-      const startedCount = enrollmentsMap.get(id) || 0;
-      const completedCount = completionsMap.get(id) || 0;
-      const inProgressCount = Math.max(0, startedCount - completedCount);
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${course.title || "-"}</td>
         <td>${course.description || "-"}</td>
         <td>${statusBadge(course.status)}</td>
-        <td>${startedCount}</td>
-        <td>${completedCount}</td>
-        <td>${inProgressCount}</td>
+        <td>${course.studentsCount || 0}</td>
         <td>
-          <a class="btn outline" href="/admin/edit-course.html?id=${id}">تعديل</a>
           <button
             type="button"
             class="delete-btn"
@@ -100,33 +92,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function loadCourses() {
     tbody.innerHTML =
-      "<tr><td colspan='7'>جارٍ تحميل الدورات...</td></tr>";
+      "<tr><td colspan='5'>جارٍ تحميل الدورات...</td></tr>";
 
     try {
-      const enrollmentsSnap = await getDocs(collection(db, "enrollments"));
-      const enrollmentKeys = new Set();
-      enrollmentsMap = new Map();
-      enrollmentsSnap.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (!data.courseId || !data.userId) return;
-        const key = `${data.courseId}_${data.userId}`;
-        if (enrollmentKeys.has(key)) return;
-        enrollmentKeys.add(key);
-        enrollmentsMap.set(data.courseId, (enrollmentsMap.get(data.courseId) || 0) + 1);
-      });
-
-      const completionsSnap = await getDocs(collection(db, "certificates"));
-      const completionKeys = new Set();
-      completionsMap = new Map();
-      completionsSnap.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (!data.courseId || !data.userId) return;
-        const key = `${data.courseId}_${data.userId}`;
-        if (completionKeys.has(key)) return;
-        completionKeys.add(key);
-        completionsMap.set(data.courseId, (completionsMap.get(data.courseId) || 0) + 1);
-      });
-
       const snapshot = await getDocs(collection(db, "courses"));
       allCourses = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
@@ -137,7 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (err) {
       console.error("خطأ في تحميل الدورات:", err);
       tbody.innerHTML =
-        "<tr><td colspan='7'>حدث خطأ أثناء التحميل</td></tr>";
+        "<tr><td colspan='5'>حدث خطأ أثناء التحميل</td></tr>";
     }
   }
 
