@@ -42,6 +42,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     // انتظار تحميل الكل
     await Promise.all(loadPromises);
 
+    const currentPath = window.location.pathname.split("/").pop();
+    const sidebarLinks = document.querySelectorAll(".sidebar-menu a");
+    sidebarLinks.forEach((link) => {
+      link.classList.toggle("active", link.getAttribute("href") === currentPath);
+    });
+
+    const sidebarToggle = document.getElementById("sidebar-toggle");
+    if (sidebarToggle) {
+      const storedState = localStorage.getItem("admin_sidebar_collapsed");
+      if (storedState === "true") {
+        document.querySelector(".admin-layout")?.classList.add("collapsed");
+      }
+
+      sidebarToggle.addEventListener("click", () => {
+        const layout = document.querySelector(".admin-layout");
+        if (!layout) return;
+        layout.classList.toggle("collapsed");
+        localStorage.setItem("admin_sidebar_collapsed", layout.classList.contains("collapsed"));
+      });
+    }
+
+    const adminSearchInput = document.getElementById("adminSearchInput");
+    const adminSearchBtn = document.getElementById("adminSearchBtn");
+    const emitAdminSearch = () => {
+      const query = adminSearchInput?.value || "";
+      document.dispatchEvent(new CustomEvent("adminSearch", { detail: { query } }));
+    };
+
+    adminSearchInput?.addEventListener("input", emitAdminSearch);
+    adminSearchBtn?.addEventListener("click", emitAdminSearch);
+    adminSearchInput?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        emitAdminSearch();
+      }
+    });
+
     // إطلاق حدث مخصص لباقي ملفات الأدمن
     document.dispatchEvent(new Event("adminLayoutLoaded"));
 

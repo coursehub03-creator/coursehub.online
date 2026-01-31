@@ -74,11 +74,49 @@
     </a>
   </section>
 
+  <section class="course-reviews container">
+    <h2>تقييمات المتعلمين</h2>
+    <div class="reviews-summary">
+      <div>
+        <strong id="reviewsAverage">0.0</strong>
+        <span>متوسط التقييم</span>
+      </div>
+      <div>
+        <strong id="reviewsCount">0</strong>
+        <span>مراجعة</span>
+      </div>
+    </div>
+
+    <div class="reviews-list" id="reviewsList"></div>
+    <div class="empty-state" id="reviewsEmpty">لا توجد مراجعات بعد.</div>
+
+    <form id="reviewForm" class="review-form">
+      <h3>أضف تقييمك</h3>
+      <label>
+        التقييم
+        <select id="reviewRating" required>
+          <option value="">اختر</option>
+          <option value="5">5 - ممتاز</option>
+          <option value="4">4 - جيد جدًا</option>
+          <option value="3">3 - جيد</option>
+          <option value="2">2 - مقبول</option>
+          <option value="1">1 - ضعيف</option>
+        </select>
+      </label>
+      <label>
+        ملاحظاتك
+        <textarea id="reviewComment" rows="4" placeholder="شاركنا تجربتك مع الدورة"></textarea>
+      </label>
+      <button type="submit" class="btn">إرسال المراجعة</button>
+    </form>
+  </section>
+
   <!-- Footer -->
   <div id="footer-placeholder"></div>
 
   <!-- JS -->
   <script type="module" src="/js/course-detail.js"></script>
+  <script type="module" src="/js/reviews.js"></script>
   <script type="module" src="/js/main.js" defer></script>
 
 </body>

@@ -115,7 +115,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       const title = document.getElementById("title").value.trim();
+      const titleEn = document.getElementById("titleEn")?.value.trim() || "";
       const description = document.getElementById("description").value.trim();
+      const descriptionEn = document.getElementById("descriptionEn")?.value.trim() || "";
       const category = document.getElementById("category").value.trim();
       const level = document.getElementById("level")?.value || "";
       const language = document.getElementById("language")?.value || "";
@@ -139,6 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       /* ===== Upload Cover Image ===== */
       let coverImageUrl = "";
       const coverFile = document.getElementById("coverImage").files[0];
+      const coverImageUrlInput = document.getElementById("coverImageUrl")?.value.trim() || "";
 
       if (coverFile) {
         const coverRef = ref(
@@ -147,6 +150,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
         await uploadBytes(coverRef, coverFile);
         coverImageUrl = await getDownloadURL(coverRef);
+      } else if (coverImageUrlInput) {
+        coverImageUrl = coverImageUrlInput;
       }
 
       /* ===== Build Lessons Data ===== */
@@ -169,7 +174,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       /* ===== Firestore ===== */
       await addDoc(collection(db, "courses"), {
         title,
+        titleEn,
         description,
+        descriptionEn,
         category,
         level,
         language,

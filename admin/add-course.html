@@ -69,6 +69,10 @@
                   <span class="field-help">اختر عنوانًا واضحًا وجذابًا.</span>
                 </div>
                 <div class="field-group">
+                  <label>عنوان الدورة (بالإنجليزية)</label>
+                  <input type="text" id="titleEn" name="titleEn" placeholder="Example: Introduction to AI">
+                </div>
+                <div class="field-group">
                   <label>تصنيف الدورة</label>
                   <input type="text" id="category" placeholder="مثال: الذكاء الاصطناعي">
                 </div>
@@ -101,6 +105,10 @@
                 <label>وصف الدورة</label>
                 <textarea id="description" name="description" rows="5" required placeholder="اكتب وصفًا احترافيًا يوضح أهداف الدورة والفائدة للطالب"></textarea>
               </div>
+              <div class="field-group">
+                <label>وصف الدورة (بالإنجليزية)</label>
+                <textarea id="descriptionEn" name="descriptionEn" rows="5" placeholder="Write a concise English description"></textarea>
+              </div>
             </div>
 
             <div class="builder-card">
@@ -109,6 +117,11 @@
                   <label>صورة الغلاف</label>
                   <input type="file" id="coverImage" accept="image/*">
                   <span class="field-help">ينصح بنسبة أبعاد 16:9 وجودة عالية.</span>
+                </div>
+                <div class="field-group">
+                  <label>رابط صورة الغلاف (اختياري)</label>
+                  <input type="url" id="coverImageUrl" placeholder="https://example.com/cover.jpg">
+                  <span class="field-help">يمكنك إدخال رابط مباشر بدل رفع ملف.</span>
                 </div>
                 <div class="cover-preview">
                   <p class="helper-text">معاينة الغلاف</p>

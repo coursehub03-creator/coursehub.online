@@ -70,6 +70,8 @@
     const coursesGrid = document.getElementById("coursesGrid");
     const categoryButtons = document.querySelectorAll(".categories button");
     let allCourses = [];
+    let activeCategory = "all";
+    let searchQuery = "";
 
     async function loadCourses() {
       try {
@@ -84,6 +86,7 @@
 
     function renderCourses(courses) {
       coursesGrid.innerHTML = "";
+      const lang = localStorage.getItem("coursehub_lang") || "ar";
 
       if (!courses || courses.length === 0) {
         coursesGrid.innerHTML = "<div class='empty-msg'>لا توجد دورات حالياً.</div>";
@@ -91,16 +94,18 @@
       }
 
       courses.forEach((course) => {
+        const titleText = lang === "en" ? course.titleEn || course.title : course.title;
+        const descriptionText = lang === "en" ? course.descriptionEn || course.description : course.description;
         const card = document.createElement("div");
         card.className = "card";
         card.dataset.category = course.category || "all";
 
         card.innerHTML = `
-          <img src="${course.image || "assets/images/default-course.png"}" alt="${course.title}">
+          <img src="${course.image || "assets/images/default-course.png"}" alt="${titleText}">
           <div class="card-content">
-            <h3 onclick="window.location.href='course-detail.html?id=${course.id}'">${course.title}</h3>
+            <h3 onclick="window.location.href='course-detail.html?id=${course.id}'">${titleText}</h3>
             <div class="rating">${"★".repeat(course.rating || 4)} <span>(${course.students || 0} طالب)</span></div>
-            <p>${course.description || ""}</p>
+            <p>${descriptionText || ""}</p>
             <a href="course-detail.html?id=${course.id}" class="btn">عرض الدورة</a>
           </div>
         `;
@@ -109,19 +114,73 @@
       });
     }
 
+    function applyFilters() {
+      const lang = localStorage.getItem("coursehub_lang") || "ar";
+      const filtered = allCourses.filter((course) => {
+        const inCategory = activeCategory === "all" || course.category === activeCategory;
+        const titleText = lang === "en" ? course.titleEn || course.title : course.title;
+        const descriptionText = lang === "en" ? course.descriptionEn || course.description : course.description;
+        const searchable = `${titleText || ""} ${descriptionText || ""} ${course.instructor || ""}`.toLowerCase();
+        const matchesSearch = !searchQuery || searchable.includes(searchQuery);
+        return inCategory && matchesSearch;
+      });
+
+      renderCourses(filtered);
+    }
+
     function filterCategory(cat) {
+      activeCategory = cat;
       categoryButtons.forEach((b) => b.classList.remove("active"));
       const activeBtn = document.querySelector(`[data-category="${cat}"]`);
       if (activeBtn) activeBtn.classList.add("active");
+      applyFilters();
+    }
 
-      renderCourses(cat === "all" ? allCourses : allCourses.filter((c) => c.category === cat));
+    function setupHeaderSearch() {
+      const searchInput = document.getElementById("searchInput");
+      const searchBtn = document.getElementById("searchBtn");
+
+      if (!searchInput || !searchBtn) return;
+
+      const handleSearch = () => {
+        searchQuery = searchInput.value.trim().toLowerCase();
+        applyFilters();
+      };
+
+      searchBtn.addEventListener("click", handleSearch);
+      searchInput.addEventListener("input", handleSearch);
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          handleSearch();
+        }
+      });
+
+      const urlSearch = new URLSearchParams(window.location.search).get("search");
+      if (urlSearch) {
+        searchInput.value = urlSearch;
+        searchQuery = urlSearch.toLowerCase();
+      }
     }
 
     categoryButtons.forEach((btn) => {
       btn.addEventListener("click", () => filterCategory(btn.dataset.category));
     });
 
-    loadCourses();
+    loadCourses().then(() => {
+      const observer = new MutationObserver(() => {
+        const searchInput = document.getElementById("searchInput");
+        if (searchInput) {
+          setupHeaderSearch();
+          if (searchQuery) {
+            applyFilters();
+          }
+          observer.disconnect();
+        }
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
   </script>
 </body>
 </html>
