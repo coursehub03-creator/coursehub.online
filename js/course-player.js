@@ -18,6 +18,7 @@ let currentSlide = 0;
 let isQuizActive = false;
 let quizState = null;
 let courseCompleted = false;
+
 const quizSummary = {
   totalQuestions: 0,
   correctAnswers: 0,
@@ -67,25 +68,33 @@ async function loadCourse() {
   }
 
   course = snap.data();
+
+  // ✅ دعم اللغة (AR/EN)
   const lang = localStorage.getItem("coursehub_lang") || "ar";
   const titleText = lang === "en" ? course.titleEn || course.title : course.title;
   const descriptionText = lang === "en" ? course.descriptionEn || course.description : course.description;
+
   const title = document.getElementById("courseTitle");
   if (title) title.textContent = titleText;
+
   const sidebarTitle = document.getElementById("courseTitleSidebar");
   if (sidebarTitle) sidebarTitle.textContent = titleText;
+
   const subtitle = document.getElementById("courseSubtitle");
   if (subtitle) {
     subtitle.textContent = descriptionText || "تابع هذه الدورة خطوة بخطوة بإشراف خبراء.";
   }
+
   const instructor = document.getElementById("courseInstructor");
   if (instructor) {
     instructor.textContent = course.instructor ? `المدرب: ${course.instructor}` : "";
   }
+
   const level = document.getElementById("courseLevel");
   if (level) {
     level.textContent = course.level ? `المستوى: ${course.level}` : "المستوى: جميع المستويات";
   }
+
   const duration = document.getElementById("courseDuration");
   if (duration) {
     duration.textContent = course.duration ? `المدة: ${course.duration}` : "";
@@ -124,6 +133,7 @@ function renderSlide() {
   isQuizActive = false;
   const playerContent = document.querySelector(".player-content");
   if (playerContent) playerContent.classList.remove("is-quiz");
+
   const lesson = course.lessons[currentLesson];
   const slide = lesson.slides[currentSlide];
 
@@ -182,6 +192,7 @@ function renderQuiz(lesson) {
   isQuizActive = true;
   const playerContent = document.querySelector(".player-content");
   if (playerContent) playerContent.classList.add("is-quiz");
+
   quizState = {
     lessonIndex: currentLesson,
     questionIndex: 0,
@@ -323,12 +334,15 @@ function nextLesson() {
 
 async function completeCourse() {
   courseCompleted = true;
+
   const finalScore = quizSummary.totalQuestions
     ? Math.round((quizSummary.correctAnswers / quizSummary.totalQuestions) * 100)
     : 100;
 
   const certId = `${user.uid}_${courseId}`;
   const verificationCode = generateVerificationCode();
+
+  // ✅ إنشاء شهادة كصورة (DataURL)
   const certificateUrl = await generateCertificateUrl();
 
   await setDoc(
@@ -364,6 +378,7 @@ async function completeCourse() {
   );
 
   saveCompletionState();
+
   pushCourseNotification({
     title: "تم إنهاء الدورة بنجاح",
     message: `تهانينا! أكملت دورة "${course.title}" بنجاح.`,
@@ -390,7 +405,6 @@ async function saveResume() {
       },
       { merge: true }
     );
-
   } catch (err) {
     console.error("❌ خطأ أثناء حفظ التقدم:", err);
   }
@@ -403,7 +417,6 @@ async function loadResume() {
   if (!snap.exists()) return;
 
   const data = snap.data();
-
   currentLesson = data.lesson || 0;
   currentSlide = data.slide || 0;
 }
@@ -423,7 +436,10 @@ function updateProgressBar() {
     currentSteps = course.lessons[currentLesson].slides.length + 1;
   }
 
-  const percent = Math.min(100, Math.floor(((completedLessonsSteps + currentSteps) / totalSteps) * 100));
+  const percent = Math.min(
+    100,
+    Math.floor(((completedLessonsSteps + currentSteps) / totalSteps) * 100)
+  );
 
   document.getElementById("courseProgress").style.width = percent + "%";
   document.getElementById("progressText").textContent = percent + "%";
@@ -431,23 +447,31 @@ function updateProgressBar() {
 
 function showCourseCompletion(finalScore) {
   const box = document.getElementById("slideContainer");
-  const summaryItems = quizSummary.lessons.map((lesson) => `
+  const summaryItems = quizSummary.lessons
+    .map(
+      (lesson) => `
     <li>
       <strong>${lesson.title}</strong>
       <span>${lesson.score}/${lesson.total} (${lesson.percent}%)</span>
     </li>
-  `).join("");
+  `
+    )
+    .join("");
 
   box.innerHTML = `
     <div class="course-finish">
       <h2>🎉 تم إنهاء الدورة بنجاح</h2>
       <p>نتيجتك الإجمالية في الاختبارات: ${finalScore}%</p>
-      ${quizSummary.lessons.length ? `
+      ${
+        quizSummary.lessons.length
+          ? `
         <div class="course-finish-results">
           <h3>تفاصيل نتائج الاختبارات</h3>
           <ul>${summaryItems}</ul>
         </div>
-      ` : `<p>لا توجد اختبارات لهذه الدورة.</p>`}
+      `
+          : `<p>لا توجد اختبارات لهذه الدورة.</p>`
+      }
       <button class="primary" id="goAchievementsBtn">عرض شهادتي</button>
     </div>
   `;
@@ -504,6 +528,7 @@ function getStoredNotifications() {
 
 function notifyIncompleteCourse() {
   if (!user || !courseId || !course) return;
+
   const completedCourses = getCompletedCourses();
   if (completedCourses[courseId]) return;
   if (currentLesson === 0 && currentSlide === 0) return;
@@ -568,7 +593,10 @@ async function saveQuizAttempt(lesson, score, percent) {
 }
 
 function generateVerificationCode() {
-  return `CH-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  return `CH-${Date.now().toString(36).toUpperCase()}-${Math.random()
+    .toString(36)
+    .slice(2, 6)
+    .toUpperCase()}`;
 }
 
 async function generateCertificateUrl() {
@@ -576,6 +604,7 @@ async function generateCertificateUrl() {
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
     canvas.height = 850;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return "";
 
@@ -584,11 +613,13 @@ async function generateCertificateUrl() {
 
     const lang = localStorage.getItem("coursehub_lang") || "ar";
     const studentName = user?.displayName || user?.email || "طالب CourseHub";
+
     const courseTitle =
-      lang === "en"
-        ? course.titleEn || course.title
-        : course.title;
-    const date = new Date().toLocaleDateString(lang === "en" ? "en-US" : "ar-EG");
+      lang === "en" ? course.titleEn || course.title : course.title;
+
+    const date = new Date().toLocaleDateString(
+      lang === "en" ? "en-US" : "ar-EG"
+    );
 
     ctx.textAlign = "center";
     ctx.fillStyle = "#1c3faa";
