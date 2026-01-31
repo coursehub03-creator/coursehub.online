@@ -1,9 +1,6 @@
 import { db } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
-import {
-  collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   await protectAdmin();
@@ -17,6 +14,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let allUsers = [];
 
+  // ✅ توحيد عرض الدور (codex): بعض البيانات قد تكون role="user" ونعتبرها student
+  const normalizeRole = (roleValue) => {
+    const role = roleValue || "student";
+    return role === "user" ? "student" : role;
+  };
+
+  // ✅ اسم عرض أفضل (codex)
+  const getDisplayName = (user) => {
+    return (
+      user.name ||
+      user.displayName ||
+      user.fullName ||
+      (user.email ? user.email.split("@")[0] : "") ||
+      user.uid ||
+      user.id ||
+      "-"
+    );
+  };
+
   const renderUsers = (users) => {
     tbody.innerHTML = "";
     if (!users.length) {
@@ -25,11 +41,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     users.forEach((user) => {
+      const displayName = getDisplayName(user);
+      const roleLabel = normalizeRole(user.role);
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${user.name || user.displayName || "-"}</td>
+        <td>${displayName}</td>
         <td>${user.email || "-"}</td>
-        <td>${user.role || "student"}</td>
+        <td>${roleLabel}</td>
         <td><span class="badge neutral">${user.status || "active"}</span></td>
       `;
       tbody.appendChild(tr);
@@ -42,10 +61,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     const query = searchInput?.value.toLowerCase().trim() || "";
 
     const filtered = allUsers.filter((user) => {
-      const roleMatch = role === "all" || user.role === role;
-      const statusMatch = status === "all" || (user.status || "active") === status;
+      const normalizedRole = normalizeRole(user.role);
+      const roleMatch = role === "all" || normalizedRole === role;
+
+      const userStatus = user.status || "active";
+      const statusMatch = status === "all" || userStatus === status;
+
+      const normalizedName = (user.name || user.displayName || user.fullName || "").toLowerCase();
+      const normalizedEmail = (user.email || "").toLowerCase();
+      const normalizedUid = (user.uid || user.id || "").toLowerCase();
+
       const searchMatch =
-        !query || (user.name || user.displayName || "").toLowerCase().includes(query);
+        !query ||
+        normalizedName.includes(query) ||
+        normalizedEmail.includes(query) ||
+        normalizedUid.includes(query);
+
       return roleMatch && statusMatch && searchMatch;
     });
 
@@ -64,4 +95,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   roleFilter?.addEventListener("change", applyFilters);
   statusFilter?.addEventListener("change", applyFilters);
   searchInput?.addEventListener("input", applyFilters);
+
+  // ✅ دعم البحث القادم من واجهة ثانية/هيدر (ميزة codex)
+  document.addEventListener("adminSearch", (event) => {
+    if (!searchInput) return;
+    searchInput.value = event.detail?.query || "";
+    applyFilters();
+  });
 });

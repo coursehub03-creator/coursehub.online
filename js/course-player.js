@@ -261,9 +261,7 @@ function renderQuizQuestion() {
     });
   });
 
-  if (selectedValue !== undefined) {
-    nextBtn.disabled = false;
-  }
+  if (selectedValue !== undefined) nextBtn.disabled = false;
 
   nextBtn.addEventListener("click", () => {
     if (isLast) {
@@ -359,9 +357,10 @@ async function completeCourse() {
   const certId = `${user.uid}_${courseId}`;
   const verificationCode = generateVerificationCode();
 
-  // ✅ توليد شهادة (DataURL) - من نسخة codex
+  // ✅ توليد شهادة (DataURL)
   const certificateUrl = await generateCertificateUrl();
 
+  // ✅ حفظ الشهادة في مجموعة certificates
   await setDoc(doc(db, "certificates", certId), {
     userId: user.uid,
     courseId,
@@ -371,6 +370,7 @@ async function completeCourse() {
     certificateUrl
   });
 
+  // ✅ تحديث المستخدم (completedCourses + certificates)
   await setDoc(
     doc(db, "users", user.uid),
     {
@@ -427,7 +427,6 @@ async function saveResume() {
 async function loadResume() {
   const docId = `${user.uid}_${courseId}`;
   const snap = await getDoc(doc(db, "enrollments", docId));
-
   if (!snap.exists()) return;
 
   const data = snap.data();
@@ -630,8 +629,7 @@ async function generateCertificateUrl() {
 
     const lang = localStorage.getItem("coursehub_lang") || "ar";
     const studentName = user?.displayName || user?.email || "طالب CourseHub";
-    const titleToPrint =
-      lang === "en" ? course.titleEn || course.title : course.title;
+    const titleToPrint = lang === "en" ? course.titleEn || course.title : course.title;
     const date = new Date().toLocaleDateString(lang === "en" ? "en-US" : "ar-EG");
 
     ctx.textAlign = "center";
