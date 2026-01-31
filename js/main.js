@@ -20,9 +20,6 @@ loadCSS("/css/style.css");
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("Main JS جاهز!");
 
-  // ===============================
-  // تحميل Header و Footer ديناميكيًا
-  // ===============================
   const headerPlaceholder = document.getElementById("header-placeholder");
   const footerPlaceholder = document.getElementById("footer-placeholder");
 
@@ -36,33 +33,35 @@ document.addEventListener("DOMContentLoaded", async () => {
       const footerHTML = await (await fetch("/partials/footer.html")).text();
       footerPlaceholder.innerHTML = footerHTML;
 
-      // تحديث سنة الحقوق تلقائيًا
       const yearEl = footerPlaceholder.querySelector("#year");
       if (yearEl) yearEl.textContent = new Date().getFullYear();
     }
 
-    // ===============================
-    // إدارة حالة المستخدم في Header
-    // ===============================
+    // ✅ إدارة حالة المستخدم + اللغة + الإشعارات
     setupUserState();
     setupLanguageToggle();
     setupNotifications();
+
+    // ✅ ميزة codex: مزامنة البروفايل مع Firestore
     syncUserProfile();
 
     // Search Bar يظهر فقط في index.html و courses.html
     const path = window.location.pathname.split("/").pop();
     const searchBar = headerPlaceholder?.querySelector("#headerSearchBar");
     if (searchBar) {
-      searchBar.style.display = (path === "index.html" || path === "courses.html") ? "flex" : "none";
+      searchBar.style.display =
+        path === "index.html" || path === "courses.html" ? "flex" : "none";
     }
 
     setupHeaderSearch();
-
   } catch (err) {
     console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
 });
 
+// ===============================
+// مزامنة بيانات المستخدم إلى Firestore (ميزة codex)
+// ===============================
 async function syncUserProfile() {
   const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
   if (!storedUser?.uid) return;
@@ -73,7 +72,8 @@ async function syncUserProfile() {
       "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
     );
 
-    const normalizedRole = storedUser.role === "user" ? "student" : storedUser.role || "student";
+    const normalizedRole =
+      storedUser.role === "user" ? "student" : storedUser.role || "student";
 
     await setDoc(
       doc(db, "users", storedUser.uid),
@@ -93,6 +93,9 @@ async function syncUserProfile() {
   }
 }
 
+// ===============================
+// بحث الهيدر
+// ===============================
 function setupHeaderSearch() {
   const path = window.location.pathname.split("/").pop();
   const searchInput = document.getElementById("searchInput");
@@ -119,7 +122,7 @@ function setupHeaderSearch() {
 }
 
 // ===============================
-// إشعارات داخلية (LocalStorage)
+// إشعارات (LocalStorage + Firestore fallback)
 // ===============================
 const NOTIFICATION_KEY = "coursehub_notifications";
 
@@ -170,7 +173,10 @@ function setupNotifications() {
     if (!notifications.length) {
       notifItems.innerHTML = `<div class="notification-empty">لا توجد إشعارات بعد.</div>`;
     } else {
-      notifItems.innerHTML = notifications.slice(0, 5).map((item) => `
+      notifItems.innerHTML = notifications
+        .slice(0, 5)
+        .map(
+          (item) => `
         <a class="notification-item ${item.read ? "" : "unread"}"
            href="${item.link}"
            data-id="${item.id}">
@@ -178,7 +184,9 @@ function setupNotifications() {
           <span class="notification-message">${item.message}</span>
           <span class="notification-time">${formatNotificationTime(item.createdAt)}</span>
         </a>
-      `).join("");
+      `
+        )
+        .join("");
     }
   });
 
@@ -191,9 +199,7 @@ function setupNotifications() {
     const target = event.target.closest(".notification-item");
     if (!target) return;
     const id = target.dataset.id;
-    if (id) {
-      markNotificationRead(userId, id);
-    }
+    if (id) markNotificationRead(userId, id);
   });
 
   document.addEventListener("click", () => {
@@ -201,9 +207,7 @@ function setupNotifications() {
   });
 
   const listContainer = document.getElementById("notificationsList");
-  if (listContainer) {
-    renderNotificationsPage(listContainer, userId);
-  }
+  if (listContainer) renderNotificationsPage(listContainer, userId);
 }
 
 function renderNotificationsPage(listContainer, userId) {
@@ -211,14 +215,14 @@ function renderNotificationsPage(listContainer, userId) {
   const markAllBtn = document.getElementById("markAllReadBtn");
 
   loadNotifications(userId).then((notifications) => {
-    if (countEl) {
-      countEl.textContent = `${notifications.length} إشعار`;
-    }
+    if (countEl) countEl.textContent = `${notifications.length} إشعار`;
 
     if (!notifications.length) {
       listContainer.innerHTML = `<div class="notification-empty-state">لا توجد إشعارات جديدة حتى الآن.</div>`;
     } else {
-      listContainer.innerHTML = notifications.map((item) => `
+      listContainer.innerHTML = notifications
+        .map(
+          (item) => `
         <div class="notification-card ${item.read ? "" : "unread"}">
           <h3>${item.title}</h3>
           <p>${item.message}</p>
@@ -230,38 +234,31 @@ function renderNotificationsPage(listContainer, userId) {
             فتح الإشعار
           </a>
         </div>
-      `).join("");
+      `
+        )
+        .join("");
     }
   });
 
   if (markAllBtn) {
-    markAllBtn.onclick = () => {
-      markAllNotificationsRead(userId).then(() => {
-        renderNotificationsPage(listContainer, userId);
-      });
-    };
+    markAllBtn.onclick = () =>
+      markAllNotificationsRead(userId).then(() => renderNotificationsPage(listContainer, userId));
   }
 
   listContainer.onclick = (event) => {
     const actionLink = event.target.closest(".notification-action");
     if (!actionLink) return;
     const id = actionLink.dataset.id;
-    if (id) {
-      markNotificationRead(userId, id);
-    }
+    if (id) markNotificationRead(userId, id);
   };
 }
 
 async function loadNotifications(userId) {
   try {
     const { db } = await import("/js/firebase-config.js");
-    const {
-      collection,
-      getDocs,
-      query,
-      where,
-      orderBy
-    } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const { collection, getDocs, query, where, orderBy } = await import(
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+    );
 
     const q = query(
       collection(db, "notifications"),
@@ -279,7 +276,9 @@ async function loadNotifications(userId) {
 async function markNotificationRead(userId, notificationId) {
   try {
     const { db } = await import("/js/firebase-config.js");
-    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const { doc, updateDoc } = await import(
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+    );
     await updateDoc(doc(db, "notifications", notificationId), { read: true });
   } catch (error) {
     console.error("تعذر تحديث الإشعار:", error);
@@ -294,7 +293,9 @@ async function markNotificationRead(userId, notificationId) {
 async function markAllNotificationsRead(userId) {
   try {
     const { db } = await import("/js/firebase-config.js");
-    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const { doc, updateDoc } = await import(
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+    );
     const notifications = await loadNotifications(userId);
     await Promise.all(
       notifications.map((item) => updateDoc(doc(db, "notifications", item.id), { read: true }))
@@ -313,6 +314,9 @@ function markAllNotificationsReadLocal(userId) {
   saveStoredNotifications(updated);
 }
 
+// ===============================
+// اللغة (i18n)
+// ===============================
 function setupLanguageToggle() {
   const langBtn = document.getElementById("langBtn");
   if (!langBtn) return;
@@ -321,7 +325,8 @@ function setupLanguageToggle() {
   applyTranslations(currentLang);
 
   langBtn.addEventListener("click", () => {
-    const nextLang = (localStorage.getItem("coursehub_lang") || "ar") === "ar" ? "en" : "ar";
+    const nextLang =
+      (localStorage.getItem("coursehub_lang") || "ar") === "ar" ? "en" : "ar";
     localStorage.setItem("coursehub_lang", nextLang);
     applyTranslations(nextLang);
   });
@@ -349,9 +354,7 @@ function applyTranslations(lang) {
 
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.dataset.i18n;
-    if (translations[lang]?.[key]) {
-      el.textContent = translations[lang][key];
-    }
+    if (translations[lang]?.[key]) el.textContent = translations[lang][key];
   });
 
   document.documentElement.setAttribute("lang", lang);
@@ -359,7 +362,7 @@ function applyTranslations(lang) {
 }
 
 // ===============================
-// إدارة حالة المستخدم (مشترك مع header.js)
+// إدارة حالة المستخدم
 // ===============================
 function setupUserState() {
   const user = JSON.parse(localStorage.getItem("coursehub_user"));
@@ -375,8 +378,8 @@ function setupUserState() {
     if (userInfo) {
       userInfo.style.display = "flex";
       userInfo.innerHTML = `
-        <img src="${user.picture}" class="user-pic" alt="${user.name}">
-        <span class="user-name">${user.name}</span>
+        <img src="${user.picture || ""}" class="user-pic" alt="${user.name || ""}">
+        <span class="user-name">${user.name || ""}</span>
         <div class="dropdown-menu">
           <a href="/profile.html">الملف الشخصي</a>
           <a href="/achievements.html">إنجازاتي</a>
@@ -387,42 +390,39 @@ function setupUserState() {
       `;
 
       const dropdown = userInfo.querySelector(".dropdown-menu");
-      const toggleDropdown = e => {
+      const toggleDropdown = (e) => {
         e.stopPropagation();
         dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
       };
 
-      userInfo.querySelector(".user-pic").addEventListener("click", toggleDropdown);
-      userInfo.querySelector(".user-name").addEventListener("click", toggleDropdown);
-      document.addEventListener("click", () => { dropdown.style.display = "none"; });
-      dropdown.addEventListener("click", e => e.stopPropagation());
+      userInfo.querySelector(".user-pic")?.addEventListener("click", toggleDropdown);
+      userInfo.querySelector(".user-name")?.addEventListener("click", toggleDropdown);
 
-      // ===============================
-      // تسجيل الخروج (تحديث جميع الصفحات فورًا)
-      // ===============================
+      document.addEventListener("click", () => {
+        dropdown.style.display = "none";
+      });
+      dropdown.addEventListener("click", (e) => e.stopPropagation());
+
       const logoutLink = document.getElementById("logout-link");
       if (logoutLink) {
-        logoutLink.addEventListener("click", e => {
+        logoutLink.addEventListener("click", (e) => {
           e.preventDefault();
           localStorage.removeItem("coursehub_user");
 
-          // إعادة تحميل الهيدر فقط
           if (document.getElementById("header-placeholder")) {
             fetch("/partials/header.html")
-              .then(res => res.text())
-              .then(html => {
+              .then((res) => res.text())
+              .then((html) => {
                 document.getElementById("header-placeholder").innerHTML = html;
-                setupUserState(); // إعادة تهيئة الهيدر بعد تسجيل الخروج
+                setupUserState();
+                setupLanguageToggle();
+                setupNotifications();
               });
           }
-
-          // إذا أردت، يمكن إعادة توجيه المستخدم لصفحة تسجيل الدخول
-          // window.location.href = "/login.html";
         });
       }
     }
 
-    // رابط الإدارة للأدمن
     if (adminLink) {
       if (adminEmails.includes(user.email)) {
         adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
@@ -430,7 +430,6 @@ function setupUserState() {
         adminLink.innerHTML = "";
       }
     }
-
   } else {
     if (loginLink) loginLink.style.display = "block";
     if (userInfo) userInfo.style.display = "none";
