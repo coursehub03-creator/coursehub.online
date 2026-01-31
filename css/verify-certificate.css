@@ -1,0 +1,58 @@
+.verify-certificate {
+  display: flex;
+  justify-content: center;
+  padding: 50px 20px;
+}
+
+.verify-card {
+  max-width: 520px;
+  width: 100%;
+  background: #fff;
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.verify-card h1 {
+  margin-bottom: 10px;
+  color: #1c3faa;
+}
+
+.verify-card p {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+#verifyForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#verifyForm input {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.verify-result {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  display: none;
+}
+
+.verify-result.success {
+  display: block;
+  background: #ecfdf3;
+  color: #065f46;
+}
+
+.verify-result.error {
+  display: block;
+  background: #fef2f2;
+  color: #991b1b;
+}
