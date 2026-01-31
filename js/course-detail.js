@@ -48,18 +48,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       const course = snap.data();
-      const lang = localStorage.getItem("coursehub_lang") || "ar";
-      const titleText = lang === "en" ? course.titleEn || course.title : course.title;
-      const descriptionText = lang === "en" ? course.descriptionEn || course.description : course.description;
 
       const titleEl = courseDetail.querySelector("h2");
-      if (titleEl) titleEl.textContent = titleText || "بدون عنوان";
+      if (titleEl) titleEl.textContent = course.title || "بدون عنوان";
 
       if (courseImage)
         courseImage.src = course.image || "/assets/images/course1.jpg";
 
       if (courseDesc)
-        courseDesc.textContent = descriptionText || "";
+        courseDesc.textContent = course.description || "";
 
       if (courseRating) {
         courseRating.textContent = course.rating
