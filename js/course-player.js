@@ -12,6 +12,8 @@ import {
 let courseId;
 let course;
 let user;
+let courseTitle = "";
+let courseDescription = "";
 
 let currentLesson = 0;
 let currentSlide = 0;
@@ -68,15 +70,15 @@ async function loadCourse() {
 
   course = snap.data();
   const lang = localStorage.getItem("coursehub_lang") || "ar";
-  const titleText = lang === "en" ? course.titleEn || course.title : course.title;
-  const descriptionText = lang === "en" ? course.descriptionEn || course.description : course.description;
+  courseTitle = lang === "en" ? course.titleEn || course.title : course.title;
+  courseDescription = lang === "en" ? course.descriptionEn || course.description : course.description;
   const title = document.getElementById("courseTitle");
-  if (title) title.textContent = titleText;
+  if (title) title.textContent = courseTitle;
   const sidebarTitle = document.getElementById("courseTitleSidebar");
-  if (sidebarTitle) sidebarTitle.textContent = titleText;
+  if (sidebarTitle) sidebarTitle.textContent = courseTitle;
   const subtitle = document.getElementById("courseSubtitle");
   if (subtitle) {
-    subtitle.textContent = descriptionText || "تابع هذه الدورة خطوة بخطوة بإشراف خبراء.";
+    subtitle.textContent = courseDescription || "تابع هذه الدورة خطوة بخطوة بإشراف خبراء.";
   }
   const instructor = document.getElementById("courseInstructor");
   if (instructor) {
@@ -336,7 +338,7 @@ async function completeCourse() {
     {
       userId: user.uid,
       courseId,
-      courseTitle: course.title,
+      courseTitle: courseTitle || course.title,
       completedAt: new Date(),
       verificationCode,
       certificateUrl
@@ -348,13 +350,13 @@ async function completeCourse() {
     {
       completedCourses: arrayUnion({
         id: courseId,
-        title: course.title,
+        title: courseTitle || course.title,
         instructor: course.instructor || "",
         image: course.image || "/assets/images/course1.jpg",
         completedAt: new Date().toLocaleDateString("ar-EG")
       }),
       certificates: arrayUnion({
-        title: course.title,
+        title: courseTitle || course.title,
         issuedAt: new Date().toLocaleDateString("ar-EG"),
         certificateUrl: certificateUrl || course.certificateUrl || "/assets/images/certificate.jpg",
         verificationCode
@@ -366,7 +368,7 @@ async function completeCourse() {
   saveCompletionState();
   pushCourseNotification({
     title: "تم إنهاء الدورة بنجاح",
-    message: `تهانينا! أكملت دورة "${course.title}" بنجاح.`,
+    message: `تهانينا! أكملت دورة "${courseTitle || course.title}" بنجاح.`,
     link: "/achievements.html"
   });
 
@@ -518,7 +520,7 @@ function notifyIncompleteCourse() {
 
   pushCourseNotification({
     title: "لم تُكمل الدورة بعد",
-    message: `لم تكمل دورة "${course.title}" بعد، ننتظرك للمتابعة!`,
+    message: `لم تكمل دورة "${courseTitle || course.title}" بعد، ننتظرك للمتابعة!`,
     link: `/course-player.html?id=${courseId}`
   });
 }
@@ -556,7 +558,7 @@ async function saveQuizAttempt(lesson, score, percent) {
     await addDoc(collection(db, "quizAttempts"), {
       userId: user.uid,
       courseId,
-      courseTitle: course.title,
+      courseTitle: courseTitle || course.title,
       lessonTitle: lesson.title,
       score,
       percent,
