@@ -81,24 +81,6 @@ function saveStoredNotifications(notifications) {
 
 function formatNotificationTime(dateValue) {
   const date = dateValue?.toDate ? dateValue.toDate() : new Date(dateValue);
-function markNotificationRead(notificationId) {
-  const notifications = getStoredNotifications();
-  const updated = notifications.map((item) =>
-    item.id === notificationId ? { ...item, read: true } : item
-  );
-  saveStoredNotifications(updated);
-}
-
-function markAllNotificationsRead(userId) {
-  const notifications = getStoredNotifications();
-  const updated = notifications.map((item) =>
-    item.userId === userId ? { ...item, read: true } : item
-  );
-  saveStoredNotifications(updated);
-}
-
-function formatNotificationTime(dateValue) {
-  const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleString("ar-EG", { hour12: true });
 }
@@ -141,25 +123,6 @@ function setupNotifications() {
       `).join("");
     }
   });
-  const notifications = getUserNotifications(userId);
-  const unreadCount = notifications.filter((item) => !item.read).length;
-
-  notifBadge.textContent = unreadCount;
-  notifBadge.style.display = unreadCount ? "inline-flex" : "none";
-
-  if (!notifications.length) {
-    notifItems.innerHTML = `<div class="notification-empty">لا توجد إشعارات بعد.</div>`;
-  } else {
-    notifItems.innerHTML = notifications.slice(0, 5).map((item) => `
-      <a class="notification-item ${item.read ? "" : "unread"}"
-         href="${item.link}"
-         data-id="${item.id}">
-        <strong>${item.title}</strong>
-        <span class="notification-message">${item.message}</span>
-        <span class="notification-time">${formatNotificationTime(item.createdAt)}</span>
-      </a>
-    `).join("");
-  }
 
   notifBtn.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -172,7 +135,6 @@ function setupNotifications() {
     const id = target.dataset.id;
     if (id) {
       markNotificationRead(userId, id);
-      markNotificationRead(id);
     }
   });
 
@@ -219,36 +181,6 @@ function renderNotificationsPage(listContainer, userId) {
       markAllNotificationsRead(userId).then(() => {
         renderNotificationsPage(listContainer, userId);
       });
-  const notifications = getUserNotifications(userId);
-  const countEl = document.getElementById("notificationsCount");
-  const markAllBtn = document.getElementById("markAllReadBtn");
-
-  if (countEl) {
-    countEl.textContent = `${notifications.length} إشعار`;
-  }
-
-  if (!notifications.length) {
-    listContainer.innerHTML = `<div class="notification-empty-state">لا توجد إشعارات جديدة حتى الآن.</div>`;
-  } else {
-    listContainer.innerHTML = notifications.map((item) => `
-      <div class="notification-card ${item.read ? "" : "unread"}">
-        <h3>${item.title}</h3>
-        <p>${item.message}</p>
-        <div class="notification-meta">
-          <span>${formatNotificationTime(item.createdAt)}</span>
-          <span>${item.read ? "مقروء" : "غير مقروء"}</span>
-        </div>
-        <a class="notification-action" href="${item.link}" data-id="${item.id}">
-          فتح الإشعار
-        </a>
-      </div>
-    `).join("");
-  }
-
-  if (markAllBtn) {
-    markAllBtn.onclick = () => {
-      markAllNotificationsRead(userId);
-      renderNotificationsPage(listContainer, userId);
     };
   }
 
@@ -366,9 +298,6 @@ function applyTranslations(lang) {
 
   document.documentElement.setAttribute("lang", lang);
   document.documentElement.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
-      markNotificationRead(id);
-    }
-  };
 }
 
 // ===============================

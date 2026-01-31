@@ -7,7 +7,6 @@ import {
   addDoc,
   collection,
   serverTimestamp
-  arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let courseId;
@@ -199,15 +198,6 @@ function renderQuizQuestion() {
   const selectedValue = quizState.answers[quizState.questionIndex];
   const isLast = quizState.questionIndex === lesson.quiz.length - 1;
 
-
-function renderQuizQuestion() {
-  const box = document.getElementById("slideContainer");
-  const lesson = quizState.lesson;
-  const question = lesson.quiz[quizState.questionIndex];
-
-  const selectedValue = quizState.answers[quizState.questionIndex];
-  const isLast = quizState.questionIndex === lesson.quiz.length - 1;
-
   box.innerHTML = `
     <div class="quiz-shell">
       <div class="quiz-header">
@@ -284,20 +274,6 @@ function submitQuiz(lesson) {
   });
 
   saveQuizAttempt(lesson, score, percent);
-  });
-
-  const percent = Math.round((score / lesson.quiz.length) * 100);
-  const passed = percent >= 80;
-
-  quizSummary.totalQuestions += lesson.quiz.length;
-  quizSummary.correctAnswers += score;
-  quizSummary.lessons.push({
-    title: lesson.title,
-    score,
-    total: lesson.quiz.length,
-    percent,
-    passed
-  });
 
   const box = document.getElementById("slideContainer");
   box.innerHTML = `
@@ -377,7 +353,6 @@ async function completeCourse() {
         issuedAt: new Date().toLocaleDateString("ar-EG"),
         certificateUrl: course.certificateUrl || "/assets/images/certificate.jpg",
         verificationCode
-        certificateUrl: course.certificateUrl || "/assets/images/certificate.jpg"
       })
     },
     { merge: true }
@@ -385,7 +360,6 @@ async function completeCourse() {
 
   saveCompletionState();
   pushCourseNotification({
-  pushLocalNotification({
     title: "تم إنهاء الدورة بنجاح",
     message: `تهانينا! أكملت دورة "${course.title}" بنجاح.`,
     link: "/achievements.html"
@@ -438,12 +412,6 @@ function updateProgressBar() {
   const completedLessonsSteps = course.lessons
     .slice(0, currentLesson)
     .reduce((sum, lesson) => sum + lesson.slides.length + (lesson.quiz?.length ? 1 : 0), 0);
-
-  let currentSteps = currentSlide + 1;
-  if (isQuizActive) {
-    currentSteps = course.lessons[currentLesson].slides.length + 1;
-  }
-
 
   let currentSteps = currentSlide + 1;
   if (isQuizActive) {
@@ -544,7 +512,6 @@ function notifyIncompleteCourse() {
   localStorage.setItem(INCOMPLETE_KEY, JSON.stringify(progressStore));
 
   pushCourseNotification({
-  pushLocalNotification({
     title: "لم تُكمل الدورة بعد",
     message: `لم تكمل دورة "${course.title}" بعد، ننتظرك للمتابعة!`,
     link: `/course-player.html?id=${courseId}`

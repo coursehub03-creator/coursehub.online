@@ -1,13 +1,6 @@
-// --- Firebase Imports ---
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
-
-// افتراضياً: firebase-config.js يستورد Firebase App ويهيئه
-import { app } from "../js/firebase-config.js"; // تأكد أن ملفك firebase-config.js يصدّر "app"
-
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+import { auth, db, googleProvider } from "/js/firebase-config.js";
+import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- دالة فتح الشهادة في نافذة جديدة ---
 window.openCertificate = function(url) {
@@ -18,8 +11,7 @@ window.openCertificate = function(url) {
 onAuthStateChanged(auth, async (user) => {
   try {
     if (!user) {
-      // تسجيل الدخول بحساب Google
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, googleProvider);
       user = result.user;
     }
 

@@ -15,11 +15,6 @@
 
   <!-- Page Styles -->
   <link rel="stylesheet" href="css/achievements.css">
-
-  <style>
-    header { direction: ltr !important; }
-    .top-bar.container { flex-direction: row !important; justify-content: space-between !important; }
-  </style>
 </head>
 <body>
 
@@ -61,85 +56,7 @@
   <!-- Footer Placeholder -->
   <div id="footer-placeholder"></div>
 
-  <!-- Firebase SDKs + App Scripts -->
-  <script type="module">
-    import { app, auth, googleProvider } from '/js/firebase-config.js';
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const db = getFirestore(app);
-
-    // التحقق من تسجيل الدخول
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        await signInWithPopup(auth, googleProvider);
-        return;
-      }
-
-      const userDocRef = doc(db, "users", user.uid);
-      let userDocSnap = await getDoc(userDocRef);
-      let progressData;
-
-      if (!userDocSnap.exists()) {
-        // إنشاء مستند جديد إذا لم يكن موجودًا
-        progressData = { completedCourses: [], certificates: [] };
-        await setDoc(userDocRef, progressData);
-      } else {
-        progressData = userDocSnap.data();
-      }
-
-      // --- Summary ---
-      document.getElementById("completedCourses").textContent = progressData.completedCourses.length;
-      document.getElementById("certificatesCount").textContent = progressData.certificates.length;
-
-      // --- Certificates ---
-      const certList = document.getElementById("certificatesList");
-      certList.innerHTML = "";
-      if (progressData.certificates.length === 0) {
-        certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
-      } else {
-        progressData.certificates.forEach(cert => {
-          certList.innerHTML += `
-            <div class="certificate-card">
-              <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
-              <h4>${cert.title}</h4>
-              <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-              ${cert.verificationCode ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>` : ""}
-              <div class="certificate-actions">
-                <button onclick="window.open('${cert.certificateUrl}', '_blank')">عرض الشهادة</button>
-                ${cert.verificationCode ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>` : ""}
-              </div>
-            </div>
-          `;
-        });
-      }
-
-      // --- Completed Courses ---
-      const coursesList = document.getElementById("coursesList");
-      coursesList.innerHTML = "";
-      if (progressData.completedCourses.length === 0) {
-        coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
-      } else {
-        progressData.completedCourses.forEach(course => {
-          coursesList.innerHTML += `
-            <div class="course-card">
-              <img src="${course.image}" alt="${course.title}">
-              <div class="course-content">
-                <h4>
-                  <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
-                    ${course.title}
-                  </a>
-                </h4>
-                <span>المدرب: ${course.instructor}</span><br>
-                <span>أكملت في: ${course.completedAt}</span>
-              </div>
-            </div>
-          `;
-        });
-      }
-    });
-  </script>
-
   <script src="js/main.js" defer></script>
+  <script type="module" src="/js/achievements.js"></script>
 </body>
 </html>
