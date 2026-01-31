@@ -1,13 +1,6 @@
-// --- Firebase Imports ---
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
-
-// افتراضياً: firebase-config.js يستورد Firebase App ويهيئه
-import { app } from "../js/firebase-config.js"; // تأكد أن ملفك firebase-config.js يصدّر "app"
-
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+import { auth, db, googleProvider } from "/js/firebase-config.js";
+import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- دالة فتح الشهادة في نافذة جديدة ---
 window.openCertificate = function(url) {
@@ -18,8 +11,7 @@ window.openCertificate = function(url) {
 onAuthStateChanged(auth, async (user) => {
   try {
     if (!user) {
-      // تسجيل الدخول بحساب Google
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, googleProvider);
       user = result.user;
     }
 
@@ -55,9 +47,13 @@ onAuthStateChanged(auth, async (user) => {
             <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
             <h4>${cert.title}</h4>
             <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-            <button onclick="openCertificate('${cert.certificateUrl}')">
-              عرض الشهادة
-            </button>
+            ${cert.verificationCode ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>` : ""}
+            <div class="certificate-actions">
+              <button onclick="openCertificate('${cert.certificateUrl}')">
+                عرض الشهادة
+              </button>
+              ${cert.verificationCode ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>` : ""}
+            </div>
           </div>
         `;
       });
@@ -75,7 +71,7 @@ onAuthStateChanged(auth, async (user) => {
             <img src="${course.image}" alt="${course.title}">
             <div class="course-content">
               <h4>
-                <a href="course.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
                   ${course.title}
                 </a>
               </h4>
