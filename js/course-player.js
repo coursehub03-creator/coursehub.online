@@ -3,7 +3,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  arrayUnion,
   addDoc,
   collection,
   serverTimestamp
@@ -403,36 +402,43 @@ async function completeCourse() {
   // ✅ توليد شهادة (DataURL)
   const certificateUrl = await generateCertificateUrl();
 
-  // ✅ حفظ الشهادة في مجموعة certificates
-  await setDoc(doc(db, "certificates", certId), {
-    userId: user.uid,
-    courseId,
-    courseTitle: courseTitle || course.title,
-    completedAt: new Date(),
-    verificationCode,
-    certificateUrl
-  });
+  try {
+    // ✅ حفظ الشهادة في مجموعة certificates العامة
+    await setDoc(doc(db, "certificates", certId), {
+      userId: user.uid,
+      courseId,
+      courseTitle: courseTitle || course.title,
+      completedAt: new Date(),
+      verificationCode,
+      certificateUrl
+    });
 
-  // ✅ تحديث المستخدم (completedCourses + certificates)
-  await setDoc(
-    doc(db, "users", user.uid),
-    {
-      completedCourses: arrayUnion({
+    // ✅ حفظ بيانات الإنجاز في مجموعات فرعية لتجنب تضخم مستند المستخدم
+    await setDoc(
+      doc(db, "users", user.uid, "completedCourses", courseId),
+      {
         id: courseId,
         title: courseTitle || course.title,
         instructor: course.instructor || "",
         image: course.image || "/assets/images/course1.jpg",
         completedAt: new Date().toLocaleDateString("ar-EG")
-      }),
-      certificates: arrayUnion({
+      },
+      { merge: true }
+    );
+
+    await setDoc(
+      doc(db, "users", user.uid, "certificates", certId),
+      {
         title: courseTitle || course.title,
         issuedAt: new Date().toLocaleDateString("ar-EG"),
         certificateUrl: certificateUrl || course.certificateUrl || "/assets/images/certificate.jpg",
         verificationCode
-      })
-    },
-    { merge: true }
-  );
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error("❌ خطأ أثناء حفظ بيانات الشهادة:", error);
+  }
 
   saveCompletionState();
 
