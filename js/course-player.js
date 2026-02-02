@@ -168,10 +168,7 @@ function renderSlide() {
     <div class="${slideClassNames}" style="background: ${backgroundColor};">
       <div class="course-slide-text" style="color: ${textColor}; text-align: ${textAlign};">
         <h3 style="font-size: ${fontSize}px; font-weight: ${fontWeight};">${slide.title || ""}</h3>
-        <div class="slide-content" style="font-size: ${Math.max(
-          fontSize - 2,
-          12
-        )}px; color: ${textColor};">
+        <div class="slide-content" style="font-size: ${Math.max(fontSize - 2, 12)}px; color: ${textColor};">
           ${slide.content ?? slide.text ?? ""}
         </div>
       </div>
@@ -354,10 +351,17 @@ function submitQuiz(lesson) {
   `;
 
   if (passed) {
-    document.getElementById("continueLessonBtn").addEventListener("click", () => {
+    document.getElementById("continueLessonBtn").addEventListener("click", async () => {
       isQuizActive = false;
       if (isLastLesson) {
-        completeCourse();
+        const btn = document.getElementById("continueLessonBtn");
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "جاري تجهيز الشهادة...";
+        }
+        await completeCourse({ showSummary: false });
+        location.href = "/achievements.html";
+        return;
       } else {
         nextLesson();
       }
@@ -389,7 +393,7 @@ function nextLesson() {
   }
 }
 
-async function completeCourse() {
+async function completeCourse({ showSummary = true } = {}) {
   courseCompleted = true;
 
   const finalScore = quizSummary.totalQuestions
@@ -448,8 +452,12 @@ async function completeCourse() {
     link: "/achievements.html"
   });
 
-  showCourseCompletion(finalScore);
+  if (showSummary) {
+    showCourseCompletion(finalScore);
+  }
 }
+
+
 
 async function saveResume() {
   try {
@@ -545,9 +553,6 @@ function showCourseCompletion(finalScore) {
     location.href = "/achievements.html";
   });
 
-  setTimeout(() => {
-    location.href = "/achievements.html";
-  }, 3500);
 }
 
 function pushLocalNotification({ title, message, link }) {
