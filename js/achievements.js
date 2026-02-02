@@ -56,6 +56,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     try {
+
       const certificatesSnap = await getDocs(
         collection(db, "users", user.uid, "certificates")
       );
@@ -69,11 +70,19 @@ onAuthStateChanged(auth, async (user) => {
         const publicCertificatesSnap = await getDocs(
           query(collection(db, "certificates"), where("userId", "==", user.uid))
         );
+
+      // ✅ Fallback (ميزة codex): إذا ما فيه شهادات بالمجموعة الفرعية، اجلبها من المجموعة العامة certificates
+      if (!certificates.length) {
+        const publicCertificatesSnap = await getDocs(
+          query(collection(db, "certificates"), where("userId", "==", user.uid))
+        );
+
         certificates = publicCertificatesSnap.docs.map((docSnap) => {
           const data = docSnap.data();
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
             : data.completedAt || "";
+
           return {
             title: data.courseTitle || data.title || "",
             issuedAt,
@@ -84,6 +93,9 @@ onAuthStateChanged(auth, async (user) => {
       } catch (error) {
         console.error("خطأ أثناء جلب الشهادات العامة:", error);
       }
+      }
+    } catch (error) {
+      console.error("خطأ أثناء جلب الإنجازات من المجموعات الفرعية:", error);
     }
 
     // ✅ fallback قديم: إذا ما عندك subcollections رجّع للحقول داخل users doc (للتوافق مع البيانات القديمة)
@@ -105,6 +117,8 @@ onAuthStateChanged(auth, async (user) => {
     if (certificatesCount) {
       certificatesCount.textContent = certificates.length;
     }
+    document.getElementById("completedCourses").textContent = completedCourses.length;
+    document.getElementById("certificatesCount").textContent = certificates.length;
 
     // --- عرض الشهادات ---
     const certList = document.getElementById("certificatesList");
@@ -118,12 +132,20 @@ onAuthStateChanged(auth, async (user) => {
             <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
             <h4>${cert.title}</h4>
             <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-            ${cert.verificationCode ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>` : ""}
+            ${
+              cert.verificationCode
+                ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
+                : ""
+            }
             <div class="certificate-actions">
               <button onclick="openCertificate('${cert.certificateUrl}')">
                 عرض الشهادة
               </button>
-              ${cert.verificationCode ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>` : ""}
+              ${
+                cert.verificationCode
+                  ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>`
+                  : ""
+              }
             </div>
           </div>
         `;
@@ -153,7 +175,6 @@ onAuthStateChanged(auth, async (user) => {
         `;
       });
     }
-
   } catch (error) {
     console.error("Firebase Auth Error:", error);
     alert("حدث خطأ أثناء تسجيل الدخول أو جلب البيانات. حاول مرة أخرى.");

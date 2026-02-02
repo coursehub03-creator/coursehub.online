@@ -360,6 +360,8 @@ function submitQuiz(lesson) {
           btn.textContent = "جاري تجهيز الشهادة...";
         }
         await completeCourse();
+        await completeCourse({ showSummary: false });
+        location.href = "/achievements.html";
         return;
       } else {
         nextLesson();
@@ -455,6 +457,8 @@ async function completeCourse({ showSummary = true } = {}) {
     showCourseCompletion(finalScore);
   }
 }
+
+
 
 async function saveResume() {
   try {
