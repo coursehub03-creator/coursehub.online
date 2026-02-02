@@ -364,6 +364,7 @@ function submitQuiz(lesson) {
         }
         await completeCourse({ showSummary: false });
         location.href = "/achievements.html";
+        return;
       } else {
         nextLesson();
       }
