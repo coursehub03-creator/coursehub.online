@@ -1,5 +1,8 @@
 import { auth, db, googleProvider } from "/js/firebase-config.js";
-import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  onAuthStateChanged,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   doc,
   getDoc,
@@ -11,7 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- دالة فتح الشهادة في نافذة جديدة ---
-window.openCertificate = function(url) {
+window.openCertificate = function (url) {
   window.open(url, "_blank");
 };
 
@@ -43,6 +46,7 @@ onAuthStateChanged(auth, async (user) => {
     let certificates = [];
 
     try {
+      // ✅ القراءة من المجموعات الفرعية (الأسلوب الجديد)
       const completedSnap = await getDocs(
         collection(db, "users", user.uid, "completedCourses")
       );
@@ -53,15 +57,18 @@ onAuthStateChanged(auth, async (user) => {
       );
       certificates = certificatesSnap.docs.map((docSnap) => docSnap.data());
 
+      // ✅ Fallback (ميزة codex): إذا ما فيه شهادات بالمجموعة الفرعية، اجلبها من المجموعة العامة certificates
       if (!certificates.length) {
         const publicCertificatesSnap = await getDocs(
           query(collection(db, "certificates"), where("userId", "==", user.uid))
         );
+
         certificates = publicCertificatesSnap.docs.map((docSnap) => {
           const data = docSnap.data();
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
             : data.completedAt || "";
+
           return {
             title: data.courseTitle || data.title || "",
             issuedAt,
@@ -74,6 +81,7 @@ onAuthStateChanged(auth, async (user) => {
       console.error("خطأ أثناء جلب الإنجازات من المجموعات الفرعية:", error);
     }
 
+    // ✅ fallback قديم: إذا ما عندك subcollections رجّع للحقول داخل users doc (للتوافق مع البيانات القديمة)
     if (!completedCourses.length && Array.isArray(userData.completedCourses)) {
       completedCourses = userData.completedCourses;
     }
@@ -92,18 +100,26 @@ onAuthStateChanged(auth, async (user) => {
     if (certificates.length === 0) {
       certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
     } else {
-      certificates.forEach(cert => {
+      certificates.forEach((cert) => {
         certList.innerHTML += `
           <div class="certificate-card">
             <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
             <h4>${cert.title}</h4>
             <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-            ${cert.verificationCode ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>` : ""}
+            ${
+              cert.verificationCode
+                ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
+                : ""
+            }
             <div class="certificate-actions">
               <button onclick="openCertificate('${cert.certificateUrl}')">
                 عرض الشهادة
               </button>
-              ${cert.verificationCode ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>` : ""}
+              ${
+                cert.verificationCode
+                  ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>`
+                  : ""
+              }
             </div>
           </div>
         `;
@@ -116,7 +132,7 @@ onAuthStateChanged(auth, async (user) => {
     if (completedCourses.length === 0) {
       coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
     } else {
-      completedCourses.forEach(course => {
+      completedCourses.forEach((course) => {
         coursesList.innerHTML += `
           <div class="course-card">
             <img src="${course.image}" alt="${course.title}">
@@ -133,7 +149,6 @@ onAuthStateChanged(auth, async (user) => {
         `;
       });
     }
-
   } catch (error) {
     console.error("Firebase Auth Error:", error);
     alert("حدث خطأ أثناء تسجيل الدخول أو جلب البيانات. حاول مرة أخرى.");
