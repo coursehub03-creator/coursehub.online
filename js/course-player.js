@@ -168,10 +168,7 @@ function renderSlide() {
     <div class="${slideClassNames}" style="background: ${backgroundColor};">
       <div class="course-slide-text" style="color: ${textColor}; text-align: ${textAlign};">
         <h3 style="font-size: ${fontSize}px; font-weight: ${fontWeight};">${slide.title || ""}</h3>
-        <div class="slide-content" style="font-size: ${Math.max(
-          fontSize - 2,
-          12
-        )}px; color: ${textColor};">
+        <div class="slide-content" style="font-size: ${Math.max(fontSize - 2, 12)}px; color: ${textColor};">
           ${slide.content ?? slide.text ?? ""}
         </div>
       </div>
