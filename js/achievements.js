@@ -1,6 +1,12 @@
 import { auth, db, googleProvider } from "/js/firebase-config.js";
 import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- دالة فتح الشهادة في نافذة جديدة ---
 window.openCertificate = function(url) {
@@ -31,17 +37,42 @@ onAuthStateChanged(auth, async (user) => {
       userData = userDataSnap.data();
     }
 
+    let completedCourses = [];
+    let certificates = [];
+
+    try {
+      const completedSnap = await getDocs(
+        collection(db, "users", user.uid, "completedCourses")
+      );
+      completedCourses = completedSnap.docs.map((docSnap) => docSnap.data());
+
+      const certificatesSnap = await getDocs(
+        collection(db, "users", user.uid, "certificates")
+      );
+      certificates = certificatesSnap.docs.map((docSnap) => docSnap.data());
+    } catch (error) {
+      console.error("خطأ أثناء جلب الإنجازات من المجموعات الفرعية:", error);
+    }
+
+    if (!completedCourses.length && Array.isArray(userData.completedCourses)) {
+      completedCourses = userData.completedCourses;
+    }
+
+    if (!certificates.length && Array.isArray(userData.certificates)) {
+      certificates = userData.certificates;
+    }
+
     // --- ملخص الإنجازات ---
-    document.getElementById("completedCourses").textContent = userData.completedCourses.length;
-    document.getElementById("certificatesCount").textContent = userData.certificates.length;
+    document.getElementById("completedCourses").textContent = completedCourses.length;
+    document.getElementById("certificatesCount").textContent = certificates.length;
 
     // --- عرض الشهادات ---
     const certList = document.getElementById("certificatesList");
     certList.innerHTML = "";
-    if (userData.certificates.length === 0) {
+    if (certificates.length === 0) {
       certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
     } else {
-      userData.certificates.forEach(cert => {
+      certificates.forEach(cert => {
         certList.innerHTML += `
           <div class="certificate-card">
             <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
@@ -62,10 +93,10 @@ onAuthStateChanged(auth, async (user) => {
     // --- عرض الدورات المكتملة ---
     const coursesList = document.getElementById("coursesList");
     coursesList.innerHTML = "";
-    if (userData.completedCourses.length === 0) {
+    if (completedCourses.length === 0) {
       coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
     } else {
-      userData.completedCourses.forEach(course => {
+      completedCourses.forEach(course => {
         coursesList.innerHTML += `
           <div class="course-card">
             <img src="${course.image}" alt="${course.title}">
