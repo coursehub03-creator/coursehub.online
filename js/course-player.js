@@ -359,6 +359,7 @@ function submitQuiz(lesson) {
           btn.disabled = true;
           btn.textContent = "جاري تجهيز الشهادة...";
         }
+        await completeCourse();
         await completeCourse({ showSummary: false });
         location.href = "/achievements.html";
         return;

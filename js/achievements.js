@@ -51,11 +51,25 @@ onAuthStateChanged(auth, async (user) => {
         collection(db, "users", user.uid, "completedCourses")
       );
       completedCourses = completedSnap.docs.map((docSnap) => docSnap.data());
+    } catch (error) {
+      console.error("خطأ أثناء جلب الدورات المكتملة من المجموعات الفرعية:", error);
+    }
+
+    try {
 
       const certificatesSnap = await getDocs(
         collection(db, "users", user.uid, "certificates")
       );
       certificates = certificatesSnap.docs.map((docSnap) => docSnap.data());
+    } catch (error) {
+      console.error("خطأ أثناء جلب الشهادات من المجموعات الفرعية:", error);
+    }
+
+    if (!certificates.length) {
+      try {
+        const publicCertificatesSnap = await getDocs(
+          query(collection(db, "certificates"), where("userId", "==", user.uid))
+        );
 
       // ✅ Fallback (ميزة codex): إذا ما فيه شهادات بالمجموعة الفرعية، اجلبها من المجموعة العامة certificates
       if (!certificates.length) {
@@ -76,6 +90,9 @@ onAuthStateChanged(auth, async (user) => {
             verificationCode: data.verificationCode || ""
           };
         });
+      } catch (error) {
+        console.error("خطأ أثناء جلب الشهادات العامة:", error);
+      }
       }
     } catch (error) {
       console.error("خطأ أثناء جلب الإنجازات من المجموعات الفرعية:", error);
@@ -91,6 +108,15 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     // --- ملخص الإنجازات ---
+    const completedCoursesCount = document.getElementById("completedCourses");
+    if (completedCoursesCount) {
+      completedCoursesCount.textContent = completedCourses.length;
+    }
+
+    const certificatesCount = document.getElementById("certificatesCount");
+    if (certificatesCount) {
+      certificatesCount.textContent = certificates.length;
+    }
     document.getElementById("completedCourses").textContent = completedCourses.length;
     document.getElementById("certificatesCount").textContent = certificates.length;
 
