@@ -3,7 +3,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  arrayUnion,
   addDoc,
   collection,
   serverTimestamp
@@ -140,14 +139,50 @@ function renderSlide() {
   const lesson = course.lessons[currentLesson];
   const slide = lesson.slides[currentSlide];
   const box = document.getElementById("slideContainer");
+  const slideStyle = slide.style || {};
+  const layoutClass = slideStyle.layout || "media-right";
+  const textAlign = slideStyle.textAlign || "right";
+  const textColor = slideStyle.textColor || "#0f172a";
+  const backgroundColor = slideStyle.backgroundColor || "#ffffff";
+  const fontSize = slideStyle.fontSize || 18;
+  const fontWeight = slideStyle.fontWeight || 600;
+  const hasMedia = Boolean(slide.mediaUrl);
+  const mediaMarkup = hasMedia
+    ? slide.type === "video"
+      ? `<video src="${slide.mediaUrl}" controls></video>`
+      : `<img src="${slide.mediaUrl}" alt="${slide.title || "وسائط الدرس"}">`
+    : "";
+  const slideClassNames = [
+    "course-slide",
+    layoutClass,
+    hasMedia && slide.type !== "text" ? "" : "no-media"
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   box.innerHTML = `
     <div class="lesson-header">
       <span class="lesson-label">الدرس ${currentLesson + 1} من ${course.lessons.length}</span>
       <h2>${lesson.title}</h2>
     </div>
-    <h3>${slide.title || ""}</h3>
-    <div class="slide-content">${slide.content ?? slide.text ?? ""}</div>
+    <div class="${slideClassNames}" style="background: ${backgroundColor};">
+      <div class="course-slide-text" style="color: ${textColor}; text-align: ${textAlign};">
+        <h3 style="font-size: ${fontSize}px; font-weight: ${fontWeight};">${slide.title || ""}</h3>
+        <div class="slide-content" style="font-size: ${Math.max(
+          fontSize - 2,
+          12
+        )}px; color: ${textColor};">
+          ${slide.content ?? slide.text ?? ""}
+        </div>
+      </div>
+      <div class="course-slide-media">
+        ${
+          hasMedia && slide.type !== "text"
+            ? mediaMarkup
+            : `<span class="slide-media-empty">لا توجد وسائط لهذا السلايد</span>`
+        }
+      </div>
+    </div>
   `;
 
   updateButtons();
@@ -287,6 +322,7 @@ function submitQuiz(lesson) {
 
   const percent = Math.round((score / lesson.quiz.length) * 100);
   const passed = percent >= 80;
+  const isLastLesson = currentLesson >= course.lessons.length - 1;
 
   quizSummary.totalQuestions += lesson.quiz.length;
   quizSummary.correctAnswers += score;
@@ -302,13 +338,15 @@ function submitQuiz(lesson) {
 
   const box = document.getElementById("slideContainer");
   box.innerHTML = `
-    <div class="quiz-result ${passed ? "passed" : "failed"}">
+      <div class="quiz-result ${passed ? "passed" : "failed"}">
       <h2>${passed ? "أحسنت! اجتزت اختبار الدرس" : "للأسف، تحتاج لإعادة المحاولة"}</h2>
       <p>نتيجتك: ${score} من ${lesson.quiz.length} (${percent}%)</p>
       <div class="quiz-result-actions">
         ${
           passed
-            ? `<button class="primary" id="continueLessonBtn">متابعة الدرس التالي</button>`
+            ? `<button class="primary" id="continueLessonBtn">${
+                isLastLesson ? "استلم شهادتك" : "متابعة الدرس التالي"
+              }</button>`
             : `<button class="primary" id="retryQuizBtn">إعادة المحاولة</button>`
         }
       </div>
@@ -316,9 +354,19 @@ function submitQuiz(lesson) {
   `;
 
   if (passed) {
-    document.getElementById("continueLessonBtn").addEventListener("click", () => {
+    document.getElementById("continueLessonBtn").addEventListener("click", async () => {
       isQuizActive = false;
-      nextLesson();
+      if (isLastLesson) {
+        const btn = document.getElementById("continueLessonBtn");
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "جاري تجهيز الشهادة...";
+        }
+        await completeCourse();
+        return;
+      } else {
+        nextLesson();
+      }
     });
   } else {
     document.getElementById("retryQuizBtn").addEventListener("click", () => {
@@ -347,7 +395,7 @@ function nextLesson() {
   }
 }
 
-async function completeCourse() {
+async function completeCourse({ showSummary = true } = {}) {
   courseCompleted = true;
 
   const finalScore = quizSummary.totalQuestions
@@ -360,36 +408,43 @@ async function completeCourse() {
   // ✅ توليد شهادة (DataURL)
   const certificateUrl = await generateCertificateUrl();
 
-  // ✅ حفظ الشهادة في مجموعة certificates
-  await setDoc(doc(db, "certificates", certId), {
-    userId: user.uid,
-    courseId,
-    courseTitle: courseTitle || course.title,
-    completedAt: new Date(),
-    verificationCode,
-    certificateUrl
-  });
+  try {
+    // ✅ حفظ الشهادة في مجموعة certificates العامة
+    await setDoc(doc(db, "certificates", certId), {
+      userId: user.uid,
+      courseId,
+      courseTitle: courseTitle || course.title,
+      completedAt: new Date(),
+      verificationCode,
+      certificateUrl
+    });
 
-  // ✅ تحديث المستخدم (completedCourses + certificates)
-  await setDoc(
-    doc(db, "users", user.uid),
-    {
-      completedCourses: arrayUnion({
+    // ✅ حفظ بيانات الإنجاز في مجموعات فرعية لتجنب تضخم مستند المستخدم
+    await setDoc(
+      doc(db, "users", user.uid, "completedCourses", courseId),
+      {
         id: courseId,
         title: courseTitle || course.title,
         instructor: course.instructor || "",
         image: course.image || "/assets/images/course1.jpg",
         completedAt: new Date().toLocaleDateString("ar-EG")
-      }),
-      certificates: arrayUnion({
+      },
+      { merge: true }
+    );
+
+    await setDoc(
+      doc(db, "users", user.uid, "certificates", certId),
+      {
         title: courseTitle || course.title,
         issuedAt: new Date().toLocaleDateString("ar-EG"),
         certificateUrl: certificateUrl || course.certificateUrl || "/assets/images/certificate.jpg",
         verificationCode
-      })
-    },
-    { merge: true }
-  );
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error("❌ خطأ أثناء حفظ بيانات الشهادة:", error);
+  }
 
   saveCompletionState();
 
@@ -399,7 +454,9 @@ async function completeCourse() {
     link: "/achievements.html"
   });
 
-  showCourseCompletion(finalScore);
+  if (showSummary) {
+    showCourseCompletion(finalScore);
+  }
 }
 
 async function saveResume() {
@@ -496,9 +553,6 @@ function showCourseCompletion(finalScore) {
     location.href = "/achievements.html";
   });
 
-  setTimeout(() => {
-    location.href = "/achievements.html";
-  }, 3500);
 }
 
 function pushLocalNotification({ title, message, link }) {
