@@ -26,17 +26,12 @@ onAuthStateChanged(auth, async (user) => {
       user = result.user;
     }
 
-    // جلب مستند المستخدم من Firestore
     const userDocRef = doc(db, "users", user.uid);
     let userDataSnap = await getDoc(userDocRef);
 
     let userData;
     if (!userDataSnap.exists()) {
-      // إنشاء مستند جديد إذا لم يكن موجودًا
-      userData = {
-        completedCourses: [],
-        certificates: []
-      };
+      userData = { completedCourses: [], certificates: [] };
       await setDoc(userDocRef, userData);
     } else {
       userData = userDataSnap.data();
@@ -46,7 +41,6 @@ onAuthStateChanged(auth, async (user) => {
     let certificates = [];
 
     try {
-      // ✅ القراءة من المجموعات الفرعية (الأسلوب الجديد)
       const completedSnap = await getDocs(
         collection(db, "users", user.uid, "completedCourses")
       );
@@ -86,16 +80,13 @@ onAuthStateChanged(auth, async (user) => {
       }
     }
 
-    // ✅ fallback قديم: إذا ما عندك subcollections رجّع للحقول داخل users doc (للتوافق مع البيانات القديمة)
     if (!completedCourses.length && Array.isArray(userData.completedCourses)) {
       completedCourses = userData.completedCourses;
     }
-
     if (!certificates.length && Array.isArray(userData.certificates)) {
       certificates = userData.certificates;
     }
 
-    // --- ملخص الإنجازات ---
     const completedCoursesCount = document.getElementById("completedCourses");
     if (completedCoursesCount) {
       completedCoursesCount.textContent = completedCourses.length;

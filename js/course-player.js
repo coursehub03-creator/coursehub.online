@@ -360,6 +360,7 @@ function submitQuiz(lesson) {
           btn.textContent = "جاري تجهيز الشهادة...";
         }
         await completeCourse();
+
         return;
       } else {
         nextLesson();
@@ -455,6 +456,8 @@ async function completeCourse({ showSummary = true } = {}) {
     showCourseCompletion(finalScore);
   }
 }
+
+
 
 async function saveResume() {
   try {
