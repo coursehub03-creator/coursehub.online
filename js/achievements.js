@@ -26,17 +26,12 @@ onAuthStateChanged(auth, async (user) => {
       user = result.user;
     }
 
-    // جلب مستند المستخدم من Firestore
     const userDocRef = doc(db, "users", user.uid);
     let userDataSnap = await getDoc(userDocRef);
 
     let userData;
     if (!userDataSnap.exists()) {
-      // إنشاء مستند جديد إذا لم يكن موجودًا
-      userData = {
-        completedCourses: [],
-        certificates: []
-      };
+      userData = { completedCourses: [], certificates: [] };
       await setDoc(userDocRef, userData);
     } else {
       userData = userDataSnap.data();
@@ -46,7 +41,6 @@ onAuthStateChanged(auth, async (user) => {
     let certificates = [];
 
     try {
-      // ✅ القراءة من المجموعات الفرعية (الأسلوب الجديد)
       const completedSnap = await getDocs(
         collection(db, "users", user.uid, "completedCourses")
       );
@@ -56,7 +50,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     try {
-
       const certificatesSnap = await getDocs(
         collection(db, "users", user.uid, "certificates")
       );
@@ -70,19 +63,11 @@ onAuthStateChanged(auth, async (user) => {
         const publicCertificatesSnap = await getDocs(
           query(collection(db, "certificates"), where("userId", "==", user.uid))
         );
-
-      // ✅ Fallback (ميزة codex): إذا ما فيه شهادات بالمجموعة الفرعية، اجلبها من المجموعة العامة certificates
-      if (!certificates.length) {
-        const publicCertificatesSnap = await getDocs(
-          query(collection(db, "certificates"), where("userId", "==", user.uid))
-        );
-
         certificates = publicCertificatesSnap.docs.map((docSnap) => {
           const data = docSnap.data();
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
             : data.completedAt || "";
-
           return {
             title: data.courseTitle || data.title || "",
             issuedAt,
@@ -93,21 +78,15 @@ onAuthStateChanged(auth, async (user) => {
       } catch (error) {
         console.error("خطأ أثناء جلب الشهادات العامة:", error);
       }
-      }
-    } catch (error) {
-      console.error("خطأ أثناء جلب الإنجازات من المجموعات الفرعية:", error);
     }
 
-    // ✅ fallback قديم: إذا ما عندك subcollections رجّع للحقول داخل users doc (للتوافق مع البيانات القديمة)
     if (!completedCourses.length && Array.isArray(userData.completedCourses)) {
       completedCourses = userData.completedCourses;
     }
-
     if (!certificates.length && Array.isArray(userData.certificates)) {
       certificates = userData.certificates;
     }
 
-    // --- ملخص الإنجازات ---
     const completedCoursesCount = document.getElementById("completedCourses");
     if (completedCoursesCount) {
       completedCoursesCount.textContent = completedCourses.length;
@@ -117,64 +96,67 @@ onAuthStateChanged(auth, async (user) => {
     if (certificatesCount) {
       certificatesCount.textContent = certificates.length;
     }
-    document.getElementById("completedCourses").textContent = completedCourses.length;
-    document.getElementById("certificatesCount").textContent = certificates.length;
 
     // --- عرض الشهادات ---
     const certList = document.getElementById("certificatesList");
-    certList.innerHTML = "";
-    if (certificates.length === 0) {
-      certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
-    } else {
-      certificates.forEach((cert) => {
-        certList.innerHTML += `
-          <div class="certificate-card">
-            <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
-            <h4>${cert.title}</h4>
-            <span>تاريخ الإصدار: ${cert.issuedAt}</span>
-            ${
-              cert.verificationCode
-                ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
-                : ""
-            }
-            <div class="certificate-actions">
-              <button onclick="openCertificate('${cert.certificateUrl}')">
-                عرض الشهادة
-              </button>
+    if (certList) {
+      certList.innerHTML = "";
+      if (certificates.length === 0) {
+        certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
+      } else {
+        certificates.forEach((cert) => {
+          certList.innerHTML += `
+            <div class="certificate-card">
+              <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
+              <h4>${cert.title}</h4>
+              <span>تاريخ الإصدار: ${cert.issuedAt}</span>
               ${
                 cert.verificationCode
-                  ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>`
+                  ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
                   : ""
               }
+              <div class="certificate-actions">
+                <button onclick="openCertificate('${cert.certificateUrl}')">
+                  عرض الشهادة
+                </button>
+                ${
+                  cert.verificationCode
+                    ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>`
+                    : ""
+                }
+              </div>
             </div>
-          </div>
-        `;
-      });
+          `;
+        });
+      }
     }
 
     // --- عرض الدورات المكتملة ---
     const coursesList = document.getElementById("coursesList");
-    coursesList.innerHTML = "";
-    if (completedCourses.length === 0) {
-      coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
-    } else {
-      completedCourses.forEach((course) => {
-        coursesList.innerHTML += `
-          <div class="course-card">
-            <img src="${course.image}" alt="${course.title}">
-            <div class="course-content">
-              <h4>
-                <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
-                  ${course.title}
-                </a>
-              </h4>
-              <span>المدرب: ${course.instructor}</span><br>
-              <span>أكملت في: ${course.completedAt}</span>
+    if (coursesList) {
+      coursesList.innerHTML = "";
+      if (completedCourses.length === 0) {
+        coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
+      } else {
+        completedCourses.forEach((course) => {
+          coursesList.innerHTML += `
+            <div class="course-card">
+              <img src="${course.image}" alt="${course.title}">
+              <div class="course-content">
+                <h4>
+                  <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                    ${course.title}
+                  </a>
+                </h4>
+                <span>المدرب: ${course.instructor}</span><br>
+                <span>أكملت في: ${course.completedAt}</span>
+              </div>
             </div>
-          </div>
-        `;
-      });
+          `;
+        });
+      }
     }
+
   } catch (error) {
     console.error("Firebase Auth Error:", error);
     alert("حدث خطأ أثناء تسجيل الدخول أو جلب البيانات. حاول مرة أخرى.");
