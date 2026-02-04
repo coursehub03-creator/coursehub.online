@@ -359,9 +359,9 @@ function submitQuiz(lesson) {
           btn.disabled = true;
           btn.textContent = "جاري تجهيز الشهادة...";
         }
-        await completeCourse();
-
+               await completeCourse();
         return;
+
       } else {
         nextLesson();
       }
@@ -435,7 +435,7 @@ async function completeCourse({ showSummary = true } = {}) {
       {
         title: courseTitle || course.title,
         issuedAt: new Date().toLocaleDateString("ar-EG"),
-        certificateUrl: certificateUrl || course.certificateUrl || "/assets/images/certificate.jpg",
+        certificateUrl: certificateUrl || course.certificateUrl || "/assets/images/certificate.svg",
         verificationCode
       },
       { merge: true }
@@ -678,7 +678,7 @@ async function generateCertificateUrl() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return "";
 
-    const template = await loadImage("/assets/images/certificate.jpg");
+    const template = await loadImage("/assets/images/certificate.svg");
     ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
 
     const lang = localStorage.getItem("coursehub_lang") || "ar";

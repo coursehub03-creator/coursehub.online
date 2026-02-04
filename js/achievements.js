@@ -27,7 +27,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     const userDocRef = doc(db, "users", user.uid);
-    let userDataSnap = await getDoc(userDocRef);
+    const userDataSnap = await getDoc(userDocRef);
 
     let userData;
     if (!userDataSnap.exists()) {
@@ -40,6 +40,7 @@ onAuthStateChanged(auth, async (user) => {
     let completedCourses = [];
     let certificates = [];
 
+    // ✅ القراءة من المجموعات الفرعية (الأسلوب الجديد)
     try {
       const completedSnap = await getDocs(
         collection(db, "users", user.uid, "completedCourses")
@@ -58,16 +59,19 @@ onAuthStateChanged(auth, async (user) => {
       console.error("خطأ أثناء جلب الشهادات من المجموعات الفرعية:", error);
     }
 
+    // ✅ Fallback للشهادات: إذا ما فيه شهادات بالمجموعة الفرعية، اجلبها من المجموعة العامة certificates
     if (!certificates.length) {
       try {
         const publicCertificatesSnap = await getDocs(
           query(collection(db, "certificates"), where("userId", "==", user.uid))
         );
+
         certificates = publicCertificatesSnap.docs.map((docSnap) => {
           const data = docSnap.data();
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
             : data.completedAt || "";
+
           return {
             title: data.courseTitle || data.title || "",
             issuedAt,
@@ -80,13 +84,16 @@ onAuthStateChanged(auth, async (user) => {
       }
     }
 
+    // ✅ fallback قديم: إذا ما عندك subcollections رجّع للحقول داخل users doc (للتوافق مع البيانات القديمة)
     if (!completedCourses.length && Array.isArray(userData.completedCourses)) {
       completedCourses = userData.completedCourses;
     }
+
     if (!certificates.length && Array.isArray(userData.certificates)) {
       certificates = userData.certificates;
     }
 
+    // --- ملخص الإنجازات ---
     const completedCoursesCount = document.getElementById("completedCourses");
     if (completedCoursesCount) {
       completedCoursesCount.textContent = completedCourses.length;
@@ -101,6 +108,7 @@ onAuthStateChanged(auth, async (user) => {
     const certList = document.getElementById("certificatesList");
     if (certList) {
       certList.innerHTML = "";
+
       if (certificates.length === 0) {
         certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
       } else {
@@ -135,28 +143,28 @@ onAuthStateChanged(auth, async (user) => {
     const coursesList = document.getElementById("coursesList");
     if (coursesList) {
       coursesList.innerHTML = "";
+
       if (completedCourses.length === 0) {
         coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
       } else {
         completedCourses.forEach((course) => {
           coursesList.innerHTML += `
             <div class="course-card">
-              <img src="${course.image}" alt="${course.title}">
+              <img src="${course.image || "/assets/images/course1.jpg"}" alt="${course.title || ""}">
               <div class="course-content">
                 <h4>
                   <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
-                    ${course.title}
+                    ${course.title || ""}
                   </a>
                 </h4>
-                <span>المدرب: ${course.instructor}</span><br>
-                <span>أكملت في: ${course.completedAt}</span>
+                <span>المدرب: ${course.instructor || "-"}</span><br>
+                <span>أكملت في: ${course.completedAt || "-"}</span>
               </div>
             </div>
           `;
         });
       }
     }
-
   } catch (error) {
     console.error("Firebase Auth Error:", error);
     alert("حدث خطأ أثناء تسجيل الدخول أو جلب البيانات. حاول مرة أخرى.");
