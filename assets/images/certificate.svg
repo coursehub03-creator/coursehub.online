@@ -72,7 +72,7 @@
 
     <!-- NEW SEAL (centered under Authorized by CourseHub) -->
     <!-- Position: center at (960, 740) -->
-    <g transform="translate(960 740) scale(0.22) translate(-217 -217)">
+    <g transform="translate(960 760) scale(0.22) translate(-217 -217)">
       <rect width="434" height="444" fill="none"/>
 
       <!-- outer blue ring -->
