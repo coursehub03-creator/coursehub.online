@@ -1,6 +1,16 @@
 import { auth, db } from "/js/firebase-config.js";
-import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  onAuthStateChanged,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+  where
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const settingsContent = document.getElementById("settings-content");
 
@@ -22,6 +32,117 @@ function getStoredPreferences() {
 
 function saveStoredPreferences(preferences) {
   localStorage.setItem("coursehub_preferences", JSON.stringify(preferences));
+}
+
+// ✅ توليد صورة شهادة PNG (DataURL) من قالب SVG + كتابة الاسم/الدورة/التاريخ/الكود فوقه
+async function generateCertificateDataUrl({
+  studentName,
+  courseTitle,
+  issuedAt,
+  verificationCode
+}) {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 850;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return "";
+
+    const template = await loadImage("/assets/images/certificate.svg");
+    ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
+
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = "#1d4ed8";
+    ctx.font = "bold 44px 'Inter', sans-serif";
+    ctx.fillText(studentName, canvas.width / 2, 415);
+
+    ctx.fillStyle = "#111827";
+    ctx.font = "bold 34px 'Inter', sans-serif";
+    ctx.fillText(courseTitle, canvas.width / 2, 525);
+
+    ctx.fillStyle = "#6b7280";
+    ctx.font = "20px 'Inter', sans-serif";
+    // نفس أماكن النصوص الموجودة في قالب الشهادة
+    ctx.fillText(issuedAt, 350, 690);
+    if (verificationCode) {
+      ctx.fillText(verificationCode, 390, 725);
+    }
+
+    return canvas.toDataURL("image/png");
+  } catch (error) {
+    console.error("تعذر تحديث صورة الشهادة:", error);
+    return "";
+  }
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+// ✅ مزامنة الشهادات الحالية بعد تغيير الاسم (داخل users subcollection + المجموعة العامة certificates)
+async function syncCertificatesForUser(user, studentName) {
+  const issuedFallback = new Date().toLocaleDateString("en-GB");
+
+  const [userCertsSnap, publicCertsSnap] = await Promise.all([
+    getDocs(collection(db, "users", user.uid, "certificates")),
+    getDocs(query(collection(db, "certificates"), where("userId", "==", user.uid)))
+  ]);
+
+  const updateTasks = [];
+
+  // تحديث شهادات المستخدم داخل subcollection
+  userCertsSnap.docs.forEach((docSnap) => {
+    const data = docSnap.data();
+    const courseTitle = data.title || "";
+    const issuedAt = data.issuedAt || issuedFallback;
+    const verificationCode = data.verificationCode || "";
+
+    updateTasks.push(
+      generateCertificateDataUrl({
+        studentName,
+        courseTitle,
+        issuedAt,
+        verificationCode
+      }).then((certificateUrl) =>
+        setDoc(
+          doc(db, "users", user.uid, "certificates", docSnap.id),
+          { certificateUrl },
+          { merge: true }
+        )
+      )
+    );
+  });
+
+  // تحديث الشهادات في المجموعة العامة
+  publicCertsSnap.docs.forEach((docSnap) => {
+    const data = docSnap.data();
+    const courseTitle = data.courseTitle || data.title || "";
+    const issuedAt = data.completedAt?.toDate
+      ? data.completedAt.toDate().toLocaleDateString("en-GB")
+      : issuedFallback;
+    const verificationCode = data.verificationCode || "";
+
+    updateTasks.push(
+      generateCertificateDataUrl({
+        studentName,
+        courseTitle,
+        issuedAt,
+        verificationCode
+      }).then((certificateUrl) =>
+        setDoc(doc(db, "certificates", docSnap.id), { certificateUrl }, { merge: true })
+      )
+    );
+  });
+
+  await Promise.all(updateTasks);
 }
 
 function renderSettings(user) {
@@ -171,7 +292,13 @@ function bindSettingsEvents(user, initialName) {
         const avatar = document.querySelector(".settings-avatar");
         if (avatar) avatar.textContent = newName.charAt(0).toUpperCase();
 
-        profileStatus.textContent = "تم تحديث الاسم بنجاح وسيظهر في الشهادة الجديدة.";
+        // ✅ الحفاظ على ميزة تحديث الشهادات الحالية بالاسم الجديد
+        profileStatus.textContent = "جارٍ تحديث الشهادات الحالية بالاسم الجديد...";
+        profileStatus.className = "settings-status";
+
+        await syncCertificatesForUser(user, newName);
+
+        profileStatus.textContent = "تم تحديث الاسم بنجاح وتم تحديث جميع الشهادات الحالية.";
         profileStatus.className = "settings-status success";
       } catch (error) {
         console.error("تعذر تحديث الملف الشخصي:", error);

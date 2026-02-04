@@ -70,8 +70,7 @@
 
   <!-- ✅ NEW SEAL + SIGNATURE (جنب بعض: التوقيع يسار الختم) -->
   <g>
-
-    <!-- NEW SEAL (centered under Authorized by CourseHub) -->
+    <!-- NEW SEAL (يمين: تحت Authorized) -->
     <g transform="translate(960 740) scale(0.22) translate(-217 -217)">
       <rect width="434" height="444" fill="none"/>
 
@@ -102,7 +101,8 @@
       </text>
     </g>
 
-    <!-- SIGNATURE (left of the seal, aligned vertically) -->
+    <!-- SIGNATURE (يسار الختم فعلاً) -->
+    <!-- ملاحظة: تم نقلها لليسار بإزاحة X سالبة، مع محاذاة على نفس مستوى الختم تقريباً -->
     <g transform="translate(960, 760) scale(0.33) translate(-325 -61.5)" opacity="0.95">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 123" width="650" height="123">
         <g transform="translate(0,123) scale(0.1,-0.1)" fill="#1e3a8a" stroke="none">
@@ -173,7 +173,5 @@ c-67 -114 -109 -197 -109 -213 1 -6 13 12 27 39 14 28 57 103 95 168 l69 117
         </g>
       </svg>
     </g>
-
   </g>
-
 </svg>
