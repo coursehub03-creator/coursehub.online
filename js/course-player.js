@@ -549,7 +549,6 @@ function showCourseCompletion(finalScore) {
   document.getElementById("goAchievementsBtn").addEventListener("click", () => {
     location.href = "/achievements.html";
   });
-
 }
 
 function pushLocalNotification({ title, message, link }) {
@@ -681,7 +680,13 @@ async function generateCertificateUrl(verificationCode) {
     const lang = localStorage.getItem("coursehub_lang") || "ar";
     const studentName = user?.displayName || user?.email || "طالب CourseHub";
     const titleToPrint = lang === "en" ? course.titleEn || course.title : course.title;
-    const date = new Date().toLocaleDateString("en-GB");
+
+    // ✅ اخترنا نسخة main لضمان DD/MM/YYYY ثابتة
+    const date = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
 
     ctx.textAlign = "center";
 
