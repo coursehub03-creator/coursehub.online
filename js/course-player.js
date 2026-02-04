@@ -680,7 +680,7 @@ async function generateCertificateUrl(verificationCode) {
     const template = await loadImage("/assets/images/certificate.svg");
     ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
 
-    const lang = localStorage.getItem("coursehub_lang") || "ar";
+    const lang = localStorage.getItem("coursehub_lang") || "en";
     const studentName = user?.displayName || user?.email || "طالب CourseHub";
     const titleToPrint = lang === "en" ? course.titleEn || course.title : course.title;
     const date = new Date().toLocaleDateString("en-GB");
