@@ -64,6 +64,7 @@ async function generateCertificateDataUrl({
 
     ctx.fillStyle = "#6b7280";
     ctx.font = "20px 'Inter', sans-serif";
+
     // نفس أماكن النصوص الموجودة في قالب الشهادة
     ctx.fillText(issuedAt, 350, 690);
     if (verificationCode) {
