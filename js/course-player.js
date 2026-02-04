@@ -456,6 +456,8 @@ async function completeCourse({ showSummary = true } = {}) {
   }
 }
 
+
+
 async function saveResume() {
   try {
     if (!user || !courseId) return;
