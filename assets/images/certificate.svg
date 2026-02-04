@@ -52,12 +52,12 @@
   <line x1="240" y1="650" x2="960" y2="650" stroke="#e2e8f0" stroke-width="2"/>
 
   <!-- Date (فارغ للتعبئة البرمجية) -->
-  <text x="145" y="690" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#475569">
+  <text x="135" y="690" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#475569">
     Issued on:
   </text>
   <text id="issuedOn" x="340" y="690" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#0f172a" font-weight="600"></text>
 
-  <text x="180" y="725" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#475569">
+  <text x="135" y="725" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#475569">
     Verification Code:
   </text>
   <text id="verificationCode" x="410" y="725" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#0f172a" font-weight="600"></text>
