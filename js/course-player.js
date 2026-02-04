@@ -359,8 +359,9 @@ function submitQuiz(lesson) {
           btn.disabled = true;
           btn.textContent = "جاري تجهيز الشهادة...";
         }
-        await completeCourse();
+               await completeCourse();
         return;
+
       } else {
         nextLesson();
       }
@@ -455,6 +456,8 @@ async function completeCourse({ showSummary = true } = {}) {
     showCourseCompletion(finalScore);
   }
 }
+
+
 
 async function saveResume() {
   try {
