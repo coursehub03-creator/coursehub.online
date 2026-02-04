@@ -71,7 +71,6 @@ onAuthStateChanged(auth, async (user) => {
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
             : data.completedAt || "";
-
           return {
             title: data.courseTitle || data.title || "",
             issuedAt,
@@ -108,7 +107,6 @@ onAuthStateChanged(auth, async (user) => {
     const certList = document.getElementById("certificatesList");
     if (certList) {
       certList.innerHTML = "";
-
       if (certificates.length === 0) {
         certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
       } else {
@@ -143,7 +141,6 @@ onAuthStateChanged(auth, async (user) => {
     const coursesList = document.getElementById("coursesList");
     if (coursesList) {
       coursesList.innerHTML = "";
-
       if (completedCourses.length === 0) {
         coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
       } else {
