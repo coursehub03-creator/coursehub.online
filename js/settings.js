@@ -1,5 +1,8 @@
 import { auth, db } from "/js/firebase-config.js";
-import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  onAuthStateChanged,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   collection,
   doc,
@@ -31,6 +34,7 @@ function saveStoredPreferences(preferences) {
   localStorage.setItem("coursehub_preferences", JSON.stringify(preferences));
 }
 
+// ✅ توليد صورة شهادة PNG (DataURL) من قالب SVG + كتابة الاسم/الدورة/التاريخ/الكود فوقه
 async function generateCertificateDataUrl({
   studentName,
   courseTitle,
@@ -60,6 +64,7 @@ async function generateCertificateDataUrl({
 
     ctx.fillStyle = "#6b7280";
     ctx.font = "20px 'Inter', sans-serif";
+    // نفس أماكن النصوص الموجودة في قالب الشهادة
     ctx.fillText(issuedAt, 350, 690);
     if (verificationCode) {
       ctx.fillText(verificationCode, 390, 725);
@@ -82,8 +87,10 @@ function loadImage(src) {
   });
 }
 
+// ✅ مزامنة الشهادات الحالية بعد تغيير الاسم (داخل users subcollection + المجموعة العامة certificates)
 async function syncCertificatesForUser(user, studentName) {
   const issuedFallback = new Date().toLocaleDateString("en-GB");
+
   const [userCertsSnap, publicCertsSnap] = await Promise.all([
     getDocs(collection(db, "users", user.uid, "certificates")),
     getDocs(query(collection(db, "certificates"), where("userId", "==", user.uid)))
@@ -91,11 +98,13 @@ async function syncCertificatesForUser(user, studentName) {
 
   const updateTasks = [];
 
+  // تحديث شهادات المستخدم داخل subcollection
   userCertsSnap.docs.forEach((docSnap) => {
     const data = docSnap.data();
     const courseTitle = data.title || "";
     const issuedAt = data.issuedAt || issuedFallback;
     const verificationCode = data.verificationCode || "";
+
     updateTasks.push(
       generateCertificateDataUrl({
         studentName,
@@ -112,6 +121,7 @@ async function syncCertificatesForUser(user, studentName) {
     );
   });
 
+  // تحديث الشهادات في المجموعة العامة
   publicCertsSnap.docs.forEach((docSnap) => {
     const data = docSnap.data();
     const courseTitle = data.courseTitle || data.title || "";
@@ -119,6 +129,7 @@ async function syncCertificatesForUser(user, studentName) {
       ? data.completedAt.toDate().toLocaleDateString("en-GB")
       : issuedFallback;
     const verificationCode = data.verificationCode || "";
+
     updateTasks.push(
       generateCertificateDataUrl({
         studentName,
@@ -281,6 +292,7 @@ function bindSettingsEvents(user, initialName) {
         const avatar = document.querySelector(".settings-avatar");
         if (avatar) avatar.textContent = newName.charAt(0).toUpperCase();
 
+        // ✅ الحفاظ على ميزة تحديث الشهادات الحالية بالاسم الجديد
         profileStatus.textContent = "جارٍ تحديث الشهادات الحالية بالاسم الجديد...";
         profileStatus.className = "settings-status";
 
