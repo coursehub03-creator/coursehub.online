@@ -51,7 +51,7 @@
   <line x1="240" y1="650" x2="960" y2="650" stroke="#e2e8f0" stroke-width="2"/>
 
   <!-- Date (فارغ للتعبئة البرمجية) -->
-  <text x="170" y="690" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#475569">
+  <text x="150" y="690" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#475569">
     Issued on:
   </text>
   <text id="issuedOn" x="340" y="690" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#0f172a" font-weight="600"></text>
@@ -62,7 +62,7 @@
   <text id="verificationCode" x="410" y="725" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#0f172a" font-weight="600"></text>
 
   <!-- Authorization -->
-  <text x="990" y="690" text-anchor="end" font-family="Inter, Segoe UI, sans-serif"
+  <text x="1050" y="690" text-anchor="end" font-family="Inter, Segoe UI, sans-serif"
         font-size="20" fill="#475569">
     Authorized by CourseHub
   </text>
