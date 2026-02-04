@@ -70,7 +70,7 @@ onAuthStateChanged(auth, async (user) => {
           const data = docSnap.data();
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
-            : data.completedAt || "";
+            : (data.completedAt || "");
 
           return {
             title: data.courseTitle || data.title || "",
@@ -114,16 +114,16 @@ onAuthStateChanged(auth, async (user) => {
         certificates.forEach((cert) => {
           certList.innerHTML += `
             <div class="certificate-card">
-              <a href="${cert.certificateUrl}" download class="download-btn">تحميل</a>
-              <h4>${cert.title}</h4>
-              <span>تاريخ الإصدار: ${cert.issuedAt}</span>
+              <a href="${cert.certificateUrl || "#"}" download class="download-btn">تحميل</a>
+              <h4>${cert.title || ""}</h4>
+              <span>تاريخ الإصدار: ${cert.issuedAt || "-"}</span>
               ${
                 cert.verificationCode
                   ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
                   : ""
               }
               <div class="certificate-actions">
-                <button onclick="openCertificate('${cert.certificateUrl}')">
+                <button onclick="openCertificate('${cert.certificateUrl || ""}')">
                   عرض الشهادة
                 </button>
                 ${
@@ -151,7 +151,7 @@ onAuthStateChanged(auth, async (user) => {
               <img src="${course.image || "/assets/images/course1.jpg"}" alt="${course.title || ""}">
               <div class="course-content">
                 <h4>
-                  <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                  <a href="course-detail.html?id=${course.id || ""}" style="text-decoration:none;color:#1c3faa;">
                     ${course.title || ""}
                   </a>
                 </h4>
