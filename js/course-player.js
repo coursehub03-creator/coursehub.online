@@ -359,9 +359,8 @@ function submitQuiz(lesson) {
           btn.disabled = true;
           btn.textContent = "جاري تجهيز الشهادة...";
         }
-               await completeCourse();
+        await completeCourse();
         return;
-
       } else {
         nextLesson();
       }
@@ -404,7 +403,7 @@ async function completeCourse({ showSummary = true } = {}) {
   const verificationCode = generateVerificationCode();
 
   // ✅ توليد شهادة (DataURL)
-  const certificateUrl = await generateCertificateUrl();
+  const certificateUrl = await generateCertificateUrl(verificationCode);
 
   try {
     // ✅ حفظ الشهادة في مجموعة certificates العامة
@@ -669,7 +668,7 @@ function generateVerificationCode() {
     .toUpperCase()}`;
 }
 
-async function generateCertificateUrl() {
+async function generateCertificateUrl(verificationCode) {
   try {
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
@@ -684,21 +683,24 @@ async function generateCertificateUrl() {
     const lang = localStorage.getItem("coursehub_lang") || "ar";
     const studentName = user?.displayName || user?.email || "طالب CourseHub";
     const titleToPrint = lang === "en" ? course.titleEn || course.title : course.title;
-    const date = new Date().toLocaleDateString(lang === "en" ? "en-US" : "ar-EG");
+    const date = new Date().toLocaleDateString("en-GB");
 
     ctx.textAlign = "center";
 
-    ctx.fillStyle = "#1c3faa";
-    ctx.font = "bold 40px 'Inter', sans-serif";
-    ctx.fillText(studentName, canvas.width / 2, 420);
+    ctx.fillStyle = "#1d4ed8";
+    ctx.font = "bold 44px 'Inter', sans-serif";
+    ctx.fillText(studentName, canvas.width / 2, 415);
 
     ctx.fillStyle = "#111827";
-    ctx.font = "bold 30px 'Inter', sans-serif";
-    ctx.fillText(titleToPrint, canvas.width / 2, 480);
+    ctx.font = "bold 34px 'Inter', sans-serif";
+    ctx.fillText(titleToPrint, canvas.width / 2, 525);
 
     ctx.fillStyle = "#6b7280";
     ctx.font = "20px 'Inter', sans-serif";
-    ctx.fillText(date, canvas.width / 2, 540);
+    ctx.fillText(date, 350, 690);
+    if (verificationCode) {
+      ctx.fillText(verificationCode, 390, 725);
+    }
 
     return canvas.toDataURL("image/png");
   } catch (error) {

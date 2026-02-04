@@ -71,6 +71,7 @@ onAuthStateChanged(auth, async (user) => {
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
             : data.completedAt || "";
+
           return {
             title: data.courseTitle || data.title || "",
             issuedAt,
