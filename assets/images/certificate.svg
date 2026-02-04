@@ -72,7 +72,7 @@
 
     <!-- NEW SEAL (centered under Authorized by CourseHub) -->
     <!-- Position: center at (960, 740) -->
-    <g transform="translate(960 800) scale(0.22) translate(-217 -217)">
+    <g transform="translate(960 740) scale(0.22) translate(-217 -217)">
       <rect width="434" height="444" fill="none"/>
 
       <!-- outer blue ring -->
@@ -104,7 +104,7 @@
 
     <!-- SIGNATURE (directly under the seal, close spacing) -->
     <!-- Centered at (960, 820), scaled to fit nicely -->
-    <g transform="translate(960 820) scale(0.33) translate(-325 -61.5)" opacity="0.95">
+    <g transform="translate(960 850) scale(0.33) translate(-325 -61.5)" opacity="0.95">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 123" width="650" height="123">
         <g transform="translate(0,123) scale(0.1,-0.1)" fill="#1e3a8a" stroke="none">
           <path d="M6030 953 c-74 -13 -191 -48 -249 -74 -88 -40 -112 -64 -110 -109 3
