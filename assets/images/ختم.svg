@@ -1,0 +1,61 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+  "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="434pt" height="444pt"
+     viewBox="0 0 434 444"
+     preserveAspectRatio="xMidYMid meet">
+
+  <defs>
+    <!-- نفس تدرّج الذهب المستخدم في الشهادة -->
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d4b06a"/>
+      <stop offset="100%" stop-color="#f6e0a3"/>
+    </linearGradient>
+
+    <!-- مسار دائري للنص (اختياري لو حبيت تكتب نص حول الختم لاحقاً) -->
+    <path id="ringTextPath"
+          d="M 217,217 m -140,0 a 140,140 0 1,1 280,0 a 140,140 0 1,1 -280,0"/>
+  </defs>
+
+  <!-- خلفية شفافة -->
+  <rect width="434" height="444" fill="none"/>
+
+  <!-- 1) الدائرة الخارجية (أزرق) -->
+  <circle cx="217" cy="217" r="185"
+          fill="none"
+          stroke="#1e3a8a"
+          stroke-width="10"/>
+
+  <!-- 2) نقاط خارجية (ذهبي) - باستخدام stroke-dasharray + round cap -->
+  <circle cx="217" cy="217" r="170"
+          fill="none"
+          stroke="url(#gold)"
+          stroke-width="8"
+          stroke-linecap="round"
+          stroke-dasharray="0.5 18"/>
+
+  <!-- 3) الدائرة الداخلية الأولى (ذهبي) -->
+  <circle cx="217" cy="217" r="135"
+          fill="none"
+          stroke="url(#gold)"
+          stroke-width="6"/>
+
+  <!-- 4) الدائرة الداخلية الثانية (ذهبي) -->
+  <circle cx="217" cy="217" r="118"
+          fill="none"
+          stroke="url(#gold)"
+          stroke-width="3"/>
+
+  <!-- 5) اسم Course Hub بالوسط (أزرق) -->
+  <text x="217" y="225"
+        text-anchor="middle"
+        font-family="'Inter','Segoe UI',sans-serif"
+        font-size="34"
+        font-weight="800"
+        fill="#1e3a8a"
+        letter-spacing="1">
+    COURSE HUB
+  </text>
+
+</svg>
