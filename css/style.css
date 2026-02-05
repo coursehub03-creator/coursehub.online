@@ -178,7 +178,7 @@ html[data-theme="dark"] .cta-strip p {
 
   display: inline-block;
   
-  transform: translate(22px, 15px);
+  transform: translate(30px, 20px);
 }
 
 .hero .btn-hero:hover { background-color: #ff4757; }
