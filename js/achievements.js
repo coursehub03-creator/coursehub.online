@@ -15,6 +15,7 @@ import {
 
 // --- دالة فتح الشهادة في نافذة جديدة ---
 window.openCertificate = function (url) {
+  // ✅ الحفاظ على ميزة التحقق من الرابط + التعامل مع حظر النوافذ المنبثقة
   if (!url) {
     alert("رابط الشهادة غير متوفر حاليًا.");
     return;
@@ -34,17 +35,12 @@ onAuthStateChanged(auth, async (user) => {
       user = result.user;
     }
 
-    // جلب مستند المستخدم من Firestore
     const userDocRef = doc(db, "users", user.uid);
-    let userDataSnap = await getDoc(userDocRef);
+    const userDataSnap = await getDoc(userDocRef);
 
     let userData;
     if (!userDataSnap.exists()) {
-      // إنشاء مستند جديد إذا لم يكن موجودًا
-      userData = {
-        completedCourses: [],
-        certificates: []
-      };
+      userData = { completedCourses: [], certificates: [] };
       await setDoc(userDocRef, userData);
     } else {
       userData = userDataSnap.data();
@@ -53,8 +49,8 @@ onAuthStateChanged(auth, async (user) => {
     let completedCourses = [];
     let certificates = [];
 
+    // ✅ القراءة من المجموعات الفرعية (الأسلوب الجديد)
     try {
-      // ✅ القراءة من المجموعات الفرعية (الأسلوب الجديد)
       const completedSnap = await getDocs(
         collection(db, "users", user.uid, "completedCourses")
       );
@@ -72,16 +68,19 @@ onAuthStateChanged(auth, async (user) => {
       console.error("خطأ أثناء جلب الشهادات من المجموعات الفرعية:", error);
     }
 
+    // ✅ Fallback للشهادات: إذا ما فيه شهادات بالمجموعة الفرعية، اجلبها من المجموعة العامة certificates
     if (!certificates.length) {
       try {
         const publicCertificatesSnap = await getDocs(
           query(collection(db, "certificates"), where("userId", "==", user.uid))
         );
+
         certificates = publicCertificatesSnap.docs.map((docSnap) => {
           const data = docSnap.data();
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
-            : data.completedAt || "";
+            : (data.completedAt || "");
+
           return {
             title: data.courseTitle || data.title || "",
             issuedAt,
@@ -125,8 +124,8 @@ onAuthStateChanged(auth, async (user) => {
           certList.innerHTML += `
             <div class="certificate-card">
               <a href="${cert.certificateUrl || "#"}" download class="download-btn">تحميل</a>
-              <h4>${cert.title}</h4>
-              <span>تاريخ الإصدار: ${cert.issuedAt}</span>
+              <h4>${cert.title || ""}</h4>
+              <span>تاريخ الإصدار: ${cert.issuedAt || "-"}</span>
               ${
                 cert.verificationCode
                   ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
@@ -158,22 +157,21 @@ onAuthStateChanged(auth, async (user) => {
         completedCourses.forEach((course) => {
           coursesList.innerHTML += `
             <div class="course-card">
-              <img src="${course.image}" alt="${course.title}">
+              <img src="${course.image || "/assets/images/course1.jpg"}" alt="${course.title || ""}">
               <div class="course-content">
                 <h4>
-                  <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
-                    ${course.title}
+                  <a href="course-detail.html?id=${course.id || ""}" style="text-decoration:none;color:#1c3faa;">
+                    ${course.title || ""}
                   </a>
                 </h4>
-                <span>المدرب: ${course.instructor}</span><br>
-                <span>أكملت في: ${course.completedAt}</span>
+                <span>المدرب: ${course.instructor || "-"}</span><br>
+                <span>أكملت في: ${course.completedAt || "-"}</span>
               </div>
             </div>
           `;
         });
       }
     }
-
   } catch (error) {
     console.error("Firebase Auth Error:", error);
     alert("حدث خطأ أثناء تسجيل الدخول أو جلب البيانات. حاول مرة أخرى.");

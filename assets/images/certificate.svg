@@ -1,46 +1,176 @@
 <svg width="1200" height="850" viewBox="0 0 1200 850" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f8fafc" />
-      <stop offset="100%" stop-color="#ffffff" />
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#ffffff"/>
     </linearGradient>
+
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#d4b06a" />
-      <stop offset="100%" stop-color="#f6e0a3" />
+      <stop offset="0%" stop-color="#d4b06a"/>
+      <stop offset="100%" stop-color="#f6e0a3"/>
     </linearGradient>
   </defs>
 
-  <rect width="1200" height="850" fill="url(#bg)" />
+  <rect width="1200" height="850" fill="url(#bg)"/>
 
-  <rect x="24" y="24" width="1152" height="802" rx="10" stroke="#1e3a8a" stroke-width="4" />
-  <rect x="46" y="46" width="1108" height="758" rx="8" stroke="url(#gold)" stroke-width="3" />
+  <rect x="24" y="24" width="1152" height="802" rx="10" stroke="#1e3a8a" stroke-width="4"/>
+  <rect x="46" y="46" width="1108" height="758" rx="8" stroke="url(#gold)" stroke-width="3"/>
 
-  <circle cx="600" cy="135" r="48" fill="#1e3a8a" />
-  <circle cx="600" cy="135" r="36" stroke="#f6e0a3" stroke-width="3" fill="none" />
-  <text x="600" y="143" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#ffffff" font-weight="700">CH</text>
+  <!-- Logo -->
+  <circle cx="600" cy="135" r="48" fill="#1e3a8a"/>
+  <circle cx="600" cy="135" r="36" stroke="#f6e0a3" stroke-width="3" fill="none"/>
+  <text x="600" y="143" text-anchor="middle" font-family="Inter, Segoe UI, sans-serif" font-size="28" fill="#ffffff" font-weight="700">CH</text>
 
-  <text x="600" y="205" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="30" fill="#1e3a8a" font-weight="600">CourseHub</text>
-  <text x="600" y="275" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="52" fill="#0f172a" font-weight="700">Certificate of Completion</text>
-  <text x="600" y="340" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="26" fill="#334155">This certifies that</text>
+  <text x="600" y="205" text-anchor="middle" font-family="Inter, Segoe UI, sans-serif" font-size="30" fill="#1e3a8a" font-weight="600">CourseHub</text>
 
-  <line x1="320" y1="430" x2="880" y2="430" stroke="#cbd5f5" stroke-width="2" />
+  <text x="600" y="275" text-anchor="middle" font-family="Inter, Segoe UI, sans-serif" font-size="52" fill="#0f172a" font-weight="700">
+    Certificate of Completion
+  </text>
 
-  <text x="600" y="485" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="26" fill="#334155">has successfully completed the course</text>
+  <text x="600" y="340" text-anchor="middle" font-family="Inter, Segoe UI, sans-serif" font-size="26" fill="#334155">
+    This certifies that
+  </text>
 
-  <line x1="320" y1="540" x2="880" y2="540" stroke="#cbd5f5" stroke-width="2" />
+  <!-- Student Name (فارغ للتعبئة البرمجية) -->
+  <text id="studentName" x="600" y="405" text-anchor="middle"
+        font-family="Inter, Segoe UI, sans-serif"
+        font-size="42" fill="#1d4ed8" font-weight="700"></text>
 
-  <line x1="240" y1="650" x2="960" y2="650" stroke="#e2e8f0" stroke-width="2" />
+  <line x1="320" y1="450" x2="880" y2="450" stroke="#cbd5f5" stroke-width="2"/>
 
-  <text x="240" y="690" font-family="'Inter', 'Segoe UI', sans-serif" font-size="20" fill="#475569">Issued on: DD / MM / YYYY</text>
-  <text x="240" y="725" font-family="'Inter', 'Segoe UI', sans-serif" font-size="20" fill="#475569">Verification Code:</text>
+  <text x="600" y="490" text-anchor="middle" font-family="Inter, Segoe UI, sans-serif" font-size="26" fill="#334155">
+    has successfully completed the course
+  </text>
 
-  <text x="960" y="690" text-anchor="end" font-family="'Inter', 'Segoe UI', sans-serif" font-size="20" fill="#475569">Authorized by CourseHub</text>
-  <path d="M760 715 C790 690, 830 700, 860 690 C885 680, 910 700, 940 680" stroke="#1e3a8a" stroke-width="2" fill="none" />
+  <!-- Course Title (فارغ للتعبئة البرمجية) -->
+  <text id="courseTitle" x="600" y="540" text-anchor="middle"
+        font-family="Inter, Segoe UI, sans-serif"
+        font-size="38" fill="#0f172a" font-weight="600"></text>
 
-  <g transform="translate(900 585)">
-    <circle cx="0" cy="0" r="42" fill="none" stroke="#1e3a8a" stroke-width="3" />
-    <circle cx="0" cy="0" r="32" fill="none" stroke="#f6e0a3" stroke-width="3" />
-    <text x="0" y="-4" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="12" fill="#1e3a8a" font-weight="700">COURSEHUB</text>
-    <text x="0" y="14" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="10" fill="#1e3a8a">SEAL</text>
+  <line x1="320" y1="575" x2="880" y2="575" stroke="#cbd5f5" stroke-width="2"/>
+
+  <line x1="240" y1="650" x2="960" y2="650" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- Date (فارغ للتعبئة البرمجية) -->
+  <text x="130" y="690" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#475569">
+    Issued on:
+  </text>
+  <text id="issuedOn" x="340" y="690" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#0f172a" font-weight="600"></text>
+
+  <text x="130" y="725" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#475569">
+    Verification Code:
+  </text>
+  <text id="verificationCode" x="410" y="725" font-family="Inter, Segoe UI, sans-serif" font-size="20" fill="#0f172a" font-weight="600"></text>
+
+  <!-- Authorization -->
+  <text x="1050" y="690" text-anchor="end" font-family="Inter, Segoe UI, sans-serif"
+        font-size="20" fill="#475569">
+    Authorized by CourseHub
+  </text>
+
+  <!-- ✅ NEW SEAL + SIGNATURE (جنب بعض: التوقيع يسار الختم) -->
+  <g>
+    <!-- NEW SEAL (يمين: تحت Authorized) -->
+    <g transform="translate(960 740) scale(0.22) translate(-217 -217)">
+      <rect width="434" height="444" fill="none"/>
+
+      <!-- outer blue ring -->
+      <circle cx="217" cy="217" r="185" fill="none" stroke="#1e3a8a" stroke-width="10"/>
+
+      <!-- dotted gold ring -->
+      <circle cx="217" cy="217" r="170"
+              fill="none"
+              stroke="url(#gold)"
+              stroke-width="8"
+              stroke-linecap="round"
+              stroke-dasharray="0.5 18"/>
+
+      <!-- inner gold rings -->
+      <circle cx="217" cy="217" r="135" fill="none" stroke="url(#gold)" stroke-width="6"/>
+      <circle cx="217" cy="217" r="118" fill="none" stroke="url(#gold)" stroke-width="3"/>
+
+      <!-- center text -->
+      <text x="217" y="225"
+            text-anchor="middle"
+            font-family="Inter, Segoe UI, sans-serif"
+            font-size="34"
+            font-weight="800"
+            fill="#1e3a8a"
+            letter-spacing="1">
+        COURSE HUB
+      </text>
+    </g>
+
+    <!-- SIGNATURE (يسار الختم فعلاً) -->
+    <g transform="translate(960, 760) scale(0.33) translate(-325 -61.5)" opacity="0.95">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 123" width="650" height="123">
+        <g transform="translate(0,123) scale(0.1,-0.1)" fill="#1e3a8a" stroke="none">
+          <path d="M6030 953 c-74 -13 -191 -48 -249 -74 -88 -40 -112 -64 -110 -109 3
+-46 -73 -184 -173 -311 -29 -38 -36 -55 -18 -44 16 10 12 -11 -12 -56 -25 -48
+-35 -128 -19 -157 10 -19 66 -40 78 -29 2 3 -5 15 -17 27 -27 27 -23 67 20
+179 30 77 166 330 209 388 66 88 422 160 490 99 52 -47 2 -112 -140 -183 -82
+-41 -250 -85 -265 -70 -4 4 0 15 9 25 10 10 17 23 17 28 0 5 23 38 50 73 28
+35 50 68 50 75 -1 15 -72 -64 -113 -127 -100 -152 -140 -217 -164 -265 -42
+-86 -20 -69 34 25 54 96 86 124 166 148 57 17 183 20 221 5 45 -17 66 -46 66
+-93 0 -125 -185 -224 -401 -215 -86 3 -88 2 -66 -14 40 -31 122 -42 217 -30
+156 21 283 106 326 217 15 41 15 46 -2 82 -24 48 -71 72 -160 80 l-68 6 34 12
+c41 15 143 72 189 106 40 29 71 78 71 112 0 66 -139 113 -270 90z"/>
+          <path d="M1725 944 c-16 -3 -54 -12 -84 -20 -38 -11 -57 -12 -64 -5 -6 6 -18
+11 -26 11 -13 -1 -12 -3 2 -11 18 -10 18 -12 -3 -34 -31 -33 -24 -71 13 -68
+25 2 27 -1 27 -36 0 -157 -92 -328 -223 -412 -139 -90 -316 -105 -357 -30 -14
+28 -12 92 4 139 34 95 149 220 255 276 78 41 161 57 186 36 25 -21 19 34 -7
+65 -57 65 -179 27 -297 -92 -77 -79 -154 -218 -166 -300 -19 -144 84 -244 222
+-213 105 23 251 150 335 292 48 81 67 139 76 238 l7 75 70 27 c76 30 151 36
+180 14 34 -25 21 -83 -64 -274 -114 -256 -121 -293 -72 -343 34 -33 50 -35 96
+-13 40 19 115 82 115 96 0 6 -20 -8 -45 -31 -96 -89 -178 -80 -160 16 7 36 33
+93 142 308 94 185 100 235 30 271 -30 16 -139 26 -192 18z"/>
+          <path d="M3821 936 c-75 -19 -224 -96 -306 -158 -178 -136 -266 -329 -198
+-439 28 -44 101 -85 170 -94 109 -14 280 34 421 118 81 49 176 127 194 160 6
+13 -9 3 -36 -23 -88 -84 -186 -140 -326 -185 -72 -24 -103 -28 -200 -29 -94
+-1 -121 2 -150 18 -52 27 -70 54 -70 109 0 68 29 118 123 209 62 60 104 90
+177 127 183 94 374 137 420 96 26 -24 35 -13 24 27 -19 64 -129 93 -243 64z"/>
+          <path d="M5185 939 c-65 -11 -134 -35 -157 -56 -21 -19 -25 -73 -4 -73 7 0 40
+16 72 35 67 41 82 44 62 13 -81 -126 -118 -186 -118 -190 0 -3 -17 -35 -38
+-69 -87 -143 -172 -308 -172 -331 0 -7 20 25 43 72 68 132 206 369 278 476 54
+80 75 94 143 94 101 0 102 -56 1 -276 -116 -257 -127 -304 -76 -355 16 -16 37
+-29 46 -29 34 0 145 70 145 92 0 6 -10 2 -22 -9 -70 -64 -140 -81 -159 -39
+-19 40 -3 85 106 301 84 165 105 216 105 250 0 87 -93 122 -255 94z"/>
+          <path d="M755 914 c-81 -20 -246 -102 -323 -161 -155 -119 -232 -278 -184
+-385 25 -58 72 -93 153 -114 55 -14 76 -15 152 -5 136 18 288 83 350 150 15
+16 2 10 -42 -18 -147 -94 -396 -130 -507 -73 -150 77 -132 229 48 402 60 58
+187 135 275 167 90 33 203 42 238 19 56 -36 20 -106 -92 -182 -32 -22 -60 -42
+-63 -46 -12 -16 -138 -68 -179 -74 -36 -6 -42 -9 -26 -15 32 -12 76 -10 140 6
+62 16 195 73 195 84 0 3 19 19 43 35 98 66 126 154 64 200 -36 27 -155 32
+-242 10z"/>
+          <path d="M2490 910 c-124 -27 -204 -55 -255 -90 -36 -25 -45 -37 -45 -60 0
+-16 -10 -49 -22 -72 -27 -54 -173 -272 -193 -288 -8 -7 -15 -18 -15 -24 0 -6
+11 3 25 19 31 38 31 29 0 -45 -41 -97 -31 -163 26 -175 37 -8 49 1 24 18 -45
+34 -6 169 112 382 103 186 106 190 176 219 202 85 449 94 469 18 13 -47 -75
+-150 -165 -195 -74 -36 -198 -69 -247 -65 l-41 3 38 53 c21 29 57 78 80 110
+23 31 39 61 36 66 -7 11 -49 -37 -109 -126 -25 -37 -54 -70 -65 -73 -23 -8
+-52 -48 -47 -67 1 -7 -21 -52 -50 -100 -58 -95 -85 -154 -79 -171 2 -6 17 16
+33 48 61 120 124 204 124 164 0 -18 100 -117 145 -143 82 -48 174 -57 221 -21
+18 14 17 14 -8 6 -48 -18 -124 15 -201 88 -58 54 -111 127 -102 141 3 6 27 10
+52 10 57 0 212 51 278 92 62 38 121 106 136 158 15 50 -2 95 -45 121 -41 25
+-169 24 -286 -1z"/>
+          <path d="M3320 915 c-127 -35 -278 -133 -315 -206 -20 -37 -19 -89 1 -118 9
+-13 50 -38 90 -57 43 -19 80 -44 90 -59 16 -25 16 -27 -3 -53 -28 -38 -78 -70
+-136 -87 -88 -26 -233 -17 -322 21 -19 8 -19 7 -4 -16 22 -36 109 -77 176 -85
+75 -8 189 15 256 53 82 46 107 122 59 175 -9 11 -51 36 -93 58 -82 41 -91 51
+-78 87 22 59 206 196 308 231 39 13 91 15 91 4 0 -5 -24 -29 -54 -55 -61 -54
+-106 -133 -106 -188 0 -56 9 -54 41 8 17 30 63 91 104 134 50 52 75 86 75 101
+0 56 -80 79 -180 52z"/>
+          <path d="M4798 796 c-18 -26 -58 -88 -90 -139 l-56 -92 -89 -11 c-209 -27
+-313 -86 -313 -178 0 -43 13 -53 28 -22 26 57 134 107 261 122 l62 7 -62 -104
+c-67 -114 -109 -197 -109 -213 1 -6 13 12 27 39 14 28 57 103 95 168 l69 117
+102 0 c56 0 117 -4 135 -9 25 -8 32 -7 30 2 -6 19 -87 55 -155 69 l-61 13 46
+77 c26 43 65 103 86 133 21 31 36 58 33 61 -3 4 -21 -15 -39 -40z"/>
+          <path d="M3521 630 c-51 -11 -71 -25 -71 -51 0 -23 3 -23 101 -3 78 16 199 15
+249 -1 24 -8 25 -8 7 12 -34 39 -191 63 -286 43z"/>
+          <path d="M5435 380 c-10 -11 -14 -20 -9 -20 5 0 15 9 22 20 7 11 11 20 9 20
+-2 0 -12 -9 -22 -20z"/>
+        </g>
+      </svg>
+    </g>
   </g>
 </svg>
