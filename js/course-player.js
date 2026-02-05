@@ -681,7 +681,13 @@ async function generateCertificateUrl(verificationCode) {
     const lang = localStorage.getItem("coursehub_lang") || "ar";
     const studentName = user?.displayName || user?.email || "طالب CourseHub";
     const titleToPrint = lang === "en" ? course.titleEn || course.title : course.title;
-    const date = new Date().toLocaleDateString("en-GB");
+// ✅ تنسيق ثابت DD/MM/YYYY
+const date = new Date().toLocaleDateString("en-GB", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric"
+});
+
 
     ctx.textAlign = "center";
 
