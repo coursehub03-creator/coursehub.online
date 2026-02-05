@@ -8,6 +8,43 @@ body {
     color: #333;
 }
 
+html[data-theme="dark"] body {
+    background-color: #0b1220;
+    color: #e2e8f0;
+}
+
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .review-card,
+html[data-theme="dark"] .review-form,
+html[data-theme="dark"] .reviews-summary div,
+html[data-theme="dark"] .course-reviews,
+html[data-theme="dark"] .profile-card,
+html[data-theme="dark"] .settings-card {
+    background: #111827;
+    color: #e2e8f0;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.4);
+}
+
+html[data-theme="dark"] .card-content p,
+html[data-theme="dark"] .reviews-summary div,
+html[data-theme="dark"] .review-card,
+html[data-theme="dark"] .review-form label,
+html[data-theme="dark"] .section-subtitle {
+    color: #cbd5f5;
+}
+
+html[data-theme="dark"] .categories button {
+    background: transparent;
+    color: #e2e8f0;
+    border-color: #3b82f6;
+}
+
+html[data-theme="dark"] .categories button.active,
+html[data-theme="dark"] .categories button:hover {
+    background-color: #1d4ed8;
+    color: #fff;
+}
+
 /* Hero Section */
 .hero {
     background: linear-gradient(135deg, #6a11cb, #2575fc), url('/assets/images/hero.jpg') no-repeat center center/cover;
@@ -19,6 +56,114 @@ body {
     color: white;
     text-align: center;
     padding: 100px 20px;
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-top: 30px;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    margin-bottom: 14px;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.hero-stats div {
+    background: rgba(255, 255, 255, 0.18);
+    padding: 10px 14px;
+    border-radius: 12px;
+    min-width: 120px;
+}
+
+.hero-stats strong {
+    font-size: 20px;
+    display: block;
+}
+
+.cta-strip {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    margin: 40px auto;
+}
+
+.cta-strip h3 {
+    color: #1c3faa;
+    margin-bottom: 6px;
+}
+
+.cta-strip p {
+    color: #64748b;
+}
+
+.learning-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.learning-step {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+.learning-step i {
+    color: #1c3faa;
+    font-size: 28px;
+    margin-bottom: 12px;
+}
+
+.test-promo {
+    background: linear-gradient(120deg, #1c3faa, #2563eb);
+    color: #fff;
+    border-radius: 18px;
+    padding: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+}
+
+.test-promo a {
+    background: #ffcc00;
+    color: #1c3faa;
+    padding: 10px 20px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+html[data-theme="dark"] .cta-strip,
+html[data-theme="dark"] .learning-step {
+    background: #111827;
+    color: #e2e8f0;
+}
+
+html[data-theme="dark"] .cta-strip p {
+    color: #cbd5f5;
 }
 .hero h1 { font-size: 48px; margin-bottom: 15px; }
 .hero p { font-size: 20px; margin-bottom: 25px; }

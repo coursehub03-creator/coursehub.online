@@ -5,6 +5,14 @@ footer {
   margin-top: 60px;
 }
 
+html[data-theme="dark"] footer {
+  background-color: #0b1220;
+}
+
+html[data-theme="dark"] .footer-bottom {
+  background-color: #060a14;
+}
+
 .footer-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

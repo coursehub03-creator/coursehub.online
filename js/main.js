@@ -37,9 +37,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (yearEl) yearEl.textContent = new Date().getFullYear();
     }
 
-    // ✅ إدارة حالة المستخدم + اللغة + الإشعارات
+    // ✅ إدارة حالة المستخدم + اللغة + المظهر + الإشعارات
     setupUserState();
     setupLanguageToggle();
+    setupThemeToggle();
     setupNotifications();
 
     // ✅ ميزة codex: مزامنة البروفايل مع Firestore
@@ -319,10 +320,10 @@ function markAllNotificationsReadLocal(userId) {
 // ===============================
 function setupLanguageToggle() {
   const langBtn = document.getElementById("langBtn");
-  if (!langBtn) return;
-
   const currentLang = localStorage.getItem("coursehub_lang") || "ar";
   applyTranslations(currentLang);
+
+  if (!langBtn) return;
 
   langBtn.addEventListener("click", () => {
     const nextLang =
@@ -337,18 +338,16 @@ function applyTranslations(lang) {
     ar: {
       nav_home: "الرئيسية",
       nav_courses: "الدورات",
-      nav_tests: "الاختبارات",
-      nav_achievements: "إنجازاتي",
       nav_paths: "المسارات",
-      lang: "عربي"
+      lang: "عربي",
+      theme: "المظهر"
     },
     en: {
       nav_home: "Home",
       nav_courses: "Courses",
-      nav_tests: "Tests",
-      nav_achievements: "Achievements",
       nav_paths: "Paths",
-      lang: "English"
+      lang: "English",
+      theme: "Theme"
     }
   };
 
@@ -359,6 +358,47 @@ function applyTranslations(lang) {
 
   document.documentElement.setAttribute("lang", lang);
   document.documentElement.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
+
+  const themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) {
+    const themeLabel = translations[lang]?.theme || "Theme";
+    themeToggle.setAttribute("aria-label", themeLabel);
+  }
+
+  const currentTheme = localStorage.getItem("coursehub_theme") || "light";
+  applyTheme(currentTheme);
+}
+
+function setupThemeToggle() {
+  const toggle = document.getElementById("themeToggle");
+  const stored = localStorage.getItem("coursehub_theme") || "light";
+  applyTheme(stored);
+
+  if (!toggle) return;
+
+  toggle.addEventListener("click", () => {
+    const current = localStorage.getItem("coursehub_theme") || "light";
+    const next = current === "light" ? "dark" : "light";
+    localStorage.setItem("coursehub_theme", next);
+    applyTheme(next);
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const toggle = document.getElementById("themeToggle");
+  if (!toggle) return;
+  const lang = localStorage.getItem("coursehub_lang") || "ar";
+  const label =
+    theme === "dark"
+      ? lang === "ar"
+        ? "فاتح"
+        : "Light"
+      : lang === "ar"
+        ? "داكن"
+        : "Dark";
+  const icon = theme === "dark" ? "fa-sun" : "fa-moon";
+  toggle.innerHTML = `<i class="fa ${icon}"></i> ${label}`;
 }
 
 // ===============================
