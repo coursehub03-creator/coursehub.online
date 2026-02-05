@@ -126,9 +126,14 @@ async function syncCertificatesForUser(user, studentName) {
   publicCertsSnap.docs.forEach((docSnap) => {
     const data = docSnap.data();
     const courseTitle = data.courseTitle || data.title || "";
-    const issuedAt = data.completedAt?.toDate
-      ? data.completedAt.toDate().toLocaleDateString("en-GB")
-      : issuedFallback;
+
+    // ✅ قراءة آمنة للتاريخ (Timestamp أو fallback)
+    const completedAt = data.completedAt;
+    const issuedAt =
+      completedAt && typeof completedAt.toDate === "function"
+        ? completedAt.toDate().toLocaleDateString("en-GB")
+        : issuedFallback;
+
     const verificationCode = data.verificationCode || "";
 
     updateTasks.push(

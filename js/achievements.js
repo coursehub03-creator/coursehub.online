@@ -77,10 +77,13 @@ onAuthStateChanged(auth, async (user) => {
 
         certificates = publicCertificatesSnap.docs.map((docSnap) => {
           const data = docSnap.data();
-          const issuedAt = data.completedAt?.toDate
-            ? data.completedAt.toDate().toLocaleDateString("ar-EG")
-            : data.completedAt || "";
-            : (data.completedAt || "");
+
+          // ✅ قراءة آمنة للتاريخ (Timestamp أو string)
+          const completedAt = data.completedAt;
+          const issuedAt =
+            completedAt && typeof completedAt.toDate === "function"
+              ? completedAt.toDate().toLocaleDateString("ar-EG")
+              : (completedAt || "");
 
           return {
             title: data.courseTitle || data.title || "",
