@@ -1,0 +1,190 @@
+.profile-page {
+  padding: 40px 20px 80px;
+  background: #f4f6f9;
+}
+
+.profile-hero {
+  background: linear-gradient(135deg, #1c3faa, #3b82f6);
+  color: #fff;
+  border-radius: 18px;
+  padding: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+  margin-bottom: 30px;
+}
+
+.profile-hero-info h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.profile-hero-info p {
+  max-width: 520px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.profile-hero-card {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 240px;
+}
+
+.profile-pic {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 4px solid #f8fafc;
+  object-fit: cover;
+  background: #fff;
+}
+
+.profile-hero-card h2 {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.profile-hero-card .email {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.profile-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-card h3 {
+  font-size: 20px;
+  color: #1c3faa;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.profile-stats div {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+
+.profile-stats span {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1c3faa;
+}
+
+.profile-stats small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.profile-activity {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-activity li {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profile-note {
+  font-size: 13px;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: #fff;
+  color: #1c3faa;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #1c3faa;
+  border: 1px dashed #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .profile-hero {
+    padding: 24px;
+  }
+
+  .profile-hero-info h1 {
+    font-size: 26px;
+  }
+
+  .profile-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
