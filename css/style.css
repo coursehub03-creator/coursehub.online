@@ -168,14 +168,18 @@ html[data-theme="dark"] .cta-strip p {
 .hero h1 { font-size: 48px; margin-bottom: 15px; }
 .hero p { font-size: 20px; margin-bottom: 25px; }
 .hero .btn-hero {
-    background-color: #ff6b6b;
-    color: white;
-    padding: 15px 30px;
-    border-radius: 50px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: 0.3s;
+  background-color: #ff6b6b;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.3s;
+
+  display: inline-block;
+  margin-top: 12px; /* زوّدها/قلّلها حسب اللي بدك */
 }
+
 .hero .btn-hero:hover { background-color: #ff4757; }
 
 /* Generic Buttons */
