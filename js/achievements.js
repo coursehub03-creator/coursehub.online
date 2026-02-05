@@ -79,6 +79,7 @@ onAuthStateChanged(auth, async (user) => {
           const data = docSnap.data();
           const issuedAt = data.completedAt?.toDate
             ? data.completedAt.toDate().toLocaleDateString("ar-EG")
+            : data.completedAt || "";
             : (data.completedAt || "");
 
           return {
@@ -124,8 +125,8 @@ onAuthStateChanged(auth, async (user) => {
           certList.innerHTML += `
             <div class="certificate-card">
               <a href="${cert.certificateUrl || "#"}" download class="download-btn">تحميل</a>
-              <h4>${cert.title || ""}</h4>
-              <span>تاريخ الإصدار: ${cert.issuedAt || "-"}</span>
+              <h4>${cert.title}</h4>
+              <span>تاريخ الإصدار: ${cert.issuedAt}</span>
               ${
                 cert.verificationCode
                   ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
@@ -157,15 +158,15 @@ onAuthStateChanged(auth, async (user) => {
         completedCourses.forEach((course) => {
           coursesList.innerHTML += `
             <div class="course-card">
-              <img src="${course.image || "/assets/images/course1.jpg"}" alt="${course.title || ""}">
+              <img src="${course.image}" alt="${course.title}">
               <div class="course-content">
                 <h4>
-                  <a href="course-detail.html?id=${course.id || ""}" style="text-decoration:none;color:#1c3faa;">
-                    ${course.title || ""}
+                  <a href="course-detail.html?id=${course.id}" style="text-decoration:none;color:#1c3faa;">
+                    ${course.title}
                   </a>
                 </h4>
-                <span>المدرب: ${course.instructor || "-"}</span><br>
-                <span>أكملت في: ${course.completedAt || "-"}</span>
+                <span>المدرب: ${course.instructor}</span><br>
+                <span>أكملت في: ${course.completedAt}</span>
               </div>
             </div>
           `;

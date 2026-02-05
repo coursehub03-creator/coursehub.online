@@ -1,6 +1,47 @@
 <svg width="1200" height="850" viewBox="0 0 1200 850" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#ffffff" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d4b06a" />
+      <stop offset="100%" stop-color="#f6e0a3" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="850" fill="url(#bg)" />
+
+  <rect x="24" y="24" width="1152" height="802" rx="10" stroke="#1e3a8a" stroke-width="4" />
+  <rect x="46" y="46" width="1108" height="758" rx="8" stroke="url(#gold)" stroke-width="3" />
+
+  <circle cx="600" cy="135" r="48" fill="#1e3a8a" />
+  <circle cx="600" cy="135" r="36" stroke="#f6e0a3" stroke-width="3" fill="none" />
+  <text x="600" y="143" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#ffffff" font-weight="700">CH</text>
+
+  <text x="600" y="205" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="30" fill="#1e3a8a" font-weight="600">CourseHub</text>
+  <text x="600" y="275" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="52" fill="#0f172a" font-weight="700">Certificate of Completion</text>
+  <text x="600" y="340" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="26" fill="#334155">This certifies that</text>
+
+  <line x1="320" y1="430" x2="880" y2="430" stroke="#cbd5f5" stroke-width="2" />
+
+  <text x="600" y="485" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="26" fill="#334155">has successfully completed the course</text>
+
+  <line x1="320" y1="540" x2="880" y2="540" stroke="#cbd5f5" stroke-width="2" />
+
+  <line x1="240" y1="650" x2="960" y2="650" stroke="#e2e8f0" stroke-width="2" />
+
+  <text x="240" y="690" font-family="'Inter', 'Segoe UI', sans-serif" font-size="20" fill="#475569">Issued on: DD / MM / YYYY</text>
+  <text x="240" y="725" font-family="'Inter', 'Segoe UI', sans-serif" font-size="20" fill="#475569">Verification Code:</text>
+
+  <text x="960" y="690" text-anchor="end" font-family="'Inter', 'Segoe UI', sans-serif" font-size="20" fill="#475569">Authorized by CourseHub</text>
+  <path d="M760 715 C790 690, 830 700, 860 690 C885 680, 910 700, 940 680" stroke="#1e3a8a" stroke-width="2" fill="none" />
+
+  <g transform="translate(900 585)">
+    <circle cx="0" cy="0" r="42" fill="none" stroke="#1e3a8a" stroke-width="3" />
+    <circle cx="0" cy="0" r="32" fill="none" stroke="#f6e0a3" stroke-width="3" />
+    <text x="0" y="-4" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="12" fill="#1e3a8a" font-weight="700">COURSEHUB</text>
+    <text x="0" y="14" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="10" fill="#1e3a8a">SEAL</text>
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="100%" stop-color="#ffffff"/>
     </linearGradient>

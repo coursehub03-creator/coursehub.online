@@ -146,12 +146,21 @@ async function syncCertificatesForUser(user, studentName) {
   await Promise.all(updateTasks);
 }
 
+function applyTheme(theme) {
+  // ✅ تطبيق الثيم فورًا على الصفحة (CSS يعتمد على data-theme)
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("coursehub_theme", theme);
+}
+
 function renderSettings(user) {
   const preferences = getStoredPreferences();
   const displayName = user?.displayName || user?.email?.split("@")[0] || "";
   const email = user?.email || "";
   const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : "C";
   const storedLang = localStorage.getItem("coursehub_lang") || "ar";
+
+  // ✅ تطبيق الثيم عند فتح الصفحة حسب آخر اختيار
+  applyTheme(preferences.theme);
 
   settingsContent.innerHTML = `
     <section class="settings-hero">
@@ -313,13 +322,18 @@ function bindSettingsEvents(user, initialName) {
   preferenceInputs.forEach((id) => {
     const input = document.getElementById(id);
     if (!input) return;
+
     input.addEventListener("change", () => {
       const preferences = getStoredPreferences();
       preferences.notifyCourses = document.getElementById("notifyCourses").checked;
       preferences.notifyCertificates = document.getElementById("notifyCertificates").checked;
       preferences.notifyEmail = document.getElementById("notifyEmail").checked;
       preferences.theme = document.getElementById("themeSelect").value;
+
       saveStoredPreferences(preferences);
+
+      // ✅ ميزة جديدة: حفظ الثيم وتطبيقه مباشرة بدون ريفرش
+      applyTheme(preferences.theme);
     });
   });
 

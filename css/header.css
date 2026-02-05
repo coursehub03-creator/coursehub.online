@@ -12,6 +12,11 @@ header {
   direction: ltr; /* حل انعكاس الهيدر */
 }
 
+html[data-theme="dark"] header {
+  background-color: #0b1220;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+}
+
 /* Top Bar Container */
 .top-bar.container {
   display: flex;
@@ -111,6 +116,20 @@ nav a:hover {
   flex-direction: column;
   overflow: hidden;
   z-index: 1200;
+}
+
+html[data-theme="dark"] .notification-menu {
+  background: #111827;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .notification-item:hover {
+  background: #1f2937;
+}
+
+html[data-theme="dark"] .notification-item.unread {
+  background: #1e1b4b;
+  border-right-color: #60a5fa;
 }
 
 .notification-menu.active {
