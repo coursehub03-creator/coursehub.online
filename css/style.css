@@ -178,6 +178,7 @@ html[data-theme="dark"] .cta-strip p {
 
   display: inline-block;
   margin-top: 12px; /* زوّدها/قلّلها حسب اللي بدك */
+  transform: translate(20px, 15px);
 }
 
 .hero .btn-hero:hover { background-color: #ff4757; }
