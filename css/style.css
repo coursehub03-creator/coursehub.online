@@ -177,8 +177,8 @@ html[data-theme="dark"] .cta-strip p {
   transition: 0.3s;
 
   display: inline-block;
-  margin-top: 12px; /* زوّدها/قلّلها حسب اللي بدك */
-  transform: translate(20px, 15px);
+  
+  transform: translate(22px, 15px);
 }
 
 .hero .btn-hero:hover { background-color: #ff4757; }
