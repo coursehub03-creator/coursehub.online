@@ -1,6 +1,8 @@
 const pdfLibraryUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 const dataUrlPrefix = "data:";
+
+// ✅ i18n (ميزة جديدة)
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 const uiText = {
   ar: {
@@ -76,9 +78,10 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
-  if (url.startsWith(dataUrlPrefix)) {
-    return url;
-  }
+  // ✅ دمج التعارض: تحقق من url + دعم data:
+  if (!url) throw new Error("Missing URL");
+  if (url.startsWith(dataUrlPrefix)) return url;
+
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("Failed to load certificate image.");
@@ -97,9 +100,9 @@ const loadImage = (src) =>
   });
 
 const fetchQrDataUrl = async (verifyUrl) => {
-  if (!verifyUrl) {
-    return "";
-  }
+  // ✅ دمج التعارض: صيغة مختصرة مع نفس السلوك
+  if (!verifyUrl) return "";
+
   const qrResponse = await fetch(
     `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
       verifyUrl
@@ -112,42 +115,49 @@ const fetchQrDataUrl = async (verifyUrl) => {
   return blobToDataUrl(qrBlob);
 };
 
+// ✅ دمج QR داخل الشهادة قبل التحويل إلى PDF
 const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const dataUrl = await fetchImageDataUrl(certificateUrl);
-  if (!verificationCode) {
-    return dataUrl;
-  }
+  if (!verificationCode) return dataUrl;
 
   const verifyUrl = new URL(
     `/verify-certificate.html?code=${encodeURIComponent(verificationCode)}`,
     window.location.href
   ).href;
-  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
-  if (!qrDataUrl) {
-    return dataUrl;
-  }
 
-  const [certificateImage, qrImage] = await Promise.all([
+  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
+  if (!qrDataUrl) return dataUrl;
+
+  const [certImg, qrImg] = await Promise.all([
     loadImage(dataUrl),
     loadImage(qrDataUrl)
   ]);
+
   const canvas = document.createElement("canvas");
-  canvas.width = certificateImage.width;
-  canvas.height = certificateImage.height;
+  canvas.width = certImg.width;
+  canvas.height = certImg.height;
+
   const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return dataUrl;
-  }
-  ctx.drawImage(certificateImage, 0, 0);
+  if (!ctx) return dataUrl;
+
+  ctx.drawImage(certImg, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
-  const qrSize = Math.round(minSide * 0.18);
+
+  // ✅ تصغير حجم الـ QR شوي (كان 0.18)
+  const qrSize = Math.round(minSide * 0.14);
+
   const margin = Math.round(minSide * 0.04);
-  const x = canvas.width - qrSize - margin;
-  const y = canvas.height - qrSize - margin;
+
+  // ✅ تعديل مكان الـ QR: أعلى اليسار داخل مساحة آمنة
+  const extraX = 40; // زوّدها عشان يتحرك يمين
+  const extraY = 40; // زوّدها عشان ينزل لتحت
+  const x = margin + extraX;
+  const y = margin + extraY;
+
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
-  ctx.drawImage(qrImage, x, y, qrSize, qrSize);
+  ctx.drawImage(qrImg, x, y, qrSize, qrSize);
 
   return canvas.toDataURL("image/png");
 };
@@ -155,10 +165,12 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 const downloadPdfFromImage = async (url, title, verificationCode) => {
   const dataUrl = await composeCertificateWithQr(url, verificationCode);
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+
   const jsPDF = await loadJsPdf();
   if (!jsPDF) {
     throw new Error("jsPDF constructor not available.");
   }
+
   const img = await loadImage(dataUrl);
   const orientation = img.width > img.height ? "landscape" : "portrait";
   const pdf = new jsPDF({
@@ -166,6 +178,7 @@ const downloadPdfFromImage = async (url, title, verificationCode) => {
     unit: "pt",
     format: [img.width, img.height]
   });
+
   pdf.addImage(dataUrl, imageType, 0, 0, img.width, img.height);
   pdf.save(`${sanitizeFileName(title)}.pdf`);
 };
@@ -176,15 +189,14 @@ const showError = (message) => {
   }
 };
 
-if (!encodedUrl) {
-  if (!encodedDataKey) {
-    showError(uiText[getLang()].missingUrl);
-  }
-}
-
-if (encodedUrl || encodedDataKey) {
+// ✅ دمج التعارض: دعم حالتين (url أو dataKey) + i18n
+if (!encodedUrl && !encodedDataKey) {
+  showError(uiText[getLang()].missingUrl);
+  if (downloadButton) downloadButton.disabled = true;
+} else {
   const storageKey = encodedDataKey ? decodeURIComponent(encodedDataKey) : "";
   const storedDataUrl = storageKey ? sessionStorage.getItem(storageKey) : "";
+
   const certificateUrl = storedDataUrl || decodeURIComponent(encodedUrl || "");
   const title = encodedTitle
     ? decodeURIComponent(encodedTitle)
@@ -193,9 +205,7 @@ if (encodedUrl || encodedDataKey) {
 
   if (!certificateUrl) {
     showError(uiText[getLang()].missingUrl);
-    if (downloadButton) {
-      downloadButton.disabled = true;
-    }
+    if (downloadButton) downloadButton.disabled = true;
   } else {
     if (certificateTitle) {
       certificateTitle.textContent = title;

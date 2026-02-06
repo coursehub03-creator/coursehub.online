@@ -18,6 +18,7 @@ const dataUrlPrefix = "data:";
 const pdfLibraryUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
+// ✅ i18n (ميزة جديدة) + نصوص عربية/إنجليزية
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 
 const uiText = {
@@ -110,6 +111,7 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
+  // (حافظنا على الكود كما هو عندك)
   if (url.startsWith(dataUrlPrefix)) {
     return url;
   }
@@ -156,6 +158,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
     `/verify-certificate.html?code=${encodeURIComponent(verificationCode)}`,
     window.location.href
   ).href;
+
   const qrDataUrl = await fetchQrDataUrl(verifyUrl);
   if (!qrDataUrl) {
     return dataUrl;
@@ -165,13 +168,16 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
     loadImage(dataUrl),
     loadImage(qrDataUrl)
   ]);
+
   const canvas = document.createElement("canvas");
   canvas.width = certificateImage.width;
   canvas.height = certificateImage.height;
+
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     return dataUrl;
   }
+
   ctx.drawImage(certificateImage, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
@@ -179,6 +185,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const margin = Math.round(minSide * 0.04);
   const x = canvas.width - qrSize - margin;
   const y = canvas.height - qrSize - margin;
+
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
   ctx.drawImage(qrImage, x, y, qrSize, qrSize);
@@ -189,10 +196,12 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 const downloadPdfFromImage = async (url, title, verificationCode) => {
   const dataUrl = await composeCertificateWithQr(url, verificationCode);
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+
   const jsPDF = await loadJsPdf();
   if (!jsPDF) {
     throw new Error("jsPDF constructor not available.");
   }
+
   const img = await loadImage(dataUrl);
   const orientation = img.width > img.height ? "landscape" : "portrait";
   const pdf = new jsPDF({
@@ -200,23 +209,28 @@ const downloadPdfFromImage = async (url, title, verificationCode) => {
     unit: "pt",
     format: [img.width, img.height]
   });
+
   pdf.addImage(dataUrl, imageType, 0, 0, img.width, img.height);
   pdf.save(`${sanitizeFileName(title)}.pdf`);
 };
 
+// ✅ Viewer + دعم DataURL عبر sessionStorage (ميزة مهمة)
 const openCertificateViewer = (url, title, verificationCode) => {
   let targetUrl = url;
   let dataKey = "";
+
   if (url.startsWith(dataUrlPrefix)) {
     dataKey = `certificate-data-${Date.now()}`;
     sessionStorage.setItem(dataKey, url);
     targetUrl = "";
   }
+
   const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(
     targetUrl
   )}&title=${encodeURIComponent(title || "certificate")}&code=${encodeURIComponent(
     verificationCode || ""
   )}&dataKey=${encodeURIComponent(dataKey)}`;
+
   openUrlInNewTab(viewerUrl);
 };
 
@@ -342,6 +356,7 @@ onAuthStateChanged(auth, async (user) => {
           const langStrings = uiText[getLang()];
           const safeUrl = encodeURIComponent(cert.certificateUrl || "");
           const safeTitle = encodeURIComponent(cert.title || "certificate");
+
           const verifyUrl = cert.verificationCode
             ? new URL(
                 `/verify-certificate.html?code=${encodeURIComponent(
@@ -350,18 +365,26 @@ onAuthStateChanged(auth, async (user) => {
                 window.location.href
               ).href
             : "";
+
           certList.innerHTML += `
             <div class="certificate-card">
-              <button type="button" class="download-btn" data-download-certificate data-url="${safeUrl}" data-title="${safeTitle}" data-code="${encodeURIComponent(
-                cert.verificationCode || ""
-              )}">${langStrings.downloadPdf}</button>
+              <button type="button" class="download-btn"
+                data-download-certificate
+                data-url="${safeUrl}"
+                data-title="${safeTitle}"
+                data-code="${encodeURIComponent(cert.verificationCode || "")}">
+                ${langStrings.downloadPdf}
+              </button>
+
               <h4>${cert.title}</h4>
               <span>${langStrings.issuedAt} ${cert.issuedAt}</span>
+
               ${
                 cert.verificationCode
                   ? `<span class="certificate-code">${langStrings.verificationCode} ${cert.verificationCode}</span>`
                   : ""
               }
+
               ${
                 cert.verificationCode
                   ? `<div class="certificate-qr">
@@ -372,16 +395,20 @@ onAuthStateChanged(auth, async (user) => {
                     </div>`
                   : ""
               }
+
               <div class="certificate-actions">
-                <button type="button" data-open-certificate data-url="${safeUrl}" data-title="${safeTitle}" data-code="${encodeURIComponent(
-                  cert.verificationCode || ""
-                )}">
+                <button type="button"
+                  data-open-certificate
+                  data-url="${safeUrl}"
+                  data-title="${safeTitle}"
+                  data-code="${encodeURIComponent(cert.verificationCode || "")}">
                   ${langStrings.viewCertificate}
                 </button>
+
                 ${
                   cert.verificationCode
                     ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">${langStrings.verifyCertificate}</a>`
-                  : ""
+                    : ""
                 }
               </div>
             </div>

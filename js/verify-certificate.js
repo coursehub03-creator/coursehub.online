@@ -9,6 +9,8 @@ import {
 const pdfLibraryUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 const dataUrlPrefix = "data:";
+
+// ✅ i18n (ميزة جديدة)
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 const uiText = {
   ar: {
@@ -19,7 +21,9 @@ const uiText = {
     viewCertificate: "عرض الشهادة",
     downloadPdf: "تحميل PDF",
     downloadFailed: "تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.",
-    verifyError: "حدث خطأ أثناء التحقق. حاول مرة أخرى."
+    verifyError: "حدث خطأ أثناء التحقق. حاول مرة أخرى.",
+    defaultTitle: "الشهادة",
+    notSpecified: "غير محدد"
   },
   en: {
     verifying: "Verifying the certificate...",
@@ -28,8 +32,11 @@ const uiText = {
     completedAt: "Completion date:",
     viewCertificate: "View certificate",
     downloadPdf: "Download PDF",
-    downloadFailed: "Failed to download the certificate as PDF. Please try again.",
-    verifyError: "An error occurred while verifying. Please try again."
+    downloadFailed:
+      "Failed to download the certificate as PDF. Please try again.",
+    verifyError: "An error occurred while verifying. Please try again.",
+    defaultTitle: "Certificate",
+    notSpecified: "Not specified"
   }
 };
 
@@ -46,7 +53,7 @@ if (presetCode && input) {
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
-  const code = input.value.trim();
+  const code = input?.value?.trim() || "";
   if (!code) return;
   verifyCode(code);
 });
@@ -99,9 +106,9 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
-  if (url.startsWith(dataUrlPrefix)) {
-    return url;
-  }
+  if (!url) throw new Error("Missing URL");
+  if (url.startsWith(dataUrlPrefix)) return url;
+
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("Failed to load certificate image.");
@@ -120,9 +127,7 @@ const loadImage = (src) =>
   });
 
 const fetchQrDataUrl = async (verifyUrl) => {
-  if (!verifyUrl) {
-    return "";
-  }
+  if (!verifyUrl) return "";
   const qrResponse = await fetch(
     `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
       verifyUrl
@@ -137,40 +142,40 @@ const fetchQrDataUrl = async (verifyUrl) => {
 
 const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const dataUrl = await fetchImageDataUrl(certificateUrl);
-  if (!verificationCode) {
-    return dataUrl;
-  }
+  if (!verificationCode) return dataUrl;
 
   const verifyUrl = new URL(
     `/verify-certificate.html?code=${encodeURIComponent(verificationCode)}`,
     window.location.href
   ).href;
-  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
-  if (!qrDataUrl) {
-    return dataUrl;
-  }
 
-  const [certificateImage, qrImage] = await Promise.all([
+  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
+  if (!qrDataUrl) return dataUrl;
+
+  const [certImg, qrImg] = await Promise.all([
     loadImage(dataUrl),
     loadImage(qrDataUrl)
   ]);
-  const canvas = document.createElement("canvas");
-  canvas.width = certificateImage.width;
-  canvas.height = certificateImage.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return dataUrl;
-  }
-  ctx.drawImage(certificateImage, 0, 0);
 
+  const canvas = document.createElement("canvas");
+  canvas.width = certImg.width;
+  canvas.height = certImg.height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return dataUrl;
+
+  ctx.drawImage(certImg, 0, 0);
+
+  // (مكان الـ QR الحالي في هذا الملف كما كان: أسفل اليمين)
   const minSide = Math.min(canvas.width, canvas.height);
   const qrSize = Math.round(minSide * 0.18);
   const margin = Math.round(minSide * 0.04);
   const x = canvas.width - qrSize - margin;
   const y = canvas.height - qrSize - margin;
+
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
-  ctx.drawImage(qrImage, x, y, qrSize, qrSize);
+  ctx.drawImage(qrImg, x, y, qrSize, qrSize);
 
   return canvas.toDataURL("image/png");
 };
@@ -178,10 +183,12 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 const downloadPdfFromImage = async (url, title, verificationCode) => {
   const dataUrl = await composeCertificateWithQr(url, verificationCode);
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+
   const jsPDF = await loadJsPdf();
   if (!jsPDF) {
     throw new Error("jsPDF constructor not available.");
   }
+
   const img = await loadImage(dataUrl);
   const orientation = img.width > img.height ? "landscape" : "portrait";
   const pdf = new jsPDF({
@@ -189,12 +196,16 @@ const downloadPdfFromImage = async (url, title, verificationCode) => {
     unit: "pt",
     format: [img.width, img.height]
   });
+
   pdf.addImage(dataUrl, imageType, 0, 0, img.width, img.height);
   pdf.save(`${sanitizeFileName(title)}.pdf`);
 };
 
 async function verifyCode(code) {
   if (!result) return;
+
+  const t = uiText[getLang()];
+
   result.className = "verify-result";
   result.style.display = "none";
   result.innerHTML = "";
@@ -202,55 +213,56 @@ async function verifyCode(code) {
 
   try {
     result.style.display = "block";
-    result.textContent = uiText[getLang()].verifying;
-    const q = query(collection(db, "certificates"), where("verificationCode", "==", code));
+    result.textContent = t.verifying;
+
+    const q = query(
+      collection(db, "certificates"),
+      where("verificationCode", "==", code)
+    );
     const snapshot = await getDocs(q);
+
     if (snapshot.empty) {
       result.classList.add("error");
-      result.textContent = uiText[getLang()].notFound;
+      result.textContent = t.notFound;
       return;
     }
 
     const cert = snapshot.docs[0].data();
-    const title = cert.courseTitle || cert.courseId || "الشهادة";
+    const title = cert.courseTitle || cert.courseId || t.defaultTitle;
     const completedAt = formatDate(cert.completedAt);
     const certificateUrl = cert.certificateUrl || "";
     const verificationCode = cert.verificationCode || code;
-    const viewUrl = `/certificate-view.html?url=${encodeURIComponent(
-      certificateUrl || ""
-    )}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(
-      verificationCode
-    )}`;
 
     result.classList.add("success");
     result.innerHTML = `
       <div class="result-header">
-        <span class="result-badge">${uiText[getLang()].validBadge}</span>
+        <span class="result-badge">${t.validBadge}</span>
       </div>
       <h3 class="result-title">${title}</h3>
-      <p class="result-meta">${uiText[getLang()].completedAt} ${completedAt || "غير محدد"}</p>
+      <p class="result-meta">${t.completedAt} ${completedAt || t.notSpecified}</p>
       <div class="result-actions">
         ${
           certificateUrl
-            ? `<button type="button" class="btn" data-view-url="${encodeURIComponent(
-                certificateUrl
-              )}" data-view-title="${encodeURIComponent(title)}" data-view-code="${encodeURIComponent(
-                verificationCode
-              )}">${uiText[getLang()].viewCertificate}</button>`
+            ? `<button type="button" class="btn"
+                data-view-url="${encodeURIComponent(certificateUrl)}"
+                data-view-title="${encodeURIComponent(title)}"
+                data-view-code="${encodeURIComponent(verificationCode)}"
+              >${t.viewCertificate}</button>`
             : ""
         }
         ${
           certificateUrl
-            ? `<button type="button" class="btn secondary" data-download-url="${encodeURIComponent(
-                certificateUrl
-              )}" data-download-title="${encodeURIComponent(title)}" data-download-code="${encodeURIComponent(
-                verificationCode
-              )}">${uiText[getLang()].downloadPdf}</button>`
+            ? `<button type="button" class="btn secondary"
+                data-download-url="${encodeURIComponent(certificateUrl)}"
+                data-download-title="${encodeURIComponent(title)}"
+                data-download-code="${encodeURIComponent(verificationCode)}"
+              >${t.downloadPdf}</button>`
             : ""
         }
       </div>
     `;
 
+    // ✅ فتح عبر viewer + دعم DataURL عبر sessionStorage (ميزة dataKey)
     const viewButton = result.querySelector("[data-view-url]");
     if (viewButton) {
       viewButton.addEventListener("click", () => {
@@ -261,41 +273,52 @@ async function verifyCode(code) {
         const viewCode = decodeURIComponent(
           viewButton.getAttribute("data-view-code") || ""
         );
+
         let dataKey = "";
         let targetUrl = url;
-        if (url.startsWith(dataUrlPrefix)) {
+
+        if (typeof url === "string" && url.startsWith(dataUrlPrefix)) {
           dataKey = `certificate-data-${Date.now()}`;
-          sessionStorage.setItem(dataKey, url);
-          targetUrl = "";
+          try {
+            sessionStorage.setItem(dataKey, url);
+            targetUrl = "";
+          } catch (e) {
+            targetUrl = url;
+            dataKey = "";
+          }
         }
+
         const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(
           targetUrl
         )}&title=${encodeURIComponent(viewTitle || "certificate")}&code=${encodeURIComponent(
           viewCode || ""
         )}&dataKey=${encodeURIComponent(dataKey)}`;
+
         window.open(viewerUrl, "_blank");
       });
     }
 
-    const downloadButton = result.querySelector("[data-download-url]");
-    if (downloadButton) {
-      downloadButton.addEventListener("click", () => {
+    const downloadButtonEl = result.querySelector("[data-download-url]");
+    if (downloadButtonEl) {
+      downloadButtonEl.addEventListener("click", () => {
         const url = decodeURIComponent(
-          downloadButton.getAttribute("data-download-url") || ""
+          downloadButtonEl.getAttribute("data-download-url") || ""
         );
         const downloadTitle = decodeURIComponent(
-          downloadButton.getAttribute("data-download-title") || ""
+          downloadButtonEl.getAttribute("data-download-title") || ""
         );
         const downloadCode = decodeURIComponent(
-          downloadButton.getAttribute("data-download-code") || ""
+          downloadButtonEl.getAttribute("data-download-code") || ""
         );
+
         downloadPdfFromImage(url, downloadTitle, downloadCode).catch(() => {
           result.classList.add("error");
-          result.textContent = uiText[getLang()].downloadFailed;
+          result.textContent = t.downloadFailed;
         });
       });
     }
   } catch (error) {
+    console.error(error);
     result.classList.add("error");
     result.textContent = uiText[getLang()].verifyError;
   }
