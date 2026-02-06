@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عرض الشهادة | CourseHub</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/css/certificate-view.css">
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main class="certificate-view">
+    <div class="certificate-view-card">
+      <h1 id="certificateTitle">عرض الشهادة</h1>
+      <p class="certificate-subtitle">يمكنك تنزيل الشهادة كملف PDF بعد عرضها.</p>
+      <div class="certificate-preview">
+        <img id="certificateImage" alt="صورة الشهادة">
+      </div>
+      <div class="certificate-actions">
+        <button type="button" class="btn" id="downloadPdf">تحميل PDF</button>
+        <a href="/verify-certificate.html" class="btn secondary">التحقق من شهادة أخرى</a>
+      </div>
+      <p id="certificateError" class="certificate-error"></p>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="/js/main.js" defer></script>
+  <script type="module" src="/js/certificate-view.js"></script>
+</body>
+</html>

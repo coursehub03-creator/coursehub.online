@@ -30,7 +30,7 @@ async function loadTests() {
     emptyState.style.display = "none";
     grid.innerHTML = coursesWithQuizzes.map((course) => `
       <div class="card">
-        <img src="${course.image || "/assets/images/course1.jpg"}" alt="${course.title}">
+        <img src="${course.image || "/assets/images/default-course.png"}" alt="${course.title}">
         <div class="card-content">
           <h3>${course.title}</h3>
           <p>${course.description || "ابدأ اختبار الدورة وتأكد من إتقان المهارات."}</p>
