@@ -21,20 +21,20 @@
   <div id="header-placeholder"></div>
 
   <main class="login-page container">
-    <h2>تسجيل الدخول</h2>
+    <h2 data-i18n-en="Log in">تسجيل الدخول</h2>
 
     <!-- تسجيل الدخول بالبريد -->
     <form id="loginForm">
-      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required>
-      <input id="passwordInput" type="password" placeholder="كلمة المرور" required>
-      <button type="submit">تسجيل الدخول</button>
+      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required data-i18n-placeholder-en="Email">
+      <input id="passwordInput" type="password" placeholder="كلمة المرور" required data-i18n-placeholder-en="Password">
+      <button type="submit" data-i18n-en="Log in">تسجيل الدخول</button>
       <div id="errorMsg" class="error-msg"></div>
     </form>
 
-    <p>أو</p>
+    <p data-i18n-en="or">أو</p>
 
     <!-- تسجيل الدخول بـ Google -->
-    <button id="googleLoginBtn" class="google-btn">
+    <button id="googleLoginBtn" class="google-btn" data-i18n-en="Log in with Google">
       تسجيل الدخول باستخدام Google
     </button>
   </main>
@@ -74,7 +74,13 @@
 
         } catch (error) {
           console.error("Login Error:", error);
-          if (errorMsg) errorMsg.textContent = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+          if (errorMsg) {
+            const lang = localStorage.getItem("coursehub_lang") || "ar";
+            errorMsg.textContent =
+              lang === "en"
+                ? "The email or password is incorrect."
+                : "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+          }
         }
       });
     }
@@ -101,7 +107,13 @@
 
         } catch (error) {
           console.error("Google Login Error:", error);
-          if (errorMsg) errorMsg.textContent = "فشل تسجيل الدخول بحساب Google.";
+          if (errorMsg) {
+            const lang = localStorage.getItem("coursehub_lang") || "ar";
+            errorMsg.textContent =
+              lang === "en"
+                ? "Google sign-in failed."
+                : "فشل تسجيل الدخول بحساب Google.";
+          }
         }
       });
     }

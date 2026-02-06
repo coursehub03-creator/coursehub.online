@@ -28,13 +28,20 @@ async function loadTests() {
     }
 
     emptyState.style.display = "none";
+    const lang = localStorage.getItem("coursehub_lang") || "ar";
+    const defaultDescription =
+      lang === "en"
+        ? "Start the course test and make sure you have mastered the skills."
+        : "ابدأ اختبار الدورة وتأكد من إتقان المهارات.";
+    const startLabel = lang === "en" ? "Start test" : "ابدأ الاختبار";
+
     grid.innerHTML = coursesWithQuizzes.map((course) => `
       <div class="card">
-        <img src="${course.image || "/assets/images/course1.jpg"}" alt="${course.title}">
+        <img src="${course.image || "/assets/images/default-course.png"}" alt="${course.title}">
         <div class="card-content">
           <h3>${course.title}</h3>
-          <p>${course.description || "ابدأ اختبار الدورة وتأكد من إتقان المهارات."}</p>
-          <a href="/course-player.html?id=${course.id}" class="btn">ابدأ الاختبار</a>
+          <p>${course.description || defaultDescription}</p>
+          <a href="/course-player.html?id=${course.id}" class="btn">${startLabel}</a>
         </div>
       </div>
     `).join("");

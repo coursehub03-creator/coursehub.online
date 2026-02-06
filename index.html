@@ -35,6 +35,8 @@
     // عرض أحدث 3 دورات
     async function loadLatestCourses() {
       try {
+        const lang = localStorage.getItem("coursehub_lang") || "ar";
+        const viewCourseLabel = lang === "en" ? "View course" : "عرض الدورة";
         const q = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(3));
         const snapshot = await getDocs(q);
         const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -51,7 +53,7 @@
             <div class="card-content">
               <h3>${course.title || ""}</h3>
               <p>${course.description || ""}</p>
-              <a href="course-detail.html?id=${course.id}" class="btn btn-card">عرض الدورة</a>
+              <a href="course-detail.html?id=${course.id}" class="btn btn-card">${viewCourseLabel}</a>
             </div>
           `;
           container.appendChild(div);
@@ -70,48 +72,48 @@
 
   <section class="hero">
     <div class="hero-content">
-      <span class="hero-badge"><i class="fa fa-award"></i> منصة تعلم احترافية</span>
-      <h1>ابدأ رحلتك التعليمية الآن!</h1>
-      <p>انضم إلى آلاف الطلاب وطور مهاراتك بسرعة مع دوراتنا الاحترافية.</p>
+      <span class="hero-badge" data-i18n-html-en="<i class='fa fa-award'></i> Professional learning platform"><i class="fa fa-award"></i> منصة تعلم احترافية</span>
+      <h1 data-i18n-en="Start your learning journey now!">ابدأ رحلتك التعليمية الآن!</h1>
+      <p data-i18n-en="Join thousands of learners and grow your skills fast with our professional courses.">انضم إلى آلاف الطلاب وطور مهاراتك بسرعة مع دوراتنا الاحترافية.</p>
       <div class="hero-stats">
         <div>
           <strong>120+</strong>
-          <span>دورة احترافية</span>
+          <span data-i18n-en="Professional courses">دورة احترافية</span>
         </div>
         <div>
           <strong>18K</strong>
-          <span>طالب نشط</span>
+          <span data-i18n-en="Active learners">طالب نشط</span>
         </div>
         <div>
           <strong>4.9/5</strong>
-          <span>تقييمات المتعلمين</span>
+          <span data-i18n-en="Learner ratings">تقييمات المتعلمين</span>
         </div>
       </div>
-      <a href="courses.html" class="btn btn-hero">استكشف الدورات</a>
+      <a href="courses.html" class="btn btn-hero" data-i18n-en="Explore courses">استكشف الدورات</a>
     </div>
   </section>
 
   <section class="features container">
     <div class="feature">
       <i class="fa fa-users fa-2x"></i>
-      <h3>آلاف الطلاب</h3>
-      <p>انضم إلى مجتمع ضخم من المتعلمين حول العالم.</p>
+      <h3 data-i18n-en="Thousands of learners">آلاف الطلاب</h3>
+      <p data-i18n-en="Join a huge community of learners worldwide.">انضم إلى مجتمع ضخم من المتعلمين حول العالم.</p>
     </div>
     <div class="feature">
       <i class="fa fa-certificate fa-2x"></i>
-      <h3>شهادات معتمدة</h3>
-      <p>احصل على شهادة رسمية عند إتمام الدورة بنجاح.</p>
+      <h3 data-i18n-en="Accredited certificates">شهادات معتمدة</h3>
+      <p data-i18n-en="Get an official certificate upon successful completion.">احصل على شهادة رسمية عند إتمام الدورة بنجاح.</p>
     </div>
     <div class="feature">
       <i class="fa fa-laptop-code fa-2x"></i>
-      <h3>دورات احترافية</h3>
-      <p>تعلم من خبراء وابدأ مسارك المهني بسرعة.</p>
+      <h3 data-i18n-en="Professional courses">دورات احترافية</h3>
+      <p data-i18n-en="Learn from experts and start your career path quickly.">تعلم من خبراء وابدأ مسارك المهني بسرعة.</p>
     </div>
   </section>
 
   <section class="popular-courses container">
-    <h2>الدورات الأكثر شعبية</h2>
-    <div class="courses-grid">
+    <h2 data-i18n-en="Most popular courses">الدورات الأكثر شعبية</h2>
+    <div class="courses-grid" data-i18n-skip="true">
       <!-- سيتم ملؤها ديناميكيًا -->
     </div>
   </section>
@@ -119,30 +121,30 @@
   <section class="container">
     <div class="test-promo">
       <div>
-        <h2>اختبر مهاراتك بعد إنهاء الدورات</h2>
-        <p>جهّز نفسك للاختبارات العملية واحصل على تقييم فوري لمستواك.</p>
+        <h2 data-i18n-en="Test your skills after completing courses">اختبر مهاراتك بعد إنهاء الدورات</h2>
+        <p data-i18n-en="Prepare for hands-on tests and get instant feedback.">جهّز نفسك للاختبارات العملية واحصل على تقييم فوري لمستواك.</p>
       </div>
-      <a href="tests.html">عرض الاختبارات</a>
+      <a href="tests.html" data-i18n-en="View tests">عرض الاختبارات</a>
     </div>
   </section>
 
   <section class="container">
-    <h2>خطوات التعلم في CourseHub</h2>
+    <h2 data-i18n-en="Learning steps in CourseHub">خطوات التعلم في CourseHub</h2>
     <div class="learning-steps">
       <div class="learning-step">
         <i class="fa fa-compass"></i>
-        <h3>اختر المسار</h3>
-        <p>استكشف الدورات والمسارات التي تناسب طموحاتك.</p>
+        <h3 data-i18n-en="Choose a path">اختر المسار</h3>
+        <p data-i18n-en="Explore courses and paths that match your goals.">استكشف الدورات والمسارات التي تناسب طموحاتك.</p>
       </div>
       <div class="learning-step">
         <i class="fa fa-play-circle"></i>
-        <h3>تابع الدروس</h3>
-        <p>تعلّم عبر دروس تفاعلية ووسائط تعليمية عالية الجودة.</p>
+        <h3 data-i18n-en="Follow the lessons">تابع الدروس</h3>
+        <p data-i18n-en="Learn with interactive lessons and high-quality media.">تعلّم عبر دروس تفاعلية ووسائط تعليمية عالية الجودة.</p>
       </div>
       <div class="learning-step">
         <i class="fa fa-medal"></i>
-        <h3>احصل على الشهادة</h3>
-        <p>أكمل الاختبارات واحصل على شهادة احترافية باسمك.</p>
+        <h3 data-i18n-en="Earn your certificate">احصل على الشهادة</h3>
+        <p data-i18n-en="Complete the tests and earn a professional certificate in your name.">أكمل الاختبارات واحصل على شهادة احترافية باسمك.</p>
       </div>
     </div>
   </section>
@@ -150,10 +152,10 @@
   <section class="container">
     <div class="cta-strip">
       <div>
-        <h3>جاهز للانضمام؟</h3>
-        <p>ابدأ اليوم واستثمر وقتك في تعلم مهارة جديدة بشهادة احترافية.</p>
+        <h3 data-i18n-en="Ready to join?">جاهز للانضمام؟</h3>
+        <p data-i18n-en="Start today and invest your time in learning a new skill with a professional certificate.">ابدأ اليوم واستثمر وقتك في تعلم مهارة جديدة بشهادة احترافية.</p>
       </div>
-      <a href="register.html" class="btn">ابدأ الآن</a>
+      <a href="register.html" class="btn" data-i18n-en="Get started">ابدأ الآن</a>
     </div>
   </section>
 

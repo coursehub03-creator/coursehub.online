@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupLanguageToggle();
     setupThemeToggle();
     setupNotifications();
+    translationObserver.observe(document.body, { childList: true, subtree: true });
 
     // ✅ ميزة codex: مزامنة البروفايل مع Firestore
     syncUserProfile();
@@ -126,6 +127,24 @@ function setupHeaderSearch() {
 // إشعارات (LocalStorage + Firestore fallback)
 // ===============================
 const NOTIFICATION_KEY = "coursehub_notifications";
+const notificationText = {
+  ar: {
+    emptyShort: "لا توجد إشعارات بعد.",
+    emptyList: "لا توجد إشعارات جديدة حتى الآن.",
+    open: "فتح الإشعار",
+    count: (total) => `${total} إشعار`,
+    read: "مقروء",
+    unread: "غير مقروء"
+  },
+  en: {
+    emptyShort: "No notifications yet.",
+    emptyList: "No new notifications yet.",
+    open: "Open notification",
+    count: (total) => `${total} notifications`,
+    read: "Read",
+    unread: "Unread"
+  }
+};
 
 function getStoredNotifications() {
   try {
@@ -144,7 +163,8 @@ function saveStoredNotifications(notifications) {
 function formatNotificationTime(dateValue) {
   const date = dateValue?.toDate ? dateValue.toDate() : new Date(dateValue);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("ar-EG", { hour12: true });
+  const locale = getCurrentLang() === "en" ? "en-US" : "ar-EG";
+  return date.toLocaleString(locale, { hour12: true });
 }
 
 function getUserNotifications(userId) {
@@ -167,12 +187,13 @@ function setupNotifications() {
 
   loadNotifications(userId).then((notifications) => {
     const unreadCount = notifications.filter((item) => !item.read).length;
+    const lang = getCurrentLang();
 
     notifBadge.textContent = unreadCount;
     notifBadge.style.display = unreadCount ? "inline-flex" : "none";
 
     if (!notifications.length) {
-      notifItems.innerHTML = `<div class="notification-empty">لا توجد إشعارات بعد.</div>`;
+      notifItems.innerHTML = `<div class="notification-empty">${notificationText[lang].emptyShort}</div>`;
     } else {
       notifItems.innerHTML = notifications
         .slice(0, 5)
@@ -216,11 +237,16 @@ function renderNotificationsPage(listContainer, userId) {
   const markAllBtn = document.getElementById("markAllReadBtn");
 
   loadNotifications(userId).then((notifications) => {
-    if (countEl) countEl.textContent = `${notifications.length} إشعار`;
+    if (countEl) {
+      const lang = getCurrentLang();
+      countEl.textContent = notificationText[lang].count(notifications.length);
+    }
 
     if (!notifications.length) {
-      listContainer.innerHTML = `<div class="notification-empty-state">لا توجد إشعارات جديدة حتى الآن.</div>`;
+      const lang = getCurrentLang();
+      listContainer.innerHTML = `<div class="notification-empty-state">${notificationText[lang].emptyList}</div>`;
     } else {
+      const lang = getCurrentLang();
       listContainer.innerHTML = notifications
         .map(
           (item) => `
@@ -229,10 +255,10 @@ function renderNotificationsPage(listContainer, userId) {
           <p>${item.message}</p>
           <div class="notification-meta">
             <span>${formatNotificationTime(item.createdAt)}</span>
-            <span>${item.read ? "مقروء" : "غير مقروء"}</span>
+            <span>${item.read ? notificationText[lang].read : notificationText[lang].unread}</span>
           </div>
           <a class="notification-action" href="${item.link}" data-id="${item.id}">
-            فتح الإشعار
+            ${notificationText[lang].open}
           </a>
         </div>
       `
@@ -318,19 +344,93 @@ function markAllNotificationsReadLocal(userId) {
 // ===============================
 // اللغة (i18n)
 // ===============================
+function getCurrentLang() {
+  return localStorage.getItem("coursehub_lang") || "ar";
+}
+
 function setupLanguageToggle() {
   const langBtn = document.getElementById("langBtn");
-  const currentLang = localStorage.getItem("coursehub_lang") || "ar";
+  const currentLang = getCurrentLang();
   applyTranslations(currentLang);
 
   if (!langBtn) return;
 
   langBtn.addEventListener("click", () => {
-    const nextLang =
-      (localStorage.getItem("coursehub_lang") || "ar") === "ar" ? "en" : "ar";
+    const nextLang = getCurrentLang() === "ar" ? "en" : "ar";
     localStorage.setItem("coursehub_lang", nextLang);
     applyTranslations(nextLang);
   });
+}
+
+function applyElementTranslations(el, lang) {
+  if (el.closest("[data-i18n-skip='true']")) {
+    return;
+  }
+  const textAr = el.dataset.i18nAr;
+  const textEn = el.dataset.i18nEn;
+  const htmlAr = el.dataset.i18nHtmlAr;
+  const htmlEn = el.dataset.i18nHtmlEn;
+
+  if (!textAr && !textEn && !htmlAr && !htmlEn && !el.dataset.i18n) {
+    return;
+  }
+
+  if (!el.dataset.i18nAr && !el.dataset.i18nHtmlAr) {
+    el.dataset.i18nAr = el.textContent?.trim() || "";
+  }
+
+  if (lang === "en") {
+    if (htmlEn) {
+      el.innerHTML = htmlEn;
+    } else if (textEn) {
+      el.textContent = textEn;
+    }
+  } else if (lang === "ar") {
+    if (htmlAr) {
+      el.innerHTML = htmlAr;
+    } else if (textAr) {
+      el.textContent = textAr;
+    }
+  }
+
+  const placeholderAr = el.dataset.i18nPlaceholderAr;
+  const placeholderEn = el.dataset.i18nPlaceholderEn;
+  if (placeholderAr || placeholderEn) {
+    if (!el.dataset.i18nPlaceholderAr && el.getAttribute("placeholder")) {
+      el.dataset.i18nPlaceholderAr = el.getAttribute("placeholder");
+    }
+    if (lang === "en" && placeholderEn) {
+      el.setAttribute("placeholder", placeholderEn);
+    } else if (lang === "ar" && placeholderAr) {
+      el.setAttribute("placeholder", placeholderAr);
+    }
+  }
+
+  const ariaAr = el.dataset.i18nAriaLabelAr;
+  const ariaEn = el.dataset.i18nAriaLabelEn;
+  if (ariaAr || ariaEn) {
+    if (!el.dataset.i18nAriaLabelAr && el.getAttribute("aria-label")) {
+      el.dataset.i18nAriaLabelAr = el.getAttribute("aria-label");
+    }
+    if (lang === "en" && ariaEn) {
+      el.setAttribute("aria-label", ariaEn);
+    } else if (lang === "ar" && ariaAr) {
+      el.setAttribute("aria-label", ariaAr);
+    }
+  }
+
+  const titleAr = el.dataset.i18nTitleAr;
+  const titleEn = el.dataset.i18nTitleEn;
+  if (titleAr || titleEn) {
+    if (!el.dataset.i18nTitleAr && el.getAttribute("title")) {
+      el.dataset.i18nTitleAr = el.getAttribute("title");
+    }
+    if (lang === "en" && titleEn) {
+      el.setAttribute("title", titleEn);
+    } else if (lang === "ar" && titleAr) {
+      el.setAttribute("title", titleAr);
+    }
+  }
 }
 
 function applyTranslations(lang) {
@@ -356,6 +456,12 @@ function applyTranslations(lang) {
     if (translations[lang]?.[key]) el.textContent = translations[lang][key];
   });
 
+  document
+    .querySelectorAll(
+      "[data-i18n-en], [data-i18n-ar], [data-i18n-html-en], [data-i18n-html-ar], [data-i18n-placeholder-en], [data-i18n-placeholder-ar], [data-i18n-aria-label-en], [data-i18n-aria-label-ar], [data-i18n-title-en], [data-i18n-title-ar]"
+    )
+    .forEach((el) => applyElementTranslations(el, lang));
+
   document.documentElement.setAttribute("lang", lang);
   document.documentElement.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
 
@@ -368,6 +474,27 @@ function applyTranslations(lang) {
   const currentTheme = localStorage.getItem("coursehub_theme") || "light";
   applyTheme(currentTheme);
 }
+
+const translationObserver = new MutationObserver((mutations) => {
+  const lang = getCurrentLang();
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (!(node instanceof HTMLElement)) return;
+      if (
+        node.matches(
+          "[data-i18n-en], [data-i18n-ar], [data-i18n-html-en], [data-i18n-html-ar], [data-i18n-placeholder-en], [data-i18n-placeholder-ar], [data-i18n-aria-label-en], [data-i18n-aria-label-ar], [data-i18n-title-en], [data-i18n-title-ar], [data-i18n]"
+        )
+      ) {
+        applyElementTranslations(node, lang);
+      }
+      node
+        .querySelectorAll(
+          "[data-i18n-en], [data-i18n-ar], [data-i18n-html-en], [data-i18n-html-ar], [data-i18n-placeholder-en], [data-i18n-placeholder-ar], [data-i18n-aria-label-en], [data-i18n-aria-label-ar], [data-i18n-title-en], [data-i18n-title-ar], [data-i18n]"
+        )
+        .forEach((el) => applyElementTranslations(el, lang));
+    });
+  });
+});
 
 function setupThemeToggle() {
   const toggle = document.getElementById("themeToggle");
