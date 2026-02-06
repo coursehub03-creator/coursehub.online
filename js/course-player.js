@@ -423,7 +423,7 @@ async function completeCourse({ showSummary = true } = {}) {
         id: courseId,
         title: courseTitle || course.title,
         instructor: course.instructor || "",
-        image: course.image || "/assets/images/course1.jpg",
+        image: course.image || "/assets/images/default-course.png",
         completedAt: new Date().toLocaleDateString("ar-EG")
       },
       { merge: true }
