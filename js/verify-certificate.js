@@ -23,7 +23,7 @@ if (presetCode && input) {
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
-  const code = input.value.trim();
+  const code = input?.value?.trim() || "";
   if (!code) return;
   verifyCode(code);
 });
@@ -54,13 +54,12 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
+  // ✅ الحفاظ على الميزة الجديدة: تحقق من url + دعم data:
   if (!url) throw new Error("Missing URL");
   if (url.startsWith(dataUrlPrefix)) return url;
 
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to load certificate image.");
-  }
+  if (!response.ok) throw new Error("Failed to load certificate image.");
   const blob = await response.blob();
   return blobToDataUrl(blob);
 };
@@ -77,15 +76,12 @@ const loadImage = (src) =>
 // ✅ ميزة جديدة: جلب QR كـ DataURL
 const fetchQrDataUrl = async (verifyUrl) => {
   if (!verifyUrl) return "";
-
   const qrResponse = await fetch(
     `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
       verifyUrl
     )}`
   );
-  if (!qrResponse.ok) {
-    throw new Error("Failed to load QR code.");
-  }
+  if (!qrResponse.ok) throw new Error("Failed to load QR code.");
   const qrBlob = await qrResponse.blob();
   return blobToDataUrl(qrBlob);
 };
@@ -103,7 +99,10 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const qrDataUrl = await fetchQrDataUrl(verifyUrl);
   if (!qrDataUrl) return dataUrl;
 
-  const [certImg, qrImg] = await Promise.all([loadImage(dataUrl), loadImage(qrDataUrl)]);
+  const [certImg, qrImg] = await Promise.all([
+    loadImage(dataUrl),
+    loadImage(qrDataUrl)
+  ]);
 
   const canvas = document.createElement("canvas");
   canvas.width = certImg.width;
@@ -161,7 +160,10 @@ async function verifyCode(code) {
     result.style.display = "block";
     result.textContent = "جاري التحقق من الشهادة...";
 
-    const q = query(collection(db, "certificates"), where("verificationCode", "==", code));
+    const q = query(
+      collection(db, "certificates"),
+      where("verificationCode", "==", code)
+    );
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
@@ -180,7 +182,9 @@ async function verifyCode(code) {
     const viewUrl = certificateUrl
       ? `/certificate-view.html?url=${encodeURIComponent(
           certificateUrl
-        )}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(verificationCode)}`
+        )}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(
+          verificationCode
+        )}`
       : "";
 
     result.classList.add("success");

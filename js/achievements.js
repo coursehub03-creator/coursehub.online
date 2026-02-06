@@ -145,36 +145,57 @@ const downloadPdfFromImage = async (url, title, verificationCode) => {
 };
 
 // ✅ فتح الشهادة داخل صفحة Viewer (ميزة جديدة) + تمرير كود التحقق
+// ✅ (يدعم DataURL عبر sessionStorage لتفادي طول الرابط)
 const openCertificateViewer = (url, title, verificationCode) => {
+  let targetUrl = url;
+  let dataKey = "";
+
+  // لو كانت الشهادة DataURL كبيرة: خزّنها في sessionStorage ومرّر مفتاح
+  if (typeof url === "string" && url.startsWith(dataUrlPrefix)) {
+    dataKey = `certificate-data-${Date.now()}`;
+    try {
+      sessionStorage.setItem(dataKey, url);
+      targetUrl = "";
+    } catch (e) {
+      // إذا فشل التخزين لأي سبب، نرجع للطريقة العادية
+      targetUrl = url;
+      dataKey = "";
+    }
+  }
+
   const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(
-    url
+    targetUrl
   )}&title=${encodeURIComponent(title || "certificate")}&code=${encodeURIComponent(
     verificationCode || ""
-  )}`;
+  )}&dataKey=${encodeURIComponent(dataKey)}`;
+
   openUrlInNewTab(viewerUrl);
 };
 
 // ✅ فتح الشهادة
 window.openCertificate = function (url, title, verificationCode) {
-  if (!url) {
+  // ✅ الحفاظ على ميزة التحقق من الرابط + التعامل مع حظر النوافذ المنبثقة
+  if (!url && !verificationCode) {
     alert("رابط الشهادة غير متوفر حاليًا.");
     return;
   }
 
   // دائمًا استخدم viewer (الميزة الجديدة)
-  openCertificateViewer(url, title, verificationCode);
+  openCertificateViewer(url || "", title || "certificate", verificationCode || "");
 };
 
-// ✅ تنزيل الشهادة PDF
+// ✅ تنزيل الشهادة PDF + QR
 window.downloadCertificate = function (url, title, verificationCode) {
   if (!url) {
     alert("رابط الشهادة غير متوفر حاليًا.");
     return;
   }
 
-  downloadPdfFromImage(url, title, verificationCode).catch(() => {
-    alert("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
-  });
+  downloadPdfFromImage(url, title || "certificate", verificationCode || "").catch(
+    () => {
+      alert("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
+    }
+  );
 };
 
 // --- مراقبة حالة تسجيل الدخول ---
@@ -233,7 +254,7 @@ onAuthStateChanged(auth, async (user) => {
           const issuedAt =
             completedAt && typeof completedAt.toDate === "function"
               ? completedAt.toDate().toLocaleDateString("ar-EG")
-              : (completedAt || "");
+              : completedAt || "";
 
           return {
             title: data.courseTitle || data.title || "",
@@ -351,14 +372,18 @@ onAuthStateChanged(auth, async (user) => {
         });
 
         // تنزيل الشهادة PDF + QR
-        certList.querySelectorAll("[data-download-certificate]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const url = decodeURIComponent(button.getAttribute("data-url") || "");
-            const title = decodeURIComponent(button.getAttribute("data-title") || "");
-            const code = decodeURIComponent(button.getAttribute("data-code") || "");
-            window.downloadCertificate(url, title, code);
+        certList
+          .querySelectorAll("[data-download-certificate]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              const url = decodeURIComponent(button.getAttribute("data-url") || "");
+              const title = decodeURIComponent(
+                button.getAttribute("data-title") || ""
+              );
+              const code = decodeURIComponent(button.getAttribute("data-code") || "");
+              window.downloadCertificate(url, title, code);
+            });
           });
-        });
       }
     }
 

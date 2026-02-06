@@ -5,8 +5,12 @@ const dataUrlPrefix = "data:";
 const params = new URLSearchParams(window.location.search);
 const encodedUrl = params.get("url");
 const encodedTitle = params.get("title");
+
 // ✅ ميزة جديدة: استلام كود التحقق من الـ Viewer (لإنشاء QR ودمجه بالشهادة)
 const encodedCode = params.get("code");
+
+// ✅ ميزة جديدة: دعم dataKey لجلب DataURL من sessionStorage (عشان روابط DataURL ما تتكسر)
+const encodedDataKey = params.get("dataKey");
 
 const certificateImage = document.getElementById("certificateImage");
 const certificateTitle = document.getElementById("certificateTitle");
@@ -43,9 +47,7 @@ const fetchImageDataUrl = async (url) => {
   if (url.startsWith(dataUrlPrefix)) return url;
 
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to load certificate image.");
-  }
+  if (!response.ok) throw new Error("Failed to load certificate image.");
   const blob = await response.blob();
   return blobToDataUrl(blob);
 };
@@ -67,9 +69,7 @@ const fetchQrDataUrl = async (verifyUrl) => {
       verifyUrl
     )}`
   );
-  if (!qrResponse.ok) {
-    throw new Error("Failed to load QR code.");
-  }
+  if (!qrResponse.ok) throw new Error("Failed to load QR code.");
   const qrBlob = await qrResponse.blob();
   return blobToDataUrl(qrBlob);
 };
@@ -87,7 +87,10 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const qrDataUrl = await fetchQrDataUrl(verifyUrl);
   if (!qrDataUrl) return dataUrl;
 
-  const [certImg, qrImg] = await Promise.all([loadImage(dataUrl), loadImage(qrDataUrl)]);
+  const [certImg, qrImg] = await Promise.all([
+    loadImage(dataUrl),
+    loadImage(qrDataUrl)
+  ]);
 
   const canvas = document.createElement("canvas");
   canvas.width = certImg.width;
@@ -137,40 +140,51 @@ const showError = (message) => {
   if (errorText) errorText.textContent = message;
 };
 
-if (!encodedUrl) {
+// ✅ حل التعارض: دعم حالتين (url أو dataKey)
+if (!encodedUrl && !encodedDataKey) {
   showError("لا يوجد رابط شهادة لعرضه.");
+  if (downloadButton) downloadButton.disabled = true;
 } else {
-  const certificateUrl = decodeURIComponent(encodedUrl);
+  const storageKey = encodedDataKey ? decodeURIComponent(encodedDataKey) : "";
+  const storedDataUrl = storageKey ? sessionStorage.getItem(storageKey) : "";
+
+  // لو dataKey موجود -> نستخدمه، وإلا نستخدم encodedUrl
+  const certificateUrl = storedDataUrl || decodeURIComponent(encodedUrl || "");
   const title = encodedTitle ? decodeURIComponent(encodedTitle) : "الشهادة";
   const verificationCode = encodedCode ? decodeURIComponent(encodedCode) : "";
 
-  if (certificateTitle) {
-    certificateTitle.textContent = title;
-  }
-
-  // ✅ عرض الشهادة (مع دمج QR إذا توفر كود)
-  const renderCertificate = async () => {
-    try {
-      const composedUrl = await composeCertificateWithQr(
-        certificateUrl,
-        verificationCode
-      );
-      if (certificateImage) {
-        certificateImage.src = composedUrl;
-      }
-    } catch (error) {
-      console.error(error);
-      showError("تعذر عرض الشهادة. حاول مرة أخرى.");
+  if (!certificateUrl) {
+    showError("لا يوجد رابط شهادة لعرضه.");
+    if (downloadButton) downloadButton.disabled = true;
+  } else {
+    if (certificateTitle) {
+      certificateTitle.textContent = title;
     }
-  };
 
-  renderCertificate();
+    // ✅ عرض الشهادة (مع دمج QR إذا توفر كود)
+    const renderCertificate = async () => {
+      try {
+        const composedUrl = await composeCertificateWithQr(
+          certificateUrl,
+          verificationCode
+        );
+        if (certificateImage) {
+          certificateImage.src = composedUrl;
+        }
+      } catch (error) {
+        console.error(error);
+        showError("تعذر عرض الشهادة. حاول مرة أخرى.");
+      }
+    };
 
-  // ✅ تنزيل PDF (مع QR إذا موجود)
-  downloadButton?.addEventListener("click", () => {
-    downloadPdfFromImage(certificateUrl, title, verificationCode).catch((err) => {
-      console.error(err);
-      showError("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
+    renderCertificate();
+
+    // ✅ تنزيل PDF (مع QR إذا موجود)
+    downloadButton?.addEventListener("click", () => {
+      downloadPdfFromImage(certificateUrl, title, verificationCode).catch((err) => {
+        console.error(err);
+        showError("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
+      });
     });
-  });
+  }
 }
