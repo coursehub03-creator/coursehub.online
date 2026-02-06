@@ -697,7 +697,7 @@ const date = new Date().toLocaleDateString("en-GB", {
 
     ctx.fillStyle = "#111827";
     ctx.font = "bold 34px 'Inter', sans-serif";
-    ctx.fillText(titleToPrint, canvas.width / 2, 525);
+    ctx.fillText(titleToPrint, canvas.width / 2, 550);
 
     ctx.fillStyle = "#6b7280";
     ctx.font = "20px 'Inter', sans-serif";
