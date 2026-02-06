@@ -13,26 +13,10 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- دالة فتح الشهادة في نافذة جديدة ---
+// --- Certificate helpers ---
 const dataUrlPrefix = "data:";
-
-const createBlobUrlFromDataUrl = (dataUrl) => {
-  const [header, base64Data] = dataUrl.split(",");
-  if (!header || !base64Data) {
-    return null;
-  }
-
-  const mimeMatch = header.match(/data:([^;]+);base64/);
-  const mimeType = mimeMatch ? mimeMatch[1] : "application/octet-stream";
-  const binary = atob(base64Data);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  const blob = new Blob([bytes], { type: mimeType });
-  return URL.createObjectURL(blob);
-};
+const pdfLibraryUrl =
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
 const openUrlInNewTab = (url) => {
   const win = window.open(url, "_blank");
@@ -41,54 +25,98 @@ const openUrlInNewTab = (url) => {
   }
 };
 
-const triggerDownload = (url, filename) => {
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename || "certificate";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+const sanitizeFileName = (value) =>
+  (value || "certificate")
+    .toString()
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const loadJsPdf = (() => {
+  let cachedModule;
+  return async () => {
+    if (!cachedModule) {
+      cachedModule = import(pdfLibraryUrl);
+    }
+    return cachedModule;
+  };
+})();
+
+const blobToDataUrl = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
+const fetchImageDataUrl = async (url) => {
+  if (!url) throw new Error("Missing URL");
+  if (url.startsWith(dataUrlPrefix)) return url;
+
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to load certificate image.");
+  const blob = await response.blob();
+  return blobToDataUrl(blob);
 };
 
-window.openCertificate = function (url) {
-  // ✅ الحفاظ على ميزة التحقق من الرابط + التعامل مع حظر النوافذ المنبثقة
+const loadImage = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Failed to load image."));
+    img.src = src;
+  });
+
+// ✅ تنزيل الشهادة كـ PDF (ميزة جديدة)
+const downloadPdfFromImage = async (url, title) => {
+  const dataUrl = await fetchImageDataUrl(url);
+  const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+
+  const { jsPDF } = await loadJsPdf();
+  const img = await loadImage(dataUrl);
+
+  const orientation = img.width > img.height ? "landscape" : "portrait";
+  const pdf = new jsPDF({
+    orientation,
+    unit: "pt",
+    format: [img.width, img.height]
+  });
+
+  pdf.addImage(dataUrl, imageType, 0, 0, img.width, img.height);
+  pdf.save(`${sanitizeFileName(title)}.pdf`);
+};
+
+// ✅ فتح الشهادة داخل صفحة Viewer (ميزة جديدة)
+const openCertificateViewer = (url, title) => {
+  const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(
+    url
+  )}&title=${encodeURIComponent(title || "certificate")}`;
+  openUrlInNewTab(viewerUrl);
+};
+
+// ✅ فتح الشهادة (يحافظ على التحقق من الرابط + popup handling)
+window.openCertificate = function (url, title) {
   if (!url) {
     alert("رابط الشهادة غير متوفر حاليًا.");
     return;
   }
 
-  if (url.startsWith(dataUrlPrefix)) {
-    const blobUrl = createBlobUrlFromDataUrl(url);
-    if (!blobUrl) {
-      alert("تعذر فتح الشهادة بسبب صيغة الرابط.");
-      return;
-    }
-    openUrlInNewTab(blobUrl);
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-    return;
-  }
-
-  openUrlInNewTab(url);
+  // استخدم الـ viewer دائما (الميزة الجديدة)
+  openCertificateViewer(url, title);
 };
 
+// ✅ تنزيل الشهادة (PDF)
 window.downloadCertificate = function (url, title) {
   if (!url) {
     alert("رابط الشهادة غير متوفر حاليًا.");
     return;
   }
 
-  if (url.startsWith(dataUrlPrefix)) {
-    const blobUrl = createBlobUrlFromDataUrl(url);
-    if (!blobUrl) {
-      alert("تعذر تنزيل الشهادة بسبب صيغة الرابط.");
-      return;
-    }
-    triggerDownload(blobUrl, title);
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-    return;
-  }
-
-  triggerDownload(url, title);
+  downloadPdfFromImage(url, title).catch(() => {
+    alert("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
+  });
 };
 
 // --- مراقبة حالة تسجيل الدخول ---
@@ -191,37 +219,76 @@ onAuthStateChanged(auth, async (user) => {
         certificates.forEach((cert) => {
           const safeUrl = encodeURIComponent(cert.certificateUrl || "");
           const safeTitle = encodeURIComponent(cert.title || "certificate");
+
+          // ✅ توليد رابط تحقق صحيح + QR (ميزة جديدة)
+          const baseUrl =
+            window.location.origin && window.location.origin !== "null"
+              ? window.location.origin
+              : "";
+          const verifyUrl = cert.verificationCode
+            ? `${baseUrl}/verify-certificate.html?code=${encodeURIComponent(
+                cert.verificationCode
+              )}`
+            : "";
+
           certList.innerHTML += `
             <div class="certificate-card">
-              <button type="button" class="download-btn" data-download-certificate data-url="${safeUrl}" data-title="${safeTitle}">تحميل</button>
+              <button type="button"
+                class="download-btn"
+                data-download-certificate
+                data-url="${safeUrl}"
+                data-title="${safeTitle}">
+                تحميل PDF
+              </button>
+
               <h4>${cert.title}</h4>
               <span>تاريخ الإصدار: ${cert.issuedAt}</span>
+
               ${
                 cert.verificationCode
                   ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
                   : ""
               }
+
+              ${
+                cert.verificationCode
+                  ? `<div class="certificate-qr">
+                      <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
+                        verifyUrl
+                      )}" alt="رمز QR للتحقق من الشهادة">
+                      <span>امسح للتحقق</span>
+                    </div>`
+                  : ""
+              }
+
               <div class="certificate-actions">
-                <button type="button" data-open-certificate data-url="${safeUrl}">
+                <button type="button"
+                  data-open-certificate
+                  data-url="${safeUrl}"
+                  data-title="${safeTitle}">
                   عرض الشهادة
                 </button>
+
                 ${
                   cert.verificationCode
                     ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>`
-                  : ""
+                    : ""
                 }
               </div>
             </div>
           `;
         });
 
+        // فتح الشهادة
         certList.querySelectorAll("[data-open-certificate]").forEach((button) => {
           button.addEventListener("click", () => {
             const url = decodeURIComponent(button.getAttribute("data-url") || "");
-            window.openCertificate(url);
+            const title = decodeURIComponent(button.getAttribute("data-title") || "");
+            window.openCertificate(url, title);
           });
         });
 
+        // تنزيل الشهادة PDF
         certList.querySelectorAll("[data-download-certificate]").forEach((button) => {
           button.addEventListener("click", () => {
             const url = decodeURIComponent(button.getAttribute("data-url") || "");
