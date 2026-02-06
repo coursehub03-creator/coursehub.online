@@ -2,6 +2,23 @@ const pdfLibraryUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 const dataUrlPrefix = "data:";
 
+// ✅ i18n (ميزة جديدة)
+const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
+const uiText = {
+  ar: {
+    missingUrl: "لا يوجد رابط شهادة لعرضه.",
+    renderFailed: "تعذر عرض الشهادة. حاول مرة أخرى.",
+    downloadFailed: "تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.",
+    defaultTitle: "الشهادة"
+  },
+  en: {
+    missingUrl: "No certificate URL was provided.",
+    renderFailed: "Unable to display the certificate. Please try again.",
+    downloadFailed: "Failed to download the certificate as PDF. Please try again.",
+    defaultTitle: "Certificate"
+  }
+};
+
 const params = new URLSearchParams(window.location.search);
 const encodedUrl = params.get("url");
 const encodedTitle = params.get("title");
@@ -61,6 +78,7 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
+  // ✅ دمج التعارض: تحقق من url + دعم data:
   if (!url) throw new Error("Missing URL");
   if (url.startsWith(dataUrlPrefix)) return url;
 
@@ -82,7 +100,9 @@ const loadImage = (src) =>
   });
 
 const fetchQrDataUrl = async (verifyUrl) => {
+  // ✅ دمج التعارض: صيغة مختصرة مع نفس السلوك
   if (!verifyUrl) return "";
+
   const qrResponse = await fetch(
     `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
       verifyUrl
@@ -95,6 +115,7 @@ const fetchQrDataUrl = async (verifyUrl) => {
   return blobToDataUrl(qrBlob);
 };
 
+// ✅ دمج QR داخل الشهادة قبل التحويل إلى PDF
 const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const dataUrl = await fetchImageDataUrl(certificateUrl);
   if (!verificationCode) return dataUrl;
@@ -122,10 +143,13 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   ctx.drawImage(certImg, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
+
+  // ✅ تصغير حجم الـ QR شوي (كان 0.18)
   const qrSize = Math.round(minSide * 0.14);
+
   const margin = Math.round(minSide * 0.04);
 
-  // ✅ تعديل مكان الـ QR: أعلى اليسار (داخل مساحة آمنة مثل اللي باللون الأحمر بالصورة)
+  // ✅ تعديل مكان الـ QR: أعلى اليسار داخل مساحة آمنة
   const extraX = 40; // زوّدها عشان يتحرك يمين
   const extraY = 40; // زوّدها عشان ينزل لتحت
   const x = margin + extraX;
@@ -165,20 +189,22 @@ const showError = (message) => {
   }
 };
 
-// ✅ دمج التعارض: إذا ما في url ولا dataKey نوقف
+// ✅ دمج التعارض: دعم حالتين (url أو dataKey) + i18n
 if (!encodedUrl && !encodedDataKey) {
-  showError("لا يوجد رابط شهادة لعرضه.");
+  showError(uiText[getLang()].missingUrl);
   if (downloadButton) downloadButton.disabled = true;
 } else {
   const storageKey = encodedDataKey ? decodeURIComponent(encodedDataKey) : "";
   const storedDataUrl = storageKey ? sessionStorage.getItem(storageKey) : "";
 
   const certificateUrl = storedDataUrl || decodeURIComponent(encodedUrl || "");
-  const title = encodedTitle ? decodeURIComponent(encodedTitle) : "الشهادة";
+  const title = encodedTitle
+    ? decodeURIComponent(encodedTitle)
+    : uiText[getLang()].defaultTitle;
   const verificationCode = encodedCode ? decodeURIComponent(encodedCode) : "";
 
   if (!certificateUrl) {
-    showError("لا يوجد رابط شهادة لعرضه.");
+    showError(uiText[getLang()].missingUrl);
     if (downloadButton) downloadButton.disabled = true;
   } else {
     if (certificateTitle) {
@@ -195,7 +221,7 @@ if (!encodedUrl && !encodedDataKey) {
           certificateImage.src = composedUrl;
         }
       } catch (error) {
-        showError("تعذر عرض الشهادة. حاول مرة أخرى.");
+        showError(uiText[getLang()].renderFailed);
       }
     };
 
@@ -203,7 +229,7 @@ if (!encodedUrl && !encodedDataKey) {
 
     downloadButton?.addEventListener("click", () => {
       downloadPdfFromImage(certificateUrl, title, verificationCode).catch(() => {
-        showError("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
+        showError(uiText[getLang()].downloadFailed);
       });
     });
   }

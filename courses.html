@@ -34,17 +34,17 @@
   <div id="header-placeholder"></div>
 
   <section class="container">
-    <h2>جميع الدورات</h2>
+    <h2 data-i18n-en="All courses">جميع الدورات</h2>
 
     <div class="categories">
-      <button class="active" data-category="all">الكل</button>
-      <button data-category="web">تطوير الويب</button>
-      <button data-category="ai">الذكاء الاصطناعي</button>
-      <button data-category="design">التصميم</button>
+      <button class="active" data-category="all" data-i18n-en="All">الكل</button>
+      <button data-category="web" data-i18n-en="Web development">تطوير الويب</button>
+      <button data-category="ai" data-i18n-en="Artificial intelligence">الذكاء الاصطناعي</button>
+      <button data-category="design" data-i18n-en="Design">التصميم</button>
     </div>
 
-    <div class="courses-grid" id="coursesGrid">
-      <div class="empty-msg">جارٍ تحميل الدورات...</div>
+    <div class="courses-grid" id="coursesGrid" data-i18n-skip="true">
+      <div class="empty-msg" data-i18n-en="Loading courses...">جارٍ تحميل الدورات...</div>
     </div>
   </section>
 
@@ -80,16 +80,25 @@
         renderCourses(allCourses);
       } catch (error) {
         console.error("خطأ في تحميل الدورات:", error);
-        coursesGrid.innerHTML = "<p class='empty-msg'>حدث خطأ أثناء تحميل الدورات.</p>";
+        const lang = localStorage.getItem("coursehub_lang") || "ar";
+        coursesGrid.innerHTML =
+          lang === "en"
+            ? "<p class='empty-msg'>An error occurred while loading courses.</p>"
+            : "<p class='empty-msg'>حدث خطأ أثناء تحميل الدورات.</p>";
       }
     }
 
     function renderCourses(courses) {
       coursesGrid.innerHTML = "";
       const lang = localStorage.getItem("coursehub_lang") || "ar";
+      const viewCourseLabel = lang === "en" ? "View course" : "عرض الدورة";
+      const studentLabel = lang === "en" ? "students" : "طالب";
 
       if (!courses || courses.length === 0) {
-        coursesGrid.innerHTML = "<div class='empty-msg'>لا توجد دورات حالياً.</div>";
+        coursesGrid.innerHTML =
+          lang === "en"
+            ? "<div class='empty-msg'>No courses available right now.</div>"
+            : "<div class='empty-msg'>لا توجد دورات حالياً.</div>";
         return;
       }
 
@@ -104,9 +113,9 @@
           <img src="${course.image || "assets/images/default-course.png"}" alt="${titleText}">
           <div class="card-content">
             <h3 onclick="window.location.href='course-detail.html?id=${course.id}'">${titleText}</h3>
-            <div class="rating">${"★".repeat(course.rating || 4)} <span>(${course.students || 0} طالب)</span></div>
+            <div class="rating">${"★".repeat(course.rating || 4)} <span>(${course.students || 0} ${studentLabel})</span></div>
             <p>${descriptionText || ""}</p>
-            <a href="course-detail.html?id=${course.id}" class="btn">عرض الدورة</a>
+            <a href="course-detail.html?id=${course.id}" class="btn">${viewCourseLabel}</a>
           </div>
         `;
 

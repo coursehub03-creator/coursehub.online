@@ -18,10 +18,48 @@ const dataUrlPrefix = "data:";
 const pdfLibraryUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
+// ✅ i18n (ميزة جديدة) + نصوص عربية/إنجليزية
+const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
+
+const uiText = {
+  ar: {
+    popupBlocked: "تم حظر فتح الشهادة من المتصفح. يرجى السماح بالنوافذ المنبثقة.",
+    missingCertificate: "رابط الشهادة غير متوفر حاليًا.",
+    downloadFailed: "تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.",
+    noCertificates: "لم تحصل على أي شهادة بعد.",
+    issuedAt: "تاريخ الإصدار:",
+    verificationCode: "رمز التحقق:",
+    scanToVerify: "امسح للتحقق",
+    viewCertificate: "عرض الشهادة",
+    verifyCertificate: "تحقق من الشهادة",
+    downloadPdf: "تحميل PDF",
+    noCompletedCourses: "لم تكمل أي دورة بعد.",
+    instructor: "المدرب:",
+    completedAt: "أكملت في:",
+    authError: "حدث خطأ أثناء تسجيل الدخول أو جلب البيانات. حاول مرة أخرى."
+  },
+  en: {
+    popupBlocked: "The browser blocked opening the certificate. Please allow pop-ups.",
+    missingCertificate: "Certificate link is not available right now.",
+    downloadFailed: "Failed to download the certificate as PDF. Please try again.",
+    noCertificates: "You have not earned any certificates yet.",
+    issuedAt: "Issued on:",
+    verificationCode: "Verification code:",
+    scanToVerify: "Scan to verify",
+    viewCertificate: "View certificate",
+    verifyCertificate: "Verify certificate",
+    downloadPdf: "Download PDF",
+    noCompletedCourses: "You haven't completed any courses yet.",
+    instructor: "Instructor:",
+    completedAt: "Completed on:",
+    authError: "An error occurred while signing in or loading data. Please try again."
+  }
+};
+
 const openUrlInNewTab = (url) => {
   const win = window.open(url, "_blank");
   if (!win) {
-    alert("تم حظر فتح الشهادة من المتصفح. يرجى السماح بالنوافذ المنبثقة.");
+    alert(uiText[getLang()].popupBlocked);
   }
 };
 
@@ -73,6 +111,7 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
+  // (حافظنا على الكود كما هو عندك)
   if (url.startsWith(dataUrlPrefix)) {
     return url;
   }
@@ -119,6 +158,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
     `/verify-certificate.html?code=${encodeURIComponent(verificationCode)}`,
     window.location.href
   ).href;
+
   const qrDataUrl = await fetchQrDataUrl(verifyUrl);
   if (!qrDataUrl) {
     return dataUrl;
@@ -128,13 +168,16 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
     loadImage(dataUrl),
     loadImage(qrDataUrl)
   ]);
+
   const canvas = document.createElement("canvas");
   canvas.width = certificateImage.width;
   canvas.height = certificateImage.height;
+
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     return dataUrl;
   }
+
   ctx.drawImage(certificateImage, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
@@ -142,6 +185,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const margin = Math.round(minSide * 0.04);
   const x = canvas.width - qrSize - margin;
   const y = canvas.height - qrSize - margin;
+
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
   ctx.drawImage(qrImage, x, y, qrSize, qrSize);
@@ -152,10 +196,12 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 const downloadPdfFromImage = async (url, title, verificationCode) => {
   const dataUrl = await composeCertificateWithQr(url, verificationCode);
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+
   const jsPDF = await loadJsPdf();
   if (!jsPDF) {
     throw new Error("jsPDF constructor not available.");
   }
+
   const img = await loadImage(dataUrl);
   const orientation = img.width > img.height ? "landscape" : "portrait";
   const pdf = new jsPDF({
@@ -163,30 +209,35 @@ const downloadPdfFromImage = async (url, title, verificationCode) => {
     unit: "pt",
     format: [img.width, img.height]
   });
+
   pdf.addImage(dataUrl, imageType, 0, 0, img.width, img.height);
   pdf.save(`${sanitizeFileName(title)}.pdf`);
 };
 
+// ✅ Viewer + دعم DataURL عبر sessionStorage (ميزة مهمة)
 const openCertificateViewer = (url, title, verificationCode) => {
   let targetUrl = url;
   let dataKey = "";
+
   if (url.startsWith(dataUrlPrefix)) {
     dataKey = `certificate-data-${Date.now()}`;
     sessionStorage.setItem(dataKey, url);
     targetUrl = "";
   }
+
   const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(
     targetUrl
   )}&title=${encodeURIComponent(title || "certificate")}&code=${encodeURIComponent(
     verificationCode || ""
   )}&dataKey=${encodeURIComponent(dataKey)}`;
+
   openUrlInNewTab(viewerUrl);
 };
 
 window.openCertificate = function (url, title, verificationCode) {
   // ✅ الحفاظ على ميزة التحقق من الرابط + التعامل مع حظر النوافذ المنبثقة
   if (!url) {
-    alert("رابط الشهادة غير متوفر حاليًا.");
+    alert(uiText[getLang()].missingCertificate);
     return;
   }
 
@@ -195,12 +246,12 @@ window.openCertificate = function (url, title, verificationCode) {
 
 window.downloadCertificate = function (url, title, verificationCode) {
   if (!url) {
-    alert("رابط الشهادة غير متوفر حاليًا.");
+    alert(uiText[getLang()].missingCertificate);
     return;
   }
 
   downloadPdfFromImage(url, title, verificationCode).catch(() => {
-    alert("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
+    alert(uiText[getLang()].downloadFailed);
   });
 };
 
@@ -299,11 +350,13 @@ onAuthStateChanged(auth, async (user) => {
     if (certList) {
       certList.innerHTML = "";
       if (certificates.length === 0) {
-        certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
+        certList.innerHTML = `<p>${uiText[getLang()].noCertificates}</p>`;
       } else {
         certificates.forEach((cert) => {
+          const langStrings = uiText[getLang()];
           const safeUrl = encodeURIComponent(cert.certificateUrl || "");
           const safeTitle = encodeURIComponent(cert.title || "certificate");
+
           const verifyUrl = cert.verificationCode
             ? new URL(
                 `/verify-certificate.html?code=${encodeURIComponent(
@@ -312,38 +365,50 @@ onAuthStateChanged(auth, async (user) => {
                 window.location.href
               ).href
             : "";
+
           certList.innerHTML += `
             <div class="certificate-card">
-              <button type="button" class="download-btn" data-download-certificate data-url="${safeUrl}" data-title="${safeTitle}" data-code="${encodeURIComponent(
-                cert.verificationCode || ""
-              )}">تحميل</button>
+              <button type="button" class="download-btn"
+                data-download-certificate
+                data-url="${safeUrl}"
+                data-title="${safeTitle}"
+                data-code="${encodeURIComponent(cert.verificationCode || "")}">
+                ${langStrings.downloadPdf}
+              </button>
+
               <h4>${cert.title}</h4>
-              <span>تاريخ الإصدار: ${cert.issuedAt}</span>
+              <span>${langStrings.issuedAt} ${cert.issuedAt}</span>
+
               ${
                 cert.verificationCode
-                  ? `<span class="certificate-code">رمز التحقق: ${cert.verificationCode}</span>`
+                  ? `<span class="certificate-code">${langStrings.verificationCode} ${cert.verificationCode}</span>`
                   : ""
               }
+
               ${
                 cert.verificationCode
                   ? `<div class="certificate-qr">
                       <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
                         verifyUrl
                       )}" alt="رمز QR للتحقق من الشهادة">
-                      <span>امسح للتحقق</span>
+                      <span>${langStrings.scanToVerify}</span>
                     </div>`
                   : ""
               }
+
               <div class="certificate-actions">
-                <button type="button" data-open-certificate data-url="${safeUrl}" data-title="${safeTitle}" data-code="${encodeURIComponent(
-                  cert.verificationCode || ""
-                )}">
-                  عرض الشهادة
+                <button type="button"
+                  data-open-certificate
+                  data-url="${safeUrl}"
+                  data-title="${safeTitle}"
+                  data-code="${encodeURIComponent(cert.verificationCode || "")}">
+                  ${langStrings.viewCertificate}
                 </button>
+
                 ${
                   cert.verificationCode
-                    ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>`
-                  : ""
+                    ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">${langStrings.verifyCertificate}</a>`
+                    : ""
                 }
               </div>
             </div>
@@ -375,9 +440,10 @@ onAuthStateChanged(auth, async (user) => {
     if (coursesList) {
       coursesList.innerHTML = "";
       if (completedCourses.length === 0) {
-        coursesList.innerHTML = "<p>لم تكمل أي دورة بعد.</p>";
+        coursesList.innerHTML = `<p>${uiText[getLang()].noCompletedCourses}</p>`;
       } else {
         completedCourses.forEach((course) => {
+          const langStrings = uiText[getLang()];
           coursesList.innerHTML += `
             <div class="course-card">
               <img src="${course.image}" alt="${course.title}">
@@ -387,8 +453,8 @@ onAuthStateChanged(auth, async (user) => {
                     ${course.title}
                   </a>
                 </h4>
-                <span>المدرب: ${course.instructor}</span><br>
-                <span>أكملت في: ${course.completedAt}</span>
+                <span>${langStrings.instructor} ${course.instructor}</span><br>
+                <span>${langStrings.completedAt} ${course.completedAt}</span>
               </div>
             </div>
           `;
@@ -397,6 +463,6 @@ onAuthStateChanged(auth, async (user) => {
     }
   } catch (error) {
     console.error("Firebase Auth Error:", error);
-    alert("حدث خطأ أثناء تسجيل الدخول أو جلب البيانات. حاول مرة أخرى.");
+    alert(uiText[getLang()].authError);
   }
 });
