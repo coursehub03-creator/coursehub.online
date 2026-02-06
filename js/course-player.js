@@ -701,7 +701,7 @@ const date = new Date().toLocaleDateString("en-GB", {
 
     ctx.fillStyle = "#6b7280";
     ctx.font = "20px 'Inter', sans-serif";
-    ctx.fillText(date, 350, 690);
+    ctx.fillText(date, 320, 690);
     if (verificationCode) {
       ctx.fillText(verificationCode, 390, 725);
     }
