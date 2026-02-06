@@ -14,6 +14,42 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- دالة فتح الشهادة في نافذة جديدة ---
+const dataUrlPrefix = "data:";
+
+const createBlobUrlFromDataUrl = (dataUrl) => {
+  const [header, base64Data] = dataUrl.split(",");
+  if (!header || !base64Data) {
+    return null;
+  }
+
+  const mimeMatch = header.match(/data:([^;]+);base64/);
+  const mimeType = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+  const binary = atob(base64Data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  const blob = new Blob([bytes], { type: mimeType });
+  return URL.createObjectURL(blob);
+};
+
+const openUrlInNewTab = (url) => {
+  const win = window.open(url, "_blank");
+  if (!win) {
+    alert("تم حظر فتح الشهادة من المتصفح. يرجى السماح بالنوافذ المنبثقة.");
+  }
+};
+
+const triggerDownload = (url, filename) => {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename || "certificate";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 window.openCertificate = function (url) {
   // ✅ الحفاظ على ميزة التحقق من الرابط + التعامل مع حظر النوافذ المنبثقة
   if (!url) {
@@ -21,10 +57,38 @@ window.openCertificate = function (url) {
     return;
   }
 
-  const win = window.open(url, "_blank");
-  if (!win) {
-    alert("تم حظر فتح الشهادة من المتصفح. يرجى السماح بالنوافذ المنبثقة.");
+  if (url.startsWith(dataUrlPrefix)) {
+    const blobUrl = createBlobUrlFromDataUrl(url);
+    if (!blobUrl) {
+      alert("تعذر فتح الشهادة بسبب صيغة الرابط.");
+      return;
+    }
+    openUrlInNewTab(blobUrl);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    return;
   }
+
+  openUrlInNewTab(url);
+};
+
+window.downloadCertificate = function (url, title) {
+  if (!url) {
+    alert("رابط الشهادة غير متوفر حاليًا.");
+    return;
+  }
+
+  if (url.startsWith(dataUrlPrefix)) {
+    const blobUrl = createBlobUrlFromDataUrl(url);
+    if (!blobUrl) {
+      alert("تعذر تنزيل الشهادة بسبب صيغة الرابط.");
+      return;
+    }
+    triggerDownload(blobUrl, title);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    return;
+  }
+
+  triggerDownload(url, title);
 };
 
 // --- مراقبة حالة تسجيل الدخول ---
@@ -125,9 +189,11 @@ onAuthStateChanged(auth, async (user) => {
         certList.innerHTML = "<p>لم تحصل على أي شهادة بعد.</p>";
       } else {
         certificates.forEach((cert) => {
+          const safeUrl = encodeURIComponent(cert.certificateUrl || "");
+          const safeTitle = encodeURIComponent(cert.title || "certificate");
           certList.innerHTML += `
             <div class="certificate-card">
-              <a href="${cert.certificateUrl || "#"}" download class="download-btn">تحميل</a>
+              <button type="button" class="download-btn" data-download-certificate data-url="${safeUrl}" data-title="${safeTitle}">تحميل</button>
               <h4>${cert.title}</h4>
               <span>تاريخ الإصدار: ${cert.issuedAt}</span>
               ${
@@ -136,17 +202,32 @@ onAuthStateChanged(auth, async (user) => {
                   : ""
               }
               <div class="certificate-actions">
-                <button onclick="openCertificate('${cert.certificateUrl || ""}')">
+                <button type="button" data-open-certificate data-url="${safeUrl}">
                   عرض الشهادة
                 </button>
                 ${
                   cert.verificationCode
                     ? `<a href="/verify-certificate.html?code=${cert.verificationCode}" class="verify-btn">تحقق من الشهادة</a>`
-                    : ""
+                  : ""
                 }
               </div>
             </div>
           `;
+        });
+
+        certList.querySelectorAll("[data-open-certificate]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const url = decodeURIComponent(button.getAttribute("data-url") || "");
+            window.openCertificate(url);
+          });
+        });
+
+        certList.querySelectorAll("[data-download-certificate]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const url = decodeURIComponent(button.getAttribute("data-url") || "");
+            const title = decodeURIComponent(button.getAttribute("data-title") || "");
+            window.downloadCertificate(url, title);
+          });
         });
       }
     }
