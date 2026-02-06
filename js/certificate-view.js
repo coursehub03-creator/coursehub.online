@@ -124,8 +124,12 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const minSide = Math.min(canvas.width, canvas.height);
   const qrSize = Math.round(minSide * 0.18);
   const margin = Math.round(minSide * 0.04);
-  const x = canvas.width - qrSize - margin;
-  const y = canvas.height - qrSize - margin;
+
+  // ✅ تعديل مكان الـ QR: أعلى اليسار (داخل مساحة آمنة مثل اللي باللون الأحمر بالصورة)
+  const extraX = 40; // زوّدها عشان يتحرك يمين
+  const extraY = 40; // زوّدها عشان ينزل لتحت
+  const x = margin + extraX;
+  const y = margin + extraY;
 
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
