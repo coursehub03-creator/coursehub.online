@@ -122,7 +122,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   ctx.drawImage(certImg, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
-  const qrSize = Math.round(minSide * 0.18);
+  const qrSize = Math.round(minSide * 0.14);
   const margin = Math.round(minSide * 0.04);
 
   // ✅ تعديل مكان الـ QR: أعلى اليسار (داخل مساحة آمنة مثل اللي باللون الأحمر بالصورة)
