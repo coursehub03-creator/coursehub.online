@@ -54,9 +54,9 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
-  if (url.startsWith(dataUrlPrefix)) {
-    return url;
-  }
+  if (!url) throw new Error("Missing URL");
+  if (url.startsWith(dataUrlPrefix)) return url;
+
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("Failed to load certificate image.");
@@ -74,10 +74,10 @@ const loadImage = (src) =>
     img.src = src;
   });
 
+// ✅ ميزة جديدة: جلب QR كـ DataURL
 const fetchQrDataUrl = async (verifyUrl) => {
-  if (!verifyUrl) {
-    return "";
-  }
+  if (!verifyUrl) return "";
+
   const qrResponse = await fetch(
     `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
       verifyUrl
@@ -90,63 +90,68 @@ const fetchQrDataUrl = async (verifyUrl) => {
   return blobToDataUrl(qrBlob);
 };
 
+// ✅ ميزة جديدة: دمج QR داخل صورة الشهادة (للعرض + الـ PDF)
 const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const dataUrl = await fetchImageDataUrl(certificateUrl);
-  if (!verificationCode) {
-    return dataUrl;
-  }
+  if (!verificationCode) return dataUrl;
 
   const verifyUrl = new URL(
     `/verify-certificate.html?code=${encodeURIComponent(verificationCode)}`,
     window.location.href
   ).href;
-  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
-  if (!qrDataUrl) {
-    return dataUrl;
-  }
 
-  const [certificateImage, qrImage] = await Promise.all([
-    loadImage(dataUrl),
-    loadImage(qrDataUrl)
-  ]);
+  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
+  if (!qrDataUrl) return dataUrl;
+
+  const [certImg, qrImg] = await Promise.all([loadImage(dataUrl), loadImage(qrDataUrl)]);
+
   const canvas = document.createElement("canvas");
-  canvas.width = certificateImage.width;
-  canvas.height = certificateImage.height;
+  canvas.width = certImg.width;
+  canvas.height = certImg.height;
+
   const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return dataUrl;
-  }
-  ctx.drawImage(certificateImage, 0, 0);
+  if (!ctx) return dataUrl;
+
+  ctx.drawImage(certImg, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
   const qrSize = Math.round(minSide * 0.18);
   const margin = Math.round(minSide * 0.04);
+
   const x = canvas.width - qrSize - margin;
   const y = canvas.height - qrSize - margin;
+
+  // خلفية بيضاء للـ QR حتى يكون واضح فوق التصميم
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
-  ctx.drawImage(qrImage, x, y, qrSize, qrSize);
+
+  ctx.drawImage(qrImg, x, y, qrSize, qrSize);
 
   return canvas.toDataURL("image/png");
 };
 
+// ✅ تنزيل PDF مع QR (ميزة جديدة)
 const downloadPdfFromImage = async (url, title, verificationCode) => {
   const dataUrl = await composeCertificateWithQr(url, verificationCode);
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+
   const { jsPDF } = await loadJsPdf();
   const img = await loadImage(dataUrl);
+
   const orientation = img.width > img.height ? "landscape" : "portrait";
   const pdf = new jsPDF({
     orientation,
     unit: "pt",
     format: [img.width, img.height]
   });
+
   pdf.addImage(dataUrl, imageType, 0, 0, img.width, img.height);
   pdf.save(`${sanitizeFileName(title)}.pdf`);
 };
 
 async function verifyCode(code) {
   if (!result) return;
+
   result.className = "verify-result";
   result.style.display = "none";
   result.innerHTML = "";
@@ -155,8 +160,10 @@ async function verifyCode(code) {
   try {
     result.style.display = "block";
     result.textContent = "جاري التحقق من الشهادة...";
+
     const q = query(collection(db, "certificates"), where("verificationCode", "==", code));
     const snapshot = await getDocs(q);
+
     if (snapshot.empty) {
       result.classList.add("error");
       result.textContent = "لم يتم العثور على شهادة بهذا الرمز.";
@@ -168,12 +175,12 @@ async function verifyCode(code) {
     const completedAt = formatDate(cert.completedAt);
     const certificateUrl = cert.certificateUrl || "";
     const verificationCode = cert.verificationCode || code;
+
+    // ✅ ميزة جديدة: تمرير code للـ viewer حتى يعرض QR
     const viewUrl = certificateUrl
       ? `/certificate-view.html?url=${encodeURIComponent(
           certificateUrl
-        )}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(
-          verificationCode
-        )}`
+        )}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(verificationCode)}`
       : "";
 
     result.classList.add("success");
@@ -191,11 +198,13 @@ async function verifyCode(code) {
         }
         ${
           certificateUrl
-            ? `<button type="button" class="btn secondary" data-download-url="${encodeURIComponent(
-                certificateUrl
-              )}" data-download-title="${encodeURIComponent(title)}" data-download-code="${encodeURIComponent(
-                verificationCode
-              )}">تحميل PDF</button>`
+            ? `<button
+                type="button"
+                class="btn secondary"
+                data-download-url="${encodeURIComponent(certificateUrl)}"
+                data-download-title="${encodeURIComponent(title)}"
+                data-download-code="${encodeURIComponent(verificationCode)}"
+              >تحميل PDF</button>`
             : ""
         }
       </div>
@@ -213,13 +222,16 @@ async function verifyCode(code) {
         const downloadCode = decodeURIComponent(
           downloadButton.getAttribute("data-download-code") || ""
         );
-        downloadPdfFromImage(url, downloadTitle, downloadCode).catch(() => {
+
+        downloadPdfFromImage(url, downloadTitle, downloadCode).catch((err) => {
+          console.error(err);
           result.classList.add("error");
           result.textContent = "تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.";
         });
       });
     }
   } catch (error) {
+    console.error(error);
     result.classList.add("error");
     result.textContent = "حدث خطأ أثناء التحقق. حاول مرة أخرى.";
   }
