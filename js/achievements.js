@@ -1,8 +1,5 @@
 import { auth, db, googleProvider } from "/js/firebase-config.js";
-import {
-  onAuthStateChanged,
-  signInWithPopup
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   doc,
   getDoc,
@@ -32,13 +29,46 @@ const sanitizeFileName = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
+// ✅ دمج الطريقتين بدون حذف ميزات:
+// - ميزة التحميل عبر script tag (تشغيل أفضل على بيئات ما تدعم import للـ CORS)
+// - وميزة dynamic import (حديثة وسريعة)
+// سترجع دائمًا { jsPDF } بشكل موحد
 const loadJsPdf = (() => {
-  let cachedModule;
+  let cachedPromise;
   return async () => {
-    if (!cachedModule) {
-      cachedModule = import(pdfLibraryUrl);
-    }
-    return cachedModule;
+    if (cachedPromise) return cachedPromise;
+
+    cachedPromise = (async () => {
+      // 1) إذا jsPDF موجود مسبقًا على window
+      if (window.jspdf?.jsPDF) {
+        return { jsPDF: window.jspdf.jsPDF };
+      }
+
+      // 2) جرّب dynamic import
+      try {
+        const mod = await import(pdfLibraryUrl);
+        if (mod?.jsPDF) return { jsPDF: mod.jsPDF };
+        if (mod?.default?.jsPDF) return { jsPDF: mod.default.jsPDF };
+        return mod;
+      } catch (e) {
+        // 3) fallback: حقن script tag
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = pdfLibraryUrl;
+          script.async = true;
+          script.onload = () => resolve(true);
+          script.onerror = () => reject(new Error("Failed to load jsPDF."));
+          document.head.appendChild(script);
+        });
+
+        if (window.jspdf?.jsPDF) {
+          return { jsPDF: window.jspdf.jsPDF };
+        }
+        throw new Error("jsPDF not available after loading script.");
+      }
+    })();
+
+    return cachedPromise;
   };
 })();
 
@@ -51,6 +81,7 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
+  // ✅ الحفاظ على التحقق + دعم data:
   if (!url) throw new Error("Missing URL");
   if (url.startsWith(dataUrlPrefix)) return url;
 
@@ -191,11 +222,9 @@ window.downloadCertificate = function (url, title, verificationCode) {
     return;
   }
 
-  downloadPdfFromImage(url, title || "certificate", verificationCode || "").catch(
-    () => {
-      alert("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
-    }
-  );
+  downloadPdfFromImage(url, title || "certificate", verificationCode || "").catch(() => {
+    alert("تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.");
+  });
 };
 
 // --- مراقبة حالة تسجيل الدخول ---
@@ -372,18 +401,14 @@ onAuthStateChanged(auth, async (user) => {
         });
 
         // تنزيل الشهادة PDF + QR
-        certList
-          .querySelectorAll("[data-download-certificate]")
-          .forEach((button) => {
-            button.addEventListener("click", () => {
-              const url = decodeURIComponent(button.getAttribute("data-url") || "");
-              const title = decodeURIComponent(
-                button.getAttribute("data-title") || ""
-              );
-              const code = decodeURIComponent(button.getAttribute("data-code") || "");
-              window.downloadCertificate(url, title, code);
-            });
+        certList.querySelectorAll("[data-download-certificate]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const url = decodeURIComponent(button.getAttribute("data-url") || "");
+            const title = decodeURIComponent(button.getAttribute("data-title") || "");
+            const code = decodeURIComponent(button.getAttribute("data-code") || "");
+            window.downloadCertificate(url, title, code);
           });
+        });
       }
     }
 

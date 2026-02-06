@@ -24,13 +24,46 @@ const sanitizeFileName = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
+// ✅ حل التعارض بدون حذف أي ميزة:
+// - يدعم script injection (لو dynamic import فشل أو بيئة ما تدعمه)
+// - ويدعم dynamic import
+// ويرجع دائمًا { jsPDF } بشكل موحد
 const loadJsPdf = (() => {
-  let cachedModule;
+  let cachedPromise;
   return async () => {
-    if (!cachedModule) {
-      cachedModule = import(pdfLibraryUrl);
-    }
-    return cachedModule;
+    if (cachedPromise) return cachedPromise;
+
+    cachedPromise = (async () => {
+      // 1) إذا موجود على window مسبقًا
+      if (window.jspdf?.jsPDF) {
+        return { jsPDF: window.jspdf.jsPDF };
+      }
+
+      // 2) جرّب dynamic import
+      try {
+        const mod = await import(pdfLibraryUrl);
+        if (mod?.jsPDF) return { jsPDF: mod.jsPDF };
+        if (mod?.default?.jsPDF) return { jsPDF: mod.default.jsPDF };
+        return mod;
+      } catch (e) {
+        // 3) fallback: حقن سكربت
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = pdfLibraryUrl;
+          script.async = true;
+          script.onload = () => resolve(true);
+          script.onerror = () => reject(new Error("Failed to load jsPDF."));
+          document.head.appendChild(script);
+        });
+
+        if (window.jspdf?.jsPDF) {
+          return { jsPDF: window.jspdf.jsPDF };
+        }
+        throw new Error("jsPDF not available after loading script.");
+      }
+    })();
+
+    return cachedPromise;
   };
 })();
 
@@ -140,7 +173,7 @@ const showError = (message) => {
   if (errorText) errorText.textContent = message;
 };
 
-// ✅ حل التعارض: دعم حالتين (url أو dataKey)
+// ✅ حل التعارض: دعم حالتين (url أو dataKey) + دعم QR + PDF
 if (!encodedUrl && !encodedDataKey) {
   showError("لا يوجد رابط شهادة لعرضه.");
   if (downloadButton) downloadButton.disabled = true;
