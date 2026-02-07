@@ -1,8 +1,5 @@
 import { auth, db, googleProvider } from "/js/firebase-config.js";
-import {
-  onAuthStateChanged,
-  signInWithPopup
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   doc,
   getDoc,
@@ -13,10 +10,9 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- دالة فتح الشهادة في نافذة جديدة ---
+// --- دوال عرض/تنزيل الشهادة ---
 const dataUrlPrefix = "data:";
-const pdfLibraryUrl =
-  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const pdfLibraryUrl = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
 // ✅ i18n (ميزة جديدة) + نصوص عربية/إنجليزية
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
@@ -58,9 +54,7 @@ const uiText = {
 
 const openUrlInNewTab = (url) => {
   const win = window.open(url, "_blank");
-  if (!win) {
-    alert(uiText[getLang()].popupBlocked);
-  }
+  if (!win) alert(uiText[getLang()].popupBlocked);
 };
 
 const sanitizeFileName = (value) =>
@@ -70,8 +64,7 @@ const sanitizeFileName = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const resolveJsPdfConstructor = () =>
-  window.jspdf?.jsPDF || window.jsPDF || null;
+const resolveJsPdfConstructor = () => window.jspdf?.jsPDF || window.jsPDF || null;
 
 const loadJsPdf = (() => {
   let cachedPromise;
@@ -79,20 +72,15 @@ const loadJsPdf = (() => {
     if (!cachedPromise) {
       cachedPromise = new Promise((resolve, reject) => {
         const existing = resolveJsPdfConstructor();
-        if (existing) {
-          resolve(existing);
-          return;
-        }
+        if (existing) return resolve(existing);
+
         const script = document.createElement("script");
         script.src = pdfLibraryUrl;
         script.async = true;
         script.onload = () => {
           const loaded = resolveJsPdfConstructor();
-          if (loaded) {
-            resolve(loaded);
-          } else {
-            reject(new Error("jsPDF constructor not found."));
-          }
+          if (loaded) resolve(loaded);
+          else reject(new Error("jsPDF constructor not found."));
         };
         script.onerror = () => reject(new Error("Failed to load jsPDF."));
         document.head.appendChild(script);
@@ -111,14 +99,11 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
-  // (حافظنا على الكود كما هو عندك)
-  if (url.startsWith(dataUrlPrefix)) {
-    return url;
-  }
+  // يدعم dataURL + الروابط العادية
+  if (url.startsWith(dataUrlPrefix)) return url;
+
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to load certificate image.");
-  }
+  if (!response.ok) throw new Error("Failed to load certificate image.");
   const blob = await response.blob();
   return blobToDataUrl(blob);
 };
@@ -133,26 +118,18 @@ const loadImage = (src) =>
   });
 
 const fetchQrDataUrl = async (verifyUrl) => {
-  if (!verifyUrl) {
-    return "";
-  }
+  if (!verifyUrl) return "";
   const qrResponse = await fetch(
-    `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-      verifyUrl
-    )}`
+    `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(verifyUrl)}`
   );
-  if (!qrResponse.ok) {
-    throw new Error("Failed to load QR code.");
-  }
+  if (!qrResponse.ok) throw new Error("Failed to load QR code.");
   const qrBlob = await qrResponse.blob();
   return blobToDataUrl(qrBlob);
 };
 
 const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const dataUrl = await fetchImageDataUrl(certificateUrl);
-  if (!verificationCode) {
-    return dataUrl;
-  }
+  if (!verificationCode) return dataUrl;
 
   const verifyUrl = new URL(
     `/verify-certificate.html?code=${encodeURIComponent(verificationCode)}`,
@@ -160,54 +137,50 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   ).href;
 
   const qrDataUrl = await fetchQrDataUrl(verifyUrl);
-  if (!qrDataUrl) {
-    return dataUrl;
-  }
+  if (!qrDataUrl) return dataUrl;
 
-  const [certificateImage, qrImage] = await Promise.all([
-    loadImage(dataUrl),
-    loadImage(qrDataUrl)
-  ]);
+  const [certificateImage, qrImage] = await Promise.all([loadImage(dataUrl), loadImage(qrDataUrl)]);
 
   const canvas = document.createElement("canvas");
-  canvas.width = certImg.width;
-  canvas.height = certImg.height;
+  canvas.width = certificateImage.width;
+  canvas.height = certificateImage.height;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return dataUrl;
 
-  ctx.drawImage(certImg, 0, 0);
+  ctx.drawImage(certificateImage, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
 
-  // ✅ تصغير حجم الـ QR شوي (كان 0.18)
+  // ✅ تصغير حجم الـ QR (ميزة main) + مكان آمن أعلى اليسار
   const qrSize = Math.round(minSide * 0.14);
-
   const margin = Math.round(minSide * 0.04);
 
-  // ✅ تعديل مكان الـ QR: أعلى اليسار داخل مساحة آمنة
-  const extraX = 40; // زوّدها عشان يتحرك يمين
-  const extraY = 40; // زوّدها عشان ينزل لتحت
+  // ✅ تحريك بسيط للداخل (ضمن مساحة آمنة)
+  const extraX = 40;
+  const extraY = 40;
+
   const x = margin + extraX;
   const y = margin + extraY;
 
+  // خلفية بيضاء للـ QR
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
-  ctx.drawImage(qrImg, x, y, qrSize, qrSize);
+  ctx.drawImage(qrImage, x, y, qrSize, qrSize);
 
   return canvas.toDataURL("image/png");
 };
+
 const downloadPdfFromImage = async (url, title, verificationCode) => {
   const dataUrl = await composeCertificateWithQr(url, verificationCode);
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
 
   const jsPDF = await loadJsPdf();
-  if (!jsPDF) {
-    throw new Error("jsPDF constructor not available.");
-  }
+  if (!jsPDF) throw new Error("jsPDF constructor not available.");
 
   const img = await loadImage(dataUrl);
   const orientation = img.width > img.height ? "landscape" : "portrait";
+
   const pdf = new jsPDF({
     orientation,
     unit: "pt",
@@ -229,22 +202,18 @@ const openCertificateViewer = (url, title, verificationCode) => {
     targetUrl = "";
   }
 
-  const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(
-    targetUrl
-  )}&title=${encodeURIComponent(title || "certificate")}&code=${encodeURIComponent(
-    verificationCode || ""
-  )}&dataKey=${encodeURIComponent(dataKey)}`;
+  const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(targetUrl)}&title=${encodeURIComponent(
+    title || "certificate"
+  )}&code=${encodeURIComponent(verificationCode || "")}&dataKey=${encodeURIComponent(dataKey)}`;
 
   openUrlInNewTab(viewerUrl);
 };
 
 window.openCertificate = function (url, title, verificationCode) {
-  // ✅ الحفاظ على ميزة التحقق من الرابط + التعامل مع حظر النوافذ المنبثقة
   if (!url) {
     alert(uiText[getLang()].missingCertificate);
     return;
   }
-
   openCertificateViewer(url, title, verificationCode);
 };
 
@@ -253,7 +222,6 @@ window.downloadCertificate = function (url, title, verificationCode) {
     alert(uiText[getLang()].missingCertificate);
     return;
   }
-
   downloadPdfFromImage(url, title, verificationCode).catch(() => {
     alert(uiText[getLang()].downloadFailed);
   });
@@ -283,18 +251,14 @@ onAuthStateChanged(auth, async (user) => {
 
     // ✅ القراءة من المجموعات الفرعية (الأسلوب الجديد)
     try {
-      const completedSnap = await getDocs(
-        collection(db, "users", user.uid, "completedCourses")
-      );
+      const completedSnap = await getDocs(collection(db, "users", user.uid, "completedCourses"));
       completedCourses = completedSnap.docs.map((docSnap) => docSnap.data());
     } catch (error) {
       console.error("خطأ أثناء جلب الدورات المكتملة من المجموعات الفرعية:", error);
     }
 
     try {
-      const certificatesSnap = await getDocs(
-        collection(db, "users", user.uid, "certificates")
-      );
+      const certificatesSnap = await getDocs(collection(db, "users", user.uid, "certificates"));
       certificates = certificatesSnap.docs.map((docSnap) => docSnap.data());
     } catch (error) {
       console.error("خطأ أثناء جلب الشهادات من المجموعات الفرعية:", error);
@@ -315,7 +279,7 @@ onAuthStateChanged(auth, async (user) => {
           const issuedAt =
             completedAt && typeof completedAt.toDate === "function"
               ? completedAt.toDate().toLocaleDateString("ar-EG")
-              : (completedAt || "");
+              : completedAt || "";
 
           return {
             title: data.courseTitle || data.title || "",
@@ -340,19 +304,16 @@ onAuthStateChanged(auth, async (user) => {
 
     // --- ملخص الإنجازات ---
     const completedCoursesCount = document.getElementById("completedCourses");
-    if (completedCoursesCount) {
-      completedCoursesCount.textContent = completedCourses.length;
-    }
+    if (completedCoursesCount) completedCoursesCount.textContent = completedCourses.length;
 
     const certificatesCount = document.getElementById("certificatesCount");
-    if (certificatesCount) {
-      certificatesCount.textContent = certificates.length;
-    }
+    if (certificatesCount) certificatesCount.textContent = certificates.length;
 
     // --- عرض الشهادات ---
     const certList = document.getElementById("certificatesList");
     if (certList) {
       certList.innerHTML = "";
+
       if (certificates.length === 0) {
         certList.innerHTML = `<p>${uiText[getLang()].noCertificates}</p>`;
       } else {
@@ -363,9 +324,7 @@ onAuthStateChanged(auth, async (user) => {
 
           const verifyUrl = cert.verificationCode
             ? new URL(
-                `/verify-certificate.html?code=${encodeURIComponent(
-                  cert.verificationCode
-                )}`,
+                `/verify-certificate.html?code=${encodeURIComponent(cert.verificationCode)}`,
                 window.location.href
               ).href
             : "";
@@ -443,6 +402,7 @@ onAuthStateChanged(auth, async (user) => {
     const coursesList = document.getElementById("coursesList");
     if (coursesList) {
       coursesList.innerHTML = "";
+
       if (completedCourses.length === 0) {
         coursesList.innerHTML = `<p>${uiText[getLang()].noCompletedCourses}</p>`;
       } else {

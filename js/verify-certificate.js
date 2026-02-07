@@ -12,6 +12,7 @@ const dataUrlPrefix = "data:";
 
 // ✅ i18n (ميزة جديدة)
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
+
 const uiText = {
   ar: {
     verifying: "جاري التحقق من الشهادة...",
@@ -32,8 +33,7 @@ const uiText = {
     completedAt: "Completion date:",
     viewCertificate: "View certificate",
     downloadPdf: "Download PDF",
-    downloadFailed:
-      "Failed to download the certificate as PDF. Please try again.",
+    downloadFailed: "Failed to download the certificate as PDF. Please try again.",
     verifyError: "An error occurred while verifying. Please try again.",
     defaultTitle: "Certificate",
     notSpecified: "Not specified"
@@ -78,17 +78,17 @@ const loadJsPdf = (() => {
           resolve(existing);
           return;
         }
+
         const script = document.createElement("script");
         script.src = pdfLibraryUrl;
         script.async = true;
+
         script.onload = () => {
           const loaded = resolveJsPdfConstructor();
-          if (loaded) {
-            resolve(loaded);
-          } else {
-            reject(new Error("jsPDF constructor not found."));
-          }
+          if (loaded) resolve(loaded);
+          else reject(new Error("jsPDF constructor not found."));
         };
+
         script.onerror = () => reject(new Error("Failed to load jsPDF."));
         document.head.appendChild(script);
       });
@@ -106,13 +106,12 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
+  // ✅ دمج التعارض: تحقق من url + دعم data:
   if (!url) throw new Error("Missing URL");
-  if (url.startsWith(dataUrlPrefix)) return url;
+  if (typeof url === "string" && url.startsWith(dataUrlPrefix)) return url;
 
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to load certificate image.");
-  }
+  if (!response.ok) throw new Error("Failed to load certificate image.");
   const blob = await response.blob();
   return blobToDataUrl(blob);
 };
@@ -128,14 +127,14 @@ const loadImage = (src) =>
 
 const fetchQrDataUrl = async (verifyUrl) => {
   if (!verifyUrl) return "";
+
   const qrResponse = await fetch(
     `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
       verifyUrl
     )}`
   );
-  if (!qrResponse.ok) {
-    throw new Error("Failed to load QR code.");
-  }
+  if (!qrResponse.ok) throw new Error("Failed to load QR code.");
+
   const qrBlob = await qrResponse.blob();
   return blobToDataUrl(qrBlob);
 };
@@ -152,12 +151,9 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const qrDataUrl = await fetchQrDataUrl(verifyUrl);
   if (!qrDataUrl) return dataUrl;
 
-  const [certImg, qrImg] = await Promise.all([
-    loadImage(dataUrl),
-    loadImage(qrDataUrl)
-  ]);
+  const [certImg, qrImg] = await Promise.all([loadImage(dataUrl), loadImage(qrDataUrl)]);
 
- const canvas = document.createElement("canvas");
+  const canvas = document.createElement("canvas");
   canvas.width = certImg.width;
   canvas.height = certImg.height;
 
@@ -168,14 +164,13 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 
   const minSide = Math.min(canvas.width, canvas.height);
 
-  // ✅ تصغير حجم الـ QR شوي (كان 0.18)
+  // ✅ تصغير حجم الـ QR (ميزة main) بدل 0.18
   const qrSize = Math.round(minSide * 0.14);
-
   const margin = Math.round(minSide * 0.04);
 
-  // ✅ تعديل مكان الـ QR: أعلى اليسار داخل مساحة آمنة
-  const extraX = 40; // زوّدها عشان يتحرك يمين
-  const extraY = 40; // زوّدها عشان ينزل لتحت
+  // ✅ تعديل مكان الـ QR: أعلى اليسار داخل مساحة آمنة (ميزة main)
+  const extraX = 40;
+  const extraY = 40;
   const x = margin + extraX;
   const y = margin + extraY;
 
@@ -191,12 +186,11 @@ const downloadPdfFromImage = async (url, title, verificationCode) => {
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
 
   const jsPDF = await loadJsPdf();
-  if (!jsPDF) {
-    throw new Error("jsPDF constructor not available.");
-  }
+  if (!jsPDF) throw new Error("jsPDF constructor not available.");
 
   const img = await loadImage(dataUrl);
   const orientation = img.width > img.height ? "landscape" : "portrait";
+
   const pdf = new jsPDF({
     orientation,
     unit: "pt",
@@ -221,10 +215,7 @@ async function verifyCode(code) {
     result.style.display = "block";
     result.textContent = t.verifying;
 
-    const q = query(
-      collection(db, "certificates"),
-      where("verificationCode", "==", code)
-    );
+    const q = query(collection(db, "certificates"), where("verificationCode", "==", code));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
@@ -234,6 +225,7 @@ async function verifyCode(code) {
     }
 
     const cert = snapshot.docs[0].data();
+
     const title = cert.courseTitle || cert.courseId || t.defaultTitle;
     const completedAt = formatDate(cert.completedAt);
     const certificateUrl = cert.certificateUrl || "";
@@ -273,22 +265,20 @@ async function verifyCode(code) {
     if (viewButton) {
       viewButton.addEventListener("click", () => {
         const url = decodeURIComponent(viewButton.getAttribute("data-view-url") || "");
-        const viewTitle = decodeURIComponent(
-          viewButton.getAttribute("data-view-title") || ""
-        );
-        const viewCode = decodeURIComponent(
-          viewButton.getAttribute("data-view-code") || ""
-        );
+        const viewTitle = decodeURIComponent(viewButton.getAttribute("data-view-title") || "");
+        const viewCode = decodeURIComponent(viewButton.getAttribute("data-view-code") || "");
 
         let dataKey = "";
         let targetUrl = url;
 
+        // إذا كانت dataURL خزّنها في sessionStorage لتفادي طول الرابط
         if (typeof url === "string" && url.startsWith(dataUrlPrefix)) {
           dataKey = `certificate-data-${Date.now()}`;
           try {
             sessionStorage.setItem(dataKey, url);
             targetUrl = "";
           } catch (e) {
+            // لو sessionStorage فشل (quota/blocked) افتح الرابط مباشرة
             targetUrl = url;
             dataKey = "";
           }
@@ -307,9 +297,7 @@ async function verifyCode(code) {
     const downloadButtonEl = result.querySelector("[data-download-url]");
     if (downloadButtonEl) {
       downloadButtonEl.addEventListener("click", () => {
-        const url = decodeURIComponent(
-          downloadButtonEl.getAttribute("data-download-url") || ""
-        );
+        const url = decodeURIComponent(downloadButtonEl.getAttribute("data-download-url") || "");
         const downloadTitle = decodeURIComponent(
           downloadButtonEl.getAttribute("data-download-title") || ""
         );
