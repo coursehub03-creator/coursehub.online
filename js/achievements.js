@@ -170,29 +170,33 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   ]);
 
   const canvas = document.createElement("canvas");
-  canvas.width = certificateImage.width;
-  canvas.height = certificateImage.height;
+  canvas.width = certImg.width;
+  canvas.height = certImg.height;
 
   const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return dataUrl;
-  }
+  if (!ctx) return dataUrl;
 
-  ctx.drawImage(certificateImage, 0, 0);
+  ctx.drawImage(certImg, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
-  const qrSize = Math.round(minSide * 0.18);
+
+  // ✅ تصغير حجم الـ QR شوي (كان 0.18)
+  const qrSize = Math.round(minSide * 0.14);
+
   const margin = Math.round(minSide * 0.04);
-  const x = canvas.width - qrSize - margin;
-  const y = canvas.height - qrSize - margin;
+
+  // ✅ تعديل مكان الـ QR: أعلى اليسار داخل مساحة آمنة
+  const extraX = 40; // زوّدها عشان يتحرك يمين
+  const extraY = 40; // زوّدها عشان ينزل لتحت
+  const x = margin + extraX;
+  const y = margin + extraY;
 
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
-  ctx.drawImage(qrImage, x, y, qrSize, qrSize);
+  ctx.drawImage(qrImg, x, y, qrSize, qrSize);
 
   return canvas.toDataURL("image/png");
 };
-
 const downloadPdfFromImage = async (url, title, verificationCode) => {
   const dataUrl = await composeCertificateWithQr(url, verificationCode);
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
