@@ -157,7 +157,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
     loadImage(qrDataUrl)
   ]);
 
-  const canvas = document.createElement("canvas");
+ const canvas = document.createElement("canvas");
   canvas.width = certImg.width;
   canvas.height = certImg.height;
 
@@ -166,12 +166,18 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 
   ctx.drawImage(certImg, 0, 0);
 
-  // (مكان الـ QR الحالي في هذا الملف كما كان: أسفل اليمين)
   const minSide = Math.min(canvas.width, canvas.height);
-  const qrSize = Math.round(minSide * 0.18);
+
+  // ✅ تصغير حجم الـ QR شوي (كان 0.18)
+  const qrSize = Math.round(minSide * 0.14);
+
   const margin = Math.round(minSide * 0.04);
-  const x = canvas.width - qrSize - margin;
-  const y = canvas.height - qrSize - margin;
+
+  // ✅ تعديل مكان الـ QR: أعلى اليسار داخل مساحة آمنة
+  const extraX = 40; // زوّدها عشان يتحرك يمين
+  const extraY = 40; // زوّدها عشان ينزل لتحت
+  const x = margin + extraX;
+  const y = margin + extraY;
 
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
