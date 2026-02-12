@@ -21,17 +21,55 @@
   <section class="auth-panel login-page" aria-label="Register panel">
     <p class="auth-kicker" data-i18n-en="Start now">ابدأ رحلتك الآن</p>
     <h2 data-i18n-en="Create a new account">إنشاء حساب جديد</h2>
-    <p class="auth-subtitle" data-i18n-en="Create an account with email and password in less than a minute.">أنشئ حسابك بالبريد وكلمة المرور خلال أقل من دقيقة.</p>
+    <p class="auth-subtitle" data-i18n-en="Create an account with email and password in less than a minute.">
+      أنشئ حسابك بالبريد وكلمة المرور خلال أقل من دقيقة.
+    </p>
 
     <form id="registerForm" novalidate>
-      <label for="regName" class="auth-label" data-i18n-en="Full name">الاسم الكامل</label>
-      <input id="regName" type="text" placeholder="الاسم الكامل" required minlength="2" data-i18n-placeholder-en="Full name">
+      <label for="regFirstName" class="auth-label" data-i18n-en="First name">الاسم</label>
+      <input id="regFirstName" type="text" placeholder="الاسم" required minlength="2" autocomplete="given-name">
+
+      <label for="regLastName" class="auth-label" data-i18n-en="Last name">اللقب</label>
+      <input id="regLastName" type="text" placeholder="اللقب" required minlength="2" autocomplete="family-name">
+
+      <label for="regGender" class="auth-label" data-i18n-en="Gender">الجنس</label>
+      <select id="regGender" required>
+        <option value="" selected disabled>اختر الجنس</option>
+        <option value="male">ذكر</option>
+        <option value="female">أنثى</option>
+        <option value="prefer_not_to_say">لا أريد التحديد</option>
+      </select>
+
+      <label for="regCountry" class="auth-label" data-i18n-en="Country">البلد</label>
+      <input id="regCountry" type="text" placeholder="البلد" required autocomplete="country-name">
+
+      <label for="regBirthDate" class="auth-label" data-i18n-en="Birth date">تاريخ الميلاد</label>
+      <input id="regBirthDate" type="date" required max="2015-12-31">
 
       <label for="regEmail" class="auth-label" data-i18n-en="Email">البريد الإلكتروني</label>
       <input id="regEmail" type="email" placeholder="name@example.com" required data-i18n-placeholder-en="Email">
 
       <label for="regPassword" class="auth-label" data-i18n-en="Password">كلمة المرور</label>
-      <input id="regPassword" type="password" placeholder="8+ أحرف" required minlength="8" data-i18n-placeholder-en="Password">
+      <input
+        id="regPassword"
+        type="password"
+        placeholder="كلمة مرور قوية"
+        required
+        minlength="8"
+        data-i18n-placeholder-en="Password"
+        autocomplete="new-password"
+      >
+      <small class="auth-hint">يجب أن تحتوي كلمة المرور على حرف كبير، حرف صغير، ورقم.</small>
+
+      <label for="regConfirmPassword" class="auth-label" data-i18n-en="Confirm password">تأكيد كلمة المرور</label>
+      <input
+        id="regConfirmPassword"
+        type="password"
+        placeholder="أعد كتابة كلمة المرور"
+        required
+        minlength="8"
+        autocomplete="new-password"
+      >
 
       <button type="submit" data-i18n-en="Create account">إنشاء الحساب</button>
       <div id="registerMsg" class="error-msg" role="alert" aria-live="polite"></div>

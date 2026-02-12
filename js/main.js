@@ -545,7 +545,7 @@ function setupUserState() {
     if (userInfo) {
       userInfo.style.display = "flex";
       userInfo.innerHTML = `
-        <img src="${user.picture || ""}" class="user-pic" alt="${user.name || ""}">
+        <img src="${(user.picture || "/assets/images/admin-avatar.png") || ""}" class="user-pic" alt="${user.name || ""}">
         <span class="user-name">${user.name || ""}</span>
         <div class="dropdown-menu">
           <a href="/profile.html">الملف الشخصي</a>
