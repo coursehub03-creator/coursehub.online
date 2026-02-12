@@ -5,135 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول - CourseHub</title>
 
-  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
 
-  <!-- CSS وميزات عامة -->
   <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="js/auth.js" defer></script>
 </head>
 
 <body>
-
-  <!-- Header والفوتر سيتم تحميلهما ديناميكيًا -->
   <div id="header-placeholder"></div>
 
-  <main class="login-page container">
-    <h2 data-i18n-en="Log in">تسجيل الدخول</h2>
+  <main class="auth-shell container">
+    <section class="auth-panel login-page" aria-label="Login panel">
+      <p class="auth-kicker" data-i18n-en="Welcome back">أهلًا بعودتك</p>
+      <h2 data-i18n-en="Log in">تسجيل الدخول</h2>
+      <p class="auth-subtitle" data-i18n-en="Access your courses and continue learning.">ادخل إلى دوراتك وتابع التعلم بسهولة.</p>
 
-    <!-- تسجيل الدخول بالبريد -->
-    <form id="loginForm">
-      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required data-i18n-placeholder-en="Email">
-      <input id="passwordInput" type="password" placeholder="كلمة المرور" required data-i18n-placeholder-en="Password">
-      <button type="submit" data-i18n-en="Log in">تسجيل الدخول</button>
-      <div id="errorMsg" class="error-msg"></div>
-    </form>
+      <form id="loginForm" novalidate>
+        <label for="emailInput" class="auth-label" data-i18n-en="Email">البريد الإلكتروني</label>
+        <input id="emailInput" type="email" placeholder="name@example.com" required data-i18n-placeholder-en="Email">
 
-    <p data-i18n-en="or">أو</p>
+        <label for="passwordInput" class="auth-label" data-i18n-en="Password">كلمة المرور</label>
+        <input id="passwordInput" type="password" placeholder="••••••••" required data-i18n-placeholder-en="Password" minlength="8">
 
-    <!-- تسجيل الدخول بـ Google -->
-    <button id="googleLoginBtn" class="google-btn" data-i18n-en="Log in with Google">
-      تسجيل الدخول باستخدام Google
-    </button>
+        <button type="submit" data-i18n-en="Log in">تسجيل الدخول</button>
+        <div id="errorMsg" class="error-msg" role="alert" aria-live="polite"></div>
+      </form>
+
+      <p class="auth-divider" data-i18n-en="or">أو</p>
+
+      <button id="googleLoginBtn" class="google-btn" type="button" data-i18n-en="Log in with Google">
+        تسجيل الدخول باستخدام Google
+      </button>
+
+      <p class="login-links" data-i18n-en="Don't have an account?">
+        ما عندك حساب؟
+        <a href="register.html" data-i18n-en="Create account">أنشئ حساب جديد</a>
+      </p>
+      <p class="login-links">
+        <a href="forgot-password.html" data-i18n-en="Forgot password?">نسيت كلمة المرور؟</a>
+      </p>
+    </section>
   </main>
 
   <div id="footer-placeholder"></div>
-
-  <!-- Firebase Auth -->
-  <script type="module">
-    import { auth, googleProvider } from './js/firebase-config.js';
-    import { signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const loginForm = document.getElementById("loginForm");
-    const errorMsg = document.getElementById("errorMsg");
-
-    // --- تسجيل الدخول بالإيميل ---
-    if (loginForm) {
-      loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = document.getElementById("emailInput").value;
-        const password = document.getElementById("passwordInput").value;
-
-        try {
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          const user = userCredential.user;
-
-          // حفظ بيانات المستخدم في localStorage
-          localStorage.setItem("coursehub_user", JSON.stringify({
-            name: user.displayName || user.email.split("@")[0],
-            email: user.email,
-            picture: user.photoURL,
-            uid: user.uid,
-            role: "user"
-          }));
-
-          // إعادة التوجيه للصفحة الرئيسية
-          window.location.href = "index.html";
-
-        } catch (error) {
-          console.error("Login Error:", error);
-          if (errorMsg) {
-            const lang = localStorage.getItem("coursehub_lang") || "ar";
-            errorMsg.textContent =
-              lang === "en"
-                ? "The email or password is incorrect."
-                : "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-          }
-        }
-      });
-    }
-
-    // --- تسجيل الدخول بحساب Google ---
-    const googleBtn = document.getElementById("googleLoginBtn");
-    if (googleBtn) {
-      googleBtn.addEventListener("click", async () => {
-        try {
-          const result = await signInWithPopup(auth, googleProvider);
-          const user = result.user;
-
-          // حفظ بيانات المستخدم في localStorage
-          localStorage.setItem("coursehub_user", JSON.stringify({
-            name: user.displayName,
-            email: user.email,
-            picture: user.photoURL,
-            uid: user.uid,
-            role: "user"
-          }));
-
-          // إعادة التوجيه للصفحة الرئيسية
-          window.location.href = "index.html";
-
-        } catch (error) {
-          console.error("Google Login Error:", error);
-          if (errorMsg) {
-            const lang = localStorage.getItem("coursehub_lang") || "ar";
-            errorMsg.textContent =
-              lang === "en"
-                ? "Google sign-in failed."
-                : "فشل تسجيل الدخول بحساب Google.";
-          }
-        }
-      });
-    }
-
-    // --- مراقبة حالة تسجيل الدخول ---
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
-        if (!storedUser) {
-          localStorage.setItem("coursehub_user", JSON.stringify({
-            name: user.displayName,
-            email: user.email,
-            picture: user.photoURL,
-            uid: user.uid,
-            role: "user"
-          }));
-        }
-      }
-    });
-  </script>
-
 </body>
 </html>
