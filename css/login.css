@@ -2,46 +2,88 @@
    Login/Register/Forgot Password Styling - CourseHub
    =============================== */
 
+.auth-shell {
+  min-height: calc(100vh - 220px);
+  display: grid;
+  place-items: center;
+}
+
 /* Container */
 .login-page {
-  max-width: 420px;
+  width: min(100%, 460px);
   margin: 80px auto;
-  padding: 35px 30px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 38px 32px;
+  background: linear-gradient(160deg, #ffffff 0%, #f7f9ff 100%);
+  border-radius: 16px;
+  border: 1px solid #e5e9f5;
+  box-shadow: 0 16px 44px rgba(19, 39, 97, 0.12);
   text-align: center;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.auth-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #e9efff;
+  color: #1c3faa;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 7px 14px;
+  margin: 0 auto 16px;
+}
+
 /* Title */
 .login-page h2 {
-  margin-bottom: 25px;
-  font-size: 28px;
-  color: #1c3faa;
-  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 30px;
+  color: #102a72;
+  font-weight: 800;
+}
+
+.auth-subtitle {
+  margin: 0 0 24px;
+  color: #5b6478;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 /* Form */
 .login-page form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   text-align: right;
 }
 
+.auth-label {
+  color: #21305a;
+  font-weight: 600;
+  font-size: 14px;
+}
+
 .login-page input {
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid #d0d5dd;
+  padding: 13px 14px;
+  border-radius: 10px;
+  border: 1px solid #cfd7e8;
   font-size: 15px;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
+  background-color: #ffffff;
+}
+
+.login-page select {
+  padding: 13px 14px;
+  border-radius: 10px;
+  border: 1px solid #cfd7e8;
+  font-size: 15px;
+  background-color: #ffffff;
 }
 
 .login-page input:focus {
   outline: none;
   border-color: #1c3faa;
-  box-shadow: 0 0 0 2px rgba(28, 63, 170, 0.15);
+  box-shadow: 0 0 0 3px rgba(28, 63, 170, 0.14);
 }
 
 /* Autofill Fix */
@@ -53,20 +95,27 @@
 
 /* Buttons */
 .login-page button {
-  margin-top: 10px;
-  background-color: #1c3faa;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #1c3faa, #2556dd);
   color: #fff;
-  padding: 12px;
+  padding: 13px;
   font-size: 16px;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .login-page button:hover {
-  background-color: #163488;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(37, 86, 221, 0.26);
+}
+
+.auth-divider {
+  margin: 18px 0 10px;
+  color: #7d879d;
+  font-weight: 600;
 }
 
 /* Google Button */
@@ -78,10 +127,11 @@
   color: #fff;
   font-weight: 600;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .google-btn:hover {
@@ -99,13 +149,14 @@
 
 /* Links */
 .login-links {
-  margin-top: 15px;
+  margin-top: 14px;
   font-size: 14px;
+  color: #4d5570;
 }
 
 .login-links a {
   color: #1c3faa;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -113,21 +164,35 @@
   text-decoration: underline;
 }
 
+.auth-hint {
+  display: block;
+  margin-top: -2px;
+  margin-bottom: 2px;
+  color: #64748b;
+  font-size: 12px;
+  text-align: right;
+}
+
 /* Error Message */
 .error-msg {
-  color: #e74c3c;
+  color: #d9363e;
   font-size: 14px;
-  margin-top: -5px;
+  min-height: 20px;
+  margin-top: 2px;
+}
+
+.success-msg {
+  color: #117a3d;
 }
 
 /* Responsive */
 @media (max-width: 480px) {
   .login-page {
-    margin: 50px 15px;
-    padding: 25px 20px;
+    margin: 40px 12px;
+    padding: 28px 18px;
   }
 
   .login-page h2 {
-    font-size: 24px;
+    font-size: 25px;
   }
 }

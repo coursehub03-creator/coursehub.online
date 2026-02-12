@@ -48,7 +48,7 @@ function renderProfile() {
   if (!user) return;
 
   if (profilePic) {
-    profilePic.src = user.picture || "/assets/images/default-course.png";
+    profilePic.src = (user.picture || "/assets/images/admin-avatar.png") || "/assets/images/default-course.png";
   }
   if (profileName) {
     profileName.textContent = user.name || user.email;
