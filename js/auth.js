@@ -1,4 +1,6 @@
 import { auth, db, googleProvider } from './firebase-config.js';
+import { getAllCountries } from './geo-data.js';
+
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -9,6 +11,7 @@ import {
   signOut,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import {
   doc,
   serverTimestamp,
@@ -107,17 +110,49 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
     payload.name = user.displayName || fullNameFromFields;
   }
 
-  if (profileData.firstName) payload.firstName = profileData.firstName;
-  if (profileData.lastName) payload.lastName = profileData.lastName;
-  if (profileData.gender) payload.gender = profileData.gender;
-  if (profileData.country) payload.country = profileData.country;
-  if (profileData.birthDate) payload.birthDate = profileData.birthDate;
+  // Keep detailed fields (feature)
+  ["firstName", "lastName", "gender", "country", "birthDate"].forEach((field) => {
+    if (profileData[field]) payload[field] = profileData[field];
+  });
 
   if (options.isNewUser) payload.createdAt = serverTimestamp();
 
   await setDoc(doc(db, "users", user.uid), payload, { merge: true });
 }
 
+/* =========================
+   Country Picker (feature)
+========================= */
+function initCountryPicker() {
+  const countrySearch = document.getElementById("countrySearch");
+  const countrySelect = document.getElementById("regCountry");
+  if (!countrySelect) return;
+
+  const countries = getAllCountries();
+
+  const renderOptions = (query = "") => {
+    const q = query.trim().toLowerCase();
+    const filtered = countries.filter((item) => item.name.toLowerCase().includes(q));
+
+    countrySelect.innerHTML = "";
+
+    filtered.forEach((country, index) => {
+      const option = document.createElement("option");
+      option.value = country.name;
+      option.textContent = `${country.flag} ${country.name}`;
+      if (!q && index === 0) option.selected = true;
+      countrySelect.appendChild(option);
+    });
+  };
+
+  renderOptions();
+
+  countrySearch?.addEventListener("input", (e) => renderOptions(e.target.value));
+}
+
+/* =========================
+   DOM
+========================= */
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
 const forgotForm = document.getElementById("forgotForm");
@@ -125,6 +160,9 @@ const forgotForm = document.getElementById("forgotForm");
 const errorMsg = document.getElementById("errorMsg");
 const registerMsg = document.getElementById("registerMsg");
 const forgotMsg = document.getElementById("forgotMsg");
+
+// Initialize optional country picker
+initCountryPicker();
 
 /* =========================
    Login
@@ -189,109 +227,71 @@ googleButtons.forEach((id) => {
 });
 
 /* =========================
-   Register
-   - Supports both:
-     A) detailed fields (first/last/gender/country/birthDate + confirm)
-     B) simple fields (name + email + password)
+   Register (Detailed form)
 ========================= */
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Detailed fields (if exist)
-    const firstNameEl = document.getElementById("regFirstName");
-    const lastNameEl = document.getElementById("regLastName");
-    const genderEl = document.getElementById("regGender");
-    const countryEl = document.getElementById("regCountry");
-    const birthDateEl = document.getElementById("regBirthDate");
-    const confirmEl = document.getElementById("regConfirmPassword");
+    const firstName = document.getElementById("regFirstName")?.value?.trim();
+    const lastName = document.getElementById("regLastName")?.value?.trim();
+    const gender = document.getElementById("regGender")?.value;
+    const country = document.getElementById("regCountry")?.value;
+    const birthDate = document.getElementById("regBirthDate")?.value;
 
-    // Simple field (if exist)
-    const nameEl = document.getElementById("regName");
-
-    const firstName = firstNameEl?.value?.trim();
-    const lastName = lastNameEl?.value?.trim();
-    const gender = genderEl?.value;
-    const country = countryEl?.value?.trim();
-    const birthDate = birthDateEl?.value;
-
-    const name = nameEl?.value?.trim();
     const email = document.getElementById("regEmail")?.value?.trim();
     const password = document.getElementById("regPassword")?.value;
-    const confirmPassword = confirmEl?.value;
+    const confirmPassword = document.getElementById("regConfirmPassword")?.value;
 
-    // Determine which mode we are in
-    const hasDetailedFields = !!(firstNameEl || lastNameEl || genderEl || countryEl || birthDateEl);
-
-    // Required fields check
-    if (!email || !password) {
+    if (!firstName || !lastName || !gender || !country || !birthDate || !email || !password || !confirmPassword) {
       if (registerMsg) registerMsg.textContent = textFor("requiredFields");
       return;
     }
 
-    if (hasDetailedFields) {
-      if (!firstName || !lastName || !gender || !country || !birthDate || !confirmPassword) {
-        if (registerMsg) registerMsg.textContent = textFor("requiredFields");
-        return;
-      }
-    }
-
-    // Password rules
     if (!isStrongPassword(password)) {
       if (registerMsg) registerMsg.textContent = textFor("weakPassword");
       return;
     }
 
-    // Confirm password if field exists
-    if (confirmEl && password !== confirmPassword) {
+    if (password !== confirmPassword) {
       if (registerMsg) registerMsg.textContent = textFor("confirmPasswordMismatch");
       return;
     }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const fullName = `${firstName} ${lastName}`.trim();
 
-      const fullName = hasDetailedFields
-        ? `${firstName} ${lastName}`.trim()
-        : (name || userCredential.user.displayName || "");
+      await updateProfile(userCredential.user, {
+        displayName: fullName,
+        photoURL: DEFAULT_AVATAR
+      });
 
-      // Update profile name + avatar
-      const profileUpdate = {};
-      if (fullName) profileUpdate.displayName = fullName;
-
-      // Set default avatar if no photo
-      profileUpdate.photoURL = userCredential.user.photoURL || DEFAULT_AVATAR;
-
-      await updateProfile(userCredential.user, profileUpdate);
-
-      // Send verification + save profile
       await sendEmailVerification(userCredential.user);
 
-      if (hasDetailedFields) {
-        await saveUserProfile(
-          userCredential.user,
-          { firstName, lastName, gender, country, birthDate },
-          { isNewUser: true }
-        );
-      } else {
-        await saveUserProfile(userCredential.user, {}, { isNewUser: true });
-      }
+      await saveUserProfile(
+        userCredential.user,
+        { firstName, lastName, gender, country, birthDate },
+        { isNewUser: true }
+      );
 
       storeUser(userCredential.user, {
-        name: fullName || userCredential.user.displayName,
-        picture: userCredential.user.photoURL || DEFAULT_AVATAR
+        name: fullName,
+        picture: DEFAULT_AVATAR,
+        emailVerified: false
       });
+
+      // Optional: store pending email for verify page
+      localStorage.setItem("coursehub_pending_verification_email", email);
 
       if (registerMsg) {
         registerMsg.classList.add("success-msg");
         registerMsg.textContent = textFor("registerSuccess");
       }
 
-      // Force logout until email verified, then redirect to login
-      await signOut(auth);
       setTimeout(() => {
-        window.location.href = "login.html";
-      }, 1600);
+        window.location.href = "verify-email.html";
+      }, 1200);
 
     } catch (error) {
       console.error("Register Error:", error);

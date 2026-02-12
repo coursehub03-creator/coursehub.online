@@ -74,6 +74,15 @@
   background-color: #ffffff;
 }
 
+/* Optional helpers (keep features) */
+.login-page select[size] {
+  min-height: 220px;
+}
+
+.login-page input[type="search"] {
+  margin-bottom: 6px;
+}
+
 .login-page input:focus,
 .login-page select:focus {
   outline: none;

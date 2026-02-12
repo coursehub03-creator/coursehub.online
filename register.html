@@ -40,8 +40,9 @@
         <option value="prefer_not_to_say">لا أريد التحديد</option>
       </select>
 
-      <label for="regCountry" class="auth-label" data-i18n-en="Country">البلد</label>
-      <input id="regCountry" type="text" placeholder="البلد" required autocomplete="country-name">
+      <label for="countrySearch" class="auth-label" data-i18n-en="Country">البلد</label>
+      <input id="countrySearch" type="search" placeholder="Search country in English..." autocomplete="off">
+      <select id="regCountry" required size="7" aria-label="Country list"></select>
 
       <label for="regBirthDate" class="auth-label" data-i18n-en="Birth date">تاريخ الميلاد</label>
       <input id="regBirthDate" type="date" required max="2015-12-31">
