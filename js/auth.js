@@ -16,6 +16,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const DEFAULT_AVATAR = "/assets/images/admin-avatar.png";
+
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 
 const messages = {
@@ -76,9 +77,10 @@ function isStrongPassword(password) {
 
 function storeUser(user, extra = {}) {
   if (!user) return;
+
   localStorage.setItem("coursehub_user", JSON.stringify({
     name: user.displayName || user.email?.split("@")[0] || "User",
-    email: user.email,
+    email: user.email || "",
     picture: user.photoURL || DEFAULT_AVATAR,
     uid: user.uid,
     emailVerified: !!user.emailVerified,
@@ -111,9 +113,7 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
   if (profileData.country) payload.country = profileData.country;
   if (profileData.birthDate) payload.birthDate = profileData.birthDate;
 
-  if (options.isNewUser) {
-    payload.createdAt = serverTimestamp();
-  }
+  if (options.isNewUser) payload.createdAt = serverTimestamp();
 
   await setDoc(doc(db, "users", user.uid), payload, { merge: true });
 }
@@ -121,10 +121,14 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
 const forgotForm = document.getElementById("forgotForm");
+
 const errorMsg = document.getElementById("errorMsg");
 const registerMsg = document.getElementById("registerMsg");
 const forgotMsg = document.getElementById("forgotMsg");
 
+/* =========================
+   Login
+========================= */
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -132,10 +136,16 @@ if (loginForm) {
     const email = document.getElementById("emailInput")?.value?.trim();
     const password = document.getElementById("passwordInput")?.value;
 
+    if (!email || !password) {
+      if (errorMsg) errorMsg.textContent = textFor("requiredFields");
+      return;
+    }
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Enforce email verification
       if (!user.emailVerified) {
         await sendEmailVerification(user);
         await signOut(auth);
@@ -145,6 +155,7 @@ if (loginForm) {
 
       storeUser(user);
       await saveUserProfile(user, {}, { isNewUser: false });
+
       window.location.href = "index.html";
     } catch (error) {
       console.error("Login Error:", error);
@@ -153,6 +164,9 @@ if (loginForm) {
   });
 }
 
+/* =========================
+   Google Auth (Login/Register buttons)
+========================= */
 const googleButtons = ["googleLoginBtn", "googleRegisterBtn"];
 googleButtons.forEach((id) => {
   const button = document.getElementById(id);
@@ -161,8 +175,10 @@ googleButtons.forEach((id) => {
   button.addEventListener("click", async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+
       storeUser(result.user);
       await saveUserProfile(result.user, {}, { isNewUser: false });
+
       window.location.href = "index.html";
     } catch (error) {
       console.error("Google Auth Error:", error);
@@ -172,56 +188,111 @@ googleButtons.forEach((id) => {
   });
 });
 
+/* =========================
+   Register
+   - Supports both:
+     A) detailed fields (first/last/gender/country/birthDate + confirm)
+     B) simple fields (name + email + password)
+========================= */
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const firstName = document.getElementById("regFirstName")?.value?.trim();
-    const lastName = document.getElementById("regLastName")?.value?.trim();
-    const gender = document.getElementById("regGender")?.value;
-    const country = document.getElementById("regCountry")?.value?.trim();
-    const birthDate = document.getElementById("regBirthDate")?.value;
+    // Detailed fields (if exist)
+    const firstNameEl = document.getElementById("regFirstName");
+    const lastNameEl = document.getElementById("regLastName");
+    const genderEl = document.getElementById("regGender");
+    const countryEl = document.getElementById("regCountry");
+    const birthDateEl = document.getElementById("regBirthDate");
+    const confirmEl = document.getElementById("regConfirmPassword");
+
+    // Simple field (if exist)
+    const nameEl = document.getElementById("regName");
+
+    const firstName = firstNameEl?.value?.trim();
+    const lastName = lastNameEl?.value?.trim();
+    const gender = genderEl?.value;
+    const country = countryEl?.value?.trim();
+    const birthDate = birthDateEl?.value;
+
+    const name = nameEl?.value?.trim();
     const email = document.getElementById("regEmail")?.value?.trim();
     const password = document.getElementById("regPassword")?.value;
-    const confirmPassword = document.getElementById("regConfirmPassword")?.value;
+    const confirmPassword = confirmEl?.value;
 
-    if (!firstName || !lastName || !gender || !country || !birthDate || !email || !password || !confirmPassword) {
+    // Determine which mode we are in
+    const hasDetailedFields = !!(firstNameEl || lastNameEl || genderEl || countryEl || birthDateEl);
+
+    // Required fields check
+    if (!email || !password) {
       if (registerMsg) registerMsg.textContent = textFor("requiredFields");
       return;
     }
 
+    if (hasDetailedFields) {
+      if (!firstName || !lastName || !gender || !country || !birthDate || !confirmPassword) {
+        if (registerMsg) registerMsg.textContent = textFor("requiredFields");
+        return;
+      }
+    }
+
+    // Password rules
     if (!isStrongPassword(password)) {
       if (registerMsg) registerMsg.textContent = textFor("weakPassword");
       return;
     }
 
-    if (password !== confirmPassword) {
+    // Confirm password if field exists
+    if (confirmEl && password !== confirmPassword) {
       if (registerMsg) registerMsg.textContent = textFor("confirmPasswordMismatch");
       return;
     }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const fullName = `${firstName} ${lastName}`.trim();
 
-      await updateProfile(userCredential.user, {
-        displayName: fullName,
-        photoURL: DEFAULT_AVATAR
-      });
+      const fullName = hasDetailedFields
+        ? `${firstName} ${lastName}`.trim()
+        : (name || userCredential.user.displayName || "");
 
+      // Update profile name + avatar
+      const profileUpdate = {};
+      if (fullName) profileUpdate.displayName = fullName;
+
+      // Set default avatar if no photo
+      profileUpdate.photoURL = userCredential.user.photoURL || DEFAULT_AVATAR;
+
+      await updateProfile(userCredential.user, profileUpdate);
+
+      // Send verification + save profile
       await sendEmailVerification(userCredential.user);
-      await saveUserProfile(userCredential.user, { firstName, lastName, gender, country, birthDate }, { isNewUser: true });
-      storeUser(userCredential.user, { name: fullName, picture: DEFAULT_AVATAR });
+
+      if (hasDetailedFields) {
+        await saveUserProfile(
+          userCredential.user,
+          { firstName, lastName, gender, country, birthDate },
+          { isNewUser: true }
+        );
+      } else {
+        await saveUserProfile(userCredential.user, {}, { isNewUser: true });
+      }
+
+      storeUser(userCredential.user, {
+        name: fullName || userCredential.user.displayName,
+        picture: userCredential.user.photoURL || DEFAULT_AVATAR
+      });
 
       if (registerMsg) {
         registerMsg.classList.add("success-msg");
         registerMsg.textContent = textFor("registerSuccess");
       }
 
+      // Force logout until email verified, then redirect to login
       await signOut(auth);
       setTimeout(() => {
         window.location.href = "login.html";
       }, 1600);
+
     } catch (error) {
       console.error("Register Error:", error);
       if (!registerMsg) return;
@@ -236,10 +307,19 @@ if (registerForm) {
   });
 }
 
+/* =========================
+   Forgot Password
+========================= */
 if (forgotForm) {
   forgotForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const email = document.getElementById("forgotEmail")?.value?.trim();
+    if (!email) {
+      if (forgotMsg) forgotMsg.textContent = textFor("requiredFields");
+      return;
+    }
+
     try {
       await sendPasswordResetEmail(auth, email);
       if (forgotMsg) {
@@ -256,8 +336,12 @@ if (forgotForm) {
   });
 }
 
+/* =========================
+   Persist user in localStorage
+========================= */
 onAuthStateChanged(auth, (user) => {
   if (!user) return;
+
   const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
   if (!storedUser) {
     storeUser(user);
