@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تأكيد البريد الإلكتروني - CourseHub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="css/login.css">
+  <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="js/verify-email.js" defer></script>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main class="auth-shell container">
+    <section class="login-page">
+      <h2>تأكيد البريد الإلكتروني</h2>
+      <p class="auth-subtitle">تم إرسال رابط التفعيل إلى بريدك. يجب تفعيل الحساب عبر الرابط قبل تسجيل الدخول.</p>
+      <p id="verifyEmailAddress" class="login-links"></p>
+
+      <button id="resendVerificationBtn" type="button">إعادة إرسال رسالة التفعيل</button>
+      <button id="checkVerificationBtn" type="button" class="google-btn">تحققت من البريد</button>
+      <div id="verifyMsg" class="error-msg" role="alert" aria-live="polite"></div>
+
+      <p class="login-links"><a href="login.html">العودة لتسجيل الدخول</a></p>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+</body>
+</html>
