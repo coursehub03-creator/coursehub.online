@@ -63,7 +63,9 @@
   font-size: 14px;
 }
 
-.login-page input {
+/* Inputs + Select */
+.login-page input,
+.login-page select {
   padding: 13px 14px;
   border-radius: 10px;
   border: 1px solid #cfd7e8;
@@ -72,14 +74,7 @@
   background-color: #ffffff;
 }
 
-.login-page select {
-  padding: 13px 14px;
-  border-radius: 10px;
-  border: 1px solid #cfd7e8;
-  font-size: 15px;
-  background-color: #ffffff;
-}
-
+/* Optional helpers (keep features) */
 .login-page select[size] {
   min-height: 220px;
 }
@@ -88,7 +83,8 @@
   margin-bottom: 6px;
 }
 
-.login-page input:focus {
+.login-page input:focus,
+.login-page select:focus {
   outline: none;
   border-color: #1c3faa;
   box-shadow: 0 0 0 3px rgba(28, 63, 170, 0.14);
@@ -149,7 +145,8 @@
 .google-btn::before {
   content: "";
   display: inline-block;
-  background: url('https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg') no-repeat center center;
+  background: url("https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg")
+    no-repeat center center;
   width: 20px;
   height: 20px;
   margin-left: 8px;

@@ -1,5 +1,6 @@
 import { auth, db, googleProvider } from './firebase-config.js';
 import { getAllCountries } from './geo-data.js';
+
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -10,6 +11,7 @@ import {
   signOut,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import {
   doc,
   serverTimestamp,
@@ -17,20 +19,54 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const DEFAULT_AVATAR = "/assets/images/admin-avatar.png";
+
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 
 const messages = {
-  invalidCredentials: { ar: "البريد الإلكتروني أو كلمة المرور غير صحيحة.", en: "The email or password is incorrect." },
-  emailNotVerified: { ar: "يرجى تفعيل بريدك الإلكتروني أولاً. أعدنا إرسال رسالة التحقق.", en: "Please verify your email first. Verification email resent." },
-  googleError: { ar: "فشل تسجيل الدخول باستخدام Google.", en: "Google sign-in failed." },
-  weakPassword: { ar: "كلمة المرور يجب أن تحتوي حرفًا كبيرًا وحرفًا صغيرًا ورقمًا، وبطول 8 أحرف على الأقل.", en: "Password must include uppercase, lowercase and number, with at least 8 chars." },
-  confirmPasswordMismatch: { ar: "تأكيد كلمة المرور غير مطابق.", en: "Password confirmation does not match." },
-  requiredFields: { ar: "يرجى تعبئة كل الحقول المطلوبة.", en: "Please fill all required fields." },
-  registerSuccess: { ar: "تم إنشاء الحساب. يلزم تفعيل البريد أولاً.", en: "Account created. Email verification is required." },
-  registerError: { ar: "تعذر إنشاء الحساب. تأكد من البيانات وحاول مرة أخرى.", en: "Unable to create account. Please check your info and try again." },
-  emailInUse: { ar: "هذا البريد مستخدم بالفعل. سجّل دخولك بدلًا من ذلك.", en: "This email is already in use. Log in instead." },
-  resetSent: { ar: "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.", en: "Password reset link sent to your email." },
-  resetError: { ar: "تعذر إرسال رابط إعادة التعيين. تحقق من البريد وحاول مجددًا.", en: "Unable to send reset email. Check your address and try again." }
+  invalidCredentials: {
+    ar: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    en: "The email or password is incorrect."
+  },
+  emailNotVerified: {
+    ar: "يرجى تفعيل بريدك الإلكتروني أولاً. أعدنا إرسال رسالة التحقق.",
+    en: "Please verify your email first. We sent a new verification email."
+  },
+  googleError: {
+    ar: "فشل تسجيل الدخول باستخدام Google.",
+    en: "Google sign-in failed."
+  },
+  weakPassword: {
+    ar: "كلمة المرور يجب أن تحتوي حرفًا كبيرًا وحرفًا صغيرًا ورقمًا، وبطول 8 أحرف على الأقل.",
+    en: "Password must include uppercase, lowercase and number, with at least 8 chars."
+  },
+  confirmPasswordMismatch: {
+    ar: "تأكيد كلمة المرور غير مطابق.",
+    en: "Password confirmation does not match."
+  },
+  requiredFields: {
+    ar: "يرجى تعبئة كل الحقول المطلوبة.",
+    en: "Please fill all required fields."
+  },
+  registerSuccess: {
+    ar: "تم إنشاء الحساب. أرسلنا رسالة التحقق إلى بريدك الإلكتروني.",
+    en: "Account created. We sent a verification email to your inbox."
+  },
+  registerError: {
+    ar: "تعذر إنشاء الحساب. تأكد من البيانات وحاول مرة أخرى.",
+    en: "Unable to create account. Please check your info and try again."
+  },
+  emailInUse: {
+    ar: "هذا البريد مستخدم بالفعل. سجّل دخولك بدلًا من ذلك.",
+    en: "This email is already in use. Log in instead."
+  },
+  resetSent: {
+    ar: "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.",
+    en: "Password reset link sent to your email."
+  },
+  resetError: {
+    ar: "تعذر إرسال رابط إعادة التعيين. تحقق من البريد وحاول مجددًا.",
+    en: "Unable to send reset email. Check your address and try again."
+  }
 };
 
 function textFor(key) {
@@ -44,9 +80,10 @@ function isStrongPassword(password) {
 
 function storeUser(user, extra = {}) {
   if (!user) return;
+
   localStorage.setItem("coursehub_user", JSON.stringify({
     name: user.displayName || user.email?.split("@")[0] || "User",
-    email: user.email,
+    email: user.email || "",
     picture: user.photoURL || DEFAULT_AVATAR,
     uid: user.uid,
     emailVerified: !!user.emailVerified,
@@ -68,9 +105,12 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
     updatedAt: serverTimestamp()
   };
 
-  const fullName = `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim();
-  if (user.displayName || fullName) payload.name = user.displayName || fullName;
+  const fullNameFromFields = `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim();
+  if (user.displayName || fullNameFromFields) {
+    payload.name = user.displayName || fullNameFromFields;
+  }
 
+  // Keep detailed fields (feature)
   ["firstName", "lastName", "gender", "country", "birthDate"].forEach((field) => {
     if (profileData[field]) payload[field] = profileData[field];
   });
@@ -80,6 +120,9 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
   await setDoc(doc(db, "users", user.uid), payload, { merge: true });
 }
 
+/* =========================
+   Country Picker (feature)
+========================= */
 function initCountryPicker() {
   const countrySearch = document.getElementById("countrySearch");
   const countrySelect = document.getElementById("regCountry");
@@ -90,6 +133,7 @@ function initCountryPicker() {
   const renderOptions = (query = "") => {
     const q = query.trim().toLowerCase();
     const filtered = countries.filter((item) => item.name.toLowerCase().includes(q));
+
     countrySelect.innerHTML = "";
 
     filtered.forEach((country, index) => {
@@ -106,25 +150,40 @@ function initCountryPicker() {
   countrySearch?.addEventListener("input", (e) => renderOptions(e.target.value));
 }
 
+/* =========================
+   DOM
+========================= */
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
 const forgotForm = document.getElementById("forgotForm");
+
 const errorMsg = document.getElementById("errorMsg");
 const registerMsg = document.getElementById("registerMsg");
 const forgotMsg = document.getElementById("forgotMsg");
 
+// Initialize optional country picker
 initCountryPicker();
 
+/* =========================
+   Login
+========================= */
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const email = document.getElementById("emailInput")?.value?.trim();
     const password = document.getElementById("passwordInput")?.value;
+
+    if (!email || !password) {
+      if (errorMsg) errorMsg.textContent = textFor("requiredFields");
+      return;
+    }
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Enforce email verification
       if (!user.emailVerified) {
         await sendEmailVerification(user);
         await signOut(auth);
@@ -133,7 +192,8 @@ if (loginForm) {
       }
 
       storeUser(user);
-      await saveUserProfile(user);
+      await saveUserProfile(user, {}, { isNewUser: false });
+
       window.location.href = "index.html";
     } catch (error) {
       console.error("Login Error:", error);
@@ -142,15 +202,21 @@ if (loginForm) {
   });
 }
 
-["googleLoginBtn", "googleRegisterBtn"].forEach((id) => {
+/* =========================
+   Google Auth (Login/Register buttons)
+========================= */
+const googleButtons = ["googleLoginBtn", "googleRegisterBtn"];
+googleButtons.forEach((id) => {
   const button = document.getElementById(id);
   if (!button) return;
 
   button.addEventListener("click", async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+
       storeUser(result.user);
-      await saveUserProfile(result.user);
+      await saveUserProfile(result.user, {}, { isNewUser: false });
+
       window.location.href = "index.html";
     } catch (error) {
       console.error("Google Auth Error:", error);
@@ -160,6 +226,9 @@ if (loginForm) {
   });
 });
 
+/* =========================
+   Register (Detailed form)
+========================= */
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -169,6 +238,7 @@ if (registerForm) {
     const gender = document.getElementById("regGender")?.value;
     const country = document.getElementById("regCountry")?.value;
     const birthDate = document.getElementById("regBirthDate")?.value;
+
     const email = document.getElementById("regEmail")?.value?.trim();
     const password = document.getElementById("regPassword")?.value;
     const confirmPassword = document.getElementById("regConfirmPassword")?.value;
@@ -192,15 +262,26 @@ if (registerForm) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const fullName = `${firstName} ${lastName}`.trim();
 
-      await updateProfile(userCredential.user, { displayName: fullName, photoURL: DEFAULT_AVATAR });
+      await updateProfile(userCredential.user, {
+        displayName: fullName,
+        photoURL: DEFAULT_AVATAR
+      });
+
       await sendEmailVerification(userCredential.user);
+
       await saveUserProfile(
         userCredential.user,
         { firstName, lastName, gender, country, birthDate },
         { isNewUser: true }
       );
 
-      storeUser(userCredential.user, { name: fullName, picture: DEFAULT_AVATAR, emailVerified: false });
+      storeUser(userCredential.user, {
+        name: fullName,
+        picture: DEFAULT_AVATAR,
+        emailVerified: false
+      });
+
+      // Optional: store pending email for verify page
       localStorage.setItem("coursehub_pending_verification_email", email);
 
       if (registerMsg) {
@@ -211,22 +292,33 @@ if (registerForm) {
       setTimeout(() => {
         window.location.href = "verify-email.html";
       }, 1200);
+
     } catch (error) {
       console.error("Register Error:", error);
       if (!registerMsg) return;
 
       registerMsg.classList.remove("success-msg");
-      registerMsg.textContent = error.code === "auth/email-already-in-use"
-        ? textFor("emailInUse")
-        : textFor("registerError");
+      if (error.code === "auth/email-already-in-use") {
+        registerMsg.textContent = textFor("emailInUse");
+      } else {
+        registerMsg.textContent = textFor("registerError");
+      }
     }
   });
 }
 
+/* =========================
+   Forgot Password
+========================= */
 if (forgotForm) {
   forgotForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const email = document.getElementById("forgotEmail")?.value?.trim();
+    if (!email) {
+      if (forgotMsg) forgotMsg.textContent = textFor("requiredFields");
+      return;
+    }
 
     try {
       await sendPasswordResetEmail(auth, email);
@@ -244,8 +336,14 @@ if (forgotForm) {
   });
 }
 
+/* =========================
+   Persist user in localStorage
+========================= */
 onAuthStateChanged(auth, (user) => {
   if (!user) return;
+
   const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
-  if (!storedUser) storeUser(user);
+  if (!storedUser) {
+    storeUser(user);
+  }
 });

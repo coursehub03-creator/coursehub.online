@@ -21,7 +21,9 @@
   <section class="auth-panel login-page" aria-label="Register panel">
     <p class="auth-kicker" data-i18n-en="Start now">ابدأ رحلتك الآن</p>
     <h2 data-i18n-en="Create a new account">إنشاء حساب جديد</h2>
-    <p class="auth-subtitle" data-i18n-en="Create an account with email and password in less than a minute.">أنشئ حسابك بالبريد وكلمة المرور خلال أقل من دقيقة.</p>
+    <p class="auth-subtitle" data-i18n-en="Create an account with email and password in less than a minute.">
+      أنشئ حسابك بالبريد وكلمة المرور خلال أقل من دقيقة.
+    </p>
 
     <form id="registerForm" novalidate>
       <label for="regFirstName" class="auth-label" data-i18n-en="First name">الاسم</label>
@@ -49,11 +51,26 @@
       <input id="regEmail" type="email" placeholder="name@example.com" required data-i18n-placeholder-en="Email">
 
       <label for="regPassword" class="auth-label" data-i18n-en="Password">كلمة المرور</label>
-      <input id="regPassword" type="password" placeholder="كلمة مرور قوية" required minlength="8" data-i18n-placeholder-en="Password" autocomplete="new-password">
+      <input
+        id="regPassword"
+        type="password"
+        placeholder="كلمة مرور قوية"
+        required
+        minlength="8"
+        data-i18n-placeholder-en="Password"
+        autocomplete="new-password"
+      >
       <small class="auth-hint">يجب أن تحتوي كلمة المرور على حرف كبير، حرف صغير، ورقم.</small>
 
       <label for="regConfirmPassword" class="auth-label" data-i18n-en="Confirm password">تأكيد كلمة المرور</label>
-      <input id="regConfirmPassword" type="password" placeholder="أعد كتابة كلمة المرور" required minlength="8" autocomplete="new-password">
+      <input
+        id="regConfirmPassword"
+        type="password"
+        placeholder="أعد كتابة كلمة المرور"
+        required
+        minlength="8"
+        autocomplete="new-password"
+      >
 
       <button type="submit" data-i18n-en="Create account">إنشاء الحساب</button>
       <div id="registerMsg" class="error-msg" role="alert" aria-live="polite"></div>

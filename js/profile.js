@@ -21,6 +21,7 @@ function setMsg(text, ok = false) {
 function fillSelectOptions() {
   const countrySelect = el("profileCountry");
   const phoneCodeSelect = el("phoneCode");
+
   if (countrySelect) {
     countrySelect.innerHTML = getAllCountries()
       .map((country) => `<option value="${country.name}">${country.flag} ${country.name}</option>`)
@@ -38,38 +39,64 @@ function getCompletedCoursesCount() {
   try {
     const stored = JSON.parse(localStorage.getItem(COMPLETED_KEY));
     return stored && typeof stored === "object" ? Object.keys(stored).length : 0;
-  } catch { return 0; }
+  } catch {
+    return 0;
+  }
 }
 
 function getCertificatesCount() {
   try {
     const stored = JSON.parse(localStorage.getItem("coursehub_certificates"));
     return Array.isArray(stored) ? stored.length : 0;
-  } catch { return 0; }
+  } catch {
+    return 0;
+  }
 }
 
 function getNotifications() {
   try {
     const stored = JSON.parse(localStorage.getItem(NOTIFICATION_KEY));
     return Array.isArray(stored) ? stored : [];
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 function renderStaticData() {
-  if (el("profilePic")) el("profilePic").src = user.picture || DEFAULT_AVATAR;
-  if (el("profileName")) el("profileName").textContent = user.name || user.email;
-  if (el("profileEmail")) el("profileEmail").textContent = user.email || "";
+  // Profile header
+  const profilePicEl = el("profilePic");
+  const profileNameEl = el("profileName");
+  const profileEmailEl = el("profileEmail");
 
-  if (el("completedCount")) el("completedCount").textContent = getCompletedCoursesCount();
-  if (el("certCount")) el("certCount").textContent = getCertificatesCount();
+  if (profilePicEl) {
+    // keep fallback logic safe
+    profilePicEl.src = user.picture || DEFAULT_AVATAR;
+  }
+  if (profileNameEl) {
+    profileNameEl.textContent = user.name || user.email || "";
+  }
+  if (profileEmailEl) {
+    profileEmailEl.textContent = user.email || "";
+  }
 
+  // Stats (keep features)
+  const completedCountEl = el("completedCount");
+  const certCountEl = el("certCount");
+
+  if (completedCountEl) completedCountEl.textContent = String(getCompletedCoursesCount());
+  if (certCountEl) certCountEl.textContent = String(getCertificatesCount());
+
+  // Notifications
   const notifications = getNotifications();
-  if (el("notifCount")) el("notifCount").textContent = notifications.length;
+  const notifCountEl = el("notifCount");
+  if (notifCountEl) notifCountEl.textContent = String(notifications.length);
 
+  // Recent activity
   const activity = el("recentActivity");
   if (activity) {
     activity.innerHTML = "";
     const recent = notifications.slice(0, 3);
+
     if (!recent.length) {
       activity.innerHTML = "<li>لا توجد أنشطة حديثة بعد.</li>";
     } else {
@@ -86,6 +113,7 @@ async function loadProfessionalProfile() {
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     if (!snap.exists()) return;
+
     const data = snap.data();
 
     const fields = [
@@ -120,8 +148,8 @@ async function saveProfessionalProfile() {
     skills: el("skills")?.value?.trim() || "",
     experiences: el("experiences")?.value?.trim() || "",
     certifications: el("certifications")?.value?.trim() || "",
-    email: user.email,
-    name: user.name,
+    email: user.email || "",
+    name: user.name || "",
     picture: user.picture || DEFAULT_AVATAR,
     updatedAt: serverTimestamp()
   };
