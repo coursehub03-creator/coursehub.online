@@ -41,7 +41,7 @@ const text = {
     noTargetEmail: "",
     needLogin: "Please login first to resend the verification link.",
     alreadyVerified: "Your account is already verified. You can log in now.",
-    resent: "Verification email resent. Check Inbox and Spam/Promotions.",
+    resent: "Verification email resent. Check Inbox/Spam/Promotions.",
     resendFailed: "Could not resend verification email. Please try again.",
     tooMany: "Too many attempts. Please wait and try again.",
     noActive: "No active verification request. You can register again.",
@@ -59,7 +59,7 @@ const t = () => text[lang()] || text.ar;
 function setMsg(message, success = false) {
   if (!verifyMsg) return;
   verifyMsg.classList.toggle("success-msg", success);
-  verifyMsg.textContent = message;
+  verifyMsg.textContent = message || "";
 }
 
 function getPendingEmail() {
@@ -76,13 +76,15 @@ function resolveTargetEmail(user) {
 }
 
 /* =========================
-   Init UI (show target email)
+   Init UI
 ========================= */
 const initialTargetEmail = resolveTargetEmail(auth.currentUser);
+
 if (emailEl) {
   emailEl.textContent = initialTargetEmail ? t().targetEmail(initialTargetEmail) : t().noTargetEmail;
 }
-if (initialTargetEmail && verifyMsg) {
+
+if (initialTargetEmail) {
   setMsg(t().sentTo(initialTargetEmail), true);
 }
 

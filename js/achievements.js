@@ -12,7 +12,8 @@ import {
 
 // --- دوال عرض/تنزيل الشهادة ---
 const dataUrlPrefix = "data:";
-const pdfLibraryUrl = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const pdfLibraryUrl =
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
 // ✅ i18n
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
@@ -77,11 +78,13 @@ const loadJsPdf = (() => {
         const script = document.createElement("script");
         script.src = pdfLibraryUrl;
         script.async = true;
+
         script.onload = () => {
           const loaded = resolveJsPdfConstructor();
           if (loaded) resolve(loaded);
           else reject(new Error("jsPDF constructor not found."));
         };
+
         script.onerror = () => reject(new Error("Failed to load jsPDF."));
         document.head.appendChild(script);
       });
@@ -100,7 +103,8 @@ const blobToDataUrl = (blob) =>
 
 const fetchImageDataUrl = async (url) => {
   // يدعم dataURL + الروابط العادية
-  if (url.startsWith(dataUrlPrefix)) return url;
+  if (!url) throw new Error("Missing URL");
+  if (typeof url === "string" && url.startsWith(dataUrlPrefix)) return url;
 
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to load certificate image.");
@@ -142,7 +146,10 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const qrDataUrl = await fetchQrDataUrl(verifyUrl);
   if (!qrDataUrl) return dataUrl;
 
-  const [certificateImage, qrImage] = await Promise.all([loadImage(dataUrl), loadImage(qrDataUrl)]);
+  const [certificateImage, qrImage] = await Promise.all([
+    loadImage(dataUrl),
+    loadImage(qrDataUrl)
+  ]);
 
   const canvas = document.createElement("canvas");
   canvas.width = certificateImage.width;
@@ -199,10 +206,16 @@ const openCertificateViewer = (url, title, verificationCode) => {
   let targetUrl = url;
   let dataKey = "";
 
-  if (url.startsWith(dataUrlPrefix)) {
+  if (typeof url === "string" && url.startsWith(dataUrlPrefix)) {
     dataKey = `certificate-data-${Date.now()}`;
-    sessionStorage.setItem(dataKey, url);
-    targetUrl = "";
+    try {
+      sessionStorage.setItem(dataKey, url);
+      targetUrl = "";
+    } catch (e) {
+      // لو sessionStorage فشل افتح dataURL مباشرة
+      targetUrl = url;
+      dataKey = "";
+    }
   }
 
   const viewerUrl =
@@ -283,8 +296,8 @@ onAuthStateChanged(auth, async (user) => {
           const completedAt = data.completedAt;
           const issuedAt =
             completedAt && typeof completedAt.toDate === "function"
-              ? completedAt.toDate().toLocaleDateString("ar-EG")
-              : completedAt || "";
+              ? completedAt.toDate().toLocaleDateString(getLang() === "en" ? "en-US" : "ar-EG")
+              : (completedAt || "");
 
           return {
             title: data.courseTitle || data.title || "",

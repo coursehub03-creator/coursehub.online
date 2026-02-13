@@ -1,5 +1,5 @@
-import { auth, db, googleProvider } from './firebase-config.js';
-import { getAllCountries } from './geo-data.js';
+import { auth, db, googleProvider } from "./firebase-config.js";
+import { getAllCountries } from "./geo-data.js";
 import { getActionCodeSettings } from "./email-action-settings.js";
 
 import {
@@ -20,7 +20,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const DEFAULT_AVATAR = "/assets/images/admin-avatar.png";
-
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 
 const messages = {
@@ -92,15 +91,18 @@ function setText(node, text, ok = false) {
 function storeUser(user, extra = {}) {
   if (!user) return;
 
-  localStorage.setItem("coursehub_user", JSON.stringify({
-    name: user.displayName || user.email?.split("@")[0] || "User",
-    email: user.email || "",
-    picture: user.photoURL || DEFAULT_AVATAR,
-    uid: user.uid,
-    emailVerified: !!user.emailVerified,
-    role: "user",
-    ...extra
-  }));
+  localStorage.setItem(
+    "coursehub_user",
+    JSON.stringify({
+      name: user.displayName || user.email?.split("@")[0] || "User",
+      email: user.email || "",
+      picture: user.photoURL || DEFAULT_AVATAR,
+      uid: user.uid,
+      emailVerified: !!user.emailVerified,
+      role: "user",
+      ...extra
+    })
+  );
 }
 
 async function saveUserProfile(user, profileData = {}, options = {}) {
@@ -131,7 +133,18 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
 }
 
 /* =========================
-   Country Picker (feature)
+   Helpers for email actions
+========================= */
+function actionSettingsSafe() {
+  try {
+    return typeof getActionCodeSettings === "function" ? getActionCodeSettings() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/* =========================
+   Country Picker
 ========================= */
 function initCountryPicker() {
   const countrySearch = document.getElementById("countrySearch");
@@ -159,17 +172,6 @@ function initCountryPicker() {
 }
 
 /* =========================
-   Helpers for email actions
-========================= */
-function actionSettingsSafe() {
-  try {
-    return typeof getActionCodeSettings === "function" ? getActionCodeSettings() : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/* =========================
    DOM
 ========================= */
 const loginForm = document.getElementById("loginForm");
@@ -180,6 +182,7 @@ const errorMsg = document.getElementById("errorMsg");
 const registerMsg = document.getElementById("registerMsg");
 const forgotMsg = document.getElementById("forgotMsg");
 
+// init optional picker (only on register page)
 initCountryPicker();
 
 /* =========================
@@ -201,13 +204,14 @@ if (loginForm) {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Enforce email verification + resend with action settings (if available)
+      // enforce verification + try resend
       if (!user.emailVerified) {
         try {
           await sendEmailVerification(user, actionSettingsSafe());
         } catch (verificationError) {
           console.error("Verification resend error:", verificationError);
         }
+
         await signOut(auth);
         setText(errorMsg, textFor("emailNotVerified"));
         return;
@@ -229,7 +233,7 @@ if (loginForm) {
 }
 
 /* =========================
-   Google Auth (Login/Register buttons)
+   Google Auth (Login/Register)
 ========================= */
 ["googleLoginBtn", "googleRegisterBtn"].forEach((id) => {
   const button = document.getElementById(id);
@@ -292,7 +296,6 @@ if (registerForm) {
         photoURL: DEFAULT_AVATAR
       });
 
-      // Send verification with action settings (if available)
       await sendEmailVerification(userCredential.user, actionSettingsSafe());
 
       await saveUserProfile(
@@ -349,7 +352,6 @@ if (forgotForm) {
     }
 
     try {
-      // reset with action settings (if available)
       await sendPasswordResetEmail(auth, email, actionSettingsSafe());
       setText(forgotMsg, textFor("resetSent"), true);
     } catch (error) {
@@ -373,7 +375,6 @@ onAuthStateChanged(auth, (user) => {
   if (!storedUser && user.emailVerified) {
     storeUser(user);
   } else if (!storedUser) {
-    // حتى لو غير مفعّل، نخزن بياناته (لكن لا نسمح بالدخول في login flow أعلاه)
     storeUser(user);
   }
 });

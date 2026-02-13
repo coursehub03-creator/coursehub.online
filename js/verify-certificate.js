@@ -96,7 +96,7 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
-  // ✅ دمج التعارض: تحقق من url + دعم data:
+  // ✅ تحقق من url + دعم data:
   if (!url) throw new Error("Missing URL");
   if (typeof url === "string" && url.startsWith(dataUrlPrefix)) return url;
 
@@ -224,6 +224,7 @@ async function verifyCode(code) {
       <div class="result-header">
         <span class="result-badge">${t.validBadge}</span>
       </div>
+
       <h3 class="result-title">${title}</h3>
       <p class="result-meta">${t.completedAt} ${completedAt || t.notSpecified}</p>
 
@@ -265,7 +266,7 @@ async function verifyCode(code) {
           try {
             sessionStorage.setItem(dataKey, url);
             targetUrl = "";
-          } catch (e) {
+          } catch {
             targetUrl = url;
             dataKey = "";
           }
