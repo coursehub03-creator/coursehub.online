@@ -6,9 +6,9 @@ import {
   doc,
   getDocs,
   query,
+  where,
   serverTimestamp,
-  updateDoc,
-  where
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -44,12 +44,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (status === "active") return "success";
     if (status === "pending" || status === "pending_verification") return "warning";
     if (status === "blocked" || status === "rejected") return "danger";
+    if (status === "deleted") return "neutral";
     return "neutral";
   };
 
-
   const isPermissionDenied = (error) => {
-    return error?.code === "permission-denied" || /insufficient permissions/i.test(error?.message || "");
+    return (
+      error?.code === "permission-denied" ||
+      /insufficient permissions/i.test(error?.message || "")
+    );
   };
 
   const removeUserRecord = async (user) => {
@@ -62,29 +65,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const confirmDelete = window.confirm(
-      `هل أنت متأكد من حذف المستخدم ${getDisplayName(user)} نهائيًا؟\n\nسيتم حذف سجل المستخدم من قاعدة البيانات وطلبات الأستاذ المرتبطة به.`
+      `هل أنت متأكد من حذف المستخدم ${getDisplayName(user)} نهائيًا؟\n\n` +
+      `سيتم حذف سجل المستخدم من قاعدة البيانات وطلبات الأستاذ المرتبطة به.`
     );
-
     if (!confirmDelete) return;
 
     let hardDeleted = false;
 
+    // 1) user doc: حاول حذف، وإن فشل بسبب rules → أرشف
     try {
       await deleteDoc(doc(db, "users", targetUid));
       hardDeleted = true;
     } catch (error) {
       if (!isPermissionDenied(error)) throw error;
 
-      // Fallback if Firestore rules block delete but allow update
       await updateDoc(doc(db, "users", targetUid), {
         status: "deleted",
+        role: "deleted",
         deletedAt: serverTimestamp(),
-        deletedBy: auth.currentUser?.uid || null,
-        role: "deleted"
+        deletedBy: auth.currentUser?.uid || null
       });
     }
 
-    const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
+    // 2) instructor applications: حاول حذف، وإن فشل → أرشف
+    const appQuery = query(
+      collection(db, "instructorApplications"),
+      where("uid", "==", targetUid)
+    );
     const appSnap = await getDocs(appQuery);
 
     await Promise.all(
@@ -93,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           await deleteDoc(snap.ref);
         } catch (error) {
           if (!isPermissionDenied(error)) throw error;
+
           await updateDoc(snap.ref, {
             applicationStatus: "archived",
             reviewReason: "Archived after account deletion request",
@@ -102,24 +110,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       })
     );
 
+    // 3) تحديث الواجهة
     if (hardDeleted) {
       allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
     } else {
       allUsers = allUsers.map((item) => {
         if ((item.uid || item.id) !== targetUid) return item;
-        return {
-          ...item,
-          status: "deleted",
-          role: "deleted"
-        };
+        return { ...item, status: "deleted", role: "deleted" };
       });
+
+      alert(
+        "تم أرشفة الحساب بدل الحذف الكامل لأن قواعد Firestore تمنع delete.\n" +
+        "راجع Firestore Rules لمنح الأدمن صلاحية الحذف إذا كان ذلك مطلوبًا."
+      );
     }
 
     applyFilters();
-
-    if (!hardDeleted) {
-      alert("تم أرشفة الحساب بدل الحذف الكامل لأن قواعد Firestore تمنع delete. راجع ملف docs/firebase-rules.md لتفعيل صلاحية الحذف.");
-    }
   };
 
   const renderUsers = (users) => {

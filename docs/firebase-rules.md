@@ -1,14 +1,3 @@
-# Firebase Security Rules (اقتراح جاهز لـ CourseHub)
-
-> هذه القواعد تقفل تدفق طلبات الأساتذة بشكل صحيح، وتسمح للأدمن بإدارة الطلبات والمستخدمين.
-> 
-> **مهم:** الحذف النهائي من Firebase Authentication (وليس Firestore فقط) يحتاج Cloud Function بـ Admin SDK.
-
-## 1) Firestore Rules
-
-> إذا لم تكن مفعل `custom claims` بعد، يمكنك استخدام `admin email allowlist` مؤقتًا داخل rules كما هو موضح في `isAdminByEmail`.
-
-```rules
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -21,12 +10,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // الأفضل: اقرأها من custom claim: admin=true
+    // الأفضل: admin=true في custom claims
     function isAdminByClaim() {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
-    // حل مؤقت متوافق مع لوحة الأدمن الحالية (تعتمد على البريد)
+    // حل مؤقت: allowlist بالبريد (إلى أن تفعل custom claims)
     function isAdminByEmail() {
       return isSignedIn() && request.auth.token.email in [
         "kaleadsalous30@gmail.com",
@@ -38,71 +27,54 @@ service cloud.firestore {
       return isAdminByClaim() || isAdminByEmail();
     }
 
-    // users
+    /* =========================
+       users
+    ========================= */
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
+
+      // المستخدم ينشئ وثيقته لأول مرة فقط لنفسه
       allow create: if isOwner(uid);
+
+      // المستخدم يعدّل وثيقته أو الأدمن يعدّل أي مستخدم
       allow update: if isOwner(uid) || isAdmin();
+
+      // الحذف للأدمن فقط
       allow delete: if isAdmin();
     }
 
-    // instructor applications
+    /* =========================
+       instructor applications
+    ========================= */
     match /instructorApplications/{appId} {
-      // المستخدم ينشئ طلبه ويقرأ طلبه
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      // المستخدم ينشئ طلبه فقط لنفسه
+      allow create: if isSignedIn()
+                    && request.resource.data.uid == request.auth.uid;
 
-      // فقط الأدمن يعدّل حالة الطلب (قبول/رفض)
+      // المستخدم يقرأ طلبه، والأدمن يقرأ الجميع
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.uid == request.auth.uid);
+
+      // فقط الأدمن يعدّل/يحذف الطلب (قبول/رفض/أرشفة)
       allow update, delete: if isAdmin();
     }
 
-    // email queue: فقط الأدمن يكتب/يقرأ
+    /* =========================
+       email queue (admin only)
+    ========================= */
     match /emailQueue/{emailId} {
       allow read, create, update, delete: if isAdmin();
     }
 
-    // courses مثال: القراءة للجميع، الكتابة للأستاذ/الأدمن
+    /* =========================
+       courses (example)
+    ========================= */
     match /courses/{courseId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() || (isSignedIn() && request.resource.data.instructorId == request.auth.uid);
+
+      // إنشاء/تعديل/حذف: الأدمن أو صاحب الكورس (instructorId)
+      allow create, update, delete: if isAdmin()
+        || (isSignedIn() && request.resource.data.instructorId == request.auth.uid);
     }
   }
 }
-```
-
-## 2) Storage Rules (شهادة العمل PDF)
-
-```rules
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.admin == true;
-    }
-
-    // مسار رفع شهادات العمل
-    match /instructor-applications/{uid}/{fileName} {
-      // الأستاذ يرفع ملف PDF لنفسه فقط
-      allow write: if isSignedIn()
-                   && request.auth.uid == uid
-                   && request.resource.contentType.matches('application/pdf');
-
-      // قراءة الملف للأدمن فقط
-      allow read: if isAdmin();
-    }
-  }
-}
-```
-
-## 3) ملاحظة عن "الحذف النهائي"
-
-زر الحذف الحالي في لوحة الأدمن يحذف:
-- وثيقة المستخدم من `users`
-- أي طلبات له من `instructorApplications`
-
-أما حذف حساب Firebase Authentication نفسه فيتطلب endpoint آمن (Cloud Function callable) يشتغل بـ Admin SDK ويتحقق أن المنفّذ أدمن.
