@@ -1,15 +1,3 @@
-# Firebase Security Rules (محدّثة ومطابقة لتدفق CourseHub الحالي)
-
-> هذه النسخة مبنية على القواعد التي أرسلتها، وتم تحديثها لتتوافق مع:
-> - إدارة طلبات الأساتذة (`instructorApplications`)
-> - طابور البريد (`emailQueue`)
-> - طابور حذف حسابات Authentication (`authDeletionQueue`)
-> - حذف المستخدم من لوحة الأدمن (delete/archive)
-> - التوافق مع أدمن عبر `custom claim` أو `email allowlist`
-
-## Firestore Rules
-
-```rules
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -22,12 +10,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // الأدمن الأساسي عبر custom claims
+    // الأفضل: admin=true في custom claims
     function isAdminByClaim() {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
-    // fallback متوافق مع لوحة الأدمن الحالية لو claims غير مفعلة بعد
+    // حل مؤقت: allowlist بالبريد (إلى أن تفعل custom claims)
     function isAdminByEmail() {
       return isSignedIn() && request.auth.token.email in [
         "kaleadsalous30@gmail.com",
@@ -39,33 +27,39 @@ service cloud.firestore {
       return isAdminByClaim() || isAdminByEmail();
     }
 
-    // المستخدمون
+    /* =========================
+       users
+    ========================= */
     match /users/{userId} {
       // يقرأ نفسه + الأدمن يقرأ الجميع
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
 
-      // إنشاء الحساب الذاتي فقط
+      // إنشاء الوثيقة: صاحبها فقط
       allow create: if isOwner(userId);
 
       // تحديث ذاتي أو أدمن
       allow update: if isOwner(userId) || isAdmin();
 
-      // حذف نهائي عبر الأدمن فقط
+      // حذف نهائي للأدمن فقط
       allow delete: if isAdmin();
 
       // الدورات المكتملة داخل المستخدم
       match /completedCourses/{courseId} {
-        allow read, write: if isOwner(userId) || isAdmin();
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create, update, delete: if isOwner(userId) || isAdmin();
       }
 
       // الشهادات داخل المستخدم
       match /certificates/{certId} {
-        allow read, write: if isOwner(userId) || isAdmin();
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create, update, delete: if isOwner(userId) || isAdmin();
       }
     }
 
-    // طلبات الأساتذة
+    /* =========================
+       instructor applications
+    ========================= */
     match /instructorApplications/{appId} {
       // المستخدم ينشئ طلبه فقط لنفس uid
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
@@ -74,67 +68,88 @@ service cloud.firestore {
       allow get: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow list: if isAdmin();
 
-      // التعديل/الحذف للأدمن فقط
+      // فقط الأدمن يعدّل/يحذف
       allow update, delete: if isAdmin();
     }
 
-    // طابور البريد
+    /* =========================
+       email queue (admin only)
+    ========================= */
     match /emailQueue/{emailId} {
       allow get, list, create, update, delete: if isAdmin();
     }
 
-
-    // طابور حذف حسابات Authentication (يعالَج عبر Cloud Function Admin SDK)
+    /* =========================
+       auth deletion queue (admin only)
+       processed by Cloud Function Admin SDK
+    ========================= */
     match /authDeletionQueue/{jobId} {
       allow get, list, create, update, delete: if isAdmin();
     }
 
-    // الدورات
+    /* =========================
+       courses
+    ========================= */
     match /courses/{courseId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
-    // التسجيلات (بدء/استكمال الدورة)
+    /* =========================
+       enrollments
+    ========================= */
     match /enrollments/{docId} {
-      // قراءة المستند: مالكه أو الأدمن
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow list: if isAdmin();
 
-      // الإنشاء: userId يجب يطابق uid الحالي
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-
-      // التحديث/الحذف: مالكه أو الأدمن
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
-    // الشهادات العامة
+    /* =========================
+       certificates (public verify)
+       IMPORTANT: لا تسمح بإنشاء عشوائي إلا للأدمن أو المدرّس/السيرفر
+    ========================= */
     match /certificates/{certId} {
-      allow read: if true; // للتحقق من الشهادة
-      allow create: if isSignedIn();
+      allow read: if true;     // للتحقق من الشهادة
+      allow get: if true;
+
+      // الأفضل: اجعل الإنشاء للأدمن فقط أو Cloud Function
+      allow create: if isAdmin();
+
       allow update, delete: if isAdmin();
       allow list: if isAdmin();
     }
 
-    // إشعارات المستخدم
+    /* =========================
+       notifications
+    ========================= */
     match /notifications/{notifId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow list: if isAdmin();
 
+      // إنشاء إشعار: يفضّل للأدمن/السيرفر، لكن نتركه للمستخدم إن كنت تحتاجه
       allow create: if isSignedIn();
+
       allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
-    // مراجعات الدورات
+    /* =========================
+       course reviews
+    ========================= */
     match /courseReviews/{reviewId} {
       allow read: if true;
+      allow get: if true;
+
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
       allow list: if isAdmin();
     }
 
-    // محاولات الاختبارات
+    /* =========================
+       quiz attempts
+    ========================= */
     match /quizAttempts/{attemptId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow list: if isAdmin();
@@ -144,57 +159,3 @@ service cloud.firestore {
     }
   }
 }
-```
-
-## Storage Rules
-
-```rules
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isAdminByClaim() {
-      return isSignedIn() && request.auth.token.admin == true;
-    }
-
-    function isAdminByEmail() {
-      return isSignedIn() && request.auth.token.email in [
-        "kaleadsalous30@gmail.com",
-        "coursehub03@gmail.com"
-      ];
-    }
-
-    function isAdmin() {
-      return isAdminByClaim() || isAdminByEmail();
-    }
-
-    // ملفات الدورات
-    match /courses/{allPaths=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // ملفات إثبات العمل للأساتذة (PDF)
-    match /instructor-applications/{uid}/{fileName} {
-      // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
-      allow write: if isSignedIn()
-                   && request.auth.uid == uid
-                   && request.resource.contentType.matches('application/pdf');
-
-      // القراءة للأدمن فقط
-      allow read: if isAdmin();
-    }
-  }
-}
-```
-
-## ملاحظات مهمة
-
-- حذف المستخدم من Firestore من لوحة الأدمن يحتاج `allow delete` على `users/{userId}` للأدمن (موجودة أعلاه).
-- إذا أردت "حذف نهائي" من Firebase Authentication أيضًا، تحتاج Cloud Function بـ Admin SDK (الـ Rules وحدها لا تحذف مستخدم Auth).
-- بعد تعديل القواعد في Firebase Console، انشرها ثم جرّب من جديد من حساب أدمن فعلي.
-- إذا بقي المستخدم موجودًا في Firebase Authentication بعد الحذف من Firestore، تأكد من وجود Cloud Function تعالج `authDeletionQueue` وتحذف مستخدم Auth فعليًا.
