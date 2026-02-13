@@ -2,23 +2,38 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+نقوم بدعم أحدث نسخة على الفرع الرئيسي (`main`) فقط حاليًا.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| main    | ✅        |
+| older   | ❌        |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+إذا اكتشفت ثغرة أمنية، الرجاء اتباع الخطوات التالية:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+1. **لا تنشر تفاصيل الثغرة بشكل علني**
+   - تجنّب فتح Issues عامة أو النشر على وسائل التواصل أو مشاركة PoC علنًا.
+
+2. **أرسل البلاغ عبر قناة آمنة**
+   - **الأفضل:** GitHub Security Advisories (قسم Security في المستودع) إن كانت مفعّلة.
+   - **بديل:** تواصل مباشرة مع مالك المشروع/فريق التطوير عبر قناة خاصة.
+
+3. **قدّم تفاصيل كافية لتسريع المعالجة**
+   - وصف واضح للثغرة.
+   - خطوات إعادة الإنتاج (Reproduction steps).
+   - التأثير المتوقع (Impact) وسيناريو الاستغلال.
+   - إن أمكن: نسخة/commit متأثر + سجل (logs) غير حساس + PoC آمن.
+
+### ماذا تتوقع بعد الإبلاغ؟
+- **تأكيد الاستلام:** عادة خلال **48–72 ساعة**.
+- **تحديثات الحالة:** سنشارك تحديثًا مبدئيًا خلال **5–7 أيام عمل** (قد تختلف حسب شدة وتعقيد الثغرة).
+- **في حال قبول الثغرة:** سنعمل على إصلاحها، وقد نطلب معلومات إضافية أو اختبارًا بعد الإصلاح.
+- **في حال رفض البلاغ:** سنوضح السبب (مثل: ليس ثغرة، أو لا يمكن إعادة الإنتاج، أو خارج نطاق المشروع).
+- **الإفصاح المسؤول:** نفضل التنسيق قبل أي نشر علني، حتى يتم إصدار إصلاح وتحديث آمن.
+
+---
 
 ## Email Deliverability (Firebase + Brevo) — Final Fix Checklist
 
@@ -55,6 +70,8 @@ declined, etc.
 
 > ملاحظة تشغيلية مهمة: لا يوجد حل ثابت يضمن وصولًا 100% دائمًا. أفضل نتيجة تأتي من مزيج: إعدادات DNS صحيحة + إعداد SMTP صحيح + سمعة إرسال جيدة + مراقبة وتحسين مستمر.
 
+---
+
 ## Branded Email Content Standard (CourseHub)
 
 لجعل رسائل المستخدمين أكثر احترافية وبهوية بصرية واضحة:
@@ -69,3 +86,29 @@ declined, etc.
 قوالب HTML الجاهزة (احترافية) موجودة هنا:
 
 - `docs/firebase-email-templates.md`
+
+---
+
+## Baseline Hardening Checklist (Applied)
+
+- تم تفعيل تسجيل الدخول وإنشاء الحساب عبر Firebase Authentication بدل التخزين المحلي لكلمات المرور.
+- تم إزالة منطق التسجيل المحلي غير الآمن الذي كان يخزن كلمات المرور داخل `localStorage`.
+- تم تحسين واجهات تسجيل الدخول/إنشاء الحساب مع رسائل أخطاء واضحة وتحقق أولي من طول كلمة المرور.
+
+---
+
+## GitHub Repository Protection Recommendations
+
+لا يمكن تقنيًا جعل المستودع "متاحًا لـ Codex فقط" إذا كان Public. لتقييد الوصول:
+
+1. اجعل المستودع **Private**.
+2. أضف فقط الحسابات أو GitHub App المصرح لها (Codex integration) بصلاحية **Least Privilege**.
+3. فعّل **Branch Protection Rules** للفرع الرئيسي:
+   - Require pull request.
+   - Require status checks.
+   - Restrict who can push.
+4. فعّل **Secret Scanning** و **Dependabot alerts**.
+5. ألغِ أي Personal Access Token قديم، واستخدم tokens قصيرة الصلاحية.
+6. امنع رفع الأسرار عبر `.gitignore` واستخدم GitHub Actions secrets.
+
+> ملاحظة: Codex لا يتجاوز صلاحيات GitHub؛ إذا كان المستودع Private ومقيد الصلاحيات، فلن يتمكن غير المصرح لهم من الوصول.

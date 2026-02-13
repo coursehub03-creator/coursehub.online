@@ -1,7 +1,9 @@
-const pdfLibraryUrl =
-  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const pdfLibraryUrl = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 const dataUrlPrefix = "data:";
+
+// ✅ i18n
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
+
 const uiText = {
   ar: {
     missingUrl: "لا يوجد رابط شهادة لعرضه.",
@@ -35,8 +37,7 @@ const sanitizeFileName = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const resolveJsPdfConstructor = () =>
-  window.jspdf?.jsPDF || window.jsPDF || null;
+const resolveJsPdfConstructor = () => window.jspdf?.jsPDF || window.jsPDF || null;
 
 const loadJsPdf = (() => {
   let cachedPromise;
@@ -44,21 +45,18 @@ const loadJsPdf = (() => {
     if (!cachedPromise) {
       cachedPromise = new Promise((resolve, reject) => {
         const existing = resolveJsPdfConstructor();
-        if (existing) {
-          resolve(existing);
-          return;
-        }
+        if (existing) return resolve(existing);
+
         const script = document.createElement("script");
         script.src = pdfLibraryUrl;
         script.async = true;
+
         script.onload = () => {
           const loaded = resolveJsPdfConstructor();
-          if (loaded) {
-            resolve(loaded);
-          } else {
-            reject(new Error("jsPDF constructor not found."));
-          }
+          if (loaded) resolve(loaded);
+          else reject(new Error("jsPDF constructor not found."));
         };
+
         script.onerror = () => reject(new Error("Failed to load jsPDF."));
         document.head.appendChild(script);
       });
@@ -76,13 +74,13 @@ const blobToDataUrl = (blob) =>
   });
 
 const fetchImageDataUrl = async (url) => {
-  if (url.startsWith(dataUrlPrefix)) {
-    return url;
-  }
+  // ✅ تحقق من url + دعم data:
+  if (!url) throw new Error("Missing URL");
+  if (typeof url === "string" && url.startsWith(dataUrlPrefix)) return url;
+
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to load certificate image.");
-  }
+  if (!response.ok) throw new Error("Failed to load certificate image.");
+
   const blob = await response.blob();
   return blobToDataUrl(blob);
 };
@@ -97,57 +95,57 @@ const loadImage = (src) =>
   });
 
 const fetchQrDataUrl = async (verifyUrl) => {
-  if (!verifyUrl) {
-    return "";
-  }
+  if (!verifyUrl) return "";
+
   const qrResponse = await fetch(
-    `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-      verifyUrl
-    )}`
+    `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(verifyUrl)}`
   );
-  if (!qrResponse.ok) {
-    throw new Error("Failed to load QR code.");
-  }
+  if (!qrResponse.ok) throw new Error("Failed to load QR code.");
+
   const qrBlob = await qrResponse.blob();
   return blobToDataUrl(qrBlob);
 };
 
+// ✅ دمج QR داخل الشهادة قبل التحويل إلى PDF/العرض
 const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const dataUrl = await fetchImageDataUrl(certificateUrl);
-  if (!verificationCode) {
-    return dataUrl;
-  }
+  if (!verificationCode) return dataUrl;
 
   const verifyUrl = new URL(
     `/verify-certificate.html?code=${encodeURIComponent(verificationCode)}`,
     window.location.href
   ).href;
-  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
-  if (!qrDataUrl) {
-    return dataUrl;
-  }
 
-  const [certificateImage, qrImage] = await Promise.all([
-    loadImage(dataUrl),
-    loadImage(qrDataUrl)
-  ]);
+  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
+  if (!qrDataUrl) return dataUrl;
+
+  const [certImg, qrImg] = await Promise.all([loadImage(dataUrl), loadImage(qrDataUrl)]);
+
   const canvas = document.createElement("canvas");
-  canvas.width = certificateImage.width;
-  canvas.height = certificateImage.height;
+  canvas.width = certImg.width;
+  canvas.height = certImg.height;
+
   const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return dataUrl;
-  }
-  ctx.drawImage(certificateImage, 0, 0);
+  if (!ctx) return dataUrl;
+
+  ctx.drawImage(certImg, 0, 0);
 
   const minSide = Math.min(canvas.width, canvas.height);
-  const qrSize = Math.round(minSide * 0.18);
+
+  // ✅ حجم QR مناسب + مكان آمن أعلى اليسار
+  const qrSize = Math.round(minSide * 0.14);
   const margin = Math.round(minSide * 0.04);
-  const x = canvas.width - qrSize - margin;
-  const y = canvas.height - qrSize - margin;
+
+  // ✅ تحريك بسيط للداخل (ضمن مساحة آمنة)
+  const extraX = 40;
+  const extraY = 40;
+  const x = margin + extraX;
+  const y = margin + extraY;
+
+  // خلفية بيضاء للـ QR
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
-  ctx.drawImage(qrImage, x, y, qrSize, qrSize);
+  ctx.drawImage(qrImg, x, y, qrSize, qrSize);
 
   return canvas.toDataURL("image/png");
 };
@@ -155,62 +153,51 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 const downloadPdfFromImage = async (url, title, verificationCode) => {
   const dataUrl = await composeCertificateWithQr(url, verificationCode);
   const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+
   const jsPDF = await loadJsPdf();
-  if (!jsPDF) {
-    throw new Error("jsPDF constructor not available.");
-  }
+  if (!jsPDF) throw new Error("jsPDF constructor not available.");
+
   const img = await loadImage(dataUrl);
   const orientation = img.width > img.height ? "landscape" : "portrait";
+
   const pdf = new jsPDF({
     orientation,
     unit: "pt",
     format: [img.width, img.height]
   });
+
   pdf.addImage(dataUrl, imageType, 0, 0, img.width, img.height);
   pdf.save(`${sanitizeFileName(title)}.pdf`);
 };
 
 const showError = (message) => {
-  if (errorText) {
-    errorText.textContent = message;
-  }
+  if (errorText) errorText.textContent = message;
 };
 
-if (!encodedUrl) {
-  if (!encodedDataKey) {
-    showError(uiText[getLang()].missingUrl);
-  }
-}
-
-if (encodedUrl || encodedDataKey) {
+// ✅ دعم حالتين (url أو dataKey) + i18n
+if (!encodedUrl && !encodedDataKey) {
+  showError(uiText[getLang()].missingUrl);
+  if (downloadButton) downloadButton.disabled = true;
+} else {
   const storageKey = encodedDataKey ? decodeURIComponent(encodedDataKey) : "";
   const storedDataUrl = storageKey ? sessionStorage.getItem(storageKey) : "";
+
   const certificateUrl = storedDataUrl || decodeURIComponent(encodedUrl || "");
-  const title = encodedTitle
-    ? decodeURIComponent(encodedTitle)
-    : uiText[getLang()].defaultTitle;
+  const title = encodedTitle ? decodeURIComponent(encodedTitle) : uiText[getLang()].defaultTitle;
   const verificationCode = encodedCode ? decodeURIComponent(encodedCode) : "";
 
   if (!certificateUrl) {
     showError(uiText[getLang()].missingUrl);
-    if (downloadButton) {
-      downloadButton.disabled = true;
-    }
+    if (downloadButton) downloadButton.disabled = true;
   } else {
-    if (certificateTitle) {
-      certificateTitle.textContent = title;
-    }
+    if (certificateTitle) certificateTitle.textContent = title;
 
     const renderCertificate = async () => {
       try {
-        const composedUrl = await composeCertificateWithQr(
-          certificateUrl,
-          verificationCode
-        );
-        if (certificateImage) {
-          certificateImage.src = composedUrl;
-        }
+        const composedUrl = await composeCertificateWithQr(certificateUrl, verificationCode);
+        if (certificateImage) certificateImage.src = composedUrl;
       } catch (error) {
+        console.error(error);
         showError(uiText[getLang()].renderFailed);
       }
     };
@@ -218,7 +205,8 @@ if (encodedUrl || encodedDataKey) {
     renderCertificate();
 
     downloadButton?.addEventListener("click", () => {
-      downloadPdfFromImage(certificateUrl, title, verificationCode).catch(() => {
+      downloadPdfFromImage(certificateUrl, title, verificationCode).catch((err) => {
+        console.error(err);
         showError(uiText[getLang()].downloadFailed);
       });
     });

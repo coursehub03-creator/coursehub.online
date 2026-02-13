@@ -2,55 +2,174 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إنشاء حساب - CourseHub</title>
+
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
+
+  <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="js/auth.js" defer></script>
 </head>
 <body>
 
-<div id="header-placeholder"></div>
+  <div id="header-placeholder"></div>
 
-<main class="login-page container register-extended">
-  <h2 data-i18n-en="Create a new account">إنشاء حساب جديد</h2>
+  <main class="auth-shell container">
+    <section class="auth-panel login-page" aria-label="Register panel">
+      <p class="auth-kicker" data-i18n-en="Start now">ابدأ رحلتك الآن</p>
+      <h2 data-i18n-en="Create a new account">إنشاء حساب جديد</h2>
+      <p class="auth-subtitle" data-i18n-en="Create an account with email and password in less than a minute.">
+        أنشئ حسابك بالبريد وكلمة المرور خلال أقل من دقيقة.
+      </p>
 
-  <form id="registerForm">
-    <div class="role-switch">
-      <label><input type="radio" name="accountType" value="student" checked> التسجيل كطالب</label>
-      <label><input type="radio" name="accountType" value="instructor"> التسجيل كأستاذ</label>
-    </div>
+      <form id="registerForm" class="register-extended" novalidate>
+        <!-- نوع الحساب (طالب / أستاذ) -->
+        <div class="role-switch" style="margin: 10px 0; display:flex; gap:12px; flex-wrap:wrap;">
+          <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="radio" name="accountType" value="student" checked>
+            التسجيل كطالب
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="radio" name="accountType" value="instructor">
+            التسجيل كأستاذ
+          </label>
+        </div>
 
-    <input id="regFullName" type="text" placeholder="الاسم الكامل" required>
-    <input id="regEmail" type="email" placeholder="البريد الإلكتروني" required data-i18n-placeholder-en="Email">
-    <input id="regPhone" type="tel" placeholder="رقم الهاتف (اختياري)">
-    <input id="regPassword" type="password" placeholder="كلمة المرور" required data-i18n-placeholder-en="Password">
+        <!-- بيانات الطالب/المستخدم (النموذج التفصيلي) -->
+        <label for="regFirstName" class="auth-label" data-i18n-en="First name">الاسم</label>
+        <input
+          id="regFirstName"
+          type="text"
+          placeholder="الاسم"
+          required
+          minlength="2"
+          autocomplete="given-name"
+        >
 
-    <div id="instructorFields" class="instructor-fields" style="display:none;">
-      <input id="regUniversity" type="text" placeholder="الجامعة / جهة العمل">
-      <input id="regSpecialization" type="text" placeholder="التخصص الأكاديمي">
-      <input id="regExperience" type="number" min="0" placeholder="سنوات الخبرة">
-      <label class="file-label">شهادة العمل (PDF)
-        <input id="regWorkProof" type="file" accept="application/pdf">
-      </label>
-      <textarea id="regBio" rows="3" placeholder="نبذة تعريفية قصيرة عنك"></textarea>
+        <label for="regLastName" class="auth-label" data-i18n-en="Last name">اللقب</label>
+        <input
+          id="regLastName"
+          type="text"
+          placeholder="اللقب"
+          required
+          minlength="2"
+          autocomplete="family-name"
+        >
 
-      <label class="terms-check">
-        <input id="instructorTerms" type="checkbox">
-        أوافق على <a href="/instructor-terms.html" target="_blank" rel="noopener">الشروط والقواعد</a> الخاصة بالأساتذة.
-      </label>
-    </div>
+        <label for="regGender" class="auth-label" data-i18n-en="Gender">الجنس</label>
+        <select id="regGender" required>
+          <option value="" selected disabled>اختر الجنس</option>
+          <option value="male">ذكر</option>
+          <option value="female">أنثى</option>
+          <option value="prefer_not_to_say">لا أريد التحديد</option>
+        </select>
 
-    <button type="submit" data-i18n-en="Create account">إنشاء الحساب</button>
-  </form>
+        <label for="countrySearch" class="auth-label" data-i18n-en="Country">البلد</label>
+        <input
+          id="countrySearch"
+          type="search"
+          placeholder="Search country in English..."
+          autocomplete="off"
+        >
+        <select id="regCountry" required size="7" aria-label="Country list"></select>
 
-  <p class="login-links">
-    <a href="login.html" data-i18n-en="Log in">تسجيل الدخول</a>
-  </p>
-</main>
+        <label for="regBirthDate" class="auth-label" data-i18n-en="Birth date">تاريخ الميلاد</label>
+        <input id="regBirthDate" type="date" required max="2015-12-31">
 
-<div id="footer-placeholder"></div>
+        <!-- حقول كانت موجودة في نسخة التسجيل القديمة (للتوافق إن احتاجها auth.js) -->
+        <input id="regFullName" type="hidden" value="">
+        <input id="regPhone" type="hidden" value="">
 
-<script type="module" src="js/auth.js"></script>
-<script src="js/main.js" defer></script>
+        <label for="regEmail" class="auth-label" data-i18n-en="Email">البريد الإلكتروني</label>
+        <input
+          id="regEmail"
+          type="email"
+          placeholder="name@example.com"
+          required
+          data-i18n-placeholder-en="Email"
+          autocomplete="email"
+        >
+
+        <label for="regPassword" class="auth-label" data-i18n-en="Password">كلمة المرور</label>
+        <input
+          id="regPassword"
+          type="password"
+          placeholder="كلمة مرور قوية"
+          required
+          minlength="8"
+          data-i18n-placeholder-en="Password"
+          autocomplete="new-password"
+        >
+        <small class="auth-hint">يجب أن تحتوي كلمة المرور على حرف كبير، حرف صغير، ورقم.</small>
+
+        <label for="regConfirmPassword" class="auth-label" data-i18n-en="Confirm password">تأكيد كلمة المرور</label>
+        <input
+          id="regConfirmPassword"
+          type="password"
+          placeholder="أعد كتابة كلمة المرور"
+          required
+          minlength="8"
+          autocomplete="new-password"
+        >
+
+        <!-- حقول الأستاذ (تظهر فقط عند اختيار Instructor) -->
+        <div id="instructorFields" class="instructor-fields" style="display:none; margin-top: 14px; gap: 10px;">
+          <div class="alert info" style="margin: 6px 0;">
+            <span>🛈</span>
+            <span>يرجى إكمال بيانات الأستاذ ورفع شهادة العمل (PDF).</span>
+          </div>
+
+          <label for="regUniversity" class="auth-label">الجامعة / جهة العمل</label>
+          <input id="regUniversity" type="text" placeholder="الجامعة / جهة العمل">
+
+          <label for="regSpecialization" class="auth-label">التخصص الأكاديمي</label>
+          <input id="regSpecialization" type="text" placeholder="التخصص الأكاديمي">
+
+          <label for="regExperience" class="auth-label">سنوات الخبرة</label>
+          <input id="regExperience" type="number" min="0" placeholder="سنوات الخبرة">
+
+          <label class="auth-label" for="regWorkProof">شهادة العمل (PDF)</label>
+          <input id="regWorkProof" type="file" accept="application/pdf">
+
+          <label for="regBio" class="auth-label">نبذة تعريفية قصيرة عنك</label>
+          <textarea id="regBio" rows="3" placeholder="نبذة تعريفية قصيرة عنك"></textarea>
+
+          <label class="terms-check" style="display:flex; align-items:flex-start; gap:10px; margin-top: 6px;">
+            <input id="instructorTerms" type="checkbox">
+            <span>
+              أوافق على
+              <a href="/instructor-terms.html" target="_blank" rel="noopener">الشروط والقواعد</a>
+              الخاصة بالأساتذة.
+            </span>
+          </label>
+        </div>
+
+        <button type="submit" data-i18n-en="Create account">إنشاء الحساب</button>
+        <div id="registerMsg" class="error-msg" role="alert" aria-live="polite"></div>
+      </form>
+
+      <p class="auth-divider" data-i18n-en="or">أو</p>
+
+      <button
+        id="googleRegisterBtn"
+        class="google-btn"
+        type="button"
+        data-i18n-en="Continue with Google"
+      >
+        المتابعة باستخدام Google
+      </button>
+
+      <p class="login-links" data-i18n-en="Already have an account?">
+        عندك حساب بالفعل؟
+        <a href="login.html" data-i18n-en="Log in">تسجيل الدخول</a>
+      </p>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
 
 </body>
 </html>
