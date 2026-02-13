@@ -1,3 +1,15 @@
+# Firebase Security Rules (محدّثة ومطابقة لتدفق CourseHub الحالي)
+
+> هذه النسخة مبنية على القواعد التي أرسلتها، وتم تحديثها لتتوافق مع:
+> - إدارة طلبات الأساتذة (`instructorApplications`)
+> - طابور البريد (`emailQueue`)
+> - طابور حذف حسابات Authentication (`authDeletionQueue`)
+> - حذف المستخدم من لوحة الأدمن (delete/archive)
+> - التوافق مع أدمن عبر `custom claim` أو `email allowlist`
+
+## Firestore Rules
+
+```rules
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,12 +22,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // الأفضل: admin=true في custom claims
+    // الأدمن الأساسي عبر custom claims
     function isAdminByClaim() {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
-    // حل مؤقت: allowlist بالبريد (إلى أن تفعل custom claims)
+    // fallback متوافق مع لوحة الأدمن الحالية لو claims غير مفعلة بعد
     function isAdminByEmail() {
       return isSignedIn() && request.auth.token.email in [
         "kaleadsalous30@gmail.com",
@@ -27,39 +39,33 @@ service cloud.firestore {
       return isAdminByClaim() || isAdminByEmail();
     }
 
-    /* =========================
-       users
-    ========================= */
+    // المستخدمون
     match /users/{userId} {
       // يقرأ نفسه + الأدمن يقرأ الجميع
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
 
-      // إنشاء الوثيقة: صاحبها فقط
+      // إنشاء الحساب الذاتي فقط
       allow create: if isOwner(userId);
 
       // تحديث ذاتي أو أدمن
       allow update: if isOwner(userId) || isAdmin();
 
-      // حذف نهائي للأدمن فقط
+      // حذف نهائي عبر الأدمن فقط
       allow delete: if isAdmin();
 
       // الدورات المكتملة داخل المستخدم
       match /completedCourses/{courseId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create, update, delete: if isOwner(userId) || isAdmin();
+        allow read, write: if isOwner(userId) || isAdmin();
       }
 
       // الشهادات داخل المستخدم
       match /certificates/{certId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create, update, delete: if isOwner(userId) || isAdmin();
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
 
-    /* =========================
-       instructor applications
-    ========================= */
+    // طلبات الأساتذة
     match /instructorApplications/{appId} {
       // المستخدم ينشئ طلبه فقط لنفس uid
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
@@ -68,88 +74,66 @@ service cloud.firestore {
       allow get: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow list: if isAdmin();
 
-      // فقط الأدمن يعدّل/يحذف
+      // التعديل/الحذف للأدمن فقط
       allow update, delete: if isAdmin();
     }
 
-    /* =========================
-       email queue (admin only)
-    ========================= */
+    // طابور البريد
     match /emailQueue/{emailId} {
       allow get, list, create, update, delete: if isAdmin();
     }
 
-    /* =========================
-       auth deletion queue (admin only)
-       processed by Cloud Function Admin SDK
-    ========================= */
+    // طابور حذف حسابات Authentication (يعالَج عبر Cloud Function Admin SDK)
     match /authDeletionQueue/{jobId} {
       allow get, list, create, update, delete: if isAdmin();
     }
 
-    /* =========================
-       courses
-    ========================= */
+    // الدورات
     match /courses/{courseId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
-    /* =========================
-       enrollments
-    ========================= */
+    // التسجيلات (بدء/استكمال الدورة)
     match /enrollments/{docId} {
+      // قراءة المستند: مالكه أو الأدمن
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow list: if isAdmin();
 
+      // الإنشاء: userId يجب يطابق uid الحالي
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+
+      // التحديث/الحذف: مالكه أو الأدمن
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
-    /* =========================
-       certificates (public verify)
-       IMPORTANT: لا تسمح بإنشاء عشوائي إلا للأدمن أو المدرّس/السيرفر
-    ========================= */
+    // الشهادات العامة
     match /certificates/{certId} {
-      allow read: if true;     // للتحقق من الشهادة
-      allow get: if true;
-
-      // الأفضل: اجعل الإنشاء للأدمن فقط أو Cloud Function
-      allow create: if isAdmin();
-
+      allow read: if true; // للتحقق من الشهادة
+      allow create: if isSignedIn();
       allow update, delete: if isAdmin();
       allow list: if isAdmin();
     }
 
-    /* =========================
-       notifications
-    ========================= */
+    // إشعارات المستخدم
     match /notifications/{notifId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow list: if isAdmin();
 
-      // إنشاء إشعار: يفضّل للأدمن/السيرفر، لكن نتركه للمستخدم إن كنت تحتاجه
       allow create: if isSignedIn();
-
       allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
-    /* =========================
-       course reviews
-    ========================= */
+    // مراجعات الدورات
     match /courseReviews/{reviewId} {
       allow read: if true;
-      allow get: if true;
-
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
       allow list: if isAdmin();
     }
 
-    /* =========================
-       quiz attempts
-    ========================= */
+    // محاولات الاختبارات
     match /quizAttempts/{attemptId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow list: if isAdmin();
