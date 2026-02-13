@@ -155,13 +155,15 @@ async function getUserMeta(uid) {
 async function saveUserProfile(user, profileData = {}, options = {}) {
   if (!user?.uid) return;
 
+  const existingMeta = options.existingMeta || (await getUserMeta(user.uid));
+
   const payload = {
     uid: user.uid,
     email: user.email || "",
     emailVerified: !!user.emailVerified,
     picture: user.photoURL || DEFAULT_AVATAR,
-    role: "student",
-    status: user.emailVerified ? "active" : "pending_verification",
+    role: existingMeta?.role || "student",
+    status: existingMeta?.status || (user.emailVerified ? "active" : "pending_verification"),
     updatedAt: serverTimestamp()
   };
 
@@ -404,6 +406,14 @@ if (registerForm) {
 
     let createdUser = null;
 
+    const cleanupCreatedUser = async () => {
+      if (!createdUser) return;
+      try { await createdUser.delete(); } catch (cleanupError) {
+        console.warn("Could not delete temporary created user:", cleanupError);
+      }
+      try { await signOut(auth); } catch {}
+    };
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       createdUser = userCredential.user;
@@ -419,15 +429,13 @@ if (registerForm) {
         const proofFile = document.getElementById("regWorkProof")?.files?.[0] || null;
 
         if (!termsAccepted) {
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
           setText(registerMsg, textFor("instructorTermsRequired"));
           return;
         }
 
         if (!proofFile || !String(proofFile.type || "").toLowerCase().includes("pdf")) {
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
           setText(registerMsg, textFor("instructorPdfRequired"));
           return;
         }
@@ -438,8 +446,7 @@ if (registerForm) {
           await uploadBytes(fileRef, proofFile);
         } catch (err) {
           console.error("Upload proof error:", err);
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
 
           if (err?.code === "storage/unauthorized") {
             setText(registerMsg, textFor("storageUnauthorized"));
@@ -524,8 +531,7 @@ if (registerForm) {
 
       // cleanup in case storage fails after user creation
       if (createdUser && error?.code === "storage/unauthorized") {
-        try { await signOut(auth); } catch {}
-        try { await createdUser.delete(); } catch {}
+        await cleanupCreatedUser();
       }
 
       if (error?.code === "auth/too-many-requests") {
