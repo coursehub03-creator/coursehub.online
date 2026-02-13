@@ -5,7 +5,6 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
   doc,
   updateDoc,
   addDoc,
@@ -13,6 +12,22 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const list = document.getElementById("applicationsList");
+
+async function queueEmail(payload) {
+  try {
+    await addDoc(collection(db, "emailQueue"), {
+      ...payload,
+      createdAt: serverTimestamp(),
+      status: "pending"
+    });
+  } catch (error) {
+    if (error?.code === "permission-denied") {
+      console.warn("emailQueue write blocked by Firestore rules:", error);
+      return;
+    }
+    throw error;
+  }
+}
 
 function renderCard(app){
   return `
@@ -59,13 +74,11 @@ async function loadApplications(){
         reviewReason:""
       });
       await updateDoc(doc(db,"users",app.uid),{status:"active", role:"instructor"});
-      await addDoc(collection(db,"emailQueue"),{
+      await queueEmail({
         to: app.email,
         template: "instructor-approved",
         subject: "تم قبول طلب الأستاذ - CourseHub",
-        message: "تم قبول طلبك كأستاذ في CourseHub ويمكنك الآن تسجيل الدخول ورفع دوراتك للمراجعة.",
-        createdAt: serverTimestamp(),
-        status: "pending"
+        message: "تم قبول طلبك كأستاذ في CourseHub ويمكنك الآن تسجيل الدخول ورفع دوراتك للمراجعة."
       });
       card.remove();
     });
@@ -86,13 +99,11 @@ async function loadApplications(){
         reviewReason:reason
       });
       await updateDoc(doc(db,"users",app.uid),{status:"rejected", role:"instructor", reviewReason:reason});
-      await addDoc(collection(db,"emailQueue"),{
+      await queueEmail({
         to: app.email,
         template: "instructor-rejected",
         subject: "نتيجة طلب الأستاذ - CourseHub",
-        message: `تم رفض طلبك للأسباب التالية: ${reason}`,
-        createdAt: serverTimestamp(),
-        status: "pending"
+        message: `تم رفض طلبك للأسباب التالية: ${reason}`
       });
       card.remove();
     });
