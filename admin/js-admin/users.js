@@ -45,15 +45,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (status === "active") return "success";
     if (status === "pending" || status === "pending_verification") return "warning";
     if (status === "blocked" || status === "rejected") return "danger";
+    if (status === "deleted") return "neutral";
     return "neutral";
   };
 
-
   const isPermissionDenied = (error) => {
-    return error?.code === "permission-denied" || /insufficient permissions/i.test(error?.message || "");
+    return (
+      error?.code === "permission-denied" ||
+      /insufficient permissions/i.test(error?.message || "")
+    );
   };
 
-
+  // Best-effort: يضيف طلب لحذف المستخدم من Firebase Auth عبر Cloud Function لاحقاً
   const queueAuthDeletion = async (user) => {
     try {
       await addDoc(collection(db, "authDeletionQueue"), {
@@ -66,6 +69,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       return true;
     } catch (error) {
+      // لو ممنوع/غير موجود في rules، لا نكسر العملية الأساسية
       if (!isPermissionDenied(error)) {
         console.warn("authDeletionQueue write failed:", error);
       }
@@ -83,28 +87,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const confirmDelete = window.confirm(
-      `هل أنت متأكد من حذف المستخدم ${getDisplayName(user)} نهائيًا؟\n\nسيتم حذف سجل المستخدم من قاعدة البيانات وطلبات الأستاذ المرتبطة به.`
+      `هل أنت متأكد من حذف المستخدم ${getDisplayName(user)} نهائيًا؟\n\n` +
+        `سيتم حذف/أرشفة سجل المستخدم من قاعدة البيانات وطلبات الأستاذ المرتبطة به.`
     );
 
     if (!confirmDelete) return;
 
     let hardDeleted = false;
 
+    // 1) users/{uid}: حاول حذف، وإن فشل بسبب rules → أرشف
     try {
       await deleteDoc(doc(db, "users", targetUid));
       hardDeleted = true;
     } catch (error) {
       if (!isPermissionDenied(error)) throw error;
 
-      // Fallback if Firestore rules block delete but allow update
       await updateDoc(doc(db, "users", targetUid), {
         status: "deleted",
+        role: "deleted",
         deletedAt: serverTimestamp(),
-        deletedBy: auth.currentUser?.uid || null,
-        role: "deleted"
+        deletedBy: auth.currentUser?.uid || null
       });
     }
 
+    // 2) instructorApplications: حاول حذف، وإن فشل → أرشف
     const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
     const appSnap = await getDocs(appQuery);
 
@@ -114,6 +120,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           await deleteDoc(snap.ref);
         } catch (error) {
           if (!isPermissionDenied(error)) throw error;
+
           await updateDoc(snap.ref, {
             applicationStatus: "archived",
             reviewReason: "Archived after account deletion request",
@@ -123,29 +130,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       })
     );
 
+    // 3) Update UI cache
     if (hardDeleted) {
       allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
     } else {
       allUsers = allUsers.map((item) => {
         if ((item.uid || item.id) !== targetUid) return item;
-        return {
-          ...item,
-          status: "deleted",
-          role: "deleted"
-        };
+        return { ...item, status: "deleted", role: "deleted" };
       });
     }
 
     applyFilters();
 
+    // 4) Best-effort: queue auth deletion
     const queued = await queueAuthDeletion(user);
 
+    // 5) User feedback
     if (!hardDeleted) {
-      if (queued) {
-        alert("تمت أرشفة الحساب بدل الحذف الكامل لأن قواعد Firestore تمنع delete، وتم إرسال طلب حذف Firebase Authentication (authDeletionQueue).");
-      } else {
-        alert("تمت أرشفة الحساب بدل الحذف الكامل. لم نتمكن من إرسال طلب حذف Firebase Authentication (authDeletionQueue). تحقق من قواعد Firestore وصلاحيات الأدمن.");
-      }
+      alert(
+        "تمت أرشفة الحساب بدل الحذف الكامل لأن قواعد Firestore تمنع delete.\n" +
+          (queued
+            ? "كما تم إرسال طلب حذف حسابه من Firebase Authentication (authDeletionQueue)."
+            : "لم نتمكن من إرسال طلب حذف Firebase Authentication (تحقق من Rules لمجموعة authDeletionQueue).")
+      );
       return;
     }
 
