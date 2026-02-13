@@ -131,3 +131,12 @@
     font-size: 24px;
   }
 }
+
+.register-extended { max-width: 560px; }
+.role-switch { display:flex; gap:16px; justify-content:center; margin-bottom:8px; font-weight:600; }
+.role-switch label { display:flex; align-items:center; gap:6px; }
+.instructor-fields { border:1px solid #dbe3f1; border-radius:10px; padding:12px; background:#f8fbff; display:flex; flex-direction:column; gap:10px; }
+.file-label { display:flex; flex-direction:column; gap:6px; font-size:14px; color:#374151; }
+.terms-check { font-size:14px; color:#1f2937; display:flex; align-items:flex-start; gap:8px; line-height:1.7; }
+.terms-check a { color:#1c3faa; font-weight:700; }
+.login-page textarea { padding: 12px 14px; border-radius:8px; border:1px solid #d0d5dd; font-size:15px; }

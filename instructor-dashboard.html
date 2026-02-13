@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة الأستاذ | CourseHub</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="/css/instructor-dashboard.css" />
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main class="instructor-shell container">
+    <section class="instructor-hero">
+      <div>
+        <h1>لوحة تحكم الأستاذ</h1>
+        <p>أنشئ دوراتك وأرسلها للمراجعة والنشر من قبل الإدارة.</p>
+      </div>
+      <div class="instructor-kpis">
+        <div><strong id="pendingCount">0</strong><span>قيد المراجعة</span></div>
+        <div><strong id="approvedCount">0</strong><span>معتمدة</span></div>
+      </div>
+    </section>
+
+    <section class="instructor-grid">
+      <div class="card">
+        <h2>إرسال دورة جديدة للمراجعة</h2>
+        <form id="instructorCourseForm" class="instructor-form">
+          <input id="courseTitle" type="text" placeholder="عنوان الدورة" required />
+          <textarea id="courseDescription" rows="4" placeholder="وصف احترافي للدورة" required></textarea>
+          <input id="coursePrice" type="number" min="0" step="0.01" placeholder="سعر الدورة" required />
+          <input id="courseCategory" type="text" placeholder="التصنيف (مثال: تطوير الويب)" required />
+          <label class="file-upload">صورة الدورة
+            <input id="courseImage" type="file" accept="image/*" />
+          </label>
+          <label class="file-upload">ملف منهج/خطة الدورة (اختياري)
+            <input id="courseOutline" type="file" accept=".pdf,.doc,.docx" />
+          </label>
+          <button type="submit" class="btn">إرسال للمراجعة</button>
+          <p id="instructorFormStatus" class="status"></p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>طلباتك السابقة</h2>
+        <div id="instructorSubmissions" class="submission-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="/js/main.js" defer></script>
+  <script type="module" src="/js/instructor-dashboard.js"></script>
+</body>
+</html>
