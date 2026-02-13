@@ -10,17 +10,40 @@
 
 <div id="header-placeholder"></div>
 
-<main class="login-page container">
-  <h2>إنشاء حساب جديد</h2>
+<main class="login-page container register-extended">
+  <h2 data-i18n-en="Create a new account">إنشاء حساب جديد</h2>
 
   <form id="registerForm">
-    <input id="regEmail" type="email" placeholder="البريد الإلكتروني" required>
-    <input id="regPassword" type="password" placeholder="كلمة المرور" required>
-    <button type="submit">إنشاء الحساب</button>
+    <div class="role-switch">
+      <label><input type="radio" name="accountType" value="student" checked> التسجيل كطالب</label>
+      <label><input type="radio" name="accountType" value="instructor"> التسجيل كأستاذ</label>
+    </div>
+
+    <input id="regFullName" type="text" placeholder="الاسم الكامل" required>
+    <input id="regEmail" type="email" placeholder="البريد الإلكتروني" required data-i18n-placeholder-en="Email">
+    <input id="regPhone" type="tel" placeholder="رقم الهاتف (اختياري)">
+    <input id="regPassword" type="password" placeholder="كلمة المرور" required data-i18n-placeholder-en="Password">
+
+    <div id="instructorFields" class="instructor-fields" style="display:none;">
+      <input id="regUniversity" type="text" placeholder="الجامعة / جهة العمل">
+      <input id="regSpecialization" type="text" placeholder="التخصص الأكاديمي">
+      <input id="regExperience" type="number" min="0" placeholder="سنوات الخبرة">
+      <label class="file-label">شهادة العمل (PDF)
+        <input id="regWorkProof" type="file" accept="application/pdf">
+      </label>
+      <textarea id="regBio" rows="3" placeholder="نبذة تعريفية قصيرة عنك"></textarea>
+
+      <label class="terms-check">
+        <input id="instructorTerms" type="checkbox">
+        أوافق على <a href="/instructor-terms.html" target="_blank" rel="noopener">الشروط والقواعد</a> الخاصة بالأساتذة.
+      </label>
+    </div>
+
+    <button type="submit" data-i18n-en="Create account">إنشاء الحساب</button>
   </form>
 
   <p class="login-links">
-    <a href="login.html">تسجيل الدخول</a>
+    <a href="login.html" data-i18n-en="Log in">تسجيل الدخول</a>
   </p>
 </main>
 

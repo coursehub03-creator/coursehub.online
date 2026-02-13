@@ -1,0 +1,20 @@
+.instructor-shell{padding:24px 0 40px}
+.instructor-hero{display:flex;justify-content:space-between;gap:16px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:20px;margin-bottom:18px}
+.instructor-hero h1{margin:0 0 8px;color:#0f3fb8}
+.instructor-kpis{display:flex;gap:12px}
+.instructor-kpis div{background:#f8fafc;border:1px solid #dbe3f1;border-radius:12px;padding:12px 16px;text-align:center;min-width:120px}
+.instructor-kpis strong{display:block;font-size:22px;color:#0f3fb8}
+.instructor-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px}
+.instructor-form{display:grid;gap:10px}
+.instructor-form input,.instructor-form textarea{padding:12px;border:1px solid #d0d5dd;border-radius:8px}
+.file-upload{font-size:14px;color:#374151;display:grid;gap:6px}
+.status{margin:0;font-size:14px;color:#1d4ed8}
+.submission-list{display:grid;gap:10px}
+.submission-item{border:1px solid #e5e7eb;border-radius:10px;padding:12px;background:#f9fafb}
+.submission-item h4{margin:0 0 4px}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge.pending{background:#fff7ed;color:#9a3412}
+.badge.approved{background:#dcfce7;color:#166534}
+.badge.rejected{background:#fee2e2;color:#991b1b}
+@media (max-width:900px){.instructor-grid{grid-template-columns:1fr}.instructor-hero{flex-direction:column}}
