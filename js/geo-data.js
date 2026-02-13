@@ -8,13 +8,18 @@ function flagFromRegion(code) {
     .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt()));
 }
 
-export function getAllCountries() {
-  const regionCodes =
-    typeof Intl.supportedValuesOf === "function"
-      ? Intl.supportedValuesOf("region")
-      : fallbackRegions;
+function getRegionCodes() {
+  if (typeof Intl.supportedValuesOf !== "function") return fallbackRegions;
 
-  const uniqueRegions = new Set(regionCodes.map((code) => code.toUpperCase()));
+  try {
+    return Intl.supportedValuesOf("region");
+  } catch {
+    return fallbackRegions;
+  }
+}
+
+export function getAllCountries() {
+  const uniqueRegions = new Set(getRegionCodes().map((code) => code.toUpperCase()));
   uniqueRegions.delete("IL");
   uniqueRegions.add("PS");
 
