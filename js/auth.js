@@ -155,13 +155,15 @@ async function getUserMeta(uid) {
 async function saveUserProfile(user, profileData = {}, options = {}) {
   if (!user?.uid) return;
 
+  const existingMeta = options.existingMeta || (await getUserMeta(user.uid));
+
   const payload = {
     uid: user.uid,
     email: user.email || "",
     emailVerified: !!user.emailVerified,
     picture: user.photoURL || DEFAULT_AVATAR,
-    role: "student",
-    status: user.emailVerified ? "active" : "pending_verification",
+    role: existingMeta?.role || "student",
+    status: existingMeta?.status || (user.emailVerified ? "active" : "pending_verification"),
     updatedAt: serverTimestamp()
   };
 
