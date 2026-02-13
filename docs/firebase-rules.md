@@ -83,6 +83,7 @@ service cloud.firestore {
       allow get, list, create, update, delete: if isAdmin();
     }
 
+
     // طابور حذف حسابات Authentication (يعالَج عبر Cloud Function Admin SDK)
     match /authDeletionQueue/{jobId} {
       allow get, list, create, update, delete: if isAdmin();
@@ -143,3 +144,57 @@ service cloud.firestore {
     }
   }
 }
+```
+
+## Storage Rules
+
+```rules
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminByClaim() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isAdminByEmail() {
+      return isSignedIn() && request.auth.token.email in [
+        "kaleadsalous30@gmail.com",
+        "coursehub03@gmail.com"
+      ];
+    }
+
+    function isAdmin() {
+      return isAdminByClaim() || isAdminByEmail();
+    }
+
+    // ملفات الدورات
+    match /courses/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ملفات إثبات العمل للأساتذة (PDF)
+    match /instructor-applications/{uid}/{fileName} {
+      // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
+      allow write: if isSignedIn()
+                   && request.auth.uid == uid
+                   && request.resource.contentType.matches('application/pdf');
+
+      // القراءة للأدمن فقط
+      allow read: if isAdmin();
+    }
+  }
+}
+```
+
+## ملاحظات مهمة
+
+- حذف المستخدم من Firestore من لوحة الأدمن يحتاج `allow delete` على `users/{userId}` للأدمن (موجودة أعلاه).
+- إذا أردت "حذف نهائي" من Firebase Authentication أيضًا، تحتاج Cloud Function بـ Admin SDK (الـ Rules وحدها لا تحذف مستخدم Auth).
+- بعد تعديل القواعد في Firebase Console، انشرها ثم جرّب من جديد من حساب أدمن فعلي.
+- إذا بقي المستخدم موجودًا في Firebase Authentication بعد الحذف من Firestore، تأكد من وجود Cloud Function تعالج `authDeletionQueue` وتحذف مستخدم Auth فعليًا.
