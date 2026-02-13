@@ -4,39 +4,82 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>تفعيل البريد الإلكتروني | CourseHub</title>
+
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/header.css" />
   <link rel="stylesheet" href="css/footer.css" />
   <link rel="stylesheet" href="css/login.css" />
+
+  <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="js/verify-email.js" defer></script>
 </head>
+
 <body>
   <div id="header-placeholder"></div>
 
-  <main class="login-page container">
-    <h2 data-i18n-en="Verify your email">تفعيل البريد الإلكتروني</h2>
-    <p id="verifyMessage" data-i18n-en="We sent a verification link to your email.">أرسلنا رابط تفعيل إلى بريدك الإلكتروني.</p>
+  <main class="auth-shell container">
+    <section class="auth-panel login-page" aria-label="Verify email panel">
+      <p class="auth-kicker" data-i18n-en="Verify your email">تفعيل البريد الإلكتروني</p>
+      <h2 data-i18n-en="Verify your email">تأكيد البريد الإلكتروني</h2>
 
-    <div class="login-links" style="margin:12px 0; text-align:right;">
-      <button id="resendVerificationBtn" type="button" class="btn" data-i18n-en="Resend verification email">إعادة إرسال رابط التفعيل</button>
-    </div>
+      <p
+        class="auth-subtitle"
+        data-i18n-en="We sent a verification link to your email. Please verify before logging in."
+      >
+        تم إرسال رابط التفعيل إلى بريدك. يجب تفعيل الحساب عبر الرابط قبل تسجيل الدخول.
+      </p>
 
-    <div class="login-links" style="margin-top:18px; padding:14px; border:1px solid #e5e7eb; border-radius:10px; background:#f8fafc;">
-      <strong data-i18n-en="Delivery help">مساعدة وصول الرسالة</strong>
-      <ul style="margin:8px 0 0; padding-inline-start:18px; line-height:1.8;">
-        <li data-i18n-en="Check Spam and Promotions folders.">تحقق من مجلد Spam وPromotions.</li>
-        <li data-i18n-en="Add sender address to contacts/safe senders.">أضف بريد المرسل إلى جهات الاتصال/القائمة الآمنة.</li>
-        <li data-i18n-en="Wait 1-2 minutes before requesting another resend.">انتظر 1-2 دقيقة قبل طلب إعادة إرسال جديدة.</li>
-      </ul>
-    </div>
+      <!-- يظهر فيه البريد المستهدف -->
+      <p id="verifyEmailAddress" class="login-links" style="text-align:right;"></p>
 
-    <p class="login-links" style="margin-top:16px;">
-      <a href="login.html" data-i18n-en="Back to login">العودة لتسجيل الدخول</a>
-    </p>
+      <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+        <button
+          id="resendVerificationBtn"
+          type="button"
+          class="btn"
+          data-i18n-en="Resend verification email"
+          style="flex:1; min-width:180px;"
+        >
+          إعادة إرسال رابط التفعيل
+        </button>
+
+        <button
+          id="checkVerificationBtn"
+          type="button"
+          class="google-btn"
+          data-i18n-en="I verified my email"
+          style="flex:1; min-width:180px;"
+        >
+          تحققت من البريد
+        </button>
+      </div>
+
+      <div
+        id="verifyMsg"
+        class="error-msg"
+        role="alert"
+        aria-live="polite"
+        style="margin-top:10px;"
+      ></div>
+
+      <!-- مساعدة وصول الرسالة -->
+      <div
+        style="margin-top:18px; padding:14px; border:1px solid #e5e7eb; border-radius:10px; background:#f8fafc; text-align:right;"
+      >
+        <strong data-i18n-en="Delivery help">مساعدة وصول الرسالة</strong>
+        <ul style="margin:8px 0 0; padding-inline-start:18px; line-height:1.8;">
+          <li data-i18n-en="Check Spam and Promotions folders.">تحقق من مجلد Spam وPromotions.</li>
+          <li data-i18n-en="Add sender address to contacts/safe senders.">أضف بريد المرسل إلى جهات الاتصال/القائمة الآمنة.</li>
+          <li data-i18n-en="Wait 1-2 minutes before requesting another resend.">انتظر 1-2 دقيقة قبل طلب إعادة إرسال جديدة.</li>
+        </ul>
+      </div>
+
+      <p class="login-links" style="margin-top:16px;">
+        <a href="login.html" data-i18n-en="Back to login">العودة لتسجيل الدخول</a>
+      </p>
+    </section>
   </main>
 
   <div id="footer-placeholder"></div>
-
-  <script type="module" src="js/main.js" defer></script>
-  <script type="module" src="js/verify-email.js"></script>
 </body>
 </html>

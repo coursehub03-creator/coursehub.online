@@ -878,19 +878,71 @@
     align-items: flex-start;
   }
 }
+/* ============================= */
+/*       Admin Users List        */
+/* ============================= */
+.admin-users-list { 
+  display: grid; 
+  gap: 14px; 
+}
 
-.admin-users-list { display:grid; gap:14px; }
 .user-card {
-  display:flex;
-  justify-content:space-between;
-  gap:16px;
-  background:#fff;
-  border:1px solid var(--admin-border);
-  border-radius:12px;
-  padding:14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  padding: 14px;
   box-shadow: var(--admin-shadow);
 }
-.user-card h3 { margin:0 0 8px; color:var(--admin-accent); }
-.user-card p { margin:4px 0; color:#334155; }
-.review-reason { width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:10px; }
-@media (max-width:900px){ .user-card{flex-direction:column;} }
+
+.user-card h3 { 
+  margin: 0 0 8px; 
+  color: var(--admin-accent); 
+}
+
+.user-card p { 
+  margin: 4px 0; 
+  color: #334155; 
+}
+
+.review-reason { 
+  width: 100%; 
+  border: 1px solid #cbd5e1; 
+  border-radius: 8px; 
+  padding: 10px; 
+}
+
+@media (max-width: 900px) { 
+  .user-card { 
+    flex-direction: column; 
+  } 
+}
+
+/* ============================= */
+/*       Alerts / Security UI    */
+/* ============================= */
+.alert.danger {
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+.security-signals {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.security-signals li {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
