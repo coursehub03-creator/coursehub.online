@@ -144,8 +144,11 @@ function renderSlide() {
   const textAlign = slideStyle.textAlign || "right";
   const textColor = slideStyle.textColor || "#0f172a";
   const backgroundColor = slideStyle.backgroundColor || "#ffffff";
-  const fontSize = slideStyle.fontSize || 18;
+  const fontSize = Math.max(slideStyle.fontSize || 24, 18);
   const fontWeight = slideStyle.fontWeight || 600;
+  const titleFontSize = Math.max(fontSize + 6, 26);
+  const bodyFontSize = Math.max(fontSize - 2, 16);
+  const slideBody = (slide.content ?? slide.text ?? "").replace(/\n/g, "<br>");
   const hasMedia = Boolean(slide.mediaUrl);
   const mediaMarkup = hasMedia
     ? slide.type === "video"
@@ -167,9 +170,9 @@ function renderSlide() {
     </div>
     <div class="${slideClassNames}" style="background: ${backgroundColor};">
       <div class="course-slide-text" style="color: ${textColor}; text-align: ${textAlign};">
-        <h3 style="font-size: ${fontSize}px; font-weight: ${fontWeight};">${slide.title || ""}</h3>
-        <div class="slide-content" style="font-size: ${Math.max(fontSize - 2, 12)}px; color: ${textColor};">
-          ${slide.content ?? slide.text ?? ""}
+        <h3 style="font-size: ${titleFontSize}px; font-weight: ${fontWeight};">${slide.title || ""}</h3>
+        <div class="slide-content" style="font-size: ${bodyFontSize}px; color: ${textColor};">
+          ${slideBody}
         </div>
       </div>
       <div class="course-slide-media">
@@ -423,7 +426,7 @@ async function completeCourse({ showSummary = true } = {}) {
         id: courseId,
         title: courseTitle || course.title,
         instructor: course.instructor || "",
-        image: course.image || "/assets/images/course1.jpg",
+        image: course.image || "/assets/images/default-course.png",
         completedAt: new Date().toLocaleDateString("ar-EG")
       },
       { merge: true }

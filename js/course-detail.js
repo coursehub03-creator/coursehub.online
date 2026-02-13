@@ -55,8 +55,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       const titleEl = courseDetail.querySelector("h2");
       if (titleEl) titleEl.textContent = titleText || "بدون عنوان";
 
-      if (courseImage)
-        courseImage.src = course.image || "/assets/images/course1.jpg";
+      if (courseImage) {
+        courseImage.src = course.image || "/assets/images/default-course.png";
+      }
 
       if (courseDesc)
         courseDesc.textContent = descriptionText || "";
