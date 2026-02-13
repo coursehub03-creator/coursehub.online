@@ -6,6 +6,33 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+const pdfLibraryUrl =
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const dataUrlPrefix = "data:";
+const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
+const uiText = {
+  ar: {
+    verifying: "جاري التحقق من الشهادة...",
+    notFound: "لم يتم العثور على شهادة بهذا الرمز.",
+    validBadge: "شهادة معتمدة وصحيحة",
+    completedAt: "تاريخ الإنجاز:",
+    viewCertificate: "عرض الشهادة",
+    downloadPdf: "تحميل PDF",
+    downloadFailed: "تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.",
+    verifyError: "حدث خطأ أثناء التحقق. حاول مرة أخرى."
+  },
+  en: {
+    verifying: "Verifying the certificate...",
+    notFound: "No certificate found with this code.",
+    validBadge: "Verified certificate",
+    completedAt: "Completion date:",
+    viewCertificate: "View certificate",
+    downloadPdf: "Download PDF",
+    downloadFailed: "Failed to download the certificate as PDF. Please try again.",
+    verifyError: "An error occurred while verifying. Please try again."
+  }
+};
+
 const form = document.getElementById("verifyForm");
 const input = document.getElementById("certificateCode");
 const result = document.getElementById("verifyResult");
@@ -24,31 +51,259 @@ form?.addEventListener("submit", (event) => {
   verifyCode(code);
 });
 
+const sanitizeFileName = (value) =>
+  (value || "certificate")
+    .toString()
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const resolveJsPdfConstructor = () =>
+  window.jspdf?.jsPDF || window.jsPDF || null;
+
+const loadJsPdf = (() => {
+  let cachedPromise;
+  return async () => {
+    if (!cachedPromise) {
+      cachedPromise = new Promise((resolve, reject) => {
+        const existing = resolveJsPdfConstructor();
+        if (existing) {
+          resolve(existing);
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = pdfLibraryUrl;
+        script.async = true;
+        script.onload = () => {
+          const loaded = resolveJsPdfConstructor();
+          if (loaded) {
+            resolve(loaded);
+          } else {
+            reject(new Error("jsPDF constructor not found."));
+          }
+        };
+        script.onerror = () => reject(new Error("Failed to load jsPDF."));
+        document.head.appendChild(script);
+      });
+    }
+    return cachedPromise;
+  };
+})();
+
+const blobToDataUrl = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
+const fetchImageDataUrl = async (url) => {
+  if (url.startsWith(dataUrlPrefix)) {
+    return url;
+  }
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to load certificate image.");
+  }
+  const blob = await response.blob();
+  return blobToDataUrl(blob);
+};
+
+const loadImage = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Failed to load image."));
+    img.src = src;
+  });
+
+const fetchQrDataUrl = async (verifyUrl) => {
+  if (!verifyUrl) {
+    return "";
+  }
+  const qrResponse = await fetch(
+    `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
+      verifyUrl
+    )}`
+  );
+  if (!qrResponse.ok) {
+    throw new Error("Failed to load QR code.");
+  }
+  const qrBlob = await qrResponse.blob();
+  return blobToDataUrl(qrBlob);
+};
+
+const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
+  const dataUrl = await fetchImageDataUrl(certificateUrl);
+  if (!verificationCode) {
+    return dataUrl;
+  }
+
+  const verifyUrl = new URL(
+    `/verify-certificate.html?code=${encodeURIComponent(verificationCode)}`,
+    window.location.href
+  ).href;
+  const qrDataUrl = await fetchQrDataUrl(verifyUrl);
+  if (!qrDataUrl) {
+    return dataUrl;
+  }
+
+  const [certificateImage, qrImage] = await Promise.all([
+    loadImage(dataUrl),
+    loadImage(qrDataUrl)
+  ]);
+  const canvas = document.createElement("canvas");
+  canvas.width = certificateImage.width;
+  canvas.height = certificateImage.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return dataUrl;
+  }
+  ctx.drawImage(certificateImage, 0, 0);
+
+  const minSide = Math.min(canvas.width, canvas.height);
+  const qrSize = Math.round(minSide * 0.18);
+  const margin = Math.round(minSide * 0.04);
+  const x = canvas.width - qrSize - margin;
+  const y = canvas.height - qrSize - margin;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
+  ctx.drawImage(qrImage, x, y, qrSize, qrSize);
+
+  return canvas.toDataURL("image/png");
+};
+
+const downloadPdfFromImage = async (url, title, verificationCode) => {
+  const dataUrl = await composeCertificateWithQr(url, verificationCode);
+  const imageType = dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+  const jsPDF = await loadJsPdf();
+  if (!jsPDF) {
+    throw new Error("jsPDF constructor not available.");
+  }
+  const img = await loadImage(dataUrl);
+  const orientation = img.width > img.height ? "landscape" : "portrait";
+  const pdf = new jsPDF({
+    orientation,
+    unit: "pt",
+    format: [img.width, img.height]
+  });
+  pdf.addImage(dataUrl, imageType, 0, 0, img.width, img.height);
+  pdf.save(`${sanitizeFileName(title)}.pdf`);
+};
+
 async function verifyCode(code) {
   if (!result) return;
   result.className = "verify-result";
   result.style.display = "none";
+  result.innerHTML = "";
+  result.classList.remove("error", "success");
 
   try {
+    result.style.display = "block";
+    result.textContent = uiText[getLang()].verifying;
     const q = query(collection(db, "certificates"), where("verificationCode", "==", code));
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
       result.classList.add("error");
-      result.textContent = "لم يتم العثور على شهادة بهذا الرمز.";
+      result.textContent = uiText[getLang()].notFound;
       return;
     }
 
     const cert = snapshot.docs[0].data();
+    const title = cert.courseTitle || cert.courseId || "الشهادة";
+    const completedAt = formatDate(cert.completedAt);
+    const certificateUrl = cert.certificateUrl || "";
+    const verificationCode = cert.verificationCode || code;
+    const viewUrl = `/certificate-view.html?url=${encodeURIComponent(
+      certificateUrl || ""
+    )}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(
+      verificationCode
+    )}`;
+
     result.classList.add("success");
-    result.textContent = `الشهادة صحيحة: دورة ${cert.courseTitle || cert.courseId}، أُنجزت بتاريخ ${formatDate(cert.completedAt)}.`;
+    result.innerHTML = `
+      <div class="result-header">
+        <span class="result-badge">${uiText[getLang()].validBadge}</span>
+      </div>
+      <h3 class="result-title">${title}</h3>
+      <p class="result-meta">${uiText[getLang()].completedAt} ${completedAt || "غير محدد"}</p>
+      <div class="result-actions">
+        ${
+          certificateUrl
+            ? `<button type="button" class="btn" data-view-url="${encodeURIComponent(
+                certificateUrl
+              )}" data-view-title="${encodeURIComponent(title)}" data-view-code="${encodeURIComponent(
+                verificationCode
+              )}">${uiText[getLang()].viewCertificate}</button>`
+            : ""
+        }
+        ${
+          certificateUrl
+            ? `<button type="button" class="btn secondary" data-download-url="${encodeURIComponent(
+                certificateUrl
+              )}" data-download-title="${encodeURIComponent(title)}" data-download-code="${encodeURIComponent(
+                verificationCode
+              )}">${uiText[getLang()].downloadPdf}</button>`
+            : ""
+        }
+      </div>
+    `;
+
+    const viewButton = result.querySelector("[data-view-url]");
+    if (viewButton) {
+      viewButton.addEventListener("click", () => {
+        const url = decodeURIComponent(viewButton.getAttribute("data-view-url") || "");
+        const viewTitle = decodeURIComponent(
+          viewButton.getAttribute("data-view-title") || ""
+        );
+        const viewCode = decodeURIComponent(
+          viewButton.getAttribute("data-view-code") || ""
+        );
+        let dataKey = "";
+        let targetUrl = url;
+        if (url.startsWith(dataUrlPrefix)) {
+          dataKey = `certificate-data-${Date.now()}`;
+          sessionStorage.setItem(dataKey, url);
+          targetUrl = "";
+        }
+        const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(
+          targetUrl
+        )}&title=${encodeURIComponent(viewTitle || "certificate")}&code=${encodeURIComponent(
+          viewCode || ""
+        )}&dataKey=${encodeURIComponent(dataKey)}`;
+        window.open(viewerUrl, "_blank");
+      });
+    }
+
+    const downloadButton = result.querySelector("[data-download-url]");
+    if (downloadButton) {
+      downloadButton.addEventListener("click", () => {
+        const url = decodeURIComponent(
+          downloadButton.getAttribute("data-download-url") || ""
+        );
+        const downloadTitle = decodeURIComponent(
+          downloadButton.getAttribute("data-download-title") || ""
+        );
+        const downloadCode = decodeURIComponent(
+          downloadButton.getAttribute("data-download-code") || ""
+        );
+        downloadPdfFromImage(url, downloadTitle, downloadCode).catch(() => {
+          result.classList.add("error");
+          result.textContent = uiText[getLang()].downloadFailed;
+        });
+      });
+    }
   } catch (error) {
     result.classList.add("error");
-    result.textContent = "حدث خطأ أثناء التحقق. حاول مرة أخرى.";
+    result.textContent = uiText[getLang()].verifyError;
   }
 }
 
 function formatDate(dateValue) {
   const date = dateValue?.toDate ? dateValue.toDate() : new Date(dateValue);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("ar-EG");
+  const locale = getLang() === "en" ? "en-US" : "ar-EG";
+  return date.toLocaleDateString(locale);
 }

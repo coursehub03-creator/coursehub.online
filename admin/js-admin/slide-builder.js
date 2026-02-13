@@ -23,7 +23,7 @@ export class SlideBuilder {
       mediaFile: null,
       textColor: "#0f172a",
       backgroundColor: "#ffffff",
-      fontSize: 18,
+      fontSize: 24,
       fontWeight: 600,
       textAlign: "right",
       layout: "media-right"
@@ -67,7 +67,12 @@ export class SlideBuilder {
         </div>
         <div class="field-group">
           <label>نص السلايد</label>
-          <textarea class="slide-text" rows="3" placeholder="اكتب نصًا يوضح النقاط الرئيسية"></textarea>
+          <textarea class="slide-text" rows="5" placeholder="اكتب نصًا يوضح النقاط الرئيسية"></textarea>
+          <div class="slide-text-tools">
+            <button type="button" class="btn outline small" data-action="line-break">سطر جديد</button>
+            <button type="button" class="btn outline small" data-action="bullet">• نقطة</button>
+          </div>
+          <span class="field-help">يمكنك كتابة كل نقطة في سطر مستقل لعرض أوضح في الشريحة.</span>
         </div>
         <div class="field-group">
           <label>تحميل الوسائط</label>
@@ -96,7 +101,7 @@ export class SlideBuilder {
         </div>
         <div class="field-group">
           <label>حجم الخط</label>
-          <input type="number" class="slide-font-size" min="12" max="40" value="18">
+          <input type="number" class="slide-font-size" min="16" max="64" value="24">
         </div>
         <div class="field-group">
           <label>سُمك الخط</label>
@@ -137,6 +142,9 @@ export class SlideBuilder {
     const preview = div.querySelector(".slide-preview");
     const previewContent = div.querySelector(".slide-preview-content");
     const previewMedia = div.querySelector(".slide-media");
+    const textToolButtons = div.querySelectorAll(".slide-text-tools button");
+
+    const formatMultiline = (value) => (value || "").replace(/\n/g, "<br>");
 
     const updatePreview = () => {
       preview.classList.remove("media-right", "media-left", "media-top");
@@ -146,10 +154,10 @@ export class SlideBuilder {
       previewContent.innerHTML = `
         <div style="color: ${slide.textColor}; text-align: ${slide.textAlign};">
           <div style="font-size: ${slide.fontSize}px; font-weight: ${slide.fontWeight}; margin-bottom: 6px;">
-            ${slide.title || "عنوان السلايد"}
+            ${formatMultiline(slide.title || "عنوان السلايد")}
           </div>
           <div style="font-size: ${Math.max(slide.fontSize - 2, 12)}px;">
-            ${slide.text || "وصف السلايد يظهر هنا."}
+            ${formatMultiline(slide.text || "وصف السلايد يظهر هنا.")}
           </div>
         </div>
       `;
@@ -217,6 +225,30 @@ export class SlideBuilder {
       slide.text = e.target.value;
       updatePreview();
     };
+
+    textToolButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.action;
+        const textarea = textInput;
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentValue = textarea.value;
+        let insertText = "";
+
+        if (action === "bullet") {
+          insertText = `${start === 0 || currentValue[start - 1] === "\n" ? "" : "\n"}• `;
+        } else {
+          insertText = "\n";
+        }
+
+        textarea.value = `${currentValue.slice(0, start)}${insertText}${currentValue.slice(end)}`;
+        textarea.selectionStart = textarea.selectionEnd = start + insertText.length;
+        slide.text = textarea.value;
+        updatePreview();
+        textarea.focus();
+      });
+    });
 
     mediaUrlInput.oninput = e => {
       slide.mediaUrl = e.target.value;
