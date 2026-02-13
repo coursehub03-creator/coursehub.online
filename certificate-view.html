@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>عرض الشهادة | CourseHub</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/header.css">
-  <link rel="stylesheet" href="/css/footer.css">
-  <link rel="stylesheet" href="/css/certificate-view.css">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="/css/certificate-view.css" />
 </head>
 <body>
   <div id="header-placeholder"></div>
@@ -15,14 +15,22 @@
   <main class="certificate-view">
     <div class="certificate-view-card">
       <h1 id="certificateTitle" data-i18n-en="View certificate">عرض الشهادة</h1>
-      <p class="certificate-subtitle" data-i18n-en="You can download the certificate as a PDF after viewing it.">يمكنك تنزيل الشهادة كملف PDF بعد عرضها.</p>
+
+      <p class="certificate-subtitle" data-i18n-en="You can download the certificate as a PDF after viewing it.">
+        يمكنك تنزيل الشهادة كملف PDF بعد عرضها.
+      </p>
+
       <div class="certificate-preview">
-        <img id="certificateImage" alt="صورة الشهادة">
+        <img id="certificateImage" alt="صورة الشهادة" />
       </div>
+
       <div class="certificate-actions">
         <button type="button" class="btn" id="downloadPdf" data-i18n-en="Download PDF">تحميل PDF</button>
-        <a href="/verify-certificate.html" class="btn secondary" data-i18n-en="Verify another certificate">التحقق من شهادة أخرى</a>
+        <a href="/verify-certificate.html" class="btn secondary" data-i18n-en="Verify another certificate">
+          التحقق من شهادة أخرى
+        </a>
       </div>
+
       <p id="certificateError" class="certificate-error"></p>
     </div>
   </main>

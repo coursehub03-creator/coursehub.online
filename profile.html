@@ -1,59 +1,98 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>حسابي - CourseHub</title>
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS -->
+  <title>الملف الشخصي الاحترافي - CourseHub</title>
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/profile.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
-
-  <!-- Header -->
   <div id="header-placeholder"></div>
 
   <main class="profile-page">
     <section class="profile-hero">
       <div class="profile-hero-info">
-        <span class="profile-badge">حسابي</span>
-        <h1>إدارة ملفك الشخصي بسهولة</h1>
-        <p>تابع إنجازاتك وتقدمك، وحدّث بياناتك من خلال صفحة الإعدادات.</p>
+        <span class="profile-badge">Career Profile</span>
+        <h1>ملف شخصي احترافي قابل للربط مع سوق العمل</h1>
+        <p>أكمل معلوماتك الأكاديمية والمهنية لزيادة فرصك لاحقًا في التكامل مع LinkedIn وسوق العمل.</p>
       </div>
       <div class="profile-hero-card">
         <img src="" alt="Profile Picture" class="profile-pic" id="profilePic">
         <div>
           <h2 id="profileName"></h2>
           <p class="email" id="profileEmail"></p>
-          <button class="btn-primary" id="goSettingsBtn">تعديل البيانات من الإعدادات</button>
+          <button class="btn-primary" id="saveProfileTopBtn">حفظ الملف الاحترافي</button>
         </div>
       </div>
     </section>
 
     <section class="profile-grid">
+      <div class="profile-card profile-wide">
+        <h3>البيانات المهنية</h3>
+        <form id="professionalProfileForm" class="pro-form">
+          <div class="form-grid">
+            <label>المسمى الوظيفي الحالي
+              <input id="currentPosition" type="text" placeholder="Software Engineer / Student / ...">
+            </label>
+            <label>الشركة/الجهة الحالية
+              <input id="currentCompany" type="text" placeholder="اسم الشركة أو الجامعة">
+            </label>
+            <label>الجامعة / المؤسسة التعليمية
+              <input id="university" type="text" placeholder="اسم الجامعة">
+            </label>
+            <label>الدرجة التعليمية
+              <input id="degree" type="text" placeholder="Bachelor, Master, ...">
+            </label>
+            <label>سنوات الخبرة
+              <input id="experienceYears" type="number" min="0" max="60" placeholder="0">
+            </label>
+            <label>الدولة (الإقامة)
+              <select id="profileCountry"></select>
+            </label>
+            <label>رمز الهاتف
+              <select id="phoneCode"></select>
+            </label>
+            <label>رقم الهاتف
+              <input id="phoneNumber" type="tel" placeholder="5xxxxxxxx" inputmode="tel">
+            </label>
+            <label>رابط LinkedIn
+              <input id="linkedinUrl" type="url" placeholder="https://linkedin.com/in/username">
+            </label>
+            <label>رابط Portfolio / CV
+              <input id="portfolioUrl" type="url" placeholder="https://...">
+            </label>
+          </div>
+
+          <label>نبذة احترافية
+            <textarea id="bio" rows="4" placeholder="اكتب ملخصًا احترافيًا عن خبراتك وأهدافك."></textarea>
+          </label>
+
+          <label>المهارات (افصل بينها بفاصلة)
+            <input id="skills" type="text" placeholder="JavaScript, React, Communication, ...">
+          </label>
+
+          <label>الخبرات العملية
+            <textarea id="experiences" rows="4" placeholder="اذكر أهم الخبرات العملية والمشاريع."></textarea>
+          </label>
+
+          <label>الشهادات الحاصل عليها + الجهة المانحة
+            <textarea id="certifications" rows="4" placeholder="e.g. AWS Cloud Practitioner - Amazon"></textarea>
+          </label>
+
+          <div id="profileMsg" class="error-msg" role="alert" aria-live="polite"></div>
+        </form>
+      </div>
+
       <div class="profile-card">
         <h3>نظرة سريعة</h3>
         <div class="profile-stats">
-          <div>
-            <span id="completedCount">0</span>
-            <small>الدورات المكتملة</small>
-          </div>
-          <div>
-            <span id="certCount">0</span>
-            <small>الشهادات</small>
-          </div>
-          <div>
-            <span id="notifCount">0</span>
-            <small>الإشعارات</small>
-          </div>
+          <div><span id="completedCount">0</span><small>الدورات المكتملة</small></div>
+          <div><span id="certCount">0</span><small>الشهادات</small></div>
+          <div><span id="notifCount">0</span><small>الإشعارات</small></div>
         </div>
       </div>
 
@@ -63,22 +102,21 @@
       </div>
 
       <div class="profile-card">
-        <h3>إعدادات الحساب</h3>
+        <h3>إجراءات الحساب</h3>
         <div class="profile-actions">
+          <button type="button" class="btn-primary" id="saveProfileBtn">حفظ كل التعديلات</button>
           <a class="btn-secondary" href="/my-courses.html">دوراتي</a>
           <a class="btn-secondary" href="/achievements.html">إنجازاتي</a>
           <button type="button" class="btn-ghost" id="logoutBtn">تسجيل الخروج</button>
         </div>
-        <p class="profile-note">يمكن تعديل الاسم فقط من خلال صفحة الإعدادات لضمان تحديث الشهادات.</p>
+        <p class="profile-note">كل هذه البيانات جاهزة للربط لاحقًا مع بوابة فرص العمل و LinkedIn.</p>
       </div>
     </section>
   </main>
 
-  <!-- Footer -->
   <div id="footer-placeholder"></div>
 
   <script type="module" src="js/main.js"></script>
-  <script src="js/profile.js"></script>
-
+  <script type="module" src="js/profile.js"></script>
 </body>
 </html>

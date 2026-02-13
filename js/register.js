@@ -1,48 +1,16 @@
-// js/register.js - تسجيل المستخدم محلياً مع تحسينات
+// Legacy register entrypoint retained for backward compatibility.
+// Registration is handled securely through Firebase in js/auth.js.
 
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("register-form");
-  if (!form) return;
+  const legacyForm = document.getElementById("register-form");
+  if (!legacyForm) return;
 
-  form.addEventListener("submit", e => {
-    e.preventDefault();
+  const notice = document.createElement("p");
+  notice.className = "error-msg";
+  notice.textContent = "تم نقل إنشاء الحساب إلى نظام تسجيل آمن. سيتم تحويلك...";
+  legacyForm.replaceWith(notice);
 
-    const name = form.name.value.trim();
-    const email = form.email.value.trim();
-    const password = form.password.value.trim();
-
-    if (!name || !email || !password) {
-      alert("الرجاء ملء جميع الحقول");
-      return;
-    }
-
-    try {
-      // جلب المستخدمين الحاليين من localStorage
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-
-      // تحقق من وجود المستخدم مسبقًا
-      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-        alert("المستخدم موجود بالفعل");
-        return;
-      }
-
-      const newUser = {
-        name,
-        email,
-        password,
-        role: "user",
-        picture: "assets/images/default-user.png"
-      };
-
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-
-      alert("تم إنشاء الحساب بنجاح!");
-      window.location.href = "login.html";
-
-    } catch (err) {
-      console.error("خطأ أثناء تسجيل المستخدم:", err);
-      alert("حدث خطأ أثناء إنشاء الحساب، الرجاء المحاولة لاحقًا");
-    }
-  });
+  setTimeout(() => {
+    window.location.href = "register.html";
+  }, 900);
 });

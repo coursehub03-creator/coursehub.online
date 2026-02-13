@@ -5,43 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول - CourseHub</title>
 
-  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
 
-  <!-- CSS وميزات عامة -->
   <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="js/auth.js" defer></script>
 </head>
 
 <body>
-
-  <!-- Header والفوتر سيتم تحميلهما ديناميكيًا -->
   <div id="header-placeholder"></div>
 
-  <main class="login-page container">
-    <h2 data-i18n-en="Log in">تسجيل الدخول</h2>
+  <main class="auth-shell container">
+    <section class="auth-panel login-page" aria-label="Login panel">
+      <p class="auth-kicker" data-i18n-en="Welcome back">أهلًا بعودتك</p>
+      <h2 data-i18n-en="Log in">تسجيل الدخول</h2>
+      <p class="auth-subtitle" data-i18n-en="Access your courses and continue learning.">
+        ادخل إلى دوراتك وتابع التعلم بسهولة.
+      </p>
 
-    <!-- تسجيل الدخول بالبريد -->
-    <form id="loginForm">
-      <input id="emailInput" type="email" placeholder="البريد الإلكتروني" required data-i18n-placeholder-en="Email">
-      <input id="passwordInput" type="password" placeholder="كلمة المرور" required data-i18n-placeholder-en="Password">
-      <button type="submit" data-i18n-en="Log in">تسجيل الدخول</button>
-      <div id="errorMsg" class="error-msg"></div>
-    </form>
+      <form id="loginForm" novalidate>
+        <label for="emailInput" class="auth-label" data-i18n-en="Email">البريد الإلكتروني</label>
+        <input
+          id="emailInput"
+          type="email"
+          placeholder="name@example.com"
+          required
+          data-i18n-placeholder-en="Email"
+          autocomplete="email"
+        >
 
-    <p data-i18n-en="or">أو</p>
+        <label for="passwordInput" class="auth-label" data-i18n-en="Password">كلمة المرور</label>
+        <input
+          id="passwordInput"
+          type="password"
+          placeholder="••••••••"
+          required
+          minlength="8"
+          data-i18n-placeholder-en="Password"
+          autocomplete="current-password"
+        >
 
-    <!-- تسجيل الدخول بـ Google -->
-    <button id="googleLoginBtn" class="google-btn" data-i18n-en="Log in with Google">
-      تسجيل الدخول باستخدام Google
-    </button>
+        <button type="submit" data-i18n-en="Log in">تسجيل الدخول</button>
+        <div id="errorMsg" class="error-msg" role="alert" aria-live="polite"></div>
+      </form>
+
+      <p class="auth-divider" data-i18n-en="or">أو</p>
+
+      <button
+        id="googleLoginBtn"
+        class="google-btn"
+        type="button"
+        data-i18n-en="Log in with Google"
+      >
+        تسجيل الدخول باستخدام Google
+      </button>
+
+      <p class="login-links" data-i18n-en="Don't have an account?">
+        ما عندك حساب؟
+        <a href="register.html" data-i18n-en="Create account">أنشئ حساب جديد</a>
+      </p>
+
+      <p class="login-links">
+        <a href="forgot-password.html" data-i18n-en="Forgot password?">نسيت كلمة المرور؟</a>
+      </p>
+    </section>
   </main>
 
   <div id="footer-placeholder"></div>
-
-  <script type="module" src="js/auth.js"></script>
-
 </body>
 </html>
