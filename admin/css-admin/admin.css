@@ -878,12 +878,13 @@
     align-items: flex-start;
   }
 }
+
 /* ============================= */
 /*       Admin Users List        */
 /* ============================= */
-.admin-users-list { 
-  display: grid; 
-  gap: 14px; 
+.admin-users-list {
+  display: grid;
+  gap: 14px;
 }
 
 .user-card {
@@ -897,27 +898,27 @@
   box-shadow: var(--admin-shadow);
 }
 
-.user-card h3 { 
-  margin: 0 0 8px; 
-  color: var(--admin-accent); 
+.user-card h3 {
+  margin: 0 0 8px;
+  color: var(--admin-accent);
 }
 
-.user-card p { 
-  margin: 4px 0; 
-  color: #334155; 
+.user-card p {
+  margin: 4px 0;
+  color: #334155;
 }
 
-.review-reason { 
-  width: 100%; 
-  border: 1px solid #cbd5e1; 
-  border-radius: 8px; 
-  padding: 10px; 
+.review-reason {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px;
 }
 
-@media (max-width: 900px) { 
-  .user-card { 
-    flex-direction: column; 
-  } 
+@media (max-width: 900px) {
+  .user-card {
+    flex-direction: column;
+  }
 }
 
 /* ============================= */
@@ -945,4 +946,3 @@
   padding: 10px 12px;
   font-size: 14px;
 }
-

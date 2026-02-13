@@ -146,10 +146,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const qrDataUrl = await fetchQrDataUrl(verifyUrl);
   if (!qrDataUrl) return dataUrl;
 
-  const [certificateImage, qrImage] = await Promise.all([
-    loadImage(dataUrl),
-    loadImage(qrDataUrl)
-  ]);
+  const [certificateImage, qrImage] = await Promise.all([loadImage(dataUrl), loadImage(qrDataUrl)]);
 
   const canvas = document.createElement("canvas");
   canvas.width = certificateImage.width;

@@ -24,14 +24,13 @@ import {
 
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
+/* =========================
+   Const / i18n
+========================= */
 const DEFAULT_AVATAR = "/assets/images/admin-avatar.png";
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 
-/* =========================
-   i18n Messages (Merged)
-========================= */
 const messages = {
-  // login/register/reset (new UI)
   invalidCredentials: {
     ar: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     en: "The email or password is incorrect."
@@ -81,7 +80,7 @@ const messages = {
     en: "Too many attempts. Please wait a bit and try again."
   },
 
-  // instructor flow (codex)
+  // instructor flow
   instructorPending: {
     ar: "تم التحقق من بريدك، لكن حساب الأستاذ قيد المراجعة. سنرسل لك رسالة عند قبول الطلب.",
     en: "Email verified, but your instructor account is pending review."
@@ -101,6 +100,10 @@ const messages = {
   instructorApplySuccess: {
     ar: "تم إرسال طلب الأستاذ بنجاح. سيتم مراجعته وإشعارك عبر البريد الإلكتروني.",
     en: "Instructor application submitted. We will review your profile and notify you by email."
+  },
+  storageUnauthorized: {
+    ar: "لا يمكن رفع شهادة العمل الآن بسبب صلاحيات التخزين. تواصل مع الإدارة لضبط Firebase Storage Rules.",
+    en: "Work-proof upload is blocked by storage permissions. Ask admin to update Firebase Storage rules."
   }
 };
 
@@ -188,7 +191,7 @@ function actionSettingsSafe() {
 }
 
 /* =========================
-   Country Picker
+   Country Picker (optional)
 ========================= */
 function initCountryPicker() {
   const countrySearch = document.getElementById("countrySearch");
@@ -197,8 +200,8 @@ function initCountryPicker() {
 
   const countries = getAllCountries();
 
-  const renderOptions = (query = "") => {
-    const q = query.trim().toLowerCase();
+  const renderOptions = (queryText = "") => {
+    const q = queryText.trim().toLowerCase();
     const filtered = countries.filter((item) => item.name.toLowerCase().includes(q));
 
     countrySelect.innerHTML = "";
@@ -217,7 +220,6 @@ function initCountryPicker() {
 
 /* =========================
    Instructor UI toggle (optional)
-   - keeps existing feature (if radio + fields exist)
 ========================= */
 function initInstructorToggle() {
   const accountTypeInputs = document.querySelectorAll('input[name="accountType"]');
@@ -281,7 +283,7 @@ if (loginForm) {
         return;
       }
 
-      // instructor status checks (keeps existing feature)
+      // instructor status checks
       const meta = await getUserMeta(user.uid);
       const role = meta?.role || "student";
 
@@ -325,7 +327,7 @@ if (loginForm) {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // if not verified yet (Google usually verified, but keep safe)
+      // If not verified yet (rare with Google), keep safe
       if (user && !user.emailVerified) {
         try {
           await sendEmailVerification(user, actionSettingsSafe());
@@ -337,7 +339,6 @@ if (loginForm) {
       const meta = await getUserMeta(user.uid);
       const role = meta?.role || "student";
 
-      // instructor status checks (keeps existing feature)
       if (role === "instructor") {
         if (meta?.status === "pending") {
           await signOut(auth);
@@ -381,12 +382,11 @@ if (registerForm) {
     const password = document.getElementById("regPassword")?.value;
     const confirmPassword = document.getElementById("regConfirmPassword")?.value;
 
-    // instructor fields (codex feature) - optional
+    // instructor fields (optional)
     const accountType = document.querySelector('input[name="accountType"]:checked')?.value || "student";
     const phone = document.getElementById("regPhone")?.value?.trim() || "";
     const fullName = `${firstName || ""} ${lastName || ""}`.trim();
 
-    // required validation (keep current UX)
     if (!firstName || !lastName || !gender || !country || !birthDate || !email || !password || !confirmPassword) {
       setText(registerMsg, textFor("requiredFields"));
       return;
@@ -402,41 +402,57 @@ if (registerForm) {
       return;
     }
 
+    let createdUser = null;
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      createdUser = userCredential.user;
 
-      await updateProfile(userCredential.user, {
+      await updateProfile(createdUser, {
         displayName: fullName,
         photoURL: DEFAULT_AVATAR
       });
 
-      // Instructor path (keeps codex feature)
+      // Instructor path
       if (accountType === "instructor") {
         const termsAccepted = document.getElementById("instructorTerms")?.checked;
         const proofFile = document.getElementById("regWorkProof")?.files?.[0] || null;
 
         if (!termsAccepted) {
-          // best-effort cleanup
           try { await signOut(auth); } catch {}
-          try { await userCredential.user.delete(); } catch {}
+          try { await createdUser.delete(); } catch {}
           setText(registerMsg, textFor("instructorTermsRequired"));
           return;
         }
 
         if (!proofFile || !String(proofFile.type || "").toLowerCase().includes("pdf")) {
           try { await signOut(auth); } catch {}
-          try { await userCredential.user.delete(); } catch {}
+          try { await createdUser.delete(); } catch {}
           setText(registerMsg, textFor("instructorPdfRequired"));
           return;
         }
 
         // upload PDF to Storage
-        const fileRef = ref(storage, `instructor-applications/${userCredential.user.uid}/work-proof-${Date.now()}.pdf`);
-        await uploadBytes(fileRef, proofFile);
+        const fileRef = ref(storage, `instructor-applications/${createdUser.uid}/work-proof-${Date.now()}.pdf`);
+        try {
+          await uploadBytes(fileRef, proofFile);
+        } catch (err) {
+          console.error("Upload proof error:", err);
+          try { await signOut(auth); } catch {}
+          try { await createdUser.delete(); } catch {}
+
+          if (err?.code === "storage/unauthorized") {
+            setText(registerMsg, textFor("storageUnauthorized"));
+          } else {
+            setText(registerMsg, textFor("registerError"));
+          }
+          return;
+        }
+
         const workProofUrl = await getDownloadURL(fileRef);
 
         const instructorData = {
-          uid: userCredential.user.uid,
+          uid: createdUser.uid,
           name: fullName,
           email,
           phone,
@@ -452,7 +468,7 @@ if (registerForm) {
           updatedAt: serverTimestamp()
         };
 
-        await setDoc(doc(db, "users", userCredential.user.uid), instructorData, { merge: true });
+        await setDoc(doc(db, "users", createdUser.uid), instructorData, { merge: true });
 
         await addDoc(collection(db, "instructorApplications"), {
           ...instructorData,
@@ -463,7 +479,7 @@ if (registerForm) {
         });
 
         // send verification email then sign out
-        await sendEmailVerification(userCredential.user, actionSettingsSafe());
+        await sendEmailVerification(createdUser, actionSettingsSafe());
 
         localStorage.setItem("coursehub_pending_verification_email", email);
         setText(registerMsg, textFor("instructorApplySuccess"), true);
@@ -477,17 +493,16 @@ if (registerForm) {
         return;
       }
 
-      // Student path (keeps new profile system)
-      await sendEmailVerification(userCredential.user, actionSettingsSafe());
+      // Student path
+      await sendEmailVerification(createdUser, actionSettingsSafe());
 
       await saveUserProfile(
-        userCredential.user,
+        createdUser,
         { firstName, lastName, gender, country, birthDate },
         { isNewUser: true }
       );
 
-      // keep local memory for verify-email page
-      storeUser(userCredential.user, {
+      storeUser(createdUser, {
         name: fullName,
         picture: DEFAULT_AVATAR,
         emailVerified: false,
@@ -498,7 +513,6 @@ if (registerForm) {
 
       setText(registerMsg, textFor("registerSuccess"), true);
 
-      // sign out until verified
       await signOut(auth);
 
       setTimeout(() => {
@@ -507,6 +521,12 @@ if (registerForm) {
 
     } catch (error) {
       console.error("Register Error:", error);
+
+      // cleanup in case storage fails after user creation
+      if (createdUser && error?.code === "storage/unauthorized") {
+        try { await signOut(auth); } catch {}
+        try { await createdUser.delete(); } catch {}
+      }
 
       if (error?.code === "auth/too-many-requests") {
         setText(registerMsg, textFor("tooManyRequests"));
@@ -550,7 +570,7 @@ if (forgotForm) {
 }
 
 /* =========================
-   Persist user in localStorage
+   Persist user in localStorage (fallback)
 ========================= */
 onAuthStateChanged(auth, (user) => {
   if (!user) return;

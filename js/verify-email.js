@@ -1,10 +1,5 @@
 import { auth } from "./firebase-config.js";
-import {
-  onAuthStateChanged,
-  reload,
-  sendEmailVerification,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged, reload, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getActionCodeSettings } from "./email-action-settings.js";
 
 /* =========================
@@ -75,6 +70,14 @@ function resolveTargetEmail(user) {
   return getPresetEmailFromUrl() || getPendingEmail() || user?.email || "";
 }
 
+function actionSettingsSafe() {
+  try {
+    return typeof getActionCodeSettings === "function" ? getActionCodeSettings() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /* =========================
    Init UI
 ========================= */
@@ -105,7 +108,7 @@ resendBtn?.addEventListener("click", async () => {
   }
 
   try {
-    await sendEmailVerification(user, getActionCodeSettings());
+    await sendEmailVerification(user, actionSettingsSafe());
     setMsg(t().resent, true);
   } catch (error) {
     console.error("Resend verify email failed:", error);
@@ -154,6 +157,7 @@ onAuthStateChanged(auth, (user) => {
     emailEl.textContent = targetEmail ? t().targetEmail(targetEmail) : t().noTargetEmail;
   }
 
+  // لا يوجد مستخدم ولا يوجد بريد مستهدف (لا URL ولا localStorage)
   if (!user && !targetEmail) {
     setMsg(t().noActive);
     return;

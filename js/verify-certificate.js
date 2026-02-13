@@ -18,7 +18,8 @@ const uiText = {
     downloadFailed: "تعذر تنزيل الشهادة كملف PDF. حاول مرة أخرى.",
     verifyError: "حدث خطأ أثناء التحقق. حاول مرة أخرى.",
     defaultTitle: "الشهادة",
-    notSpecified: "غير محدد"
+    notSpecified: "غير محدد",
+    missingUrl: "لا يوجد رابط شهادة لعرضه."
   },
   en: {
     verifying: "Verifying the certificate...",
@@ -30,7 +31,8 @@ const uiText = {
     downloadFailed: "Failed to download the certificate as PDF. Please try again.",
     verifyError: "An error occurred while verifying. Please try again.",
     defaultTitle: "Certificate",
-    notSpecified: "Not specified"
+    notSpecified: "Not specified",
+    missingUrl: "No certificate URL was provided."
   }
 };
 
@@ -154,7 +156,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 
   const minSide = Math.min(canvas.width, canvas.height);
 
-  // ✅ تصغير حجم الـ QR + مكان آمن أعلى اليسار
+  // ✅ حجم QR مناسب + مكان آمن أعلى اليسار
   const qrSize = Math.round(minSide * 0.14);
   const margin = Math.round(minSide * 0.04);
 
@@ -193,7 +195,7 @@ const downloadPdfFromImage = async (url, title, verificationCode) => {
 async function verifyCode(code) {
   if (!result) return;
 
-  const t = uiText[getLang()];
+  const t = uiText[getLang()] || uiText.ar;
 
   result.className = "verify-result";
   result.style.display = "none";
@@ -260,6 +262,12 @@ async function verifyCode(code) {
         const viewTitle = decodeURIComponent(viewButton.getAttribute("data-view-title") || "");
         const viewCode = decodeURIComponent(viewButton.getAttribute("data-view-code") || "");
 
+        if (!url) {
+          result.classList.add("error");
+          result.textContent = t.missingUrl;
+          return;
+        }
+
         let dataKey = "";
         let targetUrl = url;
 
@@ -291,7 +299,14 @@ async function verifyCode(code) {
         const downloadTitle = decodeURIComponent(downloadButtonEl.getAttribute("data-download-title") || "");
         const downloadCode = decodeURIComponent(downloadButtonEl.getAttribute("data-download-code") || "");
 
-        downloadPdfFromImage(url, downloadTitle, downloadCode).catch(() => {
+        if (!url) {
+          result.classList.add("error");
+          result.textContent = t.missingUrl;
+          return;
+        }
+
+        downloadPdfFromImage(url, downloadTitle, downloadCode).catch((err) => {
+          console.error(err);
           result.classList.add("error");
           result.textContent = t.downloadFailed;
         });
@@ -300,7 +315,7 @@ async function verifyCode(code) {
   } catch (error) {
     console.error(error);
     result.classList.add("error");
-    result.textContent = uiText[getLang()].verifyError;
+    result.textContent = uiText[getLang()]?.verifyError || uiText.ar.verifyError;
   }
 }
 
