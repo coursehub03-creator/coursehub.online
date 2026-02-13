@@ -544,6 +544,9 @@ function setupUserState() {
 
     if (userInfo) {
       userInfo.style.display = "flex";
+      const instructorLink = user.role === "instructor"
+        ? `<a href="/instructor-dashboard.html">لوحة الأستاذ</a>`
+        : "";
       userInfo.innerHTML = `
         <img src="${(user.picture || "/assets/images/admin-avatar.png") || ""}" class="user-pic" alt="${user.name || ""}">
         <span class="user-name">${user.name || ""}</span>
@@ -551,6 +554,7 @@ function setupUserState() {
           <a href="/profile.html">الملف الشخصي</a>
           <a href="/achievements.html">إنجازاتي</a>
           <a href="/my-courses.html">دوراتي</a>
+          ${instructorLink}
           <a href="/settings.html">الإعدادات</a>
           <a href="#" id="logout-link">تسجيل الخروج</a>
         </div>

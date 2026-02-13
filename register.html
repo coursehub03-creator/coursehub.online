@@ -25,7 +25,20 @@
         أنشئ حسابك بالبريد وكلمة المرور خلال أقل من دقيقة.
       </p>
 
-      <form id="registerForm" novalidate>
+      <form id="registerForm" class="register-extended" novalidate>
+        <!-- نوع الحساب (طالب / أستاذ) -->
+        <div class="role-switch" style="margin: 10px 0; display:flex; gap:12px; flex-wrap:wrap;">
+          <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="radio" name="accountType" value="student" checked>
+            التسجيل كطالب
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="radio" name="accountType" value="instructor">
+            التسجيل كأستاذ
+          </label>
+        </div>
+
+        <!-- بيانات الطالب/المستخدم (النموذج التفصيلي) -->
         <label for="regFirstName" class="auth-label" data-i18n-en="First name">الاسم</label>
         <input
           id="regFirstName"
@@ -66,6 +79,10 @@
         <label for="regBirthDate" class="auth-label" data-i18n-en="Birth date">تاريخ الميلاد</label>
         <input id="regBirthDate" type="date" required max="2015-12-31">
 
+        <!-- حقول كانت موجودة في نسخة التسجيل القديمة (نحافظ عليها حتى لا نكسر auth.js إن كان يعتمدها) -->
+        <input id="regFullName" type="hidden" value="">
+        <input id="regPhone" type="hidden" value="">
+
         <label for="regEmail" class="auth-label" data-i18n-en="Email">البريد الإلكتروني</label>
         <input
           id="regEmail"
@@ -97,6 +114,38 @@
           minlength="8"
           autocomplete="new-password"
         >
+
+        <!-- حقول الأستاذ (تظهر فقط عند اختيار Instructor) -->
+        <div id="instructorFields" class="instructor-fields" style="display:none; margin-top: 14px; gap: 10px;">
+          <div class="alert info" style="margin: 6px 0;">
+            <span>🛈</span>
+            <span>يرجى إكمال بيانات الأستاذ ورفع شهادة العمل (PDF).</span>
+          </div>
+
+          <label for="regUniversity" class="auth-label">الجامعة / جهة العمل</label>
+          <input id="regUniversity" type="text" placeholder="الجامعة / جهة العمل">
+
+          <label for="regSpecialization" class="auth-label">التخصص الأكاديمي</label>
+          <input id="regSpecialization" type="text" placeholder="التخصص الأكاديمي">
+
+          <label for="regExperience" class="auth-label">سنوات الخبرة</label>
+          <input id="regExperience" type="number" min="0" placeholder="سنوات الخبرة">
+
+          <label class="auth-label" for="regWorkProof">شهادة العمل (PDF)</label>
+          <input id="regWorkProof" type="file" accept="application/pdf">
+
+          <label for="regBio" class="auth-label">نبذة تعريفية قصيرة عنك</label>
+          <textarea id="regBio" rows="3" placeholder="نبذة تعريفية قصيرة عنك"></textarea>
+
+          <label class="terms-check" style="display:flex; align-items:flex-start; gap:10px; margin-top: 6px;">
+            <input id="instructorTerms" type="checkbox">
+            <span>
+              أوافق على
+              <a href="/instructor-terms.html" target="_blank" rel="noopener">الشروط والقواعد</a>
+              الخاصة بالأساتذة.
+            </span>
+          </label>
+        </div>
 
         <button type="submit" data-i18n-en="Create account">إنشاء الحساب</button>
         <div id="registerMsg" class="error-msg" role="alert" aria-live="polite"></div>

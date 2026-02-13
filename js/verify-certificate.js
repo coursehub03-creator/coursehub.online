@@ -40,6 +40,7 @@ const result = document.getElementById("verifyResult");
 
 const params = new URLSearchParams(window.location.search);
 const presetCode = params.get("code");
+
 if (presetCode && input) {
   input.value = presetCode;
   verifyCode(presetCode);
@@ -238,6 +239,7 @@ async function verifyCode(code) {
               >${t.viewCertificate}</button>`
             : ""
         }
+
         ${
           certificateUrl
             ? `<button type="button" class="btn secondary"

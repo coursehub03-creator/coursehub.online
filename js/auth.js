@@ -1,4 +1,4 @@
-import { auth, db, googleProvider } from "./firebase-config.js";
+import { auth, db, googleProvider, storage } from "./firebase-config.js";
 import { getAllCountries } from "./geo-data.js";
 import { getActionCodeSettings } from "./email-action-settings.js";
 
@@ -14,15 +14,24 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
+  addDoc,
   doc,
+  getDoc,
   serverTimestamp,
-  setDoc
+  setDoc,
+  collection
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const DEFAULT_AVATAR = "/assets/images/admin-avatar.png";
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 
+/* =========================
+   i18n Messages (Merged)
+========================= */
 const messages = {
+  // login/register/reset (new UI)
   invalidCredentials: {
     ar: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     en: "The email or password is incorrect."
@@ -70,6 +79,28 @@ const messages = {
   tooManyRequests: {
     ar: "تم تنفيذ محاولات كثيرة. يرجى الانتظار قليلًا ثم المحاولة مجددًا.",
     en: "Too many attempts. Please wait a bit and try again."
+  },
+
+  // instructor flow (codex)
+  instructorPending: {
+    ar: "تم التحقق من بريدك، لكن حساب الأستاذ قيد المراجعة. سنرسل لك رسالة عند قبول الطلب.",
+    en: "Email verified, but your instructor account is pending review."
+  },
+  instructorRejected: {
+    ar: "تم رفض طلب الأستاذ. راجع بريدك لمعرفة السبب أو تواصل مع الدعم.",
+    en: "Your instructor request was rejected. Check your email for details."
+  },
+  instructorTermsRequired: {
+    ar: "يجب الموافقة على شروط وقواعد الأساتذة قبل التسجيل.",
+    en: "You must accept instructor terms before registration."
+  },
+  instructorPdfRequired: {
+    ar: "يرجى رفع شهادة عمل بصيغة PDF.",
+    en: "Please upload employment proof in PDF format."
+  },
+  instructorApplySuccess: {
+    ar: "تم إرسال طلب الأستاذ بنجاح. سيتم مراجعته وإشعارك عبر البريد الإلكتروني.",
+    en: "Instructor application submitted. We will review your profile and notify you by email."
   }
 };
 
@@ -78,6 +109,9 @@ function textFor(key) {
   return messages[key]?.[lang] || messages[key]?.ar || "";
 }
 
+/* =========================
+   Helpers
+========================= */
 function isStrongPassword(password) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password || "");
 }
@@ -103,6 +137,16 @@ function storeUser(user, extra = {}) {
       ...extra
     })
   );
+}
+
+async function getUserMeta(uid) {
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    return snap.exists() ? snap.data() : null;
+  } catch (e) {
+    console.error("getUserMeta error:", e);
+    return null;
+  }
 }
 
 async function saveUserProfile(user, profileData = {}, options = {}) {
@@ -172,6 +216,25 @@ function initCountryPicker() {
 }
 
 /* =========================
+   Instructor UI toggle (optional)
+   - keeps existing feature (if radio + fields exist)
+========================= */
+function initInstructorToggle() {
+  const accountTypeInputs = document.querySelectorAll('input[name="accountType"]');
+  const instructorFields = document.getElementById("instructorFields");
+
+  if (!accountTypeInputs?.length || !instructorFields) return;
+
+  accountTypeInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      const isInstructor =
+        document.querySelector('input[name="accountType"]:checked')?.value === "instructor";
+      instructorFields.style.display = isInstructor ? "flex" : "none";
+    });
+  });
+}
+
+/* =========================
    DOM
 ========================= */
 const loginForm = document.getElementById("loginForm");
@@ -182,8 +245,9 @@ const errorMsg = document.getElementById("errorMsg");
 const registerMsg = document.getElementById("registerMsg");
 const forgotMsg = document.getElementById("forgotMsg");
 
-// init optional picker (only on register page)
+// init optional components (only if present)
 initCountryPicker();
+initInstructorToggle();
 
 /* =========================
    Login
@@ -217,10 +281,27 @@ if (loginForm) {
         return;
       }
 
-      storeUser(user);
+      // instructor status checks (keeps existing feature)
+      const meta = await getUserMeta(user.uid);
+      const role = meta?.role || "student";
+
+      if (role === "instructor") {
+        if (meta?.status === "pending") {
+          await signOut(auth);
+          setText(errorMsg, textFor("instructorPending"));
+          return;
+        }
+        if (meta?.status === "rejected") {
+          await signOut(auth);
+          setText(errorMsg, textFor("instructorRejected"));
+          return;
+        }
+      }
+
+      storeUser(user, { role });
       await saveUserProfile(user, {}, { isNewUser: false });
 
-      window.location.href = "index.html";
+      window.location.href = role === "instructor" ? "/instructor-dashboard.html" : "index.html";
     } catch (error) {
       console.error("Login Error:", error);
       if (error?.code === "auth/too-many-requests") {
@@ -242,11 +323,38 @@ if (loginForm) {
   button.addEventListener("click", async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
 
-      storeUser(result.user);
-      await saveUserProfile(result.user, {}, { isNewUser: false });
+      // if not verified yet (Google usually verified, but keep safe)
+      if (user && !user.emailVerified) {
+        try {
+          await sendEmailVerification(user, actionSettingsSafe());
+        } catch (e) {
+          console.error("Google verification resend error:", e);
+        }
+      }
 
-      window.location.href = "index.html";
+      const meta = await getUserMeta(user.uid);
+      const role = meta?.role || "student";
+
+      // instructor status checks (keeps existing feature)
+      if (role === "instructor") {
+        if (meta?.status === "pending") {
+          await signOut(auth);
+          setText(errorMsg || registerMsg, textFor("instructorPending"));
+          return;
+        }
+        if (meta?.status === "rejected") {
+          await signOut(auth);
+          setText(errorMsg || registerMsg, textFor("instructorRejected"));
+          return;
+        }
+      }
+
+      storeUser(user, { role });
+      await saveUserProfile(user, {}, { isNewUser: false });
+
+      window.location.href = role === "instructor" ? "/instructor-dashboard.html" : "index.html";
     } catch (error) {
       console.error("Google Auth Error:", error);
       const target = errorMsg || registerMsg;
@@ -256,12 +364,13 @@ if (loginForm) {
 });
 
 /* =========================
-   Register (Detailed form)
+   Register (Detailed form) + Instructor option
 ========================= */
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // detailed fields (new UI)
     const firstName = document.getElementById("regFirstName")?.value?.trim();
     const lastName = document.getElementById("regLastName")?.value?.trim();
     const gender = document.getElementById("regGender")?.value;
@@ -272,6 +381,12 @@ if (registerForm) {
     const password = document.getElementById("regPassword")?.value;
     const confirmPassword = document.getElementById("regConfirmPassword")?.value;
 
+    // instructor fields (codex feature) - optional
+    const accountType = document.querySelector('input[name="accountType"]:checked')?.value || "student";
+    const phone = document.getElementById("regPhone")?.value?.trim() || "";
+    const fullName = `${firstName || ""} ${lastName || ""}`.trim();
+
+    // required validation (keep current UX)
     if (!firstName || !lastName || !gender || !country || !birthDate || !email || !password || !confirmPassword) {
       setText(registerMsg, textFor("requiredFields"));
       return;
@@ -289,13 +404,80 @@ if (registerForm) {
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const fullName = `${firstName} ${lastName}`.trim();
 
       await updateProfile(userCredential.user, {
         displayName: fullName,
         photoURL: DEFAULT_AVATAR
       });
 
+      // Instructor path (keeps codex feature)
+      if (accountType === "instructor") {
+        const termsAccepted = document.getElementById("instructorTerms")?.checked;
+        const proofFile = document.getElementById("regWorkProof")?.files?.[0] || null;
+
+        if (!termsAccepted) {
+          // best-effort cleanup
+          try { await signOut(auth); } catch {}
+          try { await userCredential.user.delete(); } catch {}
+          setText(registerMsg, textFor("instructorTermsRequired"));
+          return;
+        }
+
+        if (!proofFile || !String(proofFile.type || "").toLowerCase().includes("pdf")) {
+          try { await signOut(auth); } catch {}
+          try { await userCredential.user.delete(); } catch {}
+          setText(registerMsg, textFor("instructorPdfRequired"));
+          return;
+        }
+
+        // upload PDF to Storage
+        const fileRef = ref(storage, `instructor-applications/${userCredential.user.uid}/work-proof-${Date.now()}.pdf`);
+        await uploadBytes(fileRef, proofFile);
+        const workProofUrl = await getDownloadURL(fileRef);
+
+        const instructorData = {
+          uid: userCredential.user.uid,
+          name: fullName,
+          email,
+          phone,
+          role: "instructor",
+          status: "pending",
+          university: document.getElementById("regUniversity")?.value?.trim() || "",
+          specialization: document.getElementById("regSpecialization")?.value?.trim() || "",
+          experienceYears: Number(document.getElementById("regExperience")?.value || 0),
+          bio: document.getElementById("regBio")?.value?.trim() || "",
+          termsAcceptedAt: serverTimestamp(),
+          workProofUrl,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+
+        await setDoc(doc(db, "users", userCredential.user.uid), instructorData, { merge: true });
+
+        await addDoc(collection(db, "instructorApplications"), {
+          ...instructorData,
+          applicationStatus: "pending",
+          reviewedAt: null,
+          reviewedBy: null,
+          reviewReason: ""
+        });
+
+        // send verification email then sign out
+        await sendEmailVerification(userCredential.user, actionSettingsSafe());
+
+        localStorage.setItem("coursehub_pending_verification_email", email);
+        setText(registerMsg, textFor("instructorApplySuccess"), true);
+
+        await signOut(auth);
+
+        setTimeout(() => {
+          window.location.href = `/instructor-pending.html?email=${encodeURIComponent(email)}`;
+        }, 1200);
+
+        return;
+      }
+
+      // Student path (keeps new profile system)
       await sendEmailVerification(userCredential.user, actionSettingsSafe());
 
       await saveUserProfile(
@@ -304,10 +486,12 @@ if (registerForm) {
         { isNewUser: true }
       );
 
+      // keep local memory for verify-email page
       storeUser(userCredential.user, {
         name: fullName,
         picture: DEFAULT_AVATAR,
-        emailVerified: false
+        emailVerified: false,
+        role: "student"
       });
 
       localStorage.setItem("coursehub_pending_verification_email", email);
@@ -372,9 +556,7 @@ onAuthStateChanged(auth, (user) => {
   if (!user) return;
 
   const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
-  if (!storedUser && user.emailVerified) {
-    storeUser(user);
-  } else if (!storedUser) {
-    storeUser(user);
+  if (!storedUser) {
+    storeUser(user, { role: "student" });
   }
 });

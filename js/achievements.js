@@ -12,8 +12,7 @@ import {
 
 // --- دوال عرض/تنزيل الشهادة ---
 const dataUrlPrefix = "data:";
-const pdfLibraryUrl =
-  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const pdfLibraryUrl = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
 // ✅ i18n
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
@@ -134,6 +133,7 @@ const fetchQrDataUrl = async (verifyUrl) => {
   return blobToDataUrl(qrBlob);
 };
 
+// ✅ دمج QR داخل الشهادة قبل التحويل إلى PDF/العرض
 const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
   const dataUrl = await fetchImageDataUrl(certificateUrl);
   if (!verificationCode) return dataUrl;
@@ -162,7 +162,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 
   const minSide = Math.min(canvas.width, canvas.height);
 
-  // ✅ حجم QR مناسب + مكان آمن أعلى اليسار
+  // ✅ تصغير حجم الـ QR + مكان آمن أعلى اليسار
   const qrSize = Math.round(minSide * 0.14);
   const margin = Math.round(minSide * 0.04);
 

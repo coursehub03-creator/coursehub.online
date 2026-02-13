@@ -76,7 +76,7 @@ const blobToDataUrl = (blob) =>
 const fetchImageDataUrl = async (url) => {
   // ✅ تحقق من url + دعم data:
   if (!url) throw new Error("Missing URL");
-  if (url.startsWith(dataUrlPrefix)) return url;
+  if (typeof url === "string" && url.startsWith(dataUrlPrefix)) return url;
 
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to load certificate image.");
