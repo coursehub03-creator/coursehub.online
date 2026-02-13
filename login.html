@@ -21,14 +21,31 @@
     <section class="auth-panel login-page" aria-label="Login panel">
       <p class="auth-kicker" data-i18n-en="Welcome back">أهلًا بعودتك</p>
       <h2 data-i18n-en="Log in">تسجيل الدخول</h2>
-      <p class="auth-subtitle" data-i18n-en="Access your courses and continue learning.">ادخل إلى دوراتك وتابع التعلم بسهولة.</p>
+      <p class="auth-subtitle" data-i18n-en="Access your courses and continue learning.">
+        ادخل إلى دوراتك وتابع التعلم بسهولة.
+      </p>
 
       <form id="loginForm" novalidate>
         <label for="emailInput" class="auth-label" data-i18n-en="Email">البريد الإلكتروني</label>
-        <input id="emailInput" type="email" placeholder="name@example.com" required data-i18n-placeholder-en="Email">
+        <input
+          id="emailInput"
+          type="email"
+          placeholder="name@example.com"
+          required
+          data-i18n-placeholder-en="Email"
+          autocomplete="email"
+        >
 
         <label for="passwordInput" class="auth-label" data-i18n-en="Password">كلمة المرور</label>
-        <input id="passwordInput" type="password" placeholder="••••••••" required data-i18n-placeholder-en="Password" minlength="8">
+        <input
+          id="passwordInput"
+          type="password"
+          placeholder="••••••••"
+          required
+          minlength="8"
+          data-i18n-placeholder-en="Password"
+          autocomplete="current-password"
+        >
 
         <button type="submit" data-i18n-en="Log in">تسجيل الدخول</button>
         <div id="errorMsg" class="error-msg" role="alert" aria-live="polite"></div>
@@ -36,7 +53,12 @@
 
       <p class="auth-divider" data-i18n-en="or">أو</p>
 
-      <button id="googleLoginBtn" class="google-btn" type="button" data-i18n-en="Log in with Google">
+      <button
+        id="googleLoginBtn"
+        class="google-btn"
+        type="button"
+        data-i18n-en="Log in with Google"
+      >
         تسجيل الدخول باستخدام Google
       </button>
 
@@ -44,6 +66,7 @@
         ما عندك حساب؟
         <a href="register.html" data-i18n-en="Create account">أنشئ حساب جديد</a>
       </p>
+
       <p class="login-links">
         <a href="forgot-password.html" data-i18n-en="Forgot password?">نسيت كلمة المرور؟</a>
       </p>

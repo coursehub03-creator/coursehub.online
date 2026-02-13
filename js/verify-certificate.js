@@ -1,16 +1,10 @@
 import { db } from "/js/firebase-config.js";
-import {
-  collection,
-  getDocs,
-  query,
-  where
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const pdfLibraryUrl =
-  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const pdfLibraryUrl = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 const dataUrlPrefix = "data:";
 
-// ✅ i18n (ميزة جديدة)
+// ✅ i18n
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 
 const uiText = {
@@ -65,8 +59,7 @@ const sanitizeFileName = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const resolveJsPdfConstructor = () =>
-  window.jspdf?.jsPDF || window.jsPDF || null;
+const resolveJsPdfConstructor = () => window.jspdf?.jsPDF || window.jsPDF || null;
 
 const loadJsPdf = (() => {
   let cachedPromise;
@@ -74,10 +67,7 @@ const loadJsPdf = (() => {
     if (!cachedPromise) {
       cachedPromise = new Promise((resolve, reject) => {
         const existing = resolveJsPdfConstructor();
-        if (existing) {
-          resolve(existing);
-          return;
-        }
+        if (existing) return resolve(existing);
 
         const script = document.createElement("script");
         script.src = pdfLibraryUrl;
@@ -112,6 +102,7 @@ const fetchImageDataUrl = async (url) => {
 
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to load certificate image.");
+
   const blob = await response.blob();
   return blobToDataUrl(blob);
 };
@@ -129,9 +120,7 @@ const fetchQrDataUrl = async (verifyUrl) => {
   if (!verifyUrl) return "";
 
   const qrResponse = await fetch(
-    `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-      verifyUrl
-    )}`
+    `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(verifyUrl)}`
   );
   if (!qrResponse.ok) throw new Error("Failed to load QR code.");
 
@@ -164,11 +153,10 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 
   const minSide = Math.min(canvas.width, canvas.height);
 
-  // ✅ تصغير حجم الـ QR (ميزة main) بدل 0.18
+  // ✅ تصغير حجم الـ QR + مكان آمن أعلى اليسار
   const qrSize = Math.round(minSide * 0.14);
   const margin = Math.round(minSide * 0.04);
 
-  // ✅ تعديل مكان الـ QR: أعلى اليسار داخل مساحة آمنة (ميزة main)
   const extraX = 40;
   const extraY = 40;
   const x = margin + extraX;
@@ -215,8 +203,8 @@ async function verifyCode(code) {
     result.style.display = "block";
     result.textContent = t.verifying;
 
-    const q = query(collection(db, "certificates"), where("verificationCode", "==", code));
-    const snapshot = await getDocs(q);
+    const qy = query(collection(db, "certificates"), where("verificationCode", "==", code));
+    const snapshot = await getDocs(qy);
 
     if (snapshot.empty) {
       result.classList.add("error");
@@ -238,6 +226,7 @@ async function verifyCode(code) {
       </div>
       <h3 class="result-title">${title}</h3>
       <p class="result-meta">${t.completedAt} ${completedAt || t.notSpecified}</p>
+
       <div class="result-actions">
         ${
           certificateUrl
@@ -260,7 +249,7 @@ async function verifyCode(code) {
       </div>
     `;
 
-    // ✅ فتح عبر viewer + دعم DataURL عبر sessionStorage (ميزة dataKey)
+    // ✅ فتح عبر viewer + دعم DataURL عبر sessionStorage (dataKey)
     const viewButton = result.querySelector("[data-view-url]");
     if (viewButton) {
       viewButton.addEventListener("click", () => {
@@ -271,24 +260,22 @@ async function verifyCode(code) {
         let dataKey = "";
         let targetUrl = url;
 
-        // إذا كانت dataURL خزّنها في sessionStorage لتفادي طول الرابط
         if (typeof url === "string" && url.startsWith(dataUrlPrefix)) {
           dataKey = `certificate-data-${Date.now()}`;
           try {
             sessionStorage.setItem(dataKey, url);
             targetUrl = "";
           } catch (e) {
-            // لو sessionStorage فشل (quota/blocked) افتح الرابط مباشرة
             targetUrl = url;
             dataKey = "";
           }
         }
 
-        const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(
-          targetUrl
-        )}&title=${encodeURIComponent(viewTitle || "certificate")}&code=${encodeURIComponent(
-          viewCode || ""
-        )}&dataKey=${encodeURIComponent(dataKey)}`;
+        const viewerUrl =
+          `/certificate-view.html?url=${encodeURIComponent(targetUrl)}` +
+          `&title=${encodeURIComponent(viewTitle || "certificate")}` +
+          `&code=${encodeURIComponent(viewCode || "")}` +
+          `&dataKey=${encodeURIComponent(dataKey)}`;
 
         window.open(viewerUrl, "_blank");
       });
@@ -298,12 +285,8 @@ async function verifyCode(code) {
     if (downloadButtonEl) {
       downloadButtonEl.addEventListener("click", () => {
         const url = decodeURIComponent(downloadButtonEl.getAttribute("data-download-url") || "");
-        const downloadTitle = decodeURIComponent(
-          downloadButtonEl.getAttribute("data-download-title") || ""
-        );
-        const downloadCode = decodeURIComponent(
-          downloadButtonEl.getAttribute("data-download-code") || ""
-        );
+        const downloadTitle = decodeURIComponent(downloadButtonEl.getAttribute("data-download-title") || "");
+        const downloadCode = decodeURIComponent(downloadButtonEl.getAttribute("data-download-code") || "");
 
         downloadPdfFromImage(url, downloadTitle, downloadCode).catch(() => {
           result.classList.add("error");

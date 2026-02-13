@@ -1,5 +1,6 @@
 import { auth, db, googleProvider } from './firebase-config.js';
 import { getAllCountries } from './geo-data.js';
+import { getActionCodeSettings } from "./email-action-settings.js";
 
 import {
   createUserWithEmailAndPassword,
@@ -28,8 +29,8 @@ const messages = {
     en: "The email or password is incorrect."
   },
   emailNotVerified: {
-    ar: "يرجى تفعيل بريدك الإلكتروني أولاً. أعدنا إرسال رسالة التحقق.",
-    en: "Please verify your email first. We sent a new verification email."
+    ar: "حسابك غير مفعّل. أعدنا إرسال رابط تفعيل جديد. افحص البريد وSpam/Promotions.",
+    en: "Your account is not verified. A new verification email has been sent. Check Inbox/Spam/Promotions."
   },
   googleError: {
     ar: "فشل تسجيل الدخول باستخدام Google.",
@@ -48,11 +49,11 @@ const messages = {
     en: "Please fill all required fields."
   },
   registerSuccess: {
-    ar: "تم إنشاء الحساب. أرسلنا رسالة التحقق إلى بريدك الإلكتروني.",
-    en: "Account created. We sent a verification email to your inbox."
+    ar: "تم إنشاء الحساب وإرسال رابط التفعيل. افحص البريد وSpam/Promotions.",
+    en: "Account created. Verification email sent. Check Inbox/Spam/Promotions."
   },
   registerError: {
-    ar: "تعذر إنشاء الحساب. تأكد من البيانات وحاول مرة أخرى.",
+    ar: "تعذر إنشاء الحساب. تحقق من البيانات وحاول مجددًا.",
     en: "Unable to create account. Please check your info and try again."
   },
   emailInUse: {
@@ -60,12 +61,16 @@ const messages = {
     en: "This email is already in use. Log in instead."
   },
   resetSent: {
-    ar: "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.",
-    en: "Password reset link sent to your email."
+    ar: "تم إرسال رابط إعادة تعيين كلمة المرور. افحص البريد وSpam/Promotions.",
+    en: "Password reset link sent. Check Inbox/Spam/Promotions."
   },
   resetError: {
-    ar: "تعذر إرسال رابط إعادة التعيين. تحقق من البريد وحاول مجددًا.",
+    ar: "تعذر إرسال رابط إعادة التعيين. تحقق من البريد وحاول مرة أخرى.",
     en: "Unable to send reset email. Check your address and try again."
+  },
+  tooManyRequests: {
+    ar: "تم تنفيذ محاولات كثيرة. يرجى الانتظار قليلًا ثم المحاولة مجددًا.",
+    en: "Too many attempts. Please wait a bit and try again."
   }
 };
 
@@ -76,6 +81,12 @@ function textFor(key) {
 
 function isStrongPassword(password) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password || "");
+}
+
+function setText(node, text, ok = false) {
+  if (!node) return;
+  node.classList.toggle("success-msg", ok);
+  node.textContent = text || "";
 }
 
 function storeUser(user, extra = {}) {
@@ -110,7 +121,6 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
     payload.name = user.displayName || fullNameFromFields;
   }
 
-  // Keep detailed fields (feature)
   ["firstName", "lastName", "gender", "country", "birthDate"].forEach((field) => {
     if (profileData[field]) payload[field] = profileData[field];
   });
@@ -135,7 +145,6 @@ function initCountryPicker() {
     const filtered = countries.filter((item) => item.name.toLowerCase().includes(q));
 
     countrySelect.innerHTML = "";
-
     filtered.forEach((country, index) => {
       const option = document.createElement("option");
       option.value = country.name;
@@ -146,8 +155,18 @@ function initCountryPicker() {
   };
 
   renderOptions();
-
   countrySearch?.addEventListener("input", (e) => renderOptions(e.target.value));
+}
+
+/* =========================
+   Helpers for email actions
+========================= */
+function actionSettingsSafe() {
+  try {
+    return typeof getActionCodeSettings === "function" ? getActionCodeSettings() : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /* =========================
@@ -161,7 +180,6 @@ const errorMsg = document.getElementById("errorMsg");
 const registerMsg = document.getElementById("registerMsg");
 const forgotMsg = document.getElementById("forgotMsg");
 
-// Initialize optional country picker
 initCountryPicker();
 
 /* =========================
@@ -175,7 +193,7 @@ if (loginForm) {
     const password = document.getElementById("passwordInput")?.value;
 
     if (!email || !password) {
-      if (errorMsg) errorMsg.textContent = textFor("requiredFields");
+      setText(errorMsg, textFor("requiredFields"));
       return;
     }
 
@@ -183,11 +201,15 @@ if (loginForm) {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Enforce email verification
+      // Enforce email verification + resend with action settings (if available)
       if (!user.emailVerified) {
-        await sendEmailVerification(user);
+        try {
+          await sendEmailVerification(user, actionSettingsSafe());
+        } catch (verificationError) {
+          console.error("Verification resend error:", verificationError);
+        }
         await signOut(auth);
-        if (errorMsg) errorMsg.textContent = textFor("emailNotVerified");
+        setText(errorMsg, textFor("emailNotVerified"));
         return;
       }
 
@@ -197,7 +219,11 @@ if (loginForm) {
       window.location.href = "index.html";
     } catch (error) {
       console.error("Login Error:", error);
-      if (errorMsg) errorMsg.textContent = textFor("invalidCredentials");
+      if (error?.code === "auth/too-many-requests") {
+        setText(errorMsg, textFor("tooManyRequests"));
+      } else {
+        setText(errorMsg, textFor("invalidCredentials"));
+      }
     }
   });
 }
@@ -205,8 +231,7 @@ if (loginForm) {
 /* =========================
    Google Auth (Login/Register buttons)
 ========================= */
-const googleButtons = ["googleLoginBtn", "googleRegisterBtn"];
-googleButtons.forEach((id) => {
+["googleLoginBtn", "googleRegisterBtn"].forEach((id) => {
   const button = document.getElementById(id);
   if (!button) return;
 
@@ -221,7 +246,7 @@ googleButtons.forEach((id) => {
     } catch (error) {
       console.error("Google Auth Error:", error);
       const target = errorMsg || registerMsg;
-      if (target) target.textContent = textFor("googleError");
+      setText(target, textFor("googleError"));
     }
   });
 });
@@ -244,17 +269,17 @@ if (registerForm) {
     const confirmPassword = document.getElementById("regConfirmPassword")?.value;
 
     if (!firstName || !lastName || !gender || !country || !birthDate || !email || !password || !confirmPassword) {
-      if (registerMsg) registerMsg.textContent = textFor("requiredFields");
+      setText(registerMsg, textFor("requiredFields"));
       return;
     }
 
     if (!isStrongPassword(password)) {
-      if (registerMsg) registerMsg.textContent = textFor("weakPassword");
+      setText(registerMsg, textFor("weakPassword"));
       return;
     }
 
     if (password !== confirmPassword) {
-      if (registerMsg) registerMsg.textContent = textFor("confirmPasswordMismatch");
+      setText(registerMsg, textFor("confirmPasswordMismatch"));
       return;
     }
 
@@ -267,7 +292,8 @@ if (registerForm) {
         photoURL: DEFAULT_AVATAR
       });
 
-      await sendEmailVerification(userCredential.user);
+      // Send verification with action settings (if available)
+      await sendEmailVerification(userCredential.user, actionSettingsSafe());
 
       await saveUserProfile(
         userCredential.user,
@@ -281,13 +307,12 @@ if (registerForm) {
         emailVerified: false
       });
 
-      // Optional: store pending email for verify page
       localStorage.setItem("coursehub_pending_verification_email", email);
 
-      if (registerMsg) {
-        registerMsg.classList.add("success-msg");
-        registerMsg.textContent = textFor("registerSuccess");
-      }
+      setText(registerMsg, textFor("registerSuccess"), true);
+
+      // sign out until verified
+      await signOut(auth);
 
       setTimeout(() => {
         window.location.href = "verify-email.html";
@@ -295,13 +320,16 @@ if (registerForm) {
 
     } catch (error) {
       console.error("Register Error:", error);
-      if (!registerMsg) return;
 
-      registerMsg.classList.remove("success-msg");
-      if (error.code === "auth/email-already-in-use") {
-        registerMsg.textContent = textFor("emailInUse");
+      if (error?.code === "auth/too-many-requests") {
+        setText(registerMsg, textFor("tooManyRequests"));
+        return;
+      }
+
+      if (error?.code === "auth/email-already-in-use") {
+        setText(registerMsg, textFor("emailInUse"));
       } else {
-        registerMsg.textContent = textFor("registerError");
+        setText(registerMsg, textFor("registerError"));
       }
     }
   });
@@ -316,21 +344,20 @@ if (forgotForm) {
 
     const email = document.getElementById("forgotEmail")?.value?.trim();
     if (!email) {
-      if (forgotMsg) forgotMsg.textContent = textFor("requiredFields");
+      setText(forgotMsg, textFor("requiredFields"));
       return;
     }
 
     try {
-      await sendPasswordResetEmail(auth, email);
-      if (forgotMsg) {
-        forgotMsg.classList.add("success-msg");
-        forgotMsg.textContent = textFor("resetSent");
-      }
+      // reset with action settings (if available)
+      await sendPasswordResetEmail(auth, email, actionSettingsSafe());
+      setText(forgotMsg, textFor("resetSent"), true);
     } catch (error) {
       console.error("Reset password error:", error);
-      if (forgotMsg) {
-        forgotMsg.classList.remove("success-msg");
-        forgotMsg.textContent = textFor("resetError");
+      if (error?.code === "auth/too-many-requests") {
+        setText(forgotMsg, textFor("tooManyRequests"));
+      } else {
+        setText(forgotMsg, textFor("resetError"));
       }
     }
   });
@@ -343,7 +370,10 @@ onAuthStateChanged(auth, (user) => {
   if (!user) return;
 
   const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
-  if (!storedUser) {
+  if (!storedUser && user.emailVerified) {
+    storeUser(user);
+  } else if (!storedUser) {
+    // حتى لو غير مفعّل، نخزن بياناته (لكن لا نسمح بالدخول في login flow أعلاه)
     storeUser(user);
   }
 });

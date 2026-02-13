@@ -14,7 +14,7 @@ import {
 const dataUrlPrefix = "data:";
 const pdfLibraryUrl = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
-// ✅ i18n (ميزة جديدة) + نصوص عربية/إنجليزية
+// ✅ i18n
 const getLang = () => localStorage.getItem("coursehub_lang") || "ar";
 
 const uiText = {
@@ -104,6 +104,7 @@ const fetchImageDataUrl = async (url) => {
 
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to load certificate image.");
+
   const blob = await response.blob();
   return blobToDataUrl(blob);
 };
@@ -119,10 +120,12 @@ const loadImage = (src) =>
 
 const fetchQrDataUrl = async (verifyUrl) => {
   if (!verifyUrl) return "";
+
   const qrResponse = await fetch(
     `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(verifyUrl)}`
   );
   if (!qrResponse.ok) throw new Error("Failed to load QR code.");
+
   const qrBlob = await qrResponse.blob();
   return blobToDataUrl(qrBlob);
 };
@@ -152,7 +155,7 @@ const composeCertificateWithQr = async (certificateUrl, verificationCode) => {
 
   const minSide = Math.min(canvas.width, canvas.height);
 
-  // ✅ تصغير حجم الـ QR (ميزة main) + مكان آمن أعلى اليسار
+  // ✅ حجم QR مناسب + مكان آمن أعلى اليسار
   const qrSize = Math.round(minSide * 0.14);
   const margin = Math.round(minSide * 0.04);
 
@@ -191,7 +194,7 @@ const downloadPdfFromImage = async (url, title, verificationCode) => {
   pdf.save(`${sanitizeFileName(title)}.pdf`);
 };
 
-// ✅ Viewer + دعم DataURL عبر sessionStorage (ميزة مهمة)
+// ✅ Viewer + دعم DataURL عبر sessionStorage
 const openCertificateViewer = (url, title, verificationCode) => {
   let targetUrl = url;
   let dataKey = "";
@@ -202,9 +205,11 @@ const openCertificateViewer = (url, title, verificationCode) => {
     targetUrl = "";
   }
 
-  const viewerUrl = `/certificate-view.html?url=${encodeURIComponent(targetUrl)}&title=${encodeURIComponent(
-    title || "certificate"
-  )}&code=${encodeURIComponent(verificationCode || "")}&dataKey=${encodeURIComponent(dataKey)}`;
+  const viewerUrl =
+    `/certificate-view.html?url=${encodeURIComponent(targetUrl)}` +
+    `&title=${encodeURIComponent(title || "certificate")}` +
+    `&code=${encodeURIComponent(verificationCode || "")}` +
+    `&dataKey=${encodeURIComponent(dataKey)}`;
 
   openUrlInNewTab(viewerUrl);
 };
@@ -222,6 +227,7 @@ window.downloadCertificate = function (url, title, verificationCode) {
     alert(uiText[getLang()].missingCertificate);
     return;
   }
+
   downloadPdfFromImage(url, title, verificationCode).catch(() => {
     alert(uiText[getLang()].downloadFailed);
   });
@@ -249,7 +255,7 @@ onAuthStateChanged(auth, async (user) => {
     let completedCourses = [];
     let certificates = [];
 
-    // ✅ القراءة من المجموعات الفرعية (الأسلوب الجديد)
+    // ✅ القراءة من المجموعات الفرعية
     try {
       const completedSnap = await getDocs(collection(db, "users", user.uid, "completedCourses"));
       completedCourses = completedSnap.docs.map((docSnap) => docSnap.data());
@@ -264,7 +270,7 @@ onAuthStateChanged(auth, async (user) => {
       console.error("خطأ أثناء جلب الشهادات من المجموعات الفرعية:", error);
     }
 
-    // ✅ Fallback للشهادات: إذا ما فيه شهادات بالمجموعة الفرعية، اجلبها من المجموعة العامة certificates
+    // ✅ Fallback للشهادات من المجموعة العامة certificates
     if (!certificates.length) {
       try {
         const publicCertificatesSnap = await getDocs(
@@ -274,7 +280,6 @@ onAuthStateChanged(auth, async (user) => {
         certificates = publicCertificatesSnap.docs.map((docSnap) => {
           const data = docSnap.data();
 
-          // ✅ قراءة آمنة للتاريخ (Timestamp أو string)
           const completedAt = data.completedAt;
           const issuedAt =
             completedAt && typeof completedAt.toDate === "function"
@@ -293,7 +298,7 @@ onAuthStateChanged(auth, async (user) => {
       }
     }
 
-    // ✅ fallback قديم: إذا ما عندك subcollections رجّع للحقول داخل users doc (للتوافق مع البيانات القديمة)
+    // ✅ fallback قديم من users doc
     if (!completedCourses.length && Array.isArray(userData.completedCourses)) {
       completedCourses = userData.completedCourses;
     }
