@@ -1,15 +1,7 @@
 # Firebase Security Rules (محدّثة ومطابقة لتدفق CourseHub الحالي)
 
-> هذه النسخة مبنية على القواعد التي أرسلتها، وتم تحديثها لتتوافق مع:
-> - إدارة طلبات الأساتذة (`instructorApplications`)
-> - طابور البريد (`emailQueue`)
-> - طابور حذف حسابات Authentication (`authDeletionQueue`)
-> - حذف المستخدم من لوحة الأدمن (delete/archive)
-> - التوافق مع أدمن عبر `custom claim` أو `email allowlist`
-
 ## Firestore Rules
 
-```rules
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -98,7 +90,11 @@ service cloud.firestore {
     match /enrollments/{docId} {
       // قراءة المستند: مالكه أو الأدمن
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow list: if isAdmin();
+
+      // list:
+      // - الأدمن: يشوف الكل
+      // - المستخدم المسجّل: يقدر يعمل query (ويجب أن يكون الاستعلام مقيّد بـ userId==auth.uid من جهة التطبيق)
+      allow list: if isAdmin() || isSignedIn();
 
       // الإنشاء: userId يجب يطابق uid الحالي
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
@@ -137,10 +133,58 @@ service cloud.firestore {
     // محاولات الاختبارات
     match /quizAttempts/{attemptId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow list: if isAdmin();
+
+      // list:
+      // - الأدمن: يشوف الكل
+      // - المستخدم المسجّل: يقدر يعمل query (ويجب أن يكون الاستعلام مقيّد بـ userId==auth.uid من جهة التطبيق)
+      allow list: if isAdmin() || isSignedIn();
 
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+  }
+}
+
+## Storage Rules
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminByClaim() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isAdminByEmail() {
+      return isSignedIn() && request.auth.token.email in [
+        "kaleadsalous30@gmail.com",
+        "coursehub03@gmail.com"
+      ];
+    }
+
+    function isAdmin() {
+      return isAdminByClaim() || isAdminByEmail();
+    }
+
+    // ملفات الدورات
+    match /courses/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ملفات إثبات العمل للأساتذة (PDF)
+    match /instructor-applications/{uid}/{fileName} {
+      // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
+      allow write: if isSignedIn()
+                   && request.auth.uid == uid
+                   && request.resource.contentType.matches('application/pdf');
+
+      // القراءة للأدمن فقط
+      allow read: if isAdmin();
     }
   }
 }

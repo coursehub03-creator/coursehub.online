@@ -104,6 +104,10 @@ const messages = {
   storageUnauthorized: {
     ar: "لا يمكن رفع شهادة العمل الآن بسبب صلاحيات التخزين. تواصل مع الإدارة لضبط Firebase Storage Rules.",
     en: "Work-proof upload is blocked by storage permissions. Ask admin to update Firebase Storage rules."
+  },
+  leakedAccountRecovered: {
+    ar: "تم تنظيف حساب سابق غير مكتمل. أعد المحاولة الآن بنفس البريد.",
+    en: "A previously incomplete account was cleaned up. Please retry registration now."
   }
 };
 
@@ -385,11 +389,21 @@ if (registerForm) {
     const confirmPassword = document.getElementById("regConfirmPassword")?.value;
 
     // instructor fields (optional)
-    const accountType = document.querySelector('input[name="accountType"]:checked')?.value || "student";
+    const accountType =
+      document.querySelector('input[name="accountType"]:checked')?.value || "student";
     const phone = document.getElementById("regPhone")?.value?.trim() || "";
     const fullName = `${firstName || ""} ${lastName || ""}`.trim();
 
-    if (!firstName || !lastName || !gender || !country || !birthDate || !email || !password || !confirmPassword) {
+    if (
+      !firstName ||
+      !lastName ||
+      !gender ||
+      !country ||
+      !birthDate ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
       setText(registerMsg, textFor("requiredFields"));
       return;
     }
@@ -406,12 +420,34 @@ if (registerForm) {
 
     let createdUser = null;
 
+    // merged behavior (old + new): delete created user safely + fallback to auth.currentUser + return deleted boolean
     const cleanupCreatedUser = async () => {
-      if (!createdUser) return;
-      try { await createdUser.delete(); } catch (cleanupError) {
+      if (!createdUser) return false;
+
+      let deleted = false;
+
+      try {
+        await createdUser.delete();
+        deleted = true;
+      } catch (cleanupError) {
         console.warn("Could not delete temporary created user:", cleanupError);
       }
-      try { await signOut(auth); } catch {}
+
+      // fallback if createdUser.delete() failed and currentUser matches
+      if (!deleted && auth.currentUser?.uid === createdUser.uid) {
+        try {
+          await auth.currentUser.delete();
+          deleted = true;
+        } catch (currentUserDeleteError) {
+          console.warn("Could not delete auth.currentUser fallback:", currentUserDeleteError);
+        }
+      }
+
+      try {
+        await signOut(auth);
+      } catch {}
+
+      return deleted;
     };
 
     try {
@@ -441,7 +477,10 @@ if (registerForm) {
         }
 
         // upload PDF to Storage
-        const fileRef = ref(storage, `instructor-applications/${createdUser.uid}/work-proof-${Date.now()}.pdf`);
+        const fileRef = ref(
+          storage,
+          `instructor-applications/${createdUser.uid}/work-proof-${Date.now()}.pdf`
+        );
         try {
           await uploadBytes(fileRef, proofFile);
         } catch (err) {
@@ -525,7 +564,6 @@ if (registerForm) {
       setTimeout(() => {
         window.location.href = "verify-email.html";
       }, 1200);
-
     } catch (error) {
       console.error("Register Error:", error);
 
@@ -540,6 +578,21 @@ if (registerForm) {
       }
 
       if (error?.code === "auth/email-already-in-use") {
+        if (accountType === "instructor") {
+          try {
+            const leakedCredential = await signInWithEmailAndPassword(auth, email, password);
+            const leakedUser = leakedCredential.user;
+            if (leakedUser && !leakedUser.emailVerified) {
+              await leakedUser.delete();
+              await signOut(auth);
+              setText(registerMsg, textFor("leakedAccountRecovered"), true);
+              return;
+            }
+            await signOut(auth);
+          } catch (recoveryError) {
+            console.warn("Could not auto-recover email-already-in-use account:", recoveryError);
+          }
+        }
         setText(registerMsg, textFor("emailInUse"));
       } else {
         setText(registerMsg, textFor("registerError"));
