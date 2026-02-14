@@ -59,3 +59,11 @@ exports.processAuthDeletionQueue = onDocumentCreated(
 - تثبيت Firebase Functions + Admin SDK داخل مشروع functions.
 - نشر الفنكشن (`firebase deploy --only functions`).
 - منح الأدمن فقط صلاحية الكتابة على `authDeletionQueue` (موجودة في `docs/firebase-rules.md`).
+
+
+## جاهز داخل المشروع
+- تمت إضافة نسخة تشغيلية في `functions/index.js` مع `functions/package.json`.
+- النشر:
+  1) `cd functions`
+  2) `npm install`
+  3) `npm run deploy`

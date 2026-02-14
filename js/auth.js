@@ -420,12 +420,10 @@ if (registerForm) {
 
     let createdUser = null;
 
-    // merged behavior (old + new): delete created user safely + fallback to auth.currentUser + return deleted boolean
     const cleanupCreatedUser = async () => {
       if (!createdUser) return false;
 
       let deleted = false;
-
       try {
         await createdUser.delete();
         deleted = true;
@@ -433,7 +431,6 @@ if (registerForm) {
         console.warn("Could not delete temporary created user:", cleanupError);
       }
 
-      // fallback if createdUser.delete() failed and currentUser matches
       if (!deleted && auth.currentUser?.uid === createdUser.uid) {
         try {
           await auth.currentUser.delete();
@@ -443,10 +440,7 @@ if (registerForm) {
         }
       }
 
-      try {
-        await signOut(auth);
-      } catch {}
-
+      try { await signOut(auth); } catch {}
       return deleted;
     };
 
