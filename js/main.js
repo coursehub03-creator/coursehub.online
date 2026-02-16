@@ -69,10 +69,13 @@ async function syncUserProfile() {
   if (!storedUser?.uid) return;
 
   try {
-    const { db } = await import("/js/firebase-config.js");
+    const { auth, db } = await import("/js/firebase-config.js");
     const { doc, setDoc, serverTimestamp } = await import(
       "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
     );
+
+    const currentUid = auth.currentUser?.uid;
+    if (!currentUid || currentUid !== storedUser.uid) return;
 
     const normalizedRole =
       storedUser.role === "user" ? "student" : storedUser.role || "student";
@@ -91,6 +94,10 @@ async function syncUserProfile() {
       { merge: true }
     );
   } catch (error) {
+    if (error?.code === "permission-denied") {
+      console.info("تخطي مزامنة بروفايل المستخدم: لا توجد صلاحية Firestore في الحالة الحالية.");
+      return;
+    }
     console.warn("تعذر مزامنة بيانات المستخدم:", error);
   }
 }
@@ -295,6 +302,10 @@ async function loadNotifications(userId) {
     const snapshot = await getDocs(q);
     return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
   } catch (error) {
+    if (error?.code === "permission-denied") {
+      console.info("تم استخدام إشعارات localStorage لأن Firestore Rules منعت القراءة.");
+      return getUserNotifications(userId);
+    }
     console.error("تعذر تحميل الإشعارات من Firestore:", error);
     return getUserNotifications(userId);
   }

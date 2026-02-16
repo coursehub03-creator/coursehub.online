@@ -65,10 +65,17 @@ async function loadCourse() {
 
   if (!snap.exists()) {
     alert("الدورة غير موجودة");
+    window.location.href = "/courses.html";
     return;
   }
 
   course = snap.data();
+
+  if (course.status !== "published") {
+    alert("هذه الدورة غير متاحة حالياً للطلاب.");
+    window.location.href = "/courses.html";
+    return;
+  }
 
   const lang = localStorage.getItem("coursehub_lang") || "ar";
   courseTitle = lang === "en" ? course.titleEn || course.title : course.title;
