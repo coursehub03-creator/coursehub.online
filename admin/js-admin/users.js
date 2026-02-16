@@ -84,8 +84,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   /**
    * تنظيف البيانات المرتبطة بالمستخدم:
-   * - instructorApplications: نحاول delete، وإن فشل بسبب rules → نعمل archive (ميزة main)
-   * - باقي المجموعات: best-effort delete، وإن فشل permission-denied نتجاهل (ميزة الفرع الآخر)
+   * - instructorApplications: نحاول delete، وإن فشل بسبب rules → نعمل archive
+   * - باقي المجموعات: best-effort delete، وإن فشل permission-denied نتجاهل
    */
   const purgeLinkedCollectionsBestEffort = async (targetUid) => {
     // 1) instructorApplications: delete ثم archive fallback عند permission-denied
