@@ -1,9 +1,20 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
 
 const db = admin.firestore();
+
+const ADMIN_EMAILS = new Set([
+  "kaleadsalous30@gmail.com",
+  "coursehub03@gmail.com"
+]);
+
+function isAdminContext(auth) {
+  if (!auth) return false;
+  return auth.token?.admin === true || ADMIN_EMAILS.has(auth.token?.email || "");
+}
 
 // يراعي حد الـ batch (500) بتجزئة الحذف على دفعات
 async function batchDeleteDocs(docRefs) {
@@ -61,10 +72,12 @@ async function cleanupUserData(uid) {
   deleted += await deleteDocsByField("notifications", "userId", uid);
   deleted += await deleteDocsByField("quizAttempts", "userId", uid);
   deleted += await deleteDocsByField("user_courses", "uid", uid);
+  deleted += await deleteDocsByField("achievements", "userId", uid);
 
   // nested user subcollections
   deleted += await deleteSubcollectionDocs(uid, "completedCourses");
   deleted += await deleteSubcollectionDocs(uid, "certificates");
+  deleted += await deleteSubcollectionDocs(uid, "achievements");
 
   // finally remove the main user doc if still exists
   await db.collection("users").doc(uid).delete().catch(() => {});
@@ -72,6 +85,59 @@ async function cleanupUserData(uid) {
   return deleted;
 }
 
+async function hardDeleteUserEverywhere(uid, email) {
+  let resolvedUid = uid || null;
+
+  if (!resolvedUid && email) {
+    try {
+      const userRecord = await admin.auth().getUserByEmail(email);
+      resolvedUid = userRecord.uid;
+    } catch (error) {
+      if (error?.code !== "auth/user-not-found") throw error;
+    }
+  }
+
+  if (!resolvedUid) {
+    throw new Error("No uid/email provided or user not found in Auth.");
+  }
+
+  // delete auth account (idempotent-ish: ignore not-found)
+  try {
+    await admin.auth().deleteUser(resolvedUid);
+  } catch (authError) {
+    if (authError?.code !== "auth/user-not-found") throw authError;
+  }
+
+  const deletedDocsCount = await cleanupUserData(resolvedUid);
+  return { uid: resolvedUid, deletedDocsCount };
+}
+
+// Callable: حذف فوري من لوحة الأدمن
+exports.hardDeleteUser = onCall({ region: "us-central1" }, async (request) => {
+  if (!isAdminContext(request.auth)) {
+    throw new HttpsError("permission-denied", "Only admins can delete users.");
+  }
+
+  const uid = typeof request.data?.uid === "string" ? request.data.uid.trim() : "";
+  const email = typeof request.data?.email === "string" ? request.data.email.trim() : "";
+
+  if (!uid && !email) {
+    throw new HttpsError("invalid-argument", "uid or email is required.");
+  }
+
+  try {
+    const result = await hardDeleteUserEverywhere(uid || null, email || null);
+    return {
+      ok: true,
+      deletedUid: result.uid,
+      deletedDocsCount: result.deletedDocsCount
+    };
+  } catch (error) {
+    throw new HttpsError("internal", String(error?.message || error));
+  }
+});
+
+// Firestore Trigger: معالجة طابور الحذف authDeletionQueue
 exports.processAuthDeletionQueue = onDocumentCreated(
   {
     document: "authDeletionQueue/{jobId}",
@@ -86,7 +152,7 @@ exports.processAuthDeletionQueue = onDocumentCreated(
 
     const attempts = Number(job.attempts || 0) + 1;
 
-    // علامة بداية المعالجة (مفيدة للتتبع + منع تكرار التنفيذ لو تحب)
+    // علامة بداية المعالجة
     await ref.update({
       attempts,
       status: "processing",
@@ -94,28 +160,12 @@ exports.processAuthDeletionQueue = onDocumentCreated(
     });
 
     try {
-      let uid = job.uid || null;
-
-      if (!uid && job.email) {
-        const userRecord = await admin.auth().getUserByEmail(job.email);
-        uid = userRecord.uid;
-      }
-
-      if (!uid) throw new Error("No uid/email provided in job");
-
-      // delete auth account (idempotent-ish: ignore not-found)
-      try {
-        await admin.auth().deleteUser(uid);
-      } catch (authError) {
-        if (authError?.code !== "auth/user-not-found") throw authError;
-      }
-
-      const deletedDocsCount = await cleanupUserData(uid);
+      const result = await hardDeleteUserEverywhere(job.uid || null, job.email || null);
 
       await ref.update({
         status: "done",
-        deletedUid: uid,
-        deletedDocsCount,
+        deletedUid: result.uid,
+        deletedDocsCount: result.deletedDocsCount,
         processedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
