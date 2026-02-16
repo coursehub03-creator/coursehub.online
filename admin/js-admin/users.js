@@ -77,6 +77,58 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  /**
+   * تنظيف البيانات المرتبطة بالمستخدم:
+   * - instructorApplications: نحاول delete، وإن فشل بسبب rules → نعمل archive (ميزة main)
+   * - باقي المجموعات: best-effort delete، وإن فشل permission-denied نتجاهل (ميزة الفرع الآخر)
+   */
+  const purgeLinkedCollectionsBestEffort = async (targetUid) => {
+    // 1) instructorApplications: delete ثم archive fallback عند permission-denied
+    const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
+    const appSnap = await getDocs(appQuery);
+
+    await Promise.all(
+      appSnap.docs.map(async (snap) => {
+        try {
+          await deleteDoc(snap.ref);
+        } catch (error) {
+          if (!isPermissionDenied(error)) throw error;
+
+          // fallback: archive instead of delete
+          await updateDoc(snap.ref, {
+            applicationStatus: "archived",
+            reviewReason: "Archived after account deletion request",
+            reviewedAt: serverTimestamp()
+          });
+        }
+      })
+    );
+
+    // 2) باقي الـ collections: best-effort delete (مع تجاهل permission-denied)
+    const cleanupTargets = [
+      { collectionName: "certificates", field: "userId" },
+      { collectionName: "enrollments", field: "userId" },
+      { collectionName: "notifications", field: "userId" },
+      { collectionName: "quizAttempts", field: "userId" },
+      { collectionName: "user_courses", field: "uid" }
+    ];
+
+    for (const target of cleanupTargets) {
+      const q = query(collection(db, target.collectionName), where(target.field, "==", targetUid));
+      const snap = await getDocs(q);
+
+      await Promise.all(
+        snap.docs.map(async (docSnap) => {
+          try {
+            await deleteDoc(docSnap.ref);
+          } catch (error) {
+            if (!isPermissionDenied(error)) throw error;
+          }
+        })
+      );
+    }
+  };
+
   const removeUserRecord = async (user) => {
     const targetUid = user.uid || user.id;
     if (!targetUid) throw new Error("User UID not found");
@@ -110,25 +162,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
-    // 2) instructorApplications: حاول حذف، وإن فشل → أرشف
-    const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
-    const appSnap = await getDocs(appQuery);
-
-    await Promise.all(
-      appSnap.docs.map(async (snap) => {
-        try {
-          await deleteDoc(snap.ref);
-        } catch (error) {
-          if (!isPermissionDenied(error)) throw error;
-
-          await updateDoc(snap.ref, {
-            applicationStatus: "archived",
-            reviewReason: "Archived after account deletion request",
-            reviewedAt: serverTimestamp()
-          });
-        }
-      })
-    );
+    // 2) linked collections cleanup (best-effort + instructorApplications archive fallback)
+    await purgeLinkedCollectionsBestEffort(targetUid);
 
     // 3) Update UI cache
     if (hardDeleted) {
