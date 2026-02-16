@@ -33,13 +33,23 @@
       </div>
 
       <div class="builder-tabs" id="instructorBuilderTabs">
-        <button class="tab-btn active" type="button" data-tab="info"><i class="fa-solid fa-circle-info"></i><span>معلومات الدورة</span></button>
-        <button class="tab-btn" type="button" data-tab="curriculum"><i class="fa-solid fa-layer-group"></i><span>المنهج والمحتوى</span></button>
-        <button class="tab-btn" type="button" data-tab="preview"><i class="fa-solid fa-eye"></i><span>المعاينة</span></button>
-        <button class="tab-btn" type="button" data-tab="submit"><i class="fa-solid fa-paper-plane"></i><span>الإرسال للمراجعة</span></button>
+        <button class="tab-btn active" type="button" data-tab="info">
+          <i class="fa-solid fa-circle-info"></i><span>معلومات الدورة</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="curriculum">
+          <i class="fa-solid fa-layer-group"></i><span>المنهج والمحتوى</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="preview">
+          <i class="fa-solid fa-eye"></i><span>المعاينة</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="submit">
+          <i class="fa-solid fa-paper-plane"></i><span>الإرسال للمراجعة</span>
+        </button>
       </div>
 
       <form id="instructorCourseForm" class="instructor-builder-form" novalidate>
+
+        <!-- TAB: INFO -->
         <div class="tab-content active" id="tab-info">
           <div class="builder-card">
             <div class="form-grid">
@@ -47,18 +57,22 @@
                 <label for="courseTitle">عنوان الدورة</label>
                 <input id="courseTitle" type="text" placeholder="مثال: أساسيات تطوير واجهات الويب الحديثة" required />
               </div>
+
               <div class="field-group">
                 <label for="courseTitleEn">عنوان الدورة (بالإنجليزية)</label>
                 <input id="courseTitleEn" type="text" placeholder="Modern Front-End Foundations" />
               </div>
+
               <div class="field-group">
                 <label for="courseCategory">التصنيف</label>
                 <input id="courseCategory" type="text" placeholder="مثال: تطوير الويب" required />
               </div>
+
               <div class="field-group">
                 <label for="coursePrice">السعر (USD)</label>
                 <input id="coursePrice" type="number" min="0" step="0.01" placeholder="49.99" required />
               </div>
+
               <div class="field-group">
                 <label for="courseLevel">المستوى</label>
                 <select id="courseLevel">
@@ -67,6 +81,7 @@
                   <option value="متقدم">متقدم</option>
                 </select>
               </div>
+
               <div class="field-group">
                 <label for="courseLanguage">لغة الدورة</label>
                 <select id="courseLanguage">
@@ -74,10 +89,12 @@
                   <option value="English">English</option>
                 </select>
               </div>
+
               <div class="field-group">
                 <label for="courseDuration">المدة (ساعات)</label>
                 <input id="courseDuration" type="number" min="1" placeholder="12" />
               </div>
+
               <div class="field-group">
                 <label for="courseDifficulty">شدة/إيقاع الدورة</label>
                 <select id="courseDifficulty">
@@ -111,6 +128,7 @@
           </div>
         </div>
 
+        <!-- TAB: CURRICULUM -->
         <div class="tab-content" id="tab-curriculum">
           <div class="builder-card">
             <div class="builder-card-head">
@@ -122,7 +140,9 @@
               <div class="dynamic-list" data-list="objectives">
                 <div class="dynamic-head">
                   <h4>أهداف الدورة</h4>
-                  <button type="button" class="add-row-btn" data-target="objectives"><i class="fa-solid fa-plus"></i> إضافة هدف</button>
+                  <button type="button" class="add-row-btn" data-target="objectives">
+                    <i class="fa-solid fa-plus"></i> إضافة هدف
+                  </button>
                 </div>
                 <div id="objectivesList" class="rows-container"></div>
               </div>
@@ -130,7 +150,9 @@
               <div class="dynamic-list" data-list="requirements">
                 <div class="dynamic-head">
                   <h4>المتطلبات المسبقة</h4>
-                  <button type="button" class="add-row-btn" data-target="requirements"><i class="fa-solid fa-plus"></i> إضافة متطلب</button>
+                  <button type="button" class="add-row-btn" data-target="requirements">
+                    <i class="fa-solid fa-plus"></i> إضافة متطلب
+                  </button>
                 </div>
                 <div id="requirementsList" class="rows-container"></div>
               </div>
@@ -138,7 +160,9 @@
               <div class="dynamic-list" data-list="outcomes">
                 <div class="dynamic-head">
                   <h4>مخرجات التعلم</h4>
-                  <button type="button" class="add-row-btn" data-target="outcomes"><i class="fa-solid fa-plus"></i> إضافة مخرج</button>
+                  <button type="button" class="add-row-btn" data-target="outcomes">
+                    <i class="fa-solid fa-plus"></i> إضافة مخرج
+                  </button>
                 </div>
                 <div id="outcomesList" class="rows-container"></div>
               </div>
@@ -151,7 +175,9 @@
               <p>قابل للتوسعة بالكامل: أضف عددًا غير محدود من الوحدات والدروس.</p>
             </div>
             <div id="modulesContainer" class="modules-container"></div>
-            <button type="button" class="btn ghost" id="addModuleBtn"><i class="fa-solid fa-plus"></i> إضافة وحدة جديدة</button>
+            <button type="button" class="btn ghost" id="addModuleBtn">
+              <i class="fa-solid fa-plus"></i> إضافة وحدة جديدة
+            </button>
           </div>
 
           <!-- Quiz Builder -->
@@ -161,7 +187,9 @@
               <p>أنشئ بنك أسئلة كامل ليتم مراجعته من المشرف قبل نشر الدورة.</p>
             </div>
             <div id="assessmentQuestions" class="assessment-questions"></div>
-            <button type="button" class="btn ghost" id="addQuestionBtn"><i class="fa-solid fa-plus"></i> إضافة سؤال</button>
+            <button type="button" class="btn ghost" id="addQuestionBtn">
+              <i class="fa-solid fa-plus"></i> إضافة سؤال
+            </button>
           </div>
 
           <!-- ملف المنهج/الخطة -->
@@ -170,12 +198,14 @@
               <h3>ملف المنهج/الخطة</h3>
               <p>ارفع ملف PDF/DOC/DOCX لإضافة مرجعية تفصيلية للمراجعين.</p>
             </div>
-            <label class="file-upload">اختيار الملف
+            <label class="file-upload">
+              اختيار الملف
               <input id="courseOutline" type="file" accept=".pdf,.doc,.docx" />
             </label>
           </div>
         </div>
 
+        <!-- TAB: PREVIEW -->
         <div class="tab-content" id="tab-preview">
           <div class="builder-card preview-card">
             <img id="previewCover" src="/assets/images/default-course.png" alt="cover preview" class="preview-cover">
@@ -195,6 +225,7 @@
           </div>
         </div>
 
+        <!-- TAB: SUBMIT -->
         <div class="tab-content" id="tab-submit">
           <div class="builder-card">
             <h3>قائمة مراجعة قبل الإرسال</h3>

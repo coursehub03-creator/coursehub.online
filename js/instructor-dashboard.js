@@ -71,8 +71,9 @@ async function loadSubmissions(uid) {
         <p>السعر: ${item.price ?? 0}$</p>
         <p>التصنيف: ${item.category || "-"}</p>
         <p>المستوى: ${item.level || "-"} | اللغة: ${item.language || "-"}</p>
-        <p>الدروس: ${item.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0}
-           | أسئلة الاختبار: ${item.assessmentQuestions?.length || 0}
+        <p>
+          الدروس: ${item.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0}
+          | أسئلة الاختبار: ${item.assessmentQuestions?.length || 0}
         </p>
         <p>${item.reviewReason ? `ملاحظة الإدارة: ${item.reviewReason}` : ""}</p>
       </div>
@@ -413,7 +414,11 @@ function saveDraft() {
 
 function loadDraft() {
   let draft = null;
-  try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch { draft = null; }
+  try {
+    draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+  } catch {
+    draft = null;
+  }
   if (!draft) return;
 
   const setVal = (id, value) => {
@@ -533,6 +538,7 @@ onAuthStateChanged(auth, async (user) => {
 
   const profile = await getDoc(doc(db, "users", user.uid));
   const data = profile.exists() ? profile.data() : null;
+
   if (!data || data.role !== "instructor" || data.status !== "active") {
     window.location.href = "/instructor-pending.html";
     return;
@@ -634,7 +640,11 @@ onAuthStateChanged(auth, async (user) => {
       } catch (err) {
         console.error(err);
 
-        const storageDenied = err?.code === "storage/unauthorized" || err?.code === "storage/unauthorized";
+        const storageDenied =
+          err?.code === "storage/unauthorized" ||
+          /storage\/unauthorized/i.test(err?.code || "") ||
+          /403/i.test(err?.message || "");
+
         const denied =
           err?.code === "permission-denied" ||
           /Missing or insufficient permissions/i.test(err?.message || "");
