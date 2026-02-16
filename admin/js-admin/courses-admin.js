@@ -1,16 +1,15 @@
-// js-admin/courses-admin.js
-
 import { db } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
 import {
   collection,
   getDocs,
   doc,
-  deleteDoc
+  deleteDoc,
+  updateDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // 🔐 حماية الأدمن
   const adminUser = await protectAdmin();
   console.log("أدمن مسجل:", adminUser.email);
 
@@ -25,16 +24,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ✅ زر إضافة دورة
   addBtn.addEventListener("click", (e) => {
     e.preventDefault();
-    console.log("تم الضغط على زر إضافة دورة");
     window.location.href = "/admin/add-course.html";
   });
 
-  // -----------------------------
-  // تحميل الدورات
-  // -----------------------------
   let allCourses = [];
   let enrollmentsMap = new Map();
   let completionsMap = new Map();
@@ -42,41 +36,54 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusBadge = (status) => {
     if (status === "published") return "<span class='badge success'>منشورة</span>";
     if (status === "review") return "<span class='badge warning'>قيد المراجعة</span>";
+    if (status === "archived") return "<span class='badge neutral'>مؤرشفة</span>";
     return "<span class='badge neutral'>مسودة</span>";
+  };
+
+  const renderCourseActions = (id, status) => {
+    const editAction = `<a class="btn outline small" href="/admin/edit-course.html?id=${id}">تعديل</a>`;
+    const publishAction = `<button type="button" class="btn success small publish-btn" data-id="${id}">نشر</button>`;
+    const reviewAction = `<button type="button" class="btn small review-btn" data-id="${id}">إرسال للمراجعة</button>`;
+    const archiveAction = `<button type="button" class="btn outline small archive-btn" data-id="${id}">أرشفة</button>`;
+    const deleteAction = `<button type="button" class="delete-btn" data-id="${id}">حذف</button>`;
+
+    if (status === "published") {
+      return `${editAction} ${archiveAction} ${deleteAction}`;
+    }
+
+    if (status === "archived") {
+      return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
+    }
+
+    if (status === "review") {
+      return `${editAction} ${publishAction} ${archiveAction} ${deleteAction}`;
+    }
+
+    // draft + unknown
+    return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
   };
 
   const renderCourses = (courses) => {
     tbody.innerHTML = "";
 
     if (!courses.length) {
-      tbody.innerHTML =
-        "<tr><td colspan='7'>لا توجد دورات حالياً</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='7'>لا توجد دورات حالياً</td></tr>";
       return;
     }
 
     courses.forEach(({ id, data }) => {
-      const course = data;
       const startedCount = enrollmentsMap.get(id) || 0;
       const completedCount = completionsMap.get(id) || 0;
       const inProgressCount = Math.max(0, startedCount - completedCount);
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${course.title || "-"}</td>
-        <td>${course.description || "-"}</td>
-        <td>${statusBadge(course.status)}</td>
+        <td>${data.title || "-"}</td>
+        <td>${data.description || "-"}</td>
+        <td>${statusBadge(data.status)}</td>
         <td>${startedCount}</td>
         <td>${completedCount}</td>
         <td>${inProgressCount}</td>
-        <td>
-          <a class="btn outline" href="/admin/edit-course.html?id=${id}">تعديل</a>
-          <button
-            type="button"
-            class="delete-btn"
-            data-id="${id}"
-          >
-            حذف
-          </button>
-        </td>
+        <td>${renderCourseActions(id, data.status)}</td>
       `;
 
       tbody.appendChild(tr);
@@ -98,9 +105,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderCourses(filtered);
   };
 
+  async function setCourseStatus(courseId, status) {
+    const payload = {
+      status,
+      updatedAt: serverTimestamp()
+    };
+
+    if (status === "published") payload.publishedAt = serverTimestamp();
+    if (status === "archived") payload.archivedAt = serverTimestamp();
+
+    await updateDoc(doc(db, "courses", courseId), payload);
+  }
+
   async function loadCourses() {
-    tbody.innerHTML =
-      "<tr><td colspan='7'>جارٍ تحميل الدورات...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='7'>جارٍ تحميل الدورات...</td></tr>";
 
     try {
       const enrollmentsSnap = await getDocs(collection(db, "enrollments"));
@@ -136,27 +154,35 @@ document.addEventListener("DOMContentLoaded", async () => {
       applyFilters();
     } catch (err) {
       console.error("خطأ في تحميل الدورات:", err);
-      tbody.innerHTML =
-        "<tr><td colspan='7'>حدث خطأ أثناء التحميل</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='7'>حدث خطأ أثناء التحميل</td></tr>";
     }
   }
 
-  // -----------------------------
-  // حذف دورة
-  // -----------------------------
   tbody.addEventListener("click", async (e) => {
-    if (!e.target.classList.contains("delete-btn")) return;
+    const actionBtn = e.target.closest("button");
+    if (!actionBtn) return;
 
-    const courseId = e.target.dataset.id;
-
-    if (!confirm("هل أنت متأكد من حذف الدورة؟")) return;
+    const courseId = actionBtn.dataset.id;
+    if (!courseId) return;
 
     try {
-      await deleteDoc(doc(db, "courses", courseId));
+      if (actionBtn.classList.contains("delete-btn")) {
+        if (!confirm("هل أنت متأكد من حذف الدورة؟")) return;
+        await deleteDoc(doc(db, "courses", courseId));
+      } else if (actionBtn.classList.contains("archive-btn")) {
+        await setCourseStatus(courseId, "archived");
+      } else if (actionBtn.classList.contains("publish-btn")) {
+        await setCourseStatus(courseId, "published");
+      } else if (actionBtn.classList.contains("review-btn")) {
+        await setCourseStatus(courseId, "review");
+      } else {
+        return;
+      }
+
       await loadCourses();
     } catch (err) {
-      console.error("فشل حذف الدورة:", err);
-      alert("حدث خطأ أثناء الحذف");
+      console.error("فشل تنفيذ الإجراء على الدورة:", err);
+      alert("حدث خطأ أثناء تنفيذ الإجراء");
     }
   });
 
