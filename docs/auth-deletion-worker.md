@@ -100,12 +100,11 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         authDeleted = true;
       } catch (authError) {
         if (authError?.code === "auth/user-not-found") {
-          authDeleted = true; // اعتبرها OK (idempotent)
+          authDeleted = true; // idempotent
         } else {
           authDeleted = false;
           authDeletionError = String(authError?.message || authError);
-          // هنا نقرر: بما أن المطلوب "يحذف من Auth و Firestore"
-          // نخليها فشل واضح بدل ما نكمل ونكتب done
+          // بما أن الهدف حذف Auth + Firestore: نخليها فشل واضح
           throw new Error(`Auth deletion failed: ${authDeletionError}`);
         }
       }

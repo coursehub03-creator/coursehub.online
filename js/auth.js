@@ -89,6 +89,10 @@ const messages = {
     ar: "تم رفض طلب الأستاذ. راجع بريدك لمعرفة السبب أو تواصل مع الدعم.",
     en: "Your instructor request was rejected. Check your email for details."
   },
+  instructorInactive: {
+    ar: "لا يمكنك تسجيل الدخول كأستاذ قبل موافقة الإدارة. حالة الطلب الحالية لا تسمح بالدخول.",
+    en: "You cannot log in as instructor before admin approval. Current status does not allow access."
+  },
   instructorTermsRequired: {
     ar: "يجب الموافقة على شروط وقواعد الأساتذة قبل التسجيل.",
     en: "You must accept instructor terms before registration."
@@ -301,6 +305,17 @@ const forgotMsg = document.getElementById("forgotMsg");
 initCountryPicker();
 initInstructorToggle();
 
+function getInstructorBlockMessage(meta) {
+  if (meta?.status === "rejected") {
+    const reason = String(meta?.reviewReason || "").trim();
+    if (reason) return `${textFor("instructorRejected")}\nسبب الرفض: ${reason}`;
+    return textFor("instructorRejected");
+  }
+
+  if (meta?.status === "pending") return textFor("instructorPending");
+  return textFor("instructorInactive");
+}
+
 /* =========================
    Login
 ========================= */
@@ -337,17 +352,10 @@ if (loginForm) {
       const meta = await getUserMeta(user.uid);
       const role = meta?.role || "student";
 
-      if (role === "instructor") {
-        if (meta?.status === "pending") {
-          await signOut(auth);
-          setText(errorMsg, textFor("instructorPending"));
-          return;
-        }
-        if (meta?.status === "rejected") {
-          await signOut(auth);
-          setText(errorMsg, textFor("instructorRejected"));
-          return;
-        }
+      if (role === "instructor" && meta?.status !== "active") {
+        await signOut(auth);
+        setText(errorMsg, getInstructorBlockMessage(meta));
+        return;
       }
 
       storeUser(user, { role });
@@ -389,17 +397,10 @@ if (loginForm) {
       const meta = await getUserMeta(user.uid);
       const role = meta?.role || "student";
 
-      if (role === "instructor") {
-        if (meta?.status === "pending") {
-          await signOut(auth);
-          setText(errorMsg || registerMsg, textFor("instructorPending"));
-          return;
-        }
-        if (meta?.status === "rejected") {
-          await signOut(auth);
-          setText(errorMsg || registerMsg, textFor("instructorRejected"));
-          return;
-        }
+      if (role === "instructor" && meta?.status !== "active") {
+        await signOut(auth);
+        setText(errorMsg || registerMsg, getInstructorBlockMessage(meta));
+        return;
       }
 
       storeUser(user, { role });
@@ -520,13 +521,16 @@ if (registerForm) {
           `instructor-applications/${createdUser.uid}/work-proof-${Date.now()}.pdf`
         );
         try {
-          await uploadBytes(fileRef, proofFile);
+          await uploadBytes(fileRef, proofFile, {
+            contentType: "application/pdf",
+            cacheControl: "public,max-age=3600"
+          });
         } catch (err) {
           console.error("Upload proof error:", err);
           await cleanupCreatedUser();
 
           if (err?.code === "storage/unauthorized") {
-            setText(registerMsg, textFor("storageUnauthorized"));
+            setText(registerMsg, `${textFor("storageUnauthorized")}\nخطأ 403 يعني أن Firebase Storage Rules تمنع الرفع لهذا المسار.`);
           } else {
             setText(registerMsg, textFor("registerError"));
           }
