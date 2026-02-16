@@ -96,6 +96,7 @@ function setupTabs() {
 
   tabs.forEach((tab) => {
     if (tab.dataset.bound) return;
+
     tab.addEventListener("click", () => {
       const target = tab.dataset.tab;
       tabs.forEach((t) => t.classList.remove("active"));
@@ -104,6 +105,7 @@ function setupTabs() {
       document.getElementById(`tab-${target}`)?.classList.add("active");
       renderPreview();
     });
+
     tab.dataset.bound = "1";
   });
 }
@@ -343,7 +345,9 @@ function renderPreview() {
             <ul>
               ${
                 m.lessons.length
-                  ? m.lessons.map((l) => `<li>${l.title}${l.duration ? ` (${l.duration} دقيقة)` : ""}</li>`).join("")
+                  ? m.lessons
+                      .map((l) => `<li>${l.title}${l.duration ? ` (${l.duration} دقيقة)` : ""}</li>`)
+                      .join("")
                   : "<li>لا توجد دروس داخل هذه الوحدة بعد.</li>"
               }
             </ul>
@@ -551,94 +555,110 @@ onAuthStateChanged(auth, async (user) => {
 
   await loadSubmissions(user.uid);
 
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // منع تعدد ربط submit لو onAuthStateChanged اشتغل أكثر من مرة
+  if (form && !form.dataset.bound) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    if (!allReviewChecksMarked()) {
-      setStatus("⚠️ أكمل قائمة المراجعة قبل إرسال الدورة.", true);
-      return;
-    }
-
-    const title = document.getElementById("courseTitle")?.value?.trim();
-    const description = document.getElementById("courseDescription")?.value?.trim();
-    const category = document.getElementById("courseCategory")?.value?.trim();
-    const modules = gatherModules();
-    const assessmentQuestions = gatherAssessmentQuestions();
-
-    if (!title || !description || !category) {
-      setStatus("يرجى إدخال العنوان + الوصف + التصنيف على الأقل.", true);
-      return;
-    }
-
-    if (!modules.length) {
-      setStatus("أضف وحدة واحدة على الأقل مع درس قبل الإرسال.", true);
-      return;
-    }
-
-    if (assessmentQuestions.length < 2) {
-      setStatus("الحد الأدنى المطلوب هو سؤالان في اختبار الدورة قبل الإرسال.", true);
-      return;
-    }
-
-    setStatus("جاري رفع الطلب...");
-
-    try {
-      const { imageUrl, outlineUrl } = await uploadFiles(user);
-
-      const payload = {
-        instructorId: user.uid,
-        instructorEmail: user.email,
-        title,
-        titleEn: document.getElementById("courseTitleEn")?.value?.trim() || "",
-        description,
-        category,
-        price: Number(document.getElementById("coursePrice")?.value || 0),
-        level: document.getElementById("courseLevel")?.value || "",
-        language: document.getElementById("courseLanguage")?.value || "",
-        durationHours: Number(document.getElementById("courseDuration")?.value || 0),
-        difficulty: document.getElementById("courseDifficulty")?.value || "",
-        objectives: getListValues("objectivesList"),
-        requirements: getListValues("requirementsList"),
-        outcomes: getListValues("outcomesList"),
-        modules,
-        assessmentQuestions,
-        image: imageUrl,
-        outlineUrl
-      };
-
-      // 1) حاول عبر Cloud Function (الأكثر احترافية وأقوى مع Rules)
-      try {
-        await submitInstructorCourse(payload);
-      } catch (callableError) {
-        console.warn("submitInstructorCourse callable failed, fallback to Firestore:", callableError);
-
-        // 2) fallback: Firestore (قد يفشل إذا rules تمنع)
-        await addDoc(collection(db, "instructorCourseSubmissions"), {
-          ...payload,
-          status: "pending",
-          reviewReason: "",
-          createdAt: serverTimestamp()
-        });
+      if (!allReviewChecksMarked()) {
+        setStatus("⚠️ أكمل قائمة المراجعة قبل إرسال الدورة.", true);
+        return;
       }
 
-      localStorage.removeItem(DRAFT_KEY);
-      setStatus("✅ تم إرسال الدورة للمراجعة بنجاح. ستظهر للمشرف ضمن طلبات المراجعة.");
-      resetBuilderState();
-      await loadSubmissions(user.uid);
-    } catch (err) {
-      console.error(err);
-      const denied =
-        err?.code === "permission-denied" ||
-        /Missing or insufficient permissions/i.test(err?.message || "");
+      const title = document.getElementById("courseTitle")?.value?.trim();
+      const description = document.getElementById("courseDescription")?.value?.trim();
+      const category = document.getElementById("courseCategory")?.value?.trim();
+      const modules = gatherModules();
+      const assessmentQuestions = gatherAssessmentQuestions();
 
-      if (denied) {
-        setStatus(
-          "❌ تم رفض الإرسال بسبب صلاحيات Firestore. إن كان مسار Cloud Function جاهزًا فتأكد من نشر آخر نسخة من functions وربطها بالمنطقة us-central1.",
-          true
-        );
-      } else {
+      if (!title || !description || !category) {
+        setStatus("يرجى إدخال العنوان + الوصف + التصنيف على الأقل.", true);
+        return;
+      }
+
+      if (!modules.length) {
+        setStatus("أضف وحدة واحدة على الأقل مع درس قبل الإرسال.", true);
+        return;
+      }
+
+      if (assessmentQuestions.length < 2) {
+        setStatus("الحد الأدنى المطلوب هو سؤالان في اختبار الدورة قبل الإرسال.", true);
+        return;
+      }
+
+      setStatus("جاري رفع الطلب...");
+
+      try {
+        const { imageUrl, outlineUrl } = await uploadFiles(user);
+
+        const payload = {
+          instructorId: user.uid,
+          instructorEmail: user.email,
+          title,
+          titleEn: document.getElementById("courseTitleEn")?.value?.trim() || "",
+          description,
+          category,
+          price: Number(document.getElementById("coursePrice")?.value || 0),
+          level: document.getElementById("courseLevel")?.value || "",
+          language: document.getElementById("courseLanguage")?.value || "",
+          durationHours: Number(document.getElementById("courseDuration")?.value || 0),
+          difficulty: document.getElementById("courseDifficulty")?.value || "",
+          objectives: getListValues("objectivesList"),
+          requirements: getListValues("requirementsList"),
+          outcomes: getListValues("outcomesList"),
+          modules,
+          assessmentQuestions,
+          image: imageUrl,
+          outlineUrl
+        };
+
+        // 1) حاول عبر Cloud Function (الأفضل مع Rules)
+        try {
+          await submitInstructorCourse(payload);
+        } catch (callableError) {
+          console.warn("submitInstructorCourse callable failed, fallback to Firestore:", callableError);
+
+          // 2) fallback: Firestore (قد يفشل إذا rules تمنع)
+          await addDoc(collection(db, "instructorCourseSubmissions"), {
+            ...payload,
+            status: "pending",
+            reviewReason: "",
+            createdAt: serverTimestamp()
+          });
+        }
+
+        localStorage.removeItem(DRAFT_KEY);
+        setStatus("✅ تم إرسال الدورة للمراجعة بنجاح. ستظهر للمشرف ضمن طلبات المراجعة.");
+        resetBuilderState();
+        await loadSubmissions(user.uid);
+      } catch (err) {
+        console.error(err);
+
+        const storageDenied = err?.code === "storage/unauthorized" || err?.code === "storage/unauthorized";
+        const denied =
+          err?.code === "permission-denied" ||
+          /Missing or insufficient permissions/i.test(err?.message || "");
+
+        if (storageDenied) {
+          setStatus(
+            "❌ تعذر رفع الملفات بسبب صلاحيات Firebase Storage (403 / storage/unauthorized). عدّل Storage Rules للسماح للأستاذ بالرفع داخل instructor-courses/{uid}/ وهو مسجّل دخول.",
+            true
+          );
+          return;
+        }
+
+        if (denied) {
+          setStatus(
+            "❌ تم رفض الإرسال بسبب صلاحيات Firestore. إن كان مسار Cloud Function جاهزًا فتأكد من نشر آخر نسخة من functions وربطها بالمنطقة us-central1.",
+            true
+          );
+          return;
+        }
+
         setStatus("❌ تعذر إرسال الدورة. تحقق من الملفات وحاول مرة أخرى.", true);
       }
-    }
-  });
+    });
+
+    form.dataset.bound = "1";
+  }
 });
