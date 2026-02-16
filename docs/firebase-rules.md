@@ -176,7 +176,7 @@ service firebase.storage {
       return isAdminByClaim() || isAdminByEmail();
     }
 
-    // ملفات الدورات
+    // ملفات الدورات العامة (يرفعها الأدمن فقط)
     match /courses/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -184,7 +184,6 @@ service firebase.storage {
 
     // ملفات إثبات العمل للأساتذة (PDF)
     match /instructor-applications/{uid}/{fileName} {
-      // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
       allow write: if isSignedIn()
                    && request.auth.uid == uid
                    && (
@@ -192,16 +191,15 @@ service firebase.storage {
                         || fileName.matches('(?i).*\\.pdf$')
                       );
 
-      // القراءة للأدمن فقط
       allow read: if isAdmin();
     }
 
     // ملفات الدورات المرفوعة من الأستاذ قبل مراجعة المشرف
     // المسار المستخدم في الواجهة: instructor-courses/{uid}/...
     match /instructor-courses/{uid}/{allPaths=**} {
-      // السماح لأي مستخدم مسجل دخول بالرفع داخل مجلده فقط.
-      // هذا يمنع خطأ 403 (storage/unauthorized) في لوحة الأستاذ
-      // حتى لو لم تكن custom claims (role/status) مضافة على token بعد.
+
+      // ✅ حل مشكلة 403: اسمح لأي مستخدم مسجل دخول بالرفع داخل مجلده فقط
+      // حتى لو لم تكن custom claims (role/status) موجودة على التوكن بعد
       allow create, update, delete: if isSignedIn() && request.auth.uid == uid;
 
       // القراءة لصاحب الملفات نفسه أو الأدمن
