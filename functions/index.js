@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 const db = admin.firestore();
+
 const ADMIN_EMAILS = new Set([
   "kaleadsalous30@gmail.com",
   "coursehub03@gmail.com"
@@ -20,8 +21,10 @@ async function assertAdmin(request) {
     throw new HttpsError("unauthenticated", "You must be authenticated.");
   }
 
+  // 1) Admin claim أو ضمن قائمة الإيميلات
   if (isAdminContext(request.auth)) return;
 
+  // 2) fallback: role داخل users/{uid}
   const userDoc = await db.collection("users").doc(request.auth.uid).get();
   const role = String(userDoc.data()?.role || "").toLowerCase();
   if (role === "admin") return;
@@ -29,11 +32,11 @@ async function assertAdmin(request) {
   throw new HttpsError("permission-denied", "Only admins can delete users.");
 }
 
-async function deleteQueryInChunks(query, chunkSize = 300) {
+async function deleteQueryInChunks(queryRef, chunkSize = 300) {
   let deleted = 0;
 
   while (true) {
-    const snap = await query.limit(chunkSize).get();
+    const snap = await queryRef.limit(chunkSize).get();
     if (snap.empty) return deleted;
 
     const batch = db.batch();
@@ -59,13 +62,27 @@ async function deleteDocIfExists(collectionName, docId) {
   return 1;
 }
 
+/**
+ * تنظيف شامل:
+ * - يحذف من عدة collections
+ * - يدور على عدة حقول (uid/userId/email/userEmail) لتفادي اختلافات البيانات القديمة/الجديدة
+ * - إضافات: studentProgress + حذف docId مباشر من user_courses
+ * - يحذف users/{uid} وما تحته باستخدام recursiveDelete
+ * - لو كان الإيميل موجودًا: يمسح أي users docs أخرى بنفس الإيميل (إن وجدت)
+ *
+ * يرجع:
+ *  - deletedDocsCount (إجمالي)
+ *  - byCollection (تفصيل لكل collection.field)
+ */
 async function cleanupUserData(uid, email) {
   let deleted = 0;
   const byCollection = {};
+
   const addCount = (key, count) => {
-    if (!count) return;
-    byCollection[key] = (byCollection[key] || 0) + count;
-    deleted += count;
+    const n = Number(count || 0);
+    if (!n) return;
+    byCollection[key] = (byCollection[key] || 0) + n;
+    deleted += n;
   };
 
   const collectionFieldPairs = [
@@ -80,29 +97,31 @@ async function cleanupUserData(uid, email) {
 
   for (const [collectionName, fields] of collectionFieldPairs) {
     for (const field of fields) {
-      const count = await deleteDocsByField(
-        collectionName,
-        field,
-        field.includes("email") ? email : uid
-      );
+      const value = field.toLowerCase().includes("email") ? (email || "") : (uid || "");
+      const count = await deleteDocsByField(collectionName, field, value);
       addCount(`${collectionName}.${field}`, count);
     }
   }
 
+  // إضافات تنظيف مفيدة (من الفرع الآخر)
   addCount("user_courses.docId", await deleteDocIfExists("user_courses", uid));
   addCount("studentProgress.userId", await deleteDocsByField("studentProgress", "userId", uid));
 
-  const userDocRef = db.collection("users").doc(uid);
-  const userDocSnap = await userDocRef.get();
-  if (userDocSnap.exists) {
-    await db.recursiveDelete(userDocRef).catch(() => {});
-    addCount("users.doc", 1);
+  // حذف users/{uid} وكل subcollections تحته
+  if (uid) {
+    const userDocRef = db.collection("users").doc(uid);
+    const userDocSnap = await userDocRef.get();
+    if (userDocSnap.exists) {
+      await db.recursiveDelete(userDocRef).catch(() => {});
+      addCount("users.doc", 1);
+    }
   }
 
+  // أحيانًا يوجد user doc آخر بنفس الإيميل (data duplication)
   if (email) {
-    const byEmail = await db.collection("users").where("email", "==", email).get();
-    for (const docSnap of byEmail.docs) {
-      if (docSnap.id === uid) continue;
+    const byEmailSnap = await db.collection("users").where("email", "==", email).get();
+    for (const docSnap of byEmailSnap.docs) {
+      if (uid && docSnap.id === uid) continue;
       await db.recursiveDelete(docSnap.ref).catch(() => {});
       addCount("users.byEmail", 1);
     }
@@ -114,6 +133,7 @@ async function cleanupUserData(uid, email) {
 async function hardDeleteUserEverywhere(uid, email) {
   let resolvedUid = uid || null;
 
+  // resolve uid from email if needed
   if (!resolvedUid && email) {
     try {
       const userRecord = await admin.auth().getUserByEmail(email);
@@ -127,10 +147,13 @@ async function hardDeleteUserEverywhere(uid, email) {
     throw new Error("No uid/email provided or user not found in Auth.");
   }
 
+  // 1) تنظيف Firestore أولًا (كما في codex)
   const cleanupResult = await cleanupUserData(resolvedUid, email || null);
 
+  // 2) حذف Auth بشكل non-fatal (ميزة codex) — لا نفشل العملية لو تعذر Auth
   let authDeleted = false;
   let authDeletionError = null;
+
   try {
     await admin.auth().deleteUser(resolvedUid);
     authDeleted = true;
@@ -151,6 +174,7 @@ async function hardDeleteUserEverywhere(uid, email) {
   };
 }
 
+// Callable: حذف فوري من لوحة الأدمن
 exports.hardDeleteUser = onCall({ region: "us-central1" }, async (request) => {
   await assertAdmin(request);
 
@@ -176,6 +200,7 @@ exports.hardDeleteUser = onCall({ region: "us-central1" }, async (request) => {
   }
 });
 
+// Firestore Trigger: معالجة طابور الحذف authDeletionQueue
 exports.processAuthDeletionQueue = onDocumentCreated(
   {
     document: "authDeletionQueue/{jobId}",
@@ -187,8 +212,10 @@ exports.processAuthDeletionQueue = onDocumentCreated(
 
     const job = snap.data() || {};
     const ref = snap.ref;
+
     const attempts = Number(job.attempts || 0) + 1;
 
+    // علامة بداية المعالجة
     await ref.update({
       attempts,
       status: "processing",
@@ -202,6 +229,11 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         status: "done",
         deletedUid: result.uid,
         deletedDocsCount: result.deletedDocsCount,
+        // (اختياري) تفصيل التنظيف للتتبع
+        cleanupBreakdown: result.cleanupBreakdown,
+        // (اختياري) حالة حذف Auth
+        authDeleted: result.authDeleted,
+        authDeletionError: result.authDeletionError,
         processedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
