@@ -22,6 +22,7 @@ async function deleteWhere(collectionName, field, value) {
   const snap = await db.collection(collectionName).where(field, "==", value).get();
   if (snap.empty) return 0;
 
+  // Batch delete (مع تقسيم للحد الأقصى 500 عملية لكل batch)
   let deleted = 0;
   let batch = db.batch();
   let opCount = 0;
@@ -44,6 +45,7 @@ async function deleteWhere(collectionName, field, value) {
 
 async function purgeLinkedCollections(uid) {
   const targets = [
+    // نفس المنطق اللي عندكم في لوحة الأدمن + توسعة التنظيف
     { collectionName: "instructorApplications", field: "uid" },
     { collectionName: "certificates", field: "userId" },
     { collectionName: "enrollments", field: "userId" },
@@ -86,7 +88,8 @@ exports.processAuthDeletionQueue = onDocumentCreated(
       // 2) تنظيف البيانات المرتبطة بالمستخدم في Firestore
       const cleanup = await purgeLinkedCollections(uid);
 
-      // (اختياري) حذف users/{uid}
+      // (اختياري) حذف users/{uid} من Firestore إذا كان موجودًا
+      // لو لوحة الأدمن تحذف/تؤرشف مسبقًا، هذا سلوك إضافي آمن:
       try {
         await db.collection("users").doc(uid).delete();
       } catch (_) {
@@ -110,25 +113,3 @@ exports.processAuthDeletionQueue = onDocumentCreated(
     }
   }
 );
-```
-
-## متطلبات
-- تثبيت Firebase Functions + Admin SDK داخل مشروع functions.
-- نشر الفنكشن (`firebase deploy --only functions`).
-- منح الأدمن فقط صلاحية الكتابة على `authDeletionQueue` (موجودة في `docs/firebase-rules.md`).
-
-## جاهز داخل المشروع
-- تمت إضافة نسخة تشغيلية في `functions/index.js` مع `functions/package.json`.
-- النشر:
-  1) `cd functions`
-  2) `npm install`
-  3) `npm run deploy`
-
-## حذف فوري من لوحة الأدمن (Callable)
-تمت إضافة دالة Callable باسم `hardDeleteUser` داخل `functions/index.js`.
-
-- هذه الدالة تحذف المستخدم فورًا من Firebase Authentication.
-- ثم تنظف كل بياناته المرتبطة في Firestore (الشهادات/الإنجازات/التسجيلات...).
-- تستخدمها لوحة الأدمن مباشرة عند الضغط على زر الحذف.
-
-> إذا ظهرت رسالة خطأ عند الحذف من الواجهة، تأكد أن Functions منشورة وأن المنطقة `us-central1`.

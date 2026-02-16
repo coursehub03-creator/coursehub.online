@@ -57,9 +57,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   };
 
+  // Cloud Function (Callable) للحذف النهائي (Auth + Firestore cleanup) إن وُجدت
   const functions = getFunctions(undefined, "us-central1");
   const hardDeleteUser = httpsCallable(functions, "hardDeleteUser");
 
+  // Best-effort: يضيف طلب لحذف المستخدم من Firebase Auth عبر Cloud Function لاحقاً
   const queueAuthDeletion = async (user) => {
     try {
       await addDoc(collection(db, "authDeletionQueue"), {
@@ -72,6 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       return true;
     } catch (error) {
+      // لو ممنوع/غير موجود في rules، لا نكسر العملية الأساسية
       if (!isPermissionDenied(error)) {
         console.warn("authDeletionQueue write failed:", error);
       }
@@ -79,7 +82,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  /**
+   * تنظيف البيانات المرتبطة بالمستخدم:
+   * - instructorApplications: نحاول delete، وإن فشل بسبب rules → نعمل archive
+   * - باقي المجموعات: best-effort delete، وإن فشل permission-denied نتجاهل
+   */
   const purgeLinkedCollectionsBestEffort = async (targetUid) => {
+    // 1) instructorApplications: delete ثم archive fallback عند permission-denied
     try {
       const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
       const appSnap = await getDocs(appQuery);
@@ -91,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           } catch (error) {
             if (!isPermissionDenied(error)) throw error;
 
+            // fallback: archive instead of delete
             await updateDoc(snap.ref, {
               applicationStatus: "archived",
               reviewReason: "Archived after account deletion request",
@@ -100,10 +110,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         })
       );
     } catch (error) {
+      // لو ممنوع قراءة/استعلام على المجموعة أساساً، نتجاهل بدون كسر
       if (!isPermissionDenied(error)) throw error;
       console.info("Skip cleanup for instructorApplications: missing Firestore permission.");
     }
 
+    // 2) باقي الـ collections: best-effort delete (مع تجاهل permission-denied)
     const cleanupTargets = [
       { collectionName: "certificates", field: "userId" },
       { collectionName: "enrollments", field: "userId" },
@@ -150,11 +162,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!confirmDelete) return;
 
+    // 1) جرّب الحذف النهائي عبر Cloud Function callable
+    // إذا نجح: حذف من القائمة مباشرة + رسالة نجاح (مع احترام حقول authDeleted/authDeletionError إن أُرسلت)
+    // إذا فشل: fallback للطريقة الحالية (Firestore delete/archive + cleanup + authDeletionQueue)
     try {
       const response = await hardDeleteUser({ uid: targetUid, email: targetEmail });
 
       const deletedDocsCount = Number(response?.data?.deletedDocsCount || 0);
-      const authDeleted = response?.data?.authDeleted !== false;
+
+      // ميزات إضافية إن كانت الدالة تُرجعها
+      const authDeleted = response?.data?.authDeleted !== false; // الافتراضي true إن لم تُرسل
       const authDeletionError = String(response?.data?.authDeletionError || "");
 
       allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
@@ -168,14 +185,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     } catch (fnError) {
       console.warn("hardDeleteUser failed; falling back to best-effort flow:", fnError);
+      // نكمل fallback بدون كسر
     }
 
+    // 2) Fallback: Firestore delete/archive حسب الصلاحيات
     let hardDeleted = false;
 
     try {
       if (targetUid) {
         await deleteDoc(doc(db, "users", targetUid));
         hardDeleted = true;
+      } else {
+        // لو ما عندنا uid (نادر) ما نقدر نحذف doc users مباشرة
+        hardDeleted = false;
       }
     } catch (error) {
       if (!isPermissionDenied(error)) throw error;
@@ -190,10 +212,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
+    // 3) Best-effort cleanup للبيانات المرتبطة إن توفر uid
     if (targetUid) {
       await purgeLinkedCollectionsBestEffort(targetUid);
     }
 
+    // 4) تحديث الكاش/الواجهة
     if (hardDeleted && targetUid) {
       allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
     } else if (targetUid) {
@@ -205,8 +229,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     applyFilters();
 
+    // 5) Best-effort: queue auth deletion (حتى لو فشل الحذف النهائي)
     const queued = await queueAuthDeletion(user);
 
+    // 6) رسائل للمستخدم
     if (!hardDeleted) {
       alert(
         "تمت أرشفة الحساب بدل الحذف الكامل لأن قواعد Firestore تمنع delete أو تعذر الحذف النهائي.\n" +
