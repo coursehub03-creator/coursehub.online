@@ -39,6 +39,12 @@ service cloud.firestore {
       return isAdminByClaim() || isAdminByEmail();
     }
 
+    function isInstructor() {
+      return isSignedIn()
+             && request.auth.token.role == "instructor"
+             && request.auth.token.status == "active";
+    }
+
     // المستخدمون
     match /users/{userId} {
       // يقرأ نفسه + الأدمن يقرأ الجميع
@@ -170,6 +176,12 @@ service firebase.storage {
       return isAdminByClaim() || isAdminByEmail();
     }
 
+    function isInstructor() {
+      return isSignedIn()
+             && request.auth.token.role == "instructor"
+             && request.auth.token.status == "active";
+    }
+
     // ملفات الدورات
     match /courses/{allPaths=**} {
       allow read: if true;
@@ -189,6 +201,20 @@ service firebase.storage {
       // القراءة للأدمن فقط
       allow read: if isAdmin();
     }
+
+    // ملفات الدورات المرفوعة من الأستاذ قبل مراجعة المشرف
+    // المسار المستخدم في الواجهة: instructor-courses/{uid}/...
+    match /instructor-courses/{uid}/{allPaths=**} {
+      // الأستاذ يرفع ويحدّث ويحذف ملفاته فقط
+      // (صورة غلاف/ملف خطة/مرفقات داعمة)
+      allow create, update, delete: if request.auth.uid == uid
+                                    && (
+                                         isInstructor()
+                                         || isAdmin()
+                                       );
+
+      // القراءة للأستاذ صاحب الملفات أو للمشرف
+      allow read: if (isSignedIn() && request.auth.uid == uid) || isAdmin();
+    }
   }
 }
-
