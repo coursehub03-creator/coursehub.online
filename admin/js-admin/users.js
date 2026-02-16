@@ -84,25 +84,31 @@ document.addEventListener("DOMContentLoaded", async () => {
    */
   const purgeLinkedCollectionsBestEffort = async (targetUid) => {
     // 1) instructorApplications: delete ثم archive fallback عند permission-denied
-    const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
-    const appSnap = await getDocs(appQuery);
+    try {
+      const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
+      const appSnap = await getDocs(appQuery);
 
-    await Promise.all(
-      appSnap.docs.map(async (snap) => {
-        try {
-          await deleteDoc(snap.ref);
-        } catch (error) {
-          if (!isPermissionDenied(error)) throw error;
+      await Promise.all(
+        appSnap.docs.map(async (snap) => {
+          try {
+            await deleteDoc(snap.ref);
+          } catch (error) {
+            if (!isPermissionDenied(error)) throw error;
 
-          // fallback: archive instead of delete
-          await updateDoc(snap.ref, {
-            applicationStatus: "archived",
-            reviewReason: "Archived after account deletion request",
-            reviewedAt: serverTimestamp()
-          });
-        }
-      })
-    );
+            // fallback: archive instead of delete
+            await updateDoc(snap.ref, {
+              applicationStatus: "archived",
+              reviewReason: "Archived after account deletion request",
+              reviewedAt: serverTimestamp()
+            });
+          }
+        })
+      );
+    } catch (error) {
+      // لو ممنوع قراءة/استعلام على المجموعة أساساً، نتجاهل بدون كسر
+      if (!isPermissionDenied(error)) throw error;
+      console.info("Skip cleanup for instructorApplications: missing Firestore permission.");
+    }
 
     // 2) باقي الـ collections: best-effort delete (مع تجاهل permission-denied)
     const cleanupTargets = [
@@ -114,18 +120,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     ];
 
     for (const target of cleanupTargets) {
-      const q = query(collection(db, target.collectionName), where(target.field, "==", targetUid));
-      const snap = await getDocs(q);
+      try {
+        const q = query(collection(db, target.collectionName), where(target.field, "==", targetUid));
+        const snap = await getDocs(q);
 
-      await Promise.all(
-        snap.docs.map(async (docSnap) => {
-          try {
-            await deleteDoc(docSnap.ref);
-          } catch (error) {
-            if (!isPermissionDenied(error)) throw error;
-          }
-        })
-      );
+        await Promise.all(
+          snap.docs.map(async (docSnap) => {
+            try {
+              await deleteDoc(docSnap.ref);
+            } catch (error) {
+              if (!isPermissionDenied(error)) throw error;
+            }
+          })
+        );
+      } catch (error) {
+        if (!isPermissionDenied(error)) throw error;
+        console.info(`Skip cleanup for ${target.collectionName}: missing Firestore permission.`);
+      }
     }
   };
 
@@ -162,7 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
-    // 2) linked collections cleanup (best-effort + instructorApplications archive fallback)
+    // 2) linked collections cleanup (best-effort + instructorApplications archive fallback + skip on missing perms)
     await purgeLinkedCollectionsBestEffort(targetUid);
 
     // 3) Update UI cache
