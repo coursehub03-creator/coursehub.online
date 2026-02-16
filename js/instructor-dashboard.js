@@ -26,6 +26,7 @@ const coverUrlInput = document.getElementById("courseImageUrl");
 const coverPreview = document.getElementById("coverPreview");
 const previewCover = document.getElementById("previewCover");
 
+// Cloud Function: إرسال دورة الأستاذ (إن كانت موجودة)
 const functions = getFunctions(undefined, "us-central1");
 const submitInstructorCourse = httpsCallable(functions, "submitInstructorCourse");
 
@@ -65,11 +66,14 @@ async function loadSubmissions(uid) {
       .map(
         (item) => `
       <div class="submission-item">
-        <h4>${item.title}</h4>
+        <h4>${item.title || "-"}</h4>
         <p>${statusBadge(item.status || "pending")}</p>
         <p>السعر: ${item.price ?? 0}$</p>
         <p>التصنيف: ${item.category || "-"}</p>
-        <p>الدروس: ${item.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0} | أسئلة الاختبار: ${item.assessmentQuestions?.length || 0}</p>
+        <p>المستوى: ${item.level || "-"} | اللغة: ${item.language || "-"}</p>
+        <p>الدروس: ${item.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0}
+           | أسئلة الاختبار: ${item.assessmentQuestions?.length || 0}
+        </p>
         <p>${item.reviewReason ? `ملاحظة الإدارة: ${item.reviewReason}` : ""}</p>
       </div>
     `
@@ -80,7 +84,8 @@ async function loadSubmissions(uid) {
     if (pendingCount) pendingCount.textContent = "-";
     if (approvedCount) approvedCount.textContent = "-";
     if (listEl) {
-      listEl.innerHTML = "<p>تعذر تحميل الطلبات بسبب صلاحيات القراءة. سيتم إرسال الدورات عبر Cloud Function.</p>";
+      listEl.innerHTML =
+        "<p>تعذر تحميل الطلبات بسبب صلاحيات القراءة. سيتم إرسال الدورات عبر Cloud Function إن كانت متاحة.</p>";
     }
   }
 }
@@ -90,6 +95,7 @@ function setupTabs() {
   const contents = document.querySelectorAll(".tab-content");
 
   tabs.forEach((tab) => {
+    if (tab.dataset.bound) return;
     tab.addEventListener("click", () => {
       const target = tab.dataset.tab;
       tabs.forEach((t) => t.classList.remove("active"));
@@ -98,6 +104,7 @@ function setupTabs() {
       document.getElementById(`tab-${target}`)?.classList.add("active");
       renderPreview();
     });
+    tab.dataset.bound = "1";
   });
 }
 
@@ -215,9 +222,13 @@ function initModules() {
     addModuleBtn.addEventListener("click", () => modulesContainer.appendChild(createModuleCard()));
     addModuleBtn.dataset.bound = "1";
   }
+
   if (!modulesContainer.children.length) modulesContainer.appendChild(createModuleCard());
 }
 
+/* =========================
+   Assessment Builder (Quiz)
+========================= */
 function createQuestionCard(data = {}) {
   const card = document.createElement("div");
   card.className = "question-card";
@@ -242,7 +253,11 @@ function createQuestionCard(data = {}) {
     </label>
   `;
 
-  card.querySelector(".question-remove")?.addEventListener("click", () => card.remove());
+  card.querySelector(".question-remove")?.addEventListener("click", () => {
+    card.remove();
+    renderPreview();
+  });
+
   card.querySelectorAll("input,select").forEach((el) => el.addEventListener("input", renderPreview));
   return card;
 }
@@ -256,6 +271,7 @@ function initAssessmentBuilder() {
     addBtn.addEventListener("click", () => container.appendChild(createQuestionCard()));
     addBtn.dataset.bound = "1";
   }
+
   if (!container.children.length) container.appendChild(createQuestionCard());
 }
 
@@ -270,6 +286,9 @@ function gatherAssessmentQuestions() {
     .filter((q) => q.question && q.options.filter(Boolean).length >= 2);
 }
 
+/* =========================
+   Preview
+========================= */
 function renderPreview() {
   const previewTitle = document.getElementById("previewTitle");
   const previewDescription = document.getElementById("previewDescription");
@@ -292,6 +311,7 @@ function renderPreview() {
     const modules = gatherModules();
     const lessonsCount = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
     const questionsCount = gatherAssessmentQuestions().length;
+
     const chips = [
       category ? `التصنيف: ${category}` : "",
       level ? `المستوى: ${level}` : "",
@@ -360,6 +380,9 @@ function setupCoverPreview() {
   });
 }
 
+/* =========================
+   Draft
+========================= */
 function saveDraft() {
   const payload = {
     title: document.getElementById("courseTitle")?.value || "",
@@ -445,6 +468,9 @@ function allReviewChecksMarked() {
   return checks.every((check) => check.checked);
 }
 
+/* =========================
+   Upload helpers
+========================= */
 async function uploadFiles(user) {
   let imageUrl = "";
   let outlineUrl = "";
@@ -472,6 +498,7 @@ async function uploadFiles(user) {
 
 function resetBuilderState() {
   form?.reset();
+
   ["objectivesList", "requirementsList", "outcomesList", "assessmentQuestions"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = "";
@@ -486,9 +513,14 @@ function resetBuilderState() {
 
   if (coverPreview) coverPreview.src = "/assets/images/default-course.png";
   if (previewCover) previewCover.src = "/assets/images/default-course.png";
+
   document.querySelectorAll(".review-check").forEach((check) => (check.checked = false));
+  renderPreview();
 }
 
+/* =========================
+   Auth gate + init
+========================= */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "/login.html";
@@ -511,7 +543,12 @@ onAuthStateChanged(auth, async (user) => {
   loadDraft();
   renderPreview();
 
-  document.getElementById("saveDraftBtn")?.addEventListener("click", saveDraft);
+  const saveBtn = document.getElementById("saveDraftBtn");
+  if (saveBtn && !saveBtn.dataset.bound) {
+    saveBtn.addEventListener("click", saveDraft);
+    saveBtn.dataset.bound = "1";
+  }
+
   await loadSubmissions(user.uid);
 
   form?.addEventListener("submit", async (e) => {
@@ -538,13 +575,8 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
-    if (!assessmentQuestions.length) {
-      setStatus("أضف سؤالين على الأقل في اختبار الدورة قبل الإرسال.", true);
-      return;
-    }
-
     if (assessmentQuestions.length < 2) {
-      setStatus("الحد الأدنى المطلوب هو سؤالان في الاختبار.", true);
+      setStatus("الحد الأدنى المطلوب هو سؤالان في اختبار الدورة قبل الإرسال.", true);
       return;
     }
 
@@ -554,6 +586,8 @@ onAuthStateChanged(auth, async (user) => {
       const { imageUrl, outlineUrl } = await uploadFiles(user);
 
       const payload = {
+        instructorId: user.uid,
+        instructorEmail: user.email,
         title,
         titleEn: document.getElementById("courseTitleEn")?.value?.trim() || "",
         description,
@@ -572,14 +606,14 @@ onAuthStateChanged(auth, async (user) => {
         outlineUrl
       };
 
+      // 1) حاول عبر Cloud Function (الأكثر احترافية وأقوى مع Rules)
       try {
         await submitInstructorCourse(payload);
       } catch (callableError) {
         console.warn("submitInstructorCourse callable failed, fallback to Firestore:", callableError);
 
+        // 2) fallback: Firestore (قد يفشل إذا rules تمنع)
         await addDoc(collection(db, "instructorCourseSubmissions"), {
-          instructorId: user.uid,
-          instructorEmail: user.email,
           ...payload,
           status: "pending",
           reviewReason: "",
@@ -590,13 +624,18 @@ onAuthStateChanged(auth, async (user) => {
       localStorage.removeItem(DRAFT_KEY);
       setStatus("✅ تم إرسال الدورة للمراجعة بنجاح. ستظهر للمشرف ضمن طلبات المراجعة.");
       resetBuilderState();
-      renderPreview();
       await loadSubmissions(user.uid);
     } catch (err) {
       console.error(err);
-      const denied = err?.code === "permission-denied" || err?.message?.includes("Missing or insufficient permissions");
+      const denied =
+        err?.code === "permission-denied" ||
+        /Missing or insufficient permissions/i.test(err?.message || "");
+
       if (denied) {
-        setStatus("❌ تم رفض الإرسال بسبب صلاحيات Firestore. تم تجهيز مسار Cloud Function لكن يحتاج نشر آخر نسخة من functions. تواصل مع المشرف التقني لنشرها.", true);
+        setStatus(
+          "❌ تم رفض الإرسال بسبب صلاحيات Firestore. إن كان مسار Cloud Function جاهزًا فتأكد من نشر آخر نسخة من functions وربطها بالمنطقة us-central1.",
+          true
+        );
       } else {
         setStatus("❌ تعذر إرسال الدورة. تحقق من الملفات وحاول مرة أخرى.", true);
       }
