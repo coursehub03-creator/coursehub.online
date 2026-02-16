@@ -5,15 +5,50 @@ admin.initializeApp();
 
 const db = admin.firestore();
 
+// يراعي حد الـ batch (500) بتجزئة الحذف على دفعات
+async function batchDeleteDocs(docRefs) {
+  let deleted = 0;
+  let batch = db.batch();
+  let opCount = 0;
+
+  for (const ref of docRefs) {
+    batch.delete(ref);
+    deleted += 1;
+    opCount += 1;
+
+    // نخليها 450 للهوامش
+    if (opCount >= 450) {
+      await batch.commit();
+      batch = db.batch();
+      opCount = 0;
+    }
+  }
+
+  if (opCount > 0) {
+    await batch.commit();
+  }
+
+  return deleted;
+}
+
 async function deleteDocsByField(collectionName, fieldName, value) {
   if (!value) return 0;
+
   const snap = await db.collection(collectionName).where(fieldName, "==", value).get();
   if (snap.empty) return 0;
 
-  const batch = db.batch();
-  snap.docs.forEach((docSnap) => batch.delete(docSnap.ref));
-  await batch.commit();
-  return snap.size;
+  const refs = snap.docs.map((d) => d.ref);
+  return await batchDeleteDocs(refs);
+}
+
+async function deleteSubcollectionDocs(uid, subcollectionName) {
+  if (!uid) return 0;
+
+  const snap = await db.collection("users").doc(uid).collection(subcollectionName).get();
+  if (snap.empty) return 0;
+
+  const refs = snap.docs.map((d) => d.ref);
+  return await batchDeleteDocs(refs);
 }
 
 async function cleanupUserData(uid) {
@@ -28,21 +63,8 @@ async function cleanupUserData(uid) {
   deleted += await deleteDocsByField("user_courses", "uid", uid);
 
   // nested user subcollections
-  const completedCourses = await db.collection("users").doc(uid).collection("completedCourses").get();
-  if (!completedCourses.empty) {
-    const batch = db.batch();
-    completedCourses.docs.forEach((d) => batch.delete(d.ref));
-    await batch.commit();
-    deleted += completedCourses.size;
-  }
-
-  const userCertificates = await db.collection("users").doc(uid).collection("certificates").get();
-  if (!userCertificates.empty) {
-    const batch = db.batch();
-    userCertificates.docs.forEach((d) => batch.delete(d.ref));
-    await batch.commit();
-    deleted += userCertificates.size;
-  }
+  deleted += await deleteSubcollectionDocs(uid, "completedCourses");
+  deleted += await deleteSubcollectionDocs(uid, "certificates");
 
   // finally remove the main user doc if still exists
   await db.collection("users").doc(uid).delete().catch(() => {});
@@ -61,8 +83,10 @@ exports.processAuthDeletionQueue = onDocumentCreated(
 
     const job = snap.data() || {};
     const ref = snap.ref;
+
     const attempts = Number(job.attempts || 0) + 1;
 
+    // علامة بداية المعالجة (مفيدة للتتبع + منع تكرار التنفيذ لو تحب)
     await ref.update({
       attempts,
       status: "processing",
