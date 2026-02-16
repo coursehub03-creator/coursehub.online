@@ -1,3 +1,18 @@
+# Cloud Function لحذف مستخدمي Firebase Authentication من `authDeletionQueue` (Functions v2)
+
+استخدم هذه الفنكشن إذا أردت أن زر الحذف في لوحة الأدمن يحذف المستخدم من Firestore **ومن Firebase Authentication**.
+
+## الفكرة
+- الواجهة تضيف مستندًا في `authDeletionQueue`.
+- Cloud Function (Admin SDK) تقرأ المستند وتحذف مستخدم Auth بواسطة `uid` أو `email`.
+- ثم تنظّف البيانات المرتبطة بالمستخدم في Firestore (certificates/enrollments/notifications/quizAttempts/user_courses/instructorApplications... إلخ).
+- بعدها تحدّث المستند إلى `status: done` أو `status: failed` (ومرحلة `processing` أثناء التنفيذ).
+
+## مثال Node.js (Functions v2) - Firestore Trigger
+
+> ملاحظة: هذا مثال “تشغيلي” مع مراعاة حد 500 عملية لكل batch، وإضافة attempts + status processing.
+
+```js
 // Cloud Function لحذف مستخدمي Firebase Authentication من `authDeletionQueue`
 // Functions v2 - Firestore Trigger
 

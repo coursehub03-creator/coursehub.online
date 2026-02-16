@@ -16,6 +16,14 @@ function isAdminContext(auth) {
   return auth.token?.admin === true || ADMIN_EMAILS.has(auth.token?.email || "");
 }
 
+async function queueEmail(payload) {
+  await db.collection("emailQueue").add({
+    ...payload,
+    status: "pending",
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+}
+
 async function assertAdmin(request) {
   if (!request.auth?.uid) {
     throw new HttpsError("unauthenticated", "You must be authenticated.");
@@ -199,6 +207,98 @@ exports.hardDeleteUser = onCall({ region: "us-central1" }, async (request) => {
   } catch (error) {
     throw new HttpsError("internal", String(error?.message || error));
   }
+});
+
+// Callable: اعتماد/رفض طلب الأستاذ (أفضل من التحديث من الواجهة لتجنب مشاكل الصلاحيات)
+exports.approveInstructorApplication = onCall({ region: "us-central1" }, async (request) => {
+  await assertAdmin(request);
+
+  const applicationId =
+    typeof request.data?.applicationId === "string" ? request.data.applicationId.trim() : "";
+  const decision =
+    typeof request.data?.decision === "string" ? request.data.decision.trim().toLowerCase() : "";
+  const reason = typeof request.data?.reason === "string" ? request.data.reason.trim() : "";
+
+  if (!applicationId) throw new HttpsError("invalid-argument", "applicationId is required.");
+  if (!["approve", "reject"].includes(decision)) {
+    throw new HttpsError("invalid-argument", "decision must be approve or reject.");
+  }
+  if (decision === "reject" && !reason) {
+    throw new HttpsError("invalid-argument", "reason is required for rejection.");
+  }
+
+  const appRef = db.collection("instructorApplications").doc(applicationId);
+  const appSnap = await appRef.get();
+  if (!appSnap.exists) throw new HttpsError("not-found", "Application not found.");
+
+  const app = appSnap.data() || {};
+  const email = String(app.email || "").trim();
+  const uid = String(app.uid || "").trim();
+
+  if (!email || !uid) throw new HttpsError("failed-precondition", "Application is missing email/uid.");
+
+  if (decision === "approve") {
+    const verifyLink = await admin.auth().generateEmailVerificationLink(email);
+
+    await appRef.update({
+      applicationStatus: "approved",
+      reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+      reviewedBy: request.auth.uid,
+      reviewReason: ""
+    });
+
+    await db
+      .collection("users")
+      .doc(uid)
+      .set(
+        {
+          role: "instructor",
+          status: "pending_verification",
+          reviewReason: "",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+
+    await queueEmail({
+      to: email,
+      template: "instructor-approved",
+      subject: "تمت الموافقة على طلبك كأستاذ - CourseHub",
+      message:
+        "تمت الموافقة على طلبك. لإكمال التفعيل اضغط رابط التفعيل التالي ثم سجّل الدخول:\n" + verifyLink
+    });
+
+    return { ok: true, decision: "approved", verifyLinkGenerated: true };
+  }
+
+  await appRef.update({
+    applicationStatus: "rejected",
+    reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+    reviewedBy: request.auth.uid,
+    reviewReason: reason
+  });
+
+  await db
+    .collection("users")
+    .doc(uid)
+    .set(
+      {
+        role: "instructor",
+        status: "rejected",
+        reviewReason: reason,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
+
+  await queueEmail({
+    to: email,
+    template: "instructor-rejected",
+    subject: "نتيجة مراجعة طلب الأستاذ - CourseHub",
+    message: `تم رفض طلبك للأسباب التالية: ${reason}`
+  });
+
+  return { ok: true, decision: "rejected" };
 });
 
 // Firestore Trigger: معالجة طابور الحذف authDeletionQueue

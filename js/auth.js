@@ -89,6 +89,10 @@ const messages = {
     ar: "تم رفض طلب الأستاذ. راجع بريدك لمعرفة السبب أو تواصل مع الدعم.",
     en: "Your instructor request was rejected. Check your email for details."
   },
+  instructorPendingVerification: {
+    ar: "تمت الموافقة المبدئية على طلبك. يرجى تفعيل البريد من الرابط الذي أرسله لك المشرف.",
+    en: "Your request was preliminarily approved. Please verify your email using the link sent by admin."
+  },
   instructorInactive: {
     ar: "لا يمكنك تسجيل الدخول كأستاذ قبل موافقة الإدارة. حالة الطلب الحالية لا تسمح بالدخول.",
     en: "You cannot log in as instructor before admin approval. Current status does not allow access."
@@ -170,8 +174,11 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
     email: user.email || "",
     emailVerified: !!user.emailVerified,
     picture: user.photoURL || DEFAULT_AVATAR,
-    role: existingMeta?.role || "student",
-    status: existingMeta?.status || (user.emailVerified ? "active" : "pending_verification"),
+    role: options.forceRole || existingMeta?.role || "student",
+    status:
+      options.forceStatus ||
+      existingMeta?.status ||
+      (user.emailVerified ? "active" : "pending_verification"),
     updatedAt: serverTimestamp()
   };
 
@@ -242,12 +249,16 @@ function initCountryPicker() {
       return;
     }
 
-    countryOptions.innerHTML = filtered.map((country) => `
+    countryOptions.innerHTML = filtered
+      .map(
+        (country) => `
       <li role="option" data-country-name="${country.name}">
         <span class="flag">${country.flag}</span>
         <span>${country.name}</span>
       </li>
-    `).join("");
+    `
+      )
+      .join("");
 
     countryOptions.querySelectorAll("li[data-country-name]").forEach((item) => {
       item.addEventListener("click", () => {
@@ -312,6 +323,10 @@ function getInstructorBlockMessage(meta) {
     return textFor("instructorRejected");
   }
 
+  if (meta?.status === "pending_verification") {
+    return textFor("instructorPendingVerification");
+  }
+
   if (meta?.status === "pending") return textFor("instructorPending");
   return textFor("instructorInactive");
 }
@@ -335,7 +350,7 @@ if (loginForm) {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // enforce verification + try resend
+      // Block if email not verified (resend best-effort)
       if (!user.emailVerified) {
         try {
           await sendEmailVerification(user, actionSettingsSafe());
@@ -348,20 +363,34 @@ if (loginForm) {
         return;
       }
 
-      // instructor status checks
+      // instructor status enforcement + auto-activate if pending_verification and verified
       const meta = await getUserMeta(user.uid);
       const role = meta?.role || "student";
 
-      if (role === "instructor" && meta?.status !== "active") {
-        await signOut(auth);
-        setText(errorMsg, getInstructorBlockMessage(meta));
+      if (role === "instructor") {
+        if (meta?.status === "pending_verification") {
+          // verified already, upgrade to active
+          await saveUserProfile(user, {}, { isNewUser: false, forceRole: "instructor", forceStatus: "active" });
+          await setDoc(doc(db, "users", user.uid), { role: "instructor", status: "active", reviewReason: "" }, { merge: true });
+        }
+
+        const refreshedMeta = await getUserMeta(user.uid);
+        if (refreshedMeta?.status !== "active") {
+          await signOut(auth);
+          setText(errorMsg, getInstructorBlockMessage(refreshedMeta));
+          return;
+        }
+
+        storeUser(user, { role: "instructor" });
+        await saveUserProfile(user, {}, { isNewUser: false, existingMeta: refreshedMeta });
+        window.location.href = "/instructor-dashboard.html";
         return;
       }
 
+      // normal student flow
       storeUser(user, { role });
-      await saveUserProfile(user, {}, { isNewUser: false });
-
-      window.location.href = role === "instructor" ? "/instructor-dashboard.html" : "index.html";
+      await saveUserProfile(user, {}, { isNewUser: false, existingMeta: meta });
+      window.location.href = "index.html";
     } catch (error) {
       console.error("Login Error:", error);
       if (error?.code === "auth/too-many-requests") {
@@ -385,7 +414,7 @@ if (loginForm) {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // If not verified yet (rare with Google), keep safe
+      // Best effort: لو Google account غير verified (نادر) نحاول إرسال
       if (user && !user.emailVerified) {
         try {
           await sendEmailVerification(user, actionSettingsSafe());
@@ -394,19 +423,33 @@ if (loginForm) {
         }
       }
 
+      // instructor enforcement + auto-activate
       const meta = await getUserMeta(user.uid);
       const role = meta?.role || "student";
 
-      if (role === "instructor" && meta?.status !== "active") {
-        await signOut(auth);
-        setText(errorMsg || registerMsg, getInstructorBlockMessage(meta));
+      if (role === "instructor") {
+        if (meta?.status === "pending_verification" && user?.emailVerified) {
+          await saveUserProfile(user, {}, { isNewUser: false, forceRole: "instructor", forceStatus: "active" });
+          await setDoc(doc(db, "users", user.uid), { role: "instructor", status: "active", reviewReason: "" }, { merge: true });
+        }
+
+        const refreshedMeta = await getUserMeta(user.uid);
+        if (refreshedMeta?.status !== "active") {
+          await signOut(auth);
+          setText(errorMsg || registerMsg, getInstructorBlockMessage(refreshedMeta));
+          return;
+        }
+
+        storeUser(user, { role: "instructor" });
+        await saveUserProfile(user, {}, { isNewUser: false, existingMeta: refreshedMeta });
+        window.location.href = "/instructor-dashboard.html";
         return;
       }
 
+      // student
       storeUser(user, { role });
-      await saveUserProfile(user, {}, { isNewUser: false });
-
-      window.location.href = role === "instructor" ? "/instructor-dashboard.html" : "index.html";
+      await saveUserProfile(user, {}, { isNewUser: false, existingMeta: meta });
+      window.location.href = "index.html";
     } catch (error) {
       console.error("Google Auth Error:", error);
       const target = errorMsg || registerMsg;
@@ -530,7 +573,10 @@ if (registerForm) {
           await cleanupCreatedUser();
 
           if (err?.code === "storage/unauthorized") {
-            setText(registerMsg, `${textFor("storageUnauthorized")}\nخطأ 403 يعني أن Firebase Storage Rules تمنع الرفع لهذا المسار.`);
+            setText(
+              registerMsg,
+              `${textFor("storageUnauthorized")}\nخطأ 403 يعني أن Firebase Storage Rules تمنع الرفع لهذا المسار.`
+            );
           } else {
             setText(registerMsg, textFor("registerError"));
           }
@@ -566,9 +612,6 @@ if (registerForm) {
           reviewedBy: null,
           reviewReason: ""
         });
-
-        // send verification email then sign out
-        await sendEmailVerification(createdUser, actionSettingsSafe());
 
         localStorage.setItem("coursehub_pending_verification_email", email);
         setText(registerMsg, textFor("instructorApplySuccess"), true);
