@@ -67,14 +67,25 @@
           <option value="prefer_not_to_say">لا أريد التحديد</option>
         </select>
 
-        <label for="countrySearch" class="auth-label" data-i18n-en="Country">البلد</label>
-        <input
-          id="countrySearch"
-          type="search"
-          placeholder="Search country in English..."
-          autocomplete="off"
-        >
-        <select id="regCountry" required size="7" aria-label="Country list"></select>
+        <label for="countryPickerTrigger" class="auth-label" data-i18n-en="Country">البلد</label>
+        <div class="country-picker" id="countryPicker">
+          <button id="countryPickerTrigger" class="country-picker-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span id="countryPickerValue">اختر البلد</span>
+            <span class="country-picker-caret">▾</span>
+          </button>
+
+          <div id="countryPickerMenu" class="country-picker-menu" hidden>
+            <input
+              id="countrySearch"
+              type="search"
+              placeholder="Search country in English..."
+              autocomplete="off"
+            >
+            <ul id="countryOptions" class="country-options" role="listbox" aria-label="Country list"></ul>
+          </div>
+
+          <input id="regCountry" type="hidden" value="" />
+        </div>
 
         <label for="regBirthDate" class="auth-label" data-i18n-en="Birth date">تاريخ الميلاد</label>
         <input id="regBirthDate" type="date" required max="2015-12-31">

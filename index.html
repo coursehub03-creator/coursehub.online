@@ -18,7 +18,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
@@ -37,7 +37,7 @@
       try {
         const lang = localStorage.getItem("coursehub_lang") || "ar";
         const viewCourseLabel = lang === "en" ? "View course" : "عرض الدورة";
-        const q = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(3));
+        const q = query(collection(db, "courses"), where("status", "==", "published"), orderBy("createdAt", "desc"), limit(3));
         const snapshot = await getDocs(q);
         const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const container = document.querySelector('.popular-courses .courses-grid');

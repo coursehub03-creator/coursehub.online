@@ -22,7 +22,7 @@ import {
   collection
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 /* =========================
    Const / i18n
@@ -89,6 +89,10 @@ const messages = {
     ar: "تم رفض طلب الأستاذ. راجع بريدك لمعرفة السبب أو تواصل مع الدعم.",
     en: "Your instructor request was rejected. Check your email for details."
   },
+  instructorInactive: {
+    ar: "لا يمكنك تسجيل الدخول كأستاذ قبل موافقة الإدارة. حالة الطلب الحالية لا تسمح بالدخول.",
+    en: "You cannot log in as instructor before admin approval. Current status does not allow access."
+  },
   instructorTermsRequired: {
     ar: "يجب الموافقة على شروط وقواعد الأساتذة قبل التسجيل.",
     en: "You must accept instructor terms before registration."
@@ -104,6 +108,10 @@ const messages = {
   storageUnauthorized: {
     ar: "لا يمكن رفع شهادة العمل الآن بسبب صلاحيات التخزين. تواصل مع الإدارة لضبط Firebase Storage Rules.",
     en: "Work-proof upload is blocked by storage permissions. Ask admin to update Firebase Storage rules."
+  },
+  leakedAccountRecovered: {
+    ar: "تم تنظيف حساب سابق غير مكتمل. أعد المحاولة الآن بنفس البريد.",
+    en: "A previously incomplete account was cleaned up. Please retry registration now."
   }
 };
 
@@ -155,13 +163,15 @@ async function getUserMeta(uid) {
 async function saveUserProfile(user, profileData = {}, options = {}) {
   if (!user?.uid) return;
 
+  const existingMeta = options.existingMeta || (await getUserMeta(user.uid));
+
   const payload = {
     uid: user.uid,
     email: user.email || "",
     emailVerified: !!user.emailVerified,
     picture: user.photoURL || DEFAULT_AVATAR,
-    role: "student",
-    status: user.emailVerified ? "active" : "pending_verification",
+    role: existingMeta?.role || "student",
+    status: existingMeta?.status || (user.emailVerified ? "active" : "pending_verification"),
     updatedAt: serverTimestamp()
   };
 
@@ -194,28 +204,72 @@ function actionSettingsSafe() {
    Country Picker (optional)
 ========================= */
 function initCountryPicker() {
+  const picker = document.getElementById("countryPicker");
+  const trigger = document.getElementById("countryPickerTrigger");
+  const valueEl = document.getElementById("countryPickerValue");
+  const menu = document.getElementById("countryPickerMenu");
   const countrySearch = document.getElementById("countrySearch");
-  const countrySelect = document.getElementById("regCountry");
-  if (!countrySelect) return;
+  const countryOptions = document.getElementById("countryOptions");
+  const countryInput = document.getElementById("regCountry");
+
+  if (!picker || !trigger || !menu || !countryOptions || !countryInput) return;
 
   const countries = getAllCountries();
+
+  const openMenu = () => {
+    menu.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    countrySearch?.focus();
+  };
+
+  const closeMenu = () => {
+    menu.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+  };
+
+  const selectCountry = (country) => {
+    countryInput.value = country.name;
+    if (valueEl) valueEl.textContent = `${country.flag} ${country.name}`;
+    closeMenu();
+  };
 
   const renderOptions = (queryText = "") => {
     const q = queryText.trim().toLowerCase();
     const filtered = countries.filter((item) => item.name.toLowerCase().includes(q));
 
-    countrySelect.innerHTML = "";
-    filtered.forEach((country, index) => {
-      const option = document.createElement("option");
-      option.value = country.name;
-      option.textContent = `${country.flag} ${country.name}`;
-      if (!q && index === 0) option.selected = true;
-      countrySelect.appendChild(option);
+    if (!filtered.length) {
+      countryOptions.innerHTML = `<li class="active" aria-disabled="true">لا توجد نتائج</li>`;
+      return;
+    }
+
+    countryOptions.innerHTML = filtered.map((country) => `
+      <li role="option" data-country-name="${country.name}">
+        <span class="flag">${country.flag}</span>
+        <span>${country.name}</span>
+      </li>
+    `).join("");
+
+    countryOptions.querySelectorAll("li[data-country-name]").forEach((item) => {
+      item.addEventListener("click", () => {
+        const countryName = item.getAttribute("data-country-name");
+        const selected = countries.find((c) => c.name === countryName);
+        if (selected) selectCountry(selected);
+      });
     });
   };
 
   renderOptions();
+
+  trigger.addEventListener("click", () => {
+    if (menu.hidden) openMenu();
+    else closeMenu();
+  });
+
   countrySearch?.addEventListener("input", (e) => renderOptions(e.target.value));
+
+  document.addEventListener("click", (event) => {
+    if (!picker.contains(event.target)) closeMenu();
+  });
 }
 
 /* =========================
@@ -250,6 +304,17 @@ const forgotMsg = document.getElementById("forgotMsg");
 // init optional components (only if present)
 initCountryPicker();
 initInstructorToggle();
+
+function getInstructorBlockMessage(meta) {
+  if (meta?.status === "rejected") {
+    const reason = String(meta?.reviewReason || "").trim();
+    if (reason) return `${textFor("instructorRejected")}\nسبب الرفض: ${reason}`;
+    return textFor("instructorRejected");
+  }
+
+  if (meta?.status === "pending") return textFor("instructorPending");
+  return textFor("instructorInactive");
+}
 
 /* =========================
    Login
@@ -287,17 +352,10 @@ if (loginForm) {
       const meta = await getUserMeta(user.uid);
       const role = meta?.role || "student";
 
-      if (role === "instructor") {
-        if (meta?.status === "pending") {
-          await signOut(auth);
-          setText(errorMsg, textFor("instructorPending"));
-          return;
-        }
-        if (meta?.status === "rejected") {
-          await signOut(auth);
-          setText(errorMsg, textFor("instructorRejected"));
-          return;
-        }
+      if (role === "instructor" && meta?.status !== "active") {
+        await signOut(auth);
+        setText(errorMsg, getInstructorBlockMessage(meta));
+        return;
       }
 
       storeUser(user, { role });
@@ -339,17 +397,10 @@ if (loginForm) {
       const meta = await getUserMeta(user.uid);
       const role = meta?.role || "student";
 
-      if (role === "instructor") {
-        if (meta?.status === "pending") {
-          await signOut(auth);
-          setText(errorMsg || registerMsg, textFor("instructorPending"));
-          return;
-        }
-        if (meta?.status === "rejected") {
-          await signOut(auth);
-          setText(errorMsg || registerMsg, textFor("instructorRejected"));
-          return;
-        }
+      if (role === "instructor" && meta?.status !== "active") {
+        await signOut(auth);
+        setText(errorMsg || registerMsg, getInstructorBlockMessage(meta));
+        return;
       }
 
       storeUser(user, { role });
@@ -404,6 +455,30 @@ if (registerForm) {
 
     let createdUser = null;
 
+    const cleanupCreatedUser = async () => {
+      if (!createdUser) return false;
+
+      let deleted = false;
+      try {
+        await createdUser.delete();
+        deleted = true;
+      } catch (cleanupError) {
+        console.warn("Could not delete temporary created user:", cleanupError);
+      }
+
+      if (!deleted && auth.currentUser?.uid === createdUser.uid) {
+        try {
+          await auth.currentUser.delete();
+          deleted = true;
+        } catch (currentUserDeleteError) {
+          console.warn("Could not delete auth.currentUser fallback:", currentUserDeleteError);
+        }
+      }
+
+      try { await signOut(auth); } catch {}
+      return deleted;
+    };
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       createdUser = userCredential.user;
@@ -419,15 +494,13 @@ if (registerForm) {
         const proofFile = document.getElementById("regWorkProof")?.files?.[0] || null;
 
         if (!termsAccepted) {
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
           setText(registerMsg, textFor("instructorTermsRequired"));
           return;
         }
 
         if (!proofFile || !String(proofFile.type || "").toLowerCase().includes("pdf")) {
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
           setText(registerMsg, textFor("instructorPdfRequired"));
           return;
         }
@@ -435,21 +508,23 @@ if (registerForm) {
         // upload PDF to Storage
         const fileRef = ref(storage, `instructor-applications/${createdUser.uid}/work-proof-${Date.now()}.pdf`);
         try {
-          await uploadBytes(fileRef, proofFile);
+          await uploadBytes(fileRef, proofFile, {
+            contentType: "application/pdf",
+            cacheControl: "public,max-age=3600"
+          });
         } catch (err) {
           console.error("Upload proof error:", err);
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
 
           if (err?.code === "storage/unauthorized") {
-            setText(registerMsg, textFor("storageUnauthorized"));
+            setText(registerMsg, `${textFor("storageUnauthorized")}\nخطأ 403 يعني أن Firebase Storage Rules تمنع الرفع لهذا المسار.`);
           } else {
             setText(registerMsg, textFor("registerError"));
           }
           return;
         }
 
-        const workProofUrl = await getDownloadURL(fileRef);
+        const workProofPath = fileRef.fullPath;
 
         const instructorData = {
           uid: createdUser.uid,
@@ -463,7 +538,8 @@ if (registerForm) {
           experienceYears: Number(document.getElementById("regExperience")?.value || 0),
           bio: document.getElementById("regBio")?.value?.trim() || "",
           termsAcceptedAt: serverTimestamp(),
-          workProofUrl,
+          workProofPath,
+          workProofUrl: "",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };
@@ -524,8 +600,7 @@ if (registerForm) {
 
       // cleanup in case storage fails after user creation
       if (createdUser && error?.code === "storage/unauthorized") {
-        try { await signOut(auth); } catch {}
-        try { await createdUser.delete(); } catch {}
+        await cleanupCreatedUser();
       }
 
       if (error?.code === "auth/too-many-requests") {
@@ -534,6 +609,21 @@ if (registerForm) {
       }
 
       if (error?.code === "auth/email-already-in-use") {
+        if (accountType === "instructor") {
+          try {
+            const leakedCredential = await signInWithEmailAndPassword(auth, email, password);
+            const leakedUser = leakedCredential.user;
+            if (leakedUser && !leakedUser.emailVerified) {
+              await leakedUser.delete();
+              await signOut(auth);
+              setText(registerMsg, textFor("leakedAccountRecovered"), true);
+              return;
+            }
+            await signOut(auth);
+          } catch (recoveryError) {
+            console.warn("Could not auto-recover email-already-in-use account:", recoveryError);
+          }
+        }
         setText(registerMsg, textFor("emailInUse"));
       } else {
         setText(registerMsg, textFor("registerError"));
