@@ -186,8 +186,20 @@ service firebase.storage {
       // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
       allow write: if isSignedIn()
                    && request.auth.uid == uid
-                   && (request.resource.contentType.matches('application/pdf')
-                       || fileName.matches('(?i).*\\.pdf$'));
+// ملفات إثبات العمل للأساتذة (PDF)
+match /instructor-applications/{uid}/{fileName} {
+  // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
+  allow write: if isSignedIn()
+               && request.auth.uid == uid
+               && (
+                    request.resource.contentType.matches('application/pdf')
+                    || fileName.matches('(?i).*\\.pdf$')
+                  );
+
+  // القراءة للأدمن فقط
+  allow read: if isAdmin();
+}
+
 
       // القراءة للأدمن فقط
       allow read: if isAdmin();
