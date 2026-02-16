@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 const db = admin.firestore();
+
 const ADMIN_EMAILS = new Set([
   "kaleadsalous30@gmail.com",
   "coursehub03@gmail.com"
@@ -15,29 +16,56 @@ function isAdminContext(auth) {
   return auth.token?.admin === true || ADMIN_EMAILS.has(auth.token?.email || "");
 }
 
+// يراعي حد الـ batch (500) بتجزئة الحذف على دفعات
+async function batchDeleteDocs(docRefs) {
+  let deleted = 0;
+  let batch = db.batch();
+  let opCount = 0;
+
+  for (const ref of docRefs) {
+    batch.delete(ref);
+    deleted += 1;
+    opCount += 1;
+
+    // نخليها 450 للهوامش
+    if (opCount >= 450) {
+      await batch.commit();
+      batch = db.batch();
+      opCount = 0;
+    }
+  }
+
+  if (opCount > 0) {
+    await batch.commit();
+  }
+
+  return deleted;
+}
+
 async function deleteDocsByField(collectionName, fieldName, value) {
   if (!value) return 0;
+
   const snap = await db.collection(collectionName).where(fieldName, "==", value).get();
   if (snap.empty) return 0;
 
-  const batch = db.batch();
-  snap.docs.forEach((docSnap) => batch.delete(docSnap.ref));
-  await batch.commit();
-  return snap.size;
+  const refs = snap.docs.map((d) => d.ref);
+  return await batchDeleteDocs(refs);
 }
 
-async function deleteAllFromSubcollection(path, uid, sub) {
-  const snap = await db.collection(path).doc(uid).collection(sub).get();
+async function deleteSubcollectionDocs(uid, subcollectionName) {
+  if (!uid) return 0;
+
+  const snap = await db.collection("users").doc(uid).collection(subcollectionName).get();
   if (snap.empty) return 0;
-  const batch = db.batch();
-  snap.docs.forEach((docSnap) => batch.delete(docSnap.ref));
-  await batch.commit();
-  return snap.size;
+
+  const refs = snap.docs.map((d) => d.ref);
+  return await batchDeleteDocs(refs);
 }
 
 async function cleanupUserData(uid) {
   let deleted = 0;
 
+  // top-level collections tied to uid/userId
   deleted += await deleteDocsByField("instructorApplications", "uid", uid);
   deleted += await deleteDocsByField("certificates", "userId", uid);
   deleted += await deleteDocsByField("enrollments", "userId", uid);
@@ -46,10 +74,12 @@ async function cleanupUserData(uid) {
   deleted += await deleteDocsByField("user_courses", "uid", uid);
   deleted += await deleteDocsByField("achievements", "userId", uid);
 
-  deleted += await deleteAllFromSubcollection("users", uid, "completedCourses");
-  deleted += await deleteAllFromSubcollection("users", uid, "certificates");
-  deleted += await deleteAllFromSubcollection("users", uid, "achievements");
+  // nested user subcollections
+  deleted += await deleteSubcollectionDocs(uid, "completedCourses");
+  deleted += await deleteSubcollectionDocs(uid, "certificates");
+  deleted += await deleteSubcollectionDocs(uid, "achievements");
 
+  // finally remove the main user doc if still exists
   await db.collection("users").doc(uid).delete().catch(() => {});
 
   return deleted;
@@ -71,6 +101,7 @@ async function hardDeleteUserEverywhere(uid, email) {
     throw new Error("No uid/email provided or user not found in Auth.");
   }
 
+  // delete auth account (idempotent-ish: ignore not-found)
   try {
     await admin.auth().deleteUser(resolvedUid);
   } catch (authError) {
@@ -81,6 +112,7 @@ async function hardDeleteUserEverywhere(uid, email) {
   return { uid: resolvedUid, deletedDocsCount };
 }
 
+// Callable: حذف فوري من لوحة الأدمن
 exports.hardDeleteUser = onCall({ region: "us-central1" }, async (request) => {
   if (!isAdminContext(request.auth)) {
     throw new HttpsError("permission-denied", "Only admins can delete users.");
@@ -105,6 +137,7 @@ exports.hardDeleteUser = onCall({ region: "us-central1" }, async (request) => {
   }
 });
 
+// Firestore Trigger: معالجة طابور الحذف authDeletionQueue
 exports.processAuthDeletionQueue = onDocumentCreated(
   {
     document: "authDeletionQueue/{jobId}",
@@ -116,8 +149,10 @@ exports.processAuthDeletionQueue = onDocumentCreated(
 
     const job = snap.data() || {};
     const ref = snap.ref;
+
     const attempts = Number(job.attempts || 0) + 1;
 
+    // علامة بداية المعالجة
     await ref.update({
       attempts,
       status: "processing",
