@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const deletedDocsCount = Number(response?.data?.deletedDocsCount || 0);
 
-      // ميزات إضافية من الفرع الآخر إن كانت الدالة تُرجعها
+      // ميزات إضافية إن كانت الدالة تُرجعها
       const authDeleted = response?.data?.authDeleted !== false; // الافتراضي true إن لم تُرسل
       const authDeletionError = String(response?.data?.authDeletionError || "");
 

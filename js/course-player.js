@@ -419,11 +419,14 @@ async function completeCourse({ showSummary = true } = {}) {
     // ✅ حفظ الشهادة في مجموعة certificates العامة
     await setDoc(doc(db, "certificates", certId), {
       userId: user.uid,
+      userEmail: user.email || "",
+      userName: user.displayName || user.email?.split("@")[0] || "Student",
       courseId,
       courseTitle: courseTitle || course.title,
       completedAt: new Date(),
       verificationCode,
-      certificateUrl
+      certificateUrl,
+      status: "active"
     });
 
     // ✅ حفظ بيانات الإنجاز في مجموعات فرعية لتجنب تضخم مستند المستخدم

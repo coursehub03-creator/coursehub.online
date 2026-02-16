@@ -103,7 +103,7 @@ async function cleanupUserData(uid, email) {
     }
   }
 
-  // إضافات تنظيف مفيدة (من الفرع الآخر)
+  // إضافات تنظيف مفيدة
   addCount("user_courses.docId", await deleteDocIfExists("user_courses", uid));
   addCount("studentProgress.userId", await deleteDocsByField("studentProgress", "userId", uid));
 
@@ -150,7 +150,7 @@ async function hardDeleteUserEverywhere(uid, email) {
   // 1) تنظيف Firestore أولًا (كما في codex)
   const cleanupResult = await cleanupUserData(resolvedUid, email || null);
 
-  // 2) حذف Auth بشكل non-fatal (ميزة codex) — لا نفشل العملية لو تعذر Auth
+  // 2) حذف Auth بشكل non-fatal — لا نفشل العملية لو تعذر Auth
   let authDeleted = false;
   let authDeletionError = null;
 
