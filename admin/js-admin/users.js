@@ -77,10 +77,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-
+  /**
+   * تنظيف البيانات المرتبطة بالمستخدم:
+   * - instructorApplications: نحاول delete، وإن فشل بسبب rules → نعمل archive (ميزة main)
+   * - باقي المجموعات: best-effort delete، وإن فشل permission-denied نتجاهل (ميزة الفرع الآخر)
+   */
   const purgeLinkedCollectionsBestEffort = async (targetUid) => {
+    // 1) instructorApplications: delete ثم archive fallback عند permission-denied
+    try {
+      const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
+      const appSnap = await getDocs(appQuery);
+
+      await Promise.all(
+        appSnap.docs.map(async (snap) => {
+          try {
+            await deleteDoc(snap.ref);
+          } catch (error) {
+            if (!isPermissionDenied(error)) throw error;
+
+            // fallback: archive instead of delete
+            await updateDoc(snap.ref, {
+              applicationStatus: "archived",
+              reviewReason: "Archived after account deletion request",
+              reviewedAt: serverTimestamp()
+            });
+          }
+        })
+      );
+    } catch (error) {
+      // لو ممنوع قراءة/استعلام على المجموعة أساساً، نتجاهل بدون كسر
+      if (!isPermissionDenied(error)) throw error;
+      console.info("Skip cleanup for instructorApplications: missing Firestore permission.");
+    }
+
+    // 2) باقي الـ collections: best-effort delete (مع تجاهل permission-denied)
     const cleanupTargets = [
-      { collectionName: "instructorApplications", field: "uid" },
       { collectionName: "certificates", field: "userId" },
       { collectionName: "enrollments", field: "userId" },
       { collectionName: "notifications", field: "userId" },
@@ -142,7 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
-    // 2) linked collections cleanup (best-effort)
+    // 2) linked collections cleanup (best-effort + instructorApplications archive fallback + skip on missing perms)
     await purgeLinkedCollectionsBestEffort(targetUid);
 
     // 3) Update UI cache
