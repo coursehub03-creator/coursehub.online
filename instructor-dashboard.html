@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/css/header.css" />
   <link rel="stylesheet" href="/css/footer.css" />
   <link rel="stylesheet" href="/css/instructor-dashboard.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div id="header-placeholder"></div>
@@ -15,8 +16,9 @@
   <main class="instructor-shell container">
     <section class="instructor-hero">
       <div>
-        <h1>لوحة تحكم الأستاذ</h1>
-        <p>أنشئ دوراتك وأرسلها للمراجعة والنشر من قبل الإدارة.</p>
+        <p class="hero-kicker">Instructor Studio</p>
+        <h1>لوحة تحكم الأستاذ الاحترافية</h1>
+        <p>ابنِ دورتك بنفس تجربة لوحة المشرف: معلومات شاملة، تخطيط مناهج مرن، معاينة مباشرة، ثم إرسال للمراجعة.</p>
       </div>
       <div class="instructor-kpis">
         <div><strong id="pendingCount">0</strong><span>قيد المراجعة</span></div>
@@ -24,29 +26,188 @@
       </div>
     </section>
 
-    <section class="instructor-grid">
-      <div class="card">
-        <h2>إرسال دورة جديدة للمراجعة</h2>
-        <form id="instructorCourseForm" class="instructor-form">
-          <input id="courseTitle" type="text" placeholder="عنوان الدورة" required />
-          <textarea id="courseDescription" rows="4" placeholder="وصف احترافي للدورة" required></textarea>
-          <input id="coursePrice" type="number" min="0" step="0.01" placeholder="سعر الدورة" required />
-          <input id="courseCategory" type="text" placeholder="التصنيف (مثال: تطوير الويب)" required />
-          <label class="file-upload">صورة الدورة
-            <input id="courseImage" type="file" accept="image/*" />
-          </label>
-          <label class="file-upload">ملف منهج/خطة الدورة (اختياري)
-            <input id="courseOutline" type="file" accept=".pdf,.doc,.docx" />
-          </label>
-          <button type="submit" class="btn">إرسال للمراجعة</button>
-          <p id="instructorFormStatus" class="status"></p>
-        </form>
+    <section class="builder-shell">
+      <div class="builder-header">
+        <h2>منشئ الدورات للأستاذ</h2>
+        <p>نفس منهج لوحة الإضافة عند المشرف مع مساحة حرية أكبر في التخطيط والتنسيق قبل الإرسال.</p>
       </div>
 
-      <div class="card">
-        <h2>طلباتك السابقة</h2>
-        <div id="instructorSubmissions" class="submission-list"></div>
+      <div class="builder-tabs" id="instructorBuilderTabs">
+        <button class="tab-btn active" type="button" data-tab="info"><i class="fa-solid fa-circle-info"></i><span>معلومات الدورة</span></button>
+        <button class="tab-btn" type="button" data-tab="curriculum"><i class="fa-solid fa-layer-group"></i><span>المنهج والمحتوى</span></button>
+        <button class="tab-btn" type="button" data-tab="preview"><i class="fa-solid fa-eye"></i><span>المعاينة</span></button>
+        <button class="tab-btn" type="button" data-tab="submit"><i class="fa-solid fa-paper-plane"></i><span>الإرسال للمراجعة</span></button>
       </div>
+
+      <form id="instructorCourseForm" class="instructor-builder-form" novalidate>
+        <div class="tab-content active" id="tab-info">
+          <div class="builder-card">
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="courseTitle">عنوان الدورة</label>
+                <input id="courseTitle" type="text" placeholder="مثال: أساسيات تطوير واجهات الويب الحديثة" required />
+              </div>
+              <div class="field-group">
+                <label for="courseTitleEn">عنوان الدورة (بالإنجليزية)</label>
+                <input id="courseTitleEn" type="text" placeholder="Modern Front-End Foundations" />
+              </div>
+              <div class="field-group">
+                <label for="courseCategory">التصنيف</label>
+                <input id="courseCategory" type="text" placeholder="مثال: تطوير الويب" required />
+              </div>
+              <div class="field-group">
+                <label for="coursePrice">السعر (USD)</label>
+                <input id="coursePrice" type="number" min="0" step="0.01" placeholder="49.99" required />
+              </div>
+              <div class="field-group">
+                <label for="courseLevel">المستوى</label>
+                <select id="courseLevel">
+                  <option value="مبتدئ">مبتدئ</option>
+                  <option value="متوسط">متوسط</option>
+                  <option value="متقدم">متقدم</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="courseLanguage">لغة الدورة</label>
+                <select id="courseLanguage">
+                  <option value="العربية">العربية</option>
+                  <option value="English">English</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="courseDuration">المدة (ساعات)</label>
+                <input id="courseDuration" type="number" min="1" placeholder="12" />
+              </div>
+              <div class="field-group">
+                <label for="courseDifficulty">شدة/إيقاع الدورة</label>
+                <select id="courseDifficulty">
+                  <option value="خفيف">خفيف</option>
+                  <option value="متوازن">متوازن</option>
+                  <option value="مكثف">مكثف</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="courseDescription">وصف الدورة</label>
+              <textarea id="courseDescription" rows="5" placeholder="اكتب وصفًا احترافيًا يوضح القيمة التعليمية والفئة المستهدفة" required></textarea>
+            </div>
+
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="courseImage">صورة الغلاف</label>
+                <input id="courseImage" type="file" accept="image/*" />
+              </div>
+              <div class="field-group">
+                <label for="courseImageUrl">رابط صورة الغلاف (اختياري)</label>
+                <input id="courseImageUrl" type="url" placeholder="https://example.com/cover.jpg" />
+              </div>
+            </div>
+
+            <div class="cover-preview-wrap">
+              <p class="helper-text">معاينة الغلاف</p>
+              <img id="coverPreview" src="/assets/images/default-course.png" alt="معاينة الغلاف">
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-curriculum">
+          <div class="builder-card">
+            <div class="builder-card-head">
+              <h3>عناصر إضافية تمنحك حرية أكبر</h3>
+              <p>أضف الأهداف والمتطلبات ومخرجات التعلم كبنود ديناميكية.</p>
+            </div>
+
+            <div class="list-editors">
+              <div class="dynamic-list" data-list="objectives">
+                <div class="dynamic-head">
+                  <h4>أهداف الدورة</h4>
+                  <button type="button" class="add-row-btn" data-target="objectives"><i class="fa-solid fa-plus"></i> إضافة هدف</button>
+                </div>
+                <div id="objectivesList" class="rows-container"></div>
+              </div>
+
+              <div class="dynamic-list" data-list="requirements">
+                <div class="dynamic-head">
+                  <h4>المتطلبات المسبقة</h4>
+                  <button type="button" class="add-row-btn" data-target="requirements"><i class="fa-solid fa-plus"></i> إضافة متطلب</button>
+                </div>
+                <div id="requirementsList" class="rows-container"></div>
+              </div>
+
+              <div class="dynamic-list" data-list="outcomes">
+                <div class="dynamic-head">
+                  <h4>مخرجات التعلم</h4>
+                  <button type="button" class="add-row-btn" data-target="outcomes"><i class="fa-solid fa-plus"></i> إضافة مخرج</button>
+                </div>
+                <div id="outcomesList" class="rows-container"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="builder-card">
+            <div class="builder-card-head">
+              <h3>خطة المنهج (Modules/Lessons)</h3>
+              <p>قابل للتوسعة بالكامل: أضف عددًا غير محدود من الوحدات والدروس.</p>
+            </div>
+            <div id="modulesContainer" class="modules-container"></div>
+            <button type="button" class="btn ghost" id="addModuleBtn"><i class="fa-solid fa-plus"></i> إضافة وحدة جديدة</button>
+          </div>
+
+          <div class="builder-card">
+            <div class="builder-card-head">
+              <h3>ملف المنهج/الخطة</h3>
+              <p>ارفع ملف PDF/DOC/DOCX لإضافة مرجعية تفصيلية للمراجعين.</p>
+            </div>
+            <label class="file-upload">اختيار الملف
+              <input id="courseOutline" type="file" accept=".pdf,.doc,.docx" />
+            </label>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-preview">
+          <div class="builder-card preview-card">
+            <img id="previewCover" src="/assets/images/default-course.png" alt="cover preview" class="preview-cover">
+            <div class="preview-content">
+              <h3 id="previewTitle">عنوان الدورة</h3>
+              <p id="previewDescription">سيظهر وصف الدورة هنا بعد إدخاله.</p>
+              <div class="meta-chips" id="previewMeta"></div>
+              <div>
+                <h4>الأهداف</h4>
+                <ul id="previewObjectives"></ul>
+              </div>
+              <div>
+                <h4>الوحدات والدروس</h4>
+                <div id="previewModules" class="preview-modules"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-submit">
+          <div class="builder-card">
+            <h3>قائمة مراجعة قبل الإرسال</h3>
+            <div class="review-list">
+              <label><input type="checkbox" class="review-check"> عنوان واضح + وصف احترافي</label>
+              <label><input type="checkbox" class="review-check"> صورة غلاف مناسبة</label>
+              <label><input type="checkbox" class="review-check"> أهداف ومخرجات تعلم واضحة</label>
+              <label><input type="checkbox" class="review-check"> هيكل منهج منظّم بوحدات/دروس</label>
+            </div>
+
+            <div class="submit-actions">
+              <button type="button" class="btn secondary" id="saveDraftBtn">حفظ كمسودة محلية</button>
+              <button type="submit" class="btn">إرسال للمراجعة</button>
+            </div>
+
+            <p id="instructorFormStatus" class="status"></p>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="card submissions-card">
+      <h2>طلباتك السابقة</h2>
+      <div id="instructorSubmissions" class="submission-list"></div>
     </section>
   </main>
 
