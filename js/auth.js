@@ -717,11 +717,15 @@ if (forgotForm) {
 /* =========================
    Persist user in localStorage (fallback)
 ========================= */
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
   const storedUser = JSON.parse(localStorage.getItem("coursehub_user"));
-  if (!storedUser) {
-    storeUser(user, { role: "student" });
-  }
+  if (storedUser) return;
+
+  const meta = await getUserMeta(user.uid);
+  storeUser(user, {
+    role: meta?.role || "student",
+    status: meta?.status || (user.emailVerified ? "active" : "pending_verification")
+  });
 });
