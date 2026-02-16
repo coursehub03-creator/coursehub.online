@@ -53,15 +53,37 @@ async function deleteDocsByField(collectionName, fieldName, value) {
   return deleteQueryInChunks(db.collection(collectionName).where(fieldName, "==", value));
 }
 
+async function deleteDocIfExists(collectionName, docId) {
+  if (!docId) return 0;
+  const ref = db.collection(collectionName).doc(docId);
+  const snap = await ref.get();
+  if (!snap.exists) return 0;
+  await ref.delete();
+  return 1;
+}
+
 /**
  * تنظيف شامل:
  * - يحذف من عدة collections
  * - يدور على عدة حقول (uid/userId/email/userEmail) لتفادي اختلافات البيانات القديمة/الجديدة
+ * - إضافات: studentProgress + حذف docId مباشر من user_courses
  * - يحذف users/{uid} وما تحته باستخدام recursiveDelete
  * - لو كان الإيميل موجودًا: يمسح أي users docs أخرى بنفس الإيميل (إن وجدت)
+ *
+ * يرجع:
+ *  - deletedDocsCount (إجمالي)
+ *  - byCollection (تفصيل لكل collection.field)
  */
 async function cleanupUserData(uid, email) {
   let deleted = 0;
+  const byCollection = {};
+
+  const addCount = (key, count) => {
+    const n = Number(count || 0);
+    if (!n) return;
+    byCollection[key] = (byCollection[key] || 0) + n;
+    deleted += n;
+  };
 
   const collectionFieldPairs = [
     ["instructorApplications", ["uid", "userId", "email", "userEmail"]],
@@ -76,27 +98,36 @@ async function cleanupUserData(uid, email) {
   for (const [collectionName, fields] of collectionFieldPairs) {
     for (const field of fields) {
       const value = field.toLowerCase().includes("email") ? (email || "") : (uid || "");
-      deleted += await deleteDocsByField(collectionName, field, value);
+      const count = await deleteDocsByField(collectionName, field, value);
+      addCount(`${collectionName}.${field}`, count);
     }
   }
+
+  // إضافات تنظيف مفيدة (من الفرع الآخر)
+  addCount("user_courses.docId", await deleteDocIfExists("user_courses", uid));
+  addCount("studentProgress.userId", await deleteDocsByField("studentProgress", "userId", uid));
 
   // حذف users/{uid} وكل subcollections تحته
   if (uid) {
     const userDocRef = db.collection("users").doc(uid);
-    await db.recursiveDelete(userDocRef).catch(() => {});
+    const userDocSnap = await userDocRef.get();
+    if (userDocSnap.exists) {
+      await db.recursiveDelete(userDocRef).catch(() => {});
+      addCount("users.doc", 1);
+    }
   }
 
   // أحيانًا يوجد user doc آخر بنفس الإيميل (data duplication)
   if (email) {
-    const byEmail = await db.collection("users").where("email", "==", email).get();
-    for (const docSnap of byEmail.docs) {
+    const byEmailSnap = await db.collection("users").where("email", "==", email).get();
+    for (const docSnap of byEmailSnap.docs) {
       if (uid && docSnap.id === uid) continue;
       await db.recursiveDelete(docSnap.ref).catch(() => {});
-      deleted += 1;
+      addCount("users.byEmail", 1);
     }
   }
 
-  return deleted;
+  return { deletedDocsCount: deleted, byCollection };
 }
 
 async function hardDeleteUserEverywhere(uid, email) {
@@ -116,15 +147,31 @@ async function hardDeleteUserEverywhere(uid, email) {
     throw new Error("No uid/email provided or user not found in Auth.");
   }
 
-  // delete auth account (idempotent-ish: ignore not-found)
+  // 1) تنظيف Firestore أولًا (كما في codex)
+  const cleanupResult = await cleanupUserData(resolvedUid, email || null);
+
+  // 2) حذف Auth بشكل non-fatal (ميزة codex) — لا نفشل العملية لو تعذر Auth
+  let authDeleted = false;
+  let authDeletionError = null;
+
   try {
     await admin.auth().deleteUser(resolvedUid);
+    authDeleted = true;
   } catch (authError) {
-    if (authError?.code !== "auth/user-not-found") throw authError;
+    if (authError?.code === "auth/user-not-found") {
+      authDeleted = true;
+    } else {
+      authDeletionError = String(authError?.message || authError);
+    }
   }
 
-  const deletedDocsCount = await cleanupUserData(resolvedUid, email || null);
-  return { uid: resolvedUid, deletedDocsCount };
+  return {
+    uid: resolvedUid,
+    deletedDocsCount: cleanupResult.deletedDocsCount,
+    cleanupBreakdown: cleanupResult.byCollection,
+    authDeleted,
+    authDeletionError
+  };
 }
 
 // Callable: حذف فوري من لوحة الأدمن
@@ -143,7 +190,10 @@ exports.hardDeleteUser = onCall({ region: "us-central1" }, async (request) => {
     return {
       ok: true,
       deletedUid: result.uid,
-      deletedDocsCount: result.deletedDocsCount
+      deletedDocsCount: result.deletedDocsCount,
+      cleanupBreakdown: result.cleanupBreakdown,
+      authDeleted: result.authDeleted,
+      authDeletionError: result.authDeletionError
     };
   } catch (error) {
     throw new HttpsError("internal", String(error?.message || error));
@@ -179,6 +229,11 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         status: "done",
         deletedUid: result.uid,
         deletedDocsCount: result.deletedDocsCount,
+        // (اختياري) تفصيل التنظيف للتتبع
+        cleanupBreakdown: result.cleanupBreakdown,
+        // (اختياري) حالة حذف Auth
+        authDeleted: result.authDeleted,
+        authDeletionError: result.authDeletionError,
         processedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {

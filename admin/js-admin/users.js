@@ -156,23 +156,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const confirmDelete = window.confirm(
-      `هل أنت متأكد من حذف المستخدم ${getDisplayName(user)} نهائيًا؟\n\n` +
+      `هل أنت متأكد من الحذف النهائي للمستخدم ${getDisplayName(user)}؟\n\n` +
         "سيتم محاولة الحذف النهائي (Authentication + Firestore). وفي حال تعذر ذلك سيتم الحذف/الأرشفة حسب الصلاحيات وإرسال طلب حذف Authentication."
     );
 
     if (!confirmDelete) return;
 
     // 1) جرّب الحذف النهائي عبر Cloud Function callable
-    // إذا نجح: حذف من القائمة مباشرة + رسالة نجاح
+    // إذا نجح: حذف من القائمة مباشرة + رسالة نجاح (مع احترام حقول authDeleted/authDeletionError إن أُرسلت)
     // إذا فشل: fallback للطريقة الحالية (Firestore delete/archive + cleanup + authDeletionQueue)
     try {
       const response = await hardDeleteUser({ uid: targetUid, email: targetEmail });
+
       const deletedDocsCount = Number(response?.data?.deletedDocsCount || 0);
+
+      // ميزات إضافية من الفرع الآخر إن كانت الدالة تُرجعها
+      const authDeleted = response?.data?.authDeleted !== false; // الافتراضي true إن لم تُرسل
+      const authDeletionError = String(response?.data?.authDeletionError || "");
 
       allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
       applyFilters();
 
-      alert(`✅ تم الحذف النهائي للمستخدم من Authentication وFirestore. العناصر المحذوفة: ${deletedDocsCount}`);
+      const authPart = authDeleted
+        ? "تم حذف حساب Authentication."
+        : `تعذر حذف Authentication حاليًا: ${authDeletionError || "unknown error"}`;
+
+      alert(`✅ تم تنظيف بيانات المستخدم من Firestore. العناصر المحذوفة: ${deletedDocsCount}\n${authPart}`);
       return;
     } catch (fnError) {
       console.warn("hardDeleteUser failed; falling back to best-effort flow:", fnError);
