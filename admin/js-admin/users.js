@@ -1,6 +1,17 @@
-import { db } from "/js/firebase-config.js";
+import { auth, db } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   await protectAdmin();
@@ -14,13 +25,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let allUsers = [];
 
-  // ✅ توحيد عرض الدور (codex): بعض البيانات قد تكون role="user" ونعتبرها student
   const normalizeRole = (roleValue) => {
     const role = roleValue || "student";
     return role === "user" ? "student" : role;
   };
 
-  // ✅ اسم عرض أفضل (codex)
   const getDisplayName = (user) => {
     return (
       user.name ||
@@ -33,32 +42,239 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   };
 
+  const statusClass = (status) => {
+    if (status === "active") return "success";
+    if (status === "pending" || status === "pending_verification") return "warning";
+    if (status === "blocked" || status === "rejected") return "danger";
+    if (status === "deleted") return "neutral";
+    return "neutral";
+  };
+
+  const isPermissionDenied = (error) => {
+    return (
+      error?.code === "permission-denied" ||
+      /insufficient permissions/i.test(error?.message || "")
+    );
+  };
+
+  const functions = getFunctions(undefined, "us-central1");
+  const hardDeleteUser = httpsCallable(functions, "hardDeleteUser");
+
+  const queueAuthDeletion = async (user) => {
+    try {
+      await addDoc(collection(db, "authDeletionQueue"), {
+        uid: user.uid || user.id || null,
+        email: user.email || null,
+        displayName: getDisplayName(user),
+        requestedBy: auth.currentUser?.uid || null,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+      return true;
+    } catch (error) {
+      if (!isPermissionDenied(error)) {
+        console.warn("authDeletionQueue write failed:", error);
+      }
+      return false;
+    }
+  };
+
+  const purgeLinkedCollectionsBestEffort = async (targetUid) => {
+    try {
+      const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
+      const appSnap = await getDocs(appQuery);
+
+      await Promise.all(
+        appSnap.docs.map(async (snap) => {
+          try {
+            await deleteDoc(snap.ref);
+          } catch (error) {
+            if (!isPermissionDenied(error)) throw error;
+
+            await updateDoc(snap.ref, {
+              applicationStatus: "archived",
+              reviewReason: "Archived after account deletion request",
+              reviewedAt: serverTimestamp()
+            });
+          }
+        })
+      );
+    } catch (error) {
+      if (!isPermissionDenied(error)) throw error;
+      console.info("Skip cleanup for instructorApplications: missing Firestore permission.");
+    }
+
+    const cleanupTargets = [
+      { collectionName: "certificates", field: "userId" },
+      { collectionName: "enrollments", field: "userId" },
+      { collectionName: "notifications", field: "userId" },
+      { collectionName: "quizAttempts", field: "userId" },
+      { collectionName: "user_courses", field: "uid" }
+    ];
+
+    for (const target of cleanupTargets) {
+      try {
+        const q = query(collection(db, target.collectionName), where(target.field, "==", targetUid));
+        const snap = await getDocs(q);
+
+        await Promise.all(
+          snap.docs.map(async (docSnap) => {
+            try {
+              await deleteDoc(docSnap.ref);
+            } catch (error) {
+              if (!isPermissionDenied(error)) throw error;
+            }
+          })
+        );
+      } catch (error) {
+        if (!isPermissionDenied(error)) throw error;
+        console.info(`Skip cleanup for ${target.collectionName}: missing Firestore permission.`);
+      }
+    }
+  };
+
+  const removeUserRecord = async (user) => {
+    const targetUid = user.uid || user.id;
+    const targetEmail = user.email || "";
+    if (!targetUid && !targetEmail) throw new Error("User UID/email not found");
+
+    if (auth.currentUser?.uid && auth.currentUser.uid === targetUid) {
+      alert("لا يمكنك حذف حسابك الحالي من هذه الواجهة.");
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `هل أنت متأكد من الحذف النهائي للمستخدم ${getDisplayName(user)}؟\n\n` +
+        "سيتم محاولة الحذف النهائي (Authentication + Firestore). وفي حال تعذر ذلك سيتم الحذف/الأرشفة حسب الصلاحيات وإرسال طلب حذف Authentication."
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const response = await hardDeleteUser({ uid: targetUid, email: targetEmail });
+
+      const deletedDocsCount = Number(response?.data?.deletedDocsCount || 0);
+      const authDeleted = response?.data?.authDeleted !== false;
+      const authDeletionError = String(response?.data?.authDeletionError || "");
+
+      allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
+      applyFilters();
+
+      const authPart = authDeleted
+        ? "تم حذف حساب Authentication."
+        : `تعذر حذف Authentication حاليًا: ${authDeletionError || "unknown error"}`;
+
+      alert(`✅ تم تنظيف بيانات المستخدم من Firestore. العناصر المحذوفة: ${deletedDocsCount}\n${authPart}`);
+      return;
+    } catch (fnError) {
+      console.warn("hardDeleteUser failed; falling back to best-effort flow:", fnError);
+    }
+
+    let hardDeleted = false;
+
+    try {
+      if (targetUid) {
+        await deleteDoc(doc(db, "users", targetUid));
+        hardDeleted = true;
+      }
+    } catch (error) {
+      if (!isPermissionDenied(error)) throw error;
+
+      if (targetUid) {
+        await updateDoc(doc(db, "users", targetUid), {
+          status: "deleted",
+          role: "deleted",
+          deletedAt: serverTimestamp(),
+          deletedBy: auth.currentUser?.uid || null
+        });
+      }
+    }
+
+    if (targetUid) {
+      await purgeLinkedCollectionsBestEffort(targetUid);
+    }
+
+    if (hardDeleted && targetUid) {
+      allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
+    } else if (targetUid) {
+      allUsers = allUsers.map((item) => {
+        if ((item.uid || item.id) !== targetUid) return item;
+        return { ...item, status: "deleted", role: "deleted" };
+      });
+    }
+
+    applyFilters();
+
+    const queued = await queueAuthDeletion(user);
+
+    if (!hardDeleted) {
+      alert(
+        "تمت أرشفة الحساب بدل الحذف الكامل لأن قواعد Firestore تمنع delete أو تعذر الحذف النهائي.\n" +
+          (queued
+            ? "كما تم إرسال طلب حذف حسابه من Firebase Authentication (authDeletionQueue)."
+            : "لم نتمكن من إرسال طلب حذف Firebase Authentication (تحقق من Rules لمجموعة authDeletionQueue).")
+      );
+      return;
+    }
+
+    if (queued) {
+      alert("تم حذف بيانات المستخدم من Firestore وإضافة طلب حذف حسابه من Firebase Authentication (authDeletionQueue).");
+    } else {
+      alert("تم حذف بيانات المستخدم من Firestore. لم نتمكن من إرسال طلب حذف Firebase Authentication (authDeletionQueue).");
+    }
+  };
+
   const renderUsers = (users) => {
     tbody.innerHTML = "";
     if (!users.length) {
-      tbody.innerHTML = "<tr><td colspan='4'>لا يوجد مستخدمون بعد.</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='5'>لا يوجد مستخدمون بعد.</td></tr>";
       return;
     }
 
     users.forEach((user) => {
       const displayName = getDisplayName(user);
       const roleLabel = normalizeRole(user.role);
+      const userStatus = user.status || "active";
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${displayName}</td>
         <td>${user.email || "-"}</td>
         <td>${roleLabel}</td>
-        <td><span class="badge neutral">${user.status || "active"}</span></td>
+        <td><span class="badge ${statusClass(userStatus)}">${userStatus}</span></td>
+        <td>
+          <button class="btn danger small delete-user-btn" data-user-id="${user.uid || user.id || ""}">
+            <i class="fa-solid fa-trash"></i>
+            حذف
+          </button>
+        </td>
       `;
       tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll(".delete-user-btn").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const targetId = button.dataset.userId;
+        const user = allUsers.find((item) => (item.uid || item.id) === targetId);
+        if (!user) return;
+
+        button.disabled = true;
+        try {
+          await removeUserRecord(user);
+        } catch (error) {
+          console.error("Delete user failed:", error);
+          alert("تعذّر الحذف. تحقق من Firestore Rules أو نشر Cloud Functions وصلاحيات الأدمن.");
+        } finally {
+          button.disabled = false;
+        }
+      });
     });
   };
 
   const applyFilters = () => {
     const role = roleFilter?.value || "all";
     const status = statusFilter?.value || "all";
-    const query = searchInput?.value.toLowerCase().trim() || "";
+    const queryText = searchInput?.value.toLowerCase().trim() || "";
 
     const filtered = allUsers.filter((user) => {
       const normalizedRole = normalizeRole(user.role);
@@ -72,10 +288,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       const normalizedUid = (user.uid || user.id || "").toLowerCase();
 
       const searchMatch =
-        !query ||
-        normalizedName.includes(query) ||
-        normalizedEmail.includes(query) ||
-        normalizedUid.includes(query);
+        !queryText ||
+        normalizedName.includes(queryText) ||
+        normalizedEmail.includes(queryText) ||
+        normalizedUid.includes(queryText);
 
       return roleMatch && statusMatch && searchMatch;
     });
@@ -89,14 +305,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyFilters();
   } catch (error) {
     console.error("خطأ في تحميل المستخدمين:", error);
-    tbody.innerHTML = "<tr><td colspan='4'>حدث خطأ أثناء التحميل.</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='5'>حدث خطأ أثناء التحميل.</td></tr>";
   }
 
   roleFilter?.addEventListener("change", applyFilters);
   statusFilter?.addEventListener("change", applyFilters);
   searchInput?.addEventListener("input", applyFilters);
 
-  // ✅ دعم البحث القادم من واجهة ثانية/هيدر (ميزة codex)
   document.addEventListener("adminSearch", (event) => {
     if (!searchInput) return;
     searchInput.value = event.detail?.query || "";
