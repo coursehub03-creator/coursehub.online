@@ -104,6 +104,10 @@ const messages = {
   storageUnauthorized: {
     ar: "لا يمكن رفع شهادة العمل الآن بسبب صلاحيات التخزين. تواصل مع الإدارة لضبط Firebase Storage Rules.",
     en: "Work-proof upload is blocked by storage permissions. Ask admin to update Firebase Storage rules."
+  },
+  leakedAccountRecovered: {
+    ar: "تم تنظيف حساب سابق غير مكتمل. أعد المحاولة الآن بنفس البريد.",
+    en: "A previously incomplete account was cleaned up. Please retry registration now."
   }
 };
 
@@ -155,13 +159,15 @@ async function getUserMeta(uid) {
 async function saveUserProfile(user, profileData = {}, options = {}) {
   if (!user?.uid) return;
 
+  const existingMeta = options.existingMeta || (await getUserMeta(user.uid));
+
   const payload = {
     uid: user.uid,
     email: user.email || "",
     emailVerified: !!user.emailVerified,
     picture: user.photoURL || DEFAULT_AVATAR,
-    role: "student",
-    status: user.emailVerified ? "active" : "pending_verification",
+    role: existingMeta?.role || "student",
+    status: existingMeta?.status || (user.emailVerified ? "active" : "pending_verification"),
     updatedAt: serverTimestamp()
   };
 
@@ -404,6 +410,30 @@ if (registerForm) {
 
     let createdUser = null;
 
+    const cleanupCreatedUser = async () => {
+      if (!createdUser) return false;
+
+      let deleted = false;
+      try {
+        await createdUser.delete();
+        deleted = true;
+      } catch (cleanupError) {
+        console.warn("Could not delete temporary created user:", cleanupError);
+      }
+
+      if (!deleted && auth.currentUser?.uid === createdUser.uid) {
+        try {
+          await auth.currentUser.delete();
+          deleted = true;
+        } catch (currentUserDeleteError) {
+          console.warn("Could not delete auth.currentUser fallback:", currentUserDeleteError);
+        }
+      }
+
+      try { await signOut(auth); } catch {}
+      return deleted;
+    };
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       createdUser = userCredential.user;
@@ -419,15 +449,13 @@ if (registerForm) {
         const proofFile = document.getElementById("regWorkProof")?.files?.[0] || null;
 
         if (!termsAccepted) {
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
           setText(registerMsg, textFor("instructorTermsRequired"));
           return;
         }
 
         if (!proofFile || !String(proofFile.type || "").toLowerCase().includes("pdf")) {
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
           setText(registerMsg, textFor("instructorPdfRequired"));
           return;
         }
@@ -438,8 +466,7 @@ if (registerForm) {
           await uploadBytes(fileRef, proofFile);
         } catch (err) {
           console.error("Upload proof error:", err);
-          try { await signOut(auth); } catch {}
-          try { await createdUser.delete(); } catch {}
+          await cleanupCreatedUser();
 
           if (err?.code === "storage/unauthorized") {
             setText(registerMsg, textFor("storageUnauthorized"));
@@ -524,8 +551,7 @@ if (registerForm) {
 
       // cleanup in case storage fails after user creation
       if (createdUser && error?.code === "storage/unauthorized") {
-        try { await signOut(auth); } catch {}
-        try { await createdUser.delete(); } catch {}
+        await cleanupCreatedUser();
       }
 
       if (error?.code === "auth/too-many-requests") {
@@ -534,6 +560,21 @@ if (registerForm) {
       }
 
       if (error?.code === "auth/email-already-in-use") {
+        if (accountType === "instructor") {
+          try {
+            const leakedCredential = await signInWithEmailAndPassword(auth, email, password);
+            const leakedUser = leakedCredential.user;
+            if (leakedUser && !leakedUser.emailVerified) {
+              await leakedUser.delete();
+              await signOut(auth);
+              setText(registerMsg, textFor("leakedAccountRecovered"), true);
+              return;
+            }
+            await signOut(auth);
+          } catch (recoveryError) {
+            console.warn("Could not auto-recover email-already-in-use account:", recoveryError);
+          }
+        }
         setText(registerMsg, textFor("emailInUse"));
       } else {
         setText(registerMsg, textFor("registerError"));

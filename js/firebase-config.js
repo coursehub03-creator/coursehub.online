@@ -2,7 +2,8 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.
 import {
   initializeFirestore,
   persistentLocalCache,
-  persistentSingleTabManager
+  persistentSingleTabManager,
+  persistentMultipleTabManager
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -25,9 +26,12 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
+const localStorageKey = "coursehub_firestore_tab_mode";
+const isSingleTab = window.localStorage?.getItem(localStorageKey) === "single";
+
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
-    tabManager: persistentSingleTabManager()
+    tabManager: isSingleTab ? persistentSingleTabManager() : persistentMultipleTabManager()
   })
 });
 
