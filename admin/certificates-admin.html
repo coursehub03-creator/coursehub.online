@@ -1,14 +1,14 @@
-<!DOCTYPE html>␊
-<html lang="ar" dir="rtl">␊
-<head>␊
-  <meta charset="UTF-8">␊
-  <title>الشهادات | لوحة التحكم</title>␊
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">␊
-␊
-  <link rel="stylesheet" href="/css/style.css">␊
-  <link rel="stylesheet" href="/css/header.css">␊
-  <link rel="stylesheet" href="/css/footer.css">␊
-  <link rel="stylesheet" href="css-admin/admin.css">␊
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>الشهادات | لوحة التحكم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="css-admin/admin.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -22,21 +22,37 @@
       <div id="topbar-placeholder"></div>
       <div class="admin-content">
         <h1>إدارة الشهادات</h1>
-        <button id="add-certificate-btn">➕ إضافة شهادة جديدة</button>
-        <input type="text" id="certificate-search" placeholder="ابحث عن شهادة..." />
+
+        <div class="admin-stats">
+          <div class="card">إجمالي الشهادات: <span id="totalCertificates">0</span></div>
+          <div class="card">الشهادات المفعلة: <span id="activeCertificates">0</span></div>
+          <div class="card">الشهادات الملغاة: <span id="inactiveCertificates">0</span></div>
+        </div>
+
+        <div class="admin-toolbar" style="display:flex; gap:10px; flex-wrap:wrap; margin: 12px 0 16px;">
+          <input type="text" id="certificate-search" placeholder="ابحث بالاسم، البريد، الكود، الدورة..." style="min-width:280px;" />
+          <select id="certificate-status-filter">
+            <option value="all">كل الحالات</option>
+            <option value="active">مفعلة</option>
+            <option value="inactive">ملغاة</option>
+          </select>
+          <button id="refresh-certificates-btn" class="btn">تحديث</button>
+        </div>
+
         <table class="certificates-table">
           <thead>
             <tr>
-              <th>اسم الشهادة</th>
-              <th>الدورة المرتبطة</th>
-              <th>الطالب</th>
+              <th>اسم الطالب</th>
+              <th>البريد الإلكتروني</th>
+              <th>الدورة</th>
+              <th>رمز التحقق</th>
               <th>تاريخ الإصدار</th>
-              <th>الإجراءات</th>
+              <th>الحالة</th>
+              <th>تغيير الحالة</th>
+              <th>التحقق</th>
             </tr>
           </thead>
-          <tbody id="certificates-list">
-            <!-- سيتم تعبئتها ديناميكيًا بواسطة certificate-admin.js -->
-          </tbody>
+          <tbody id="certificates-list"></tbody>
         </table>
       </div>
     </section>
@@ -46,13 +62,11 @@
 <div id="footer-placeholder"></div>
 
 <script type="module" src="/js/main.js" defer></script>
-<script type="module" src="/js/footer.js"></script>␊
-␊
-<script type="module" src="js-admin/admin-guard.js"></script>␊
-<script type="module" src="js-admin/admin-layout.js"></script>␊
-<script type="module" src="js-admin/certificates-admin.js"></script>␊
-␊
-</body>␊
-</html>␊
-␊
-␊
+<script type="module" src="/js/footer.js"></script>
+
+<script type="module" src="js-admin/admin-guard.js"></script>
+<script type="module" src="js-admin/admin-layout.js"></script>
+<script type="module" src="js-admin/certificates-admin.js"></script>
+
+</body>
+</html>

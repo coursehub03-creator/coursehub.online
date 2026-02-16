@@ -65,10 +65,17 @@ async function loadCourse() {
 
   if (!snap.exists()) {
     alert("الدورة غير موجودة");
+    window.location.href = "/courses.html";
     return;
   }
 
   course = snap.data();
+
+  if (course.status !== "published") {
+    alert("هذه الدورة غير متاحة حالياً للطلاب.");
+    window.location.href = "/courses.html";
+    return;
+  }
 
   const lang = localStorage.getItem("coursehub_lang") || "ar";
   courseTitle = lang === "en" ? course.titleEn || course.title : course.title;
@@ -412,11 +419,14 @@ async function completeCourse({ showSummary = true } = {}) {
     // ✅ حفظ الشهادة في مجموعة certificates العامة
     await setDoc(doc(db, "certificates", certId), {
       userId: user.uid,
+      userEmail: user.email || "",
+      userName: user.displayName || user.email?.split("@")[0] || "Student",
       courseId,
       courseTitle: courseTitle || course.title,
       completedAt: new Date(),
       verificationCode,
-      certificateUrl
+      certificateUrl,
+      status: "active"
     });
 
     // ✅ حفظ بيانات الإنجاز في مجموعات فرعية لتجنب تضخم مستند المستخدم

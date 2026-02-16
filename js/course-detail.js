@@ -48,6 +48,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       const course = snap.data();
+      if (course.status !== "published") {
+        courseDetail.innerHTML = "<p class='empty-msg'>هذه الدورة غير متاحة حالياً للطلاب.</p>";
+        joinBtn.style.display = "none";
+        return;
+      }
       const lang = localStorage.getItem("coursehub_lang") || "ar";
       const titleText = lang === "en" ? course.titleEn || course.title : course.title;
       const descriptionText = lang === "en" ? course.descriptionEn || course.description : course.description;
