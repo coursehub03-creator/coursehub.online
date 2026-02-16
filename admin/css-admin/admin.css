@@ -429,6 +429,39 @@
   color: #4338ca;
 }
 
+.badge.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-stats .card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--admin-shadow);
+  font-weight: 600;
+}
+
+.admin-stats .card span {
+  color: var(--admin-primary);
+}
+
+.btn.warning {
+  background: var(--admin-warning);
+}
+
+.btn.warning:hover {
+  background: #ea580c;
+}
+
 .alert {
   padding: 14px 16px;
   border-radius: 12px;

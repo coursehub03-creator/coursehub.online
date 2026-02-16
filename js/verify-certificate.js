@@ -12,6 +12,7 @@ const uiText = {
     verifying: "جاري التحقق من الشهادة...",
     notFound: "لم يتم العثور على شهادة بهذا الرمز.",
     validBadge: "شهادة معتمدة وصحيحة",
+    inactiveCertificate: "هذه الشهادة ملغاة / غير مفعلة حاليًا.",
     completedAt: "تاريخ الإنجاز:",
     viewCertificate: "عرض الشهادة",
     downloadPdf: "تحميل PDF",
@@ -25,6 +26,7 @@ const uiText = {
     verifying: "Verifying the certificate...",
     notFound: "No certificate found with this code.",
     validBadge: "Verified certificate",
+    inactiveCertificate: "This certificate is inactive / revoked.",
     completedAt: "Completion date:",
     viewCertificate: "View certificate",
     downloadPdf: "Download PDF",
@@ -216,6 +218,13 @@ async function verifyCode(code) {
     }
 
     const cert = snapshot.docs[0].data();
+    const status = cert.status === "inactive" ? "inactive" : "active";
+
+    if (status !== "active") {
+      result.classList.add("error");
+      result.textContent = t.inactiveCertificate;
+      return;
+    }
 
     const title = cert.courseTitle || cert.courseId || t.defaultTitle;
     const completedAt = formatDate(cert.completedAt);

@@ -53,7 +53,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
@@ -75,7 +75,8 @@
 
     async function loadCourses() {
       try {
-        const snapshot = await getDocs(collection(db, "courses"));
+        const publishedQuery = query(collection(db, "courses"), where("status", "==", "published"));
+        const snapshot = await getDocs(publishedQuery);
         allCourses = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         renderCourses(allCourses);
       } catch (error) {
