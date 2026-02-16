@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 const db = admin.firestore();
+
 const ADMIN_EMAILS = new Set([
   "kaleadsalous30@gmail.com",
   "coursehub03@gmail.com"
@@ -23,7 +24,6 @@ async function queueEmail(payload) {
   });
 }
 
-
 async function assertAdmin(request) {
   if (!request.auth?.uid) {
     throw new HttpsError("unauthenticated", "You must be authenticated.");
@@ -40,6 +40,7 @@ async function assertAdmin(request) {
   throw new HttpsError("permission-denied", "Only admins can delete users.");
 }
 
+// حذف Query على دفعات (لتفادي limits)
 async function deleteQueryInChunks(queryRef, chunkSize = 300) {
   let deleted = 0;
 
@@ -72,11 +73,14 @@ async function deleteDocIfExists(collectionName, docId) {
 
 /**
  * تنظيف شامل:
- * - يحذف من عدة collections
- * - يدور على عدة حقول (uid/userId/email/userEmail)
+ * - يدور على عدة حقول (uid/userId/email/userEmail) لتفادي اختلافات البيانات
  * - إضافات: studentProgress + حذف docId مباشر من user_courses
  * - يحذف users/{uid} وما تحته باستخدام recursiveDelete
- * - يمسح users docs أخرى بنفس الإيميل إذا وجدت
+ * - لو كان الإيميل موجودًا: يمسح أي users docs أخرى بنفس الإيميل (إن وجدت)
+ *
+ * يرجع:
+ *  - deletedDocsCount (إجمالي)
+ *  - byCollection (تفصيل لكل collection.field)
  */
 async function cleanupUserData(uid, email) {
   let deleted = 0;
@@ -107,9 +111,11 @@ async function cleanupUserData(uid, email) {
     }
   }
 
+  // إضافات تنظيف مفيدة
   addCount("user_courses.docId", await deleteDocIfExists("user_courses", uid));
   addCount("studentProgress.userId", await deleteDocsByField("studentProgress", "userId", uid));
 
+  // حذف users/{uid} وكل subcollections تحته
   if (uid) {
     const userDocRef = db.collection("users").doc(uid);
     const userDocSnap = await userDocRef.get();
@@ -119,6 +125,7 @@ async function cleanupUserData(uid, email) {
     }
   }
 
+  // أحيانًا يوجد user doc آخر بنفس الإيميل (data duplication)
   if (email) {
     const byEmailSnap = await db.collection("users").where("email", "==", email).get();
     for (const docSnap of byEmailSnap.docs) {
@@ -151,16 +158,18 @@ async function hardDeleteUserEverywhere(uid, email) {
   // 1) تنظيف Firestore أولًا
   const cleanupResult = await cleanupUserData(resolvedUid, email || null);
 
-  // 2) حذف Auth بشكل non-fatal
+  // 2) حذف Auth بشكل non-fatal — لا نفشل العملية لو تعذر Auth (لكن نُرجع الحالة)
   let authDeleted = false;
   let authDeletionError = null;
+
   try {
     await admin.auth().deleteUser(resolvedUid);
     authDeleted = true;
   } catch (authError) {
     if (authError?.code === "auth/user-not-found") {
-      authDeleted = true;
+      authDeleted = true; // idempotent
     } else {
+      authDeleted = false;
       authDeletionError = String(authError?.message || authError);
     }
   }
@@ -200,16 +209,23 @@ exports.hardDeleteUser = onCall({ region: "us-central1" }, async (request) => {
   }
 });
 
+// Callable: اعتماد/رفض طلب الأستاذ (أفضل من التحديث من الواجهة لتجنب مشاكل الصلاحيات)
 exports.approveInstructorApplication = onCall({ region: "us-central1" }, async (request) => {
   await assertAdmin(request);
 
-  const applicationId = typeof request.data?.applicationId === "string" ? request.data.applicationId.trim() : "";
-  const decision = typeof request.data?.decision === "string" ? request.data.decision.trim().toLowerCase() : "";
+  const applicationId =
+    typeof request.data?.applicationId === "string" ? request.data.applicationId.trim() : "";
+  const decision =
+    typeof request.data?.decision === "string" ? request.data.decision.trim().toLowerCase() : "";
   const reason = typeof request.data?.reason === "string" ? request.data.reason.trim() : "";
 
   if (!applicationId) throw new HttpsError("invalid-argument", "applicationId is required.");
-  if (!["approve", "reject"].includes(decision)) throw new HttpsError("invalid-argument", "decision must be approve or reject.");
-  if (decision === "reject" && !reason) throw new HttpsError("invalid-argument", "reason is required for rejection.");
+  if (!["approve", "reject"].includes(decision)) {
+    throw new HttpsError("invalid-argument", "decision must be approve or reject.");
+  }
+  if (decision === "reject" && !reason) {
+    throw new HttpsError("invalid-argument", "reason is required for rejection.");
+  }
 
   const appRef = db.collection("instructorApplications").doc(applicationId);
   const appSnap = await appRef.get();
@@ -231,12 +247,18 @@ exports.approveInstructorApplication = onCall({ region: "us-central1" }, async (
       reviewReason: ""
     });
 
-    await db.collection("users").doc(uid).set({
-      role: "instructor",
-      status: "pending_verification",
-      reviewReason: "",
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    await db
+      .collection("users")
+      .doc(uid)
+      .set(
+        {
+          role: "instructor",
+          status: "pending_verification",
+          reviewReason: "",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
 
     await queueEmail({
       to: email,
@@ -256,12 +278,18 @@ exports.approveInstructorApplication = onCall({ region: "us-central1" }, async (
     reviewReason: reason
   });
 
-  await db.collection("users").doc(uid).set({
-    role: "instructor",
-    status: "rejected",
-    reviewReason: reason,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  await db
+    .collection("users")
+    .doc(uid)
+    .set(
+      {
+        role: "instructor",
+        status: "rejected",
+        reviewReason: reason,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
 
   await queueEmail({
     to: email,
@@ -285,6 +313,7 @@ exports.processAuthDeletionQueue = onDocumentCreated(
 
     const job = snap.data() || {};
     const ref = snap.ref;
+
     const attempts = Number(job.attempts || 0) + 1;
 
     // علامة بداية المعالجة
@@ -301,9 +330,14 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         status: "done",
         deletedUid: result.uid,
         deletedDocsCount: result.deletedDocsCount,
+
+        // (اختياري) تفصيل التنظيف للتتبع
         cleanupBreakdown: result.cleanupBreakdown,
+
+        // (اختياري) حالة حذف Auth
         authDeleted: result.authDeleted,
         authDeletionError: result.authDeletionError,
+
         processedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {

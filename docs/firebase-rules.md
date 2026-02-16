@@ -83,7 +83,6 @@ service cloud.firestore {
       allow get, list, create, update, delete: if isAdmin();
     }
 
-
     // طابور حذف حسابات Authentication (يعالَج عبر Cloud Function Admin SDK)
     match /authDeletionQueue/{jobId} {
       allow get, list, create, update, delete: if isAdmin();
@@ -99,7 +98,7 @@ service cloud.firestore {
     match /enrollments/{docId} {
       // قراءة المستند: مالكه أو الأدمن
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      // السماح للمستخدم بجلب إشعاراته عبر query where(userId == auth.uid)
+      // السماح للمستخدم بجلب تسجيلاته عبر query where(userId == auth.uid)
       allow list: if isAdmin() || isSignedIn();
 
       // الإنشاء: userId يجب يطابق uid الحالي
@@ -139,7 +138,7 @@ service cloud.firestore {
     // محاولات الاختبارات
     match /quizAttempts/{attemptId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      // السماح للمستخدم بجلب إشعاراته عبر query where(userId == auth.uid)
+      // السماح للمستخدم بجلب محاولاته عبر query where(userId == auth.uid)
       allow list: if isAdmin() || isSignedIn();
 
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
@@ -147,11 +146,7 @@ service cloud.firestore {
     }
   }
 }
-```
 
-## Storage Rules
-
-```rules
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
@@ -186,19 +181,14 @@ service firebase.storage {
       // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
       allow write: if isSignedIn()
                    && request.auth.uid == uid
-                   && (request.resource.contentType.matches('application/pdf')
-                       || fileName.matches('(?i).*\\.pdf$'));
+                   && (
+                        request.resource.contentType.matches('application/pdf')
+                        || fileName.matches('(?i).*\\.pdf$')
+                      );
 
       // القراءة للأدمن فقط
       allow read: if isAdmin();
     }
   }
 }
-```
 
-## ملاحظات مهمة
-
-- حذف المستخدم من Firestore من لوحة الأدمن يحتاج `allow delete` على `users/{userId}` للأدمن (موجودة أعلاه).
-- إذا أردت "حذف نهائي" من Firebase Authentication أيضًا، تحتاج Cloud Function بـ Admin SDK (الـ Rules وحدها لا تحذف مستخدم Auth).
-- بعد تعديل القواعد في Firebase Console، انشرها ثم جرّب من جديد من حساب أدمن فعلي.
-- إذا بقي المستخدم موجودًا في Firebase Authentication بعد الحذف من Firestore، تأكد من وجود Cloud Function تعالج `authDeletionQueue` وتحذف مستخدم Auth فعليًا.
