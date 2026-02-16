@@ -1,8 +1,15 @@
 import { auth, db } from "/js/firebase-config.js";
 import { protectAdmin } from "./admin-guard.js";
 import {
+  addDoc,
   collection,
-  getDocs
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
@@ -43,8 +50,88 @@ document.addEventListener("DOMContentLoaded", async () => {
     return "neutral";
   };
 
+  const isPermissionDenied = (error) => {
+    return (
+      error?.code === "permission-denied" ||
+      /insufficient permissions/i.test(error?.message || "")
+    );
+  };
+
   const functions = getFunctions(undefined, "us-central1");
   const hardDeleteUser = httpsCallable(functions, "hardDeleteUser");
+
+  const queueAuthDeletion = async (user) => {
+    try {
+      await addDoc(collection(db, "authDeletionQueue"), {
+        uid: user.uid || user.id || null,
+        email: user.email || null,
+        displayName: getDisplayName(user),
+        requestedBy: auth.currentUser?.uid || null,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+      return true;
+    } catch (error) {
+      if (!isPermissionDenied(error)) {
+        console.warn("authDeletionQueue write failed:", error);
+      }
+      return false;
+    }
+  };
+
+  const purgeLinkedCollectionsBestEffort = async (targetUid) => {
+    try {
+      const appQuery = query(collection(db, "instructorApplications"), where("uid", "==", targetUid));
+      const appSnap = await getDocs(appQuery);
+
+      await Promise.all(
+        appSnap.docs.map(async (snap) => {
+          try {
+            await deleteDoc(snap.ref);
+          } catch (error) {
+            if (!isPermissionDenied(error)) throw error;
+
+            await updateDoc(snap.ref, {
+              applicationStatus: "archived",
+              reviewReason: "Archived after account deletion request",
+              reviewedAt: serverTimestamp()
+            });
+          }
+        })
+      );
+    } catch (error) {
+      if (!isPermissionDenied(error)) throw error;
+      console.info("Skip cleanup for instructorApplications: missing Firestore permission.");
+    }
+
+    const cleanupTargets = [
+      { collectionName: "certificates", field: "userId" },
+      { collectionName: "enrollments", field: "userId" },
+      { collectionName: "notifications", field: "userId" },
+      { collectionName: "quizAttempts", field: "userId" },
+      { collectionName: "user_courses", field: "uid" }
+    ];
+
+    for (const target of cleanupTargets) {
+      try {
+        const q = query(collection(db, target.collectionName), where(target.field, "==", targetUid));
+        const snap = await getDocs(q);
+
+        await Promise.all(
+          snap.docs.map(async (docSnap) => {
+            try {
+              await deleteDoc(docSnap.ref);
+            } catch (error) {
+              if (!isPermissionDenied(error)) throw error;
+            }
+          })
+        );
+      } catch (error) {
+        if (!isPermissionDenied(error)) throw error;
+        console.info(`Skip cleanup for ${target.collectionName}: missing Firestore permission.`);
+      }
+    }
+  };
 
   const removeUserRecord = async (user) => {
     const targetUid = user.uid || user.id;
@@ -58,24 +145,83 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const confirmDelete = window.confirm(
       `هل أنت متأكد من الحذف النهائي للمستخدم ${getDisplayName(user)}؟\n\n` +
-        "سيتم حذف حساب Authentication وجميع بيانات المستخدم (الشهادات، الإنجازات، التسجيلات...)."
+        "سيتم محاولة الحذف النهائي (Authentication + Firestore). وفي حال تعذر ذلك سيتم الحذف/الأرشفة حسب الصلاحيات وإرسال طلب حذف Authentication."
     );
 
     if (!confirmDelete) return;
 
-    const response = await hardDeleteUser({ uid: targetUid, email: targetEmail });
-    const deletedDocsCount = Number(response?.data?.deletedDocsCount || 0);
-    const authDeleted = response?.data?.authDeleted !== false;
-    const authDeletionError = response?.data?.authDeletionError || "";
+    try {
+      const response = await hardDeleteUser({ uid: targetUid, email: targetEmail });
 
-    allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
+      const deletedDocsCount = Number(response?.data?.deletedDocsCount || 0);
+      const authDeleted = response?.data?.authDeleted !== false;
+      const authDeletionError = String(response?.data?.authDeletionError || "");
+
+      allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
+      applyFilters();
+
+      const authPart = authDeleted
+        ? "تم حذف حساب Authentication."
+        : `تعذر حذف Authentication حاليًا: ${authDeletionError || "unknown error"}`;
+
+      alert(`✅ تم تنظيف بيانات المستخدم من Firestore. العناصر المحذوفة: ${deletedDocsCount}\n${authPart}`);
+      return;
+    } catch (fnError) {
+      console.warn("hardDeleteUser failed; falling back to best-effort flow:", fnError);
+    }
+
+    let hardDeleted = false;
+
+    try {
+      if (targetUid) {
+        await deleteDoc(doc(db, "users", targetUid));
+        hardDeleted = true;
+      }
+    } catch (error) {
+      if (!isPermissionDenied(error)) throw error;
+
+      if (targetUid) {
+        await updateDoc(doc(db, "users", targetUid), {
+          status: "deleted",
+          role: "deleted",
+          deletedAt: serverTimestamp(),
+          deletedBy: auth.currentUser?.uid || null
+        });
+      }
+    }
+
+    if (targetUid) {
+      await purgeLinkedCollectionsBestEffort(targetUid);
+    }
+
+    if (hardDeleted && targetUid) {
+      allUsers = allUsers.filter((item) => (item.uid || item.id) !== targetUid);
+    } else if (targetUid) {
+      allUsers = allUsers.map((item) => {
+        if ((item.uid || item.id) !== targetUid) return item;
+        return { ...item, status: "deleted", role: "deleted" };
+      });
+    }
+
     applyFilters();
 
-    const authPart = authDeleted
-      ? "تم حذف حساب Authentication."
-      : `تعذر حذف Authentication حاليًا: ${authDeletionError}`;
+    const queued = await queueAuthDeletion(user);
 
-    alert(`✅ تم تنظيف بيانات المستخدم من Firestore. العناصر المحذوفة: ${deletedDocsCount}\n${authPart}`);
+    if (!hardDeleted) {
+      alert(
+        "تمت أرشفة الحساب بدل الحذف الكامل لأن قواعد Firestore تمنع delete أو تعذر الحذف النهائي.\n" +
+          (queued
+            ? "كما تم إرسال طلب حذف حسابه من Firebase Authentication (authDeletionQueue)."
+            : "لم نتمكن من إرسال طلب حذف Firebase Authentication (تحقق من Rules لمجموعة authDeletionQueue).")
+      );
+      return;
+    }
+
+    if (queued) {
+      alert("تم حذف بيانات المستخدم من Firestore وإضافة طلب حذف حسابه من Firebase Authentication (authDeletionQueue).");
+    } else {
+      alert("تم حذف بيانات المستخدم من Firestore. لم نتمكن من إرسال طلب حذف Firebase Authentication (authDeletionQueue).");
+    }
   };
 
   const renderUsers = (users) => {
@@ -117,7 +263,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           await removeUserRecord(user);
         } catch (error) {
           console.error("Delete user failed:", error);
-          alert("تعذّر الحذف النهائي. تحقق من نشر Cloud Function hardDeleteUser وصلاحيات الأدمن.");
+          alert("تعذّر الحذف. تحقق من Firestore Rules أو نشر Cloud Functions وصلاحيات الأدمن.");
         } finally {
           button.disabled = false;
         }
