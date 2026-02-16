@@ -44,6 +44,22 @@ async function resolveWorkProofUrl(app) {
   }
 }
 
+async function queueEmail(payload) {
+  try {
+    await addDoc(collection(db, "emailQueue"), {
+      ...payload,
+      createdAt: serverTimestamp(),
+      status: "pending"
+    });
+  } catch (error) {
+    if (error?.code === "permission-denied") {
+      console.warn("emailQueue write blocked by Firestore rules:", error);
+      return;
+    }
+    throw error;
+  }
+}
+
 function renderCard(app){
   return `
     <div class="user-card" data-id="${app.id}">

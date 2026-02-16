@@ -186,8 +186,51 @@ service firebase.storage {
       // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
       allow write: if isSignedIn()
                    && request.auth.uid == uid
-                   && (request.resource.contentType.matches('application/pdf')
-                       || fileName.matches('(?i).*\\.pdf$'));
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminByClaim() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isAdminByEmail() {
+      return isSignedIn() && request.auth.token.email in [
+        "kaleadsalous30@gmail.com",
+        "coursehub03@gmail.com"
+      ];
+    }
+
+    function isAdmin() {
+      return isAdminByClaim() || isAdminByEmail();
+    }
+
+    // ملفات الدورات
+    match /courses/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ملفات إثبات العمل للأساتذة (PDF)
+    match /instructor-applications/{uid}/{fileName} {
+      // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
+      allow write: if isSignedIn()
+                   && request.auth.uid == uid
+                   && (
+                        request.resource.contentType.matches('application/pdf')
+                        || fileName.matches('(?i).*\\.pdf$')
+                      );
+
+      // القراءة للأدمن فقط
+      allow read: if isAdmin();
+    }
+  }
+}
+
 
       // القراءة للأدمن فقط
       allow read: if isAdmin();

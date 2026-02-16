@@ -434,11 +434,21 @@ if (registerForm) {
     const confirmPassword = document.getElementById("regConfirmPassword")?.value;
 
     // instructor fields (optional)
-    const accountType = document.querySelector('input[name="accountType"]:checked')?.value || "student";
+    const accountType =
+      document.querySelector('input[name="accountType"]:checked')?.value || "student";
     const phone = document.getElementById("regPhone")?.value?.trim() || "";
     const fullName = `${firstName || ""} ${lastName || ""}`.trim();
 
-    if (!firstName || !lastName || !gender || !country || !birthDate || !email || !password || !confirmPassword) {
+    if (
+      !firstName ||
+      !lastName ||
+      !gender ||
+      !country ||
+      !birthDate ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
       setText(registerMsg, textFor("requiredFields"));
       return;
     }
@@ -506,7 +516,10 @@ if (registerForm) {
         }
 
         // upload PDF to Storage
-        const fileRef = ref(storage, `instructor-applications/${createdUser.uid}/work-proof-${Date.now()}.pdf`);
+        const fileRef = ref(
+          storage,
+          `instructor-applications/${createdUser.uid}/work-proof-${Date.now()}.pdf`
+        );
         try {
           await uploadBytes(fileRef, proofFile, {
             contentType: "application/pdf",
@@ -594,7 +607,6 @@ if (registerForm) {
       setTimeout(() => {
         window.location.href = "verify-email.html";
       }, 1200);
-
     } catch (error) {
       console.error("Register Error:", error);
 
