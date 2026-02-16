@@ -200,28 +200,72 @@ function actionSettingsSafe() {
    Country Picker (optional)
 ========================= */
 function initCountryPicker() {
+  const picker = document.getElementById("countryPicker");
+  const trigger = document.getElementById("countryPickerTrigger");
+  const valueEl = document.getElementById("countryPickerValue");
+  const menu = document.getElementById("countryPickerMenu");
   const countrySearch = document.getElementById("countrySearch");
-  const countrySelect = document.getElementById("regCountry");
-  if (!countrySelect) return;
+  const countryOptions = document.getElementById("countryOptions");
+  const countryInput = document.getElementById("regCountry");
+
+  if (!picker || !trigger || !menu || !countryOptions || !countryInput) return;
 
   const countries = getAllCountries();
+
+  const openMenu = () => {
+    menu.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    countrySearch?.focus();
+  };
+
+  const closeMenu = () => {
+    menu.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+  };
+
+  const selectCountry = (country) => {
+    countryInput.value = country.name;
+    if (valueEl) valueEl.textContent = `${country.flag} ${country.name}`;
+    closeMenu();
+  };
 
   const renderOptions = (queryText = "") => {
     const q = queryText.trim().toLowerCase();
     const filtered = countries.filter((item) => item.name.toLowerCase().includes(q));
 
-    countrySelect.innerHTML = "";
-    filtered.forEach((country, index) => {
-      const option = document.createElement("option");
-      option.value = country.name;
-      option.textContent = `${country.flag} ${country.name}`;
-      if (!q && index === 0) option.selected = true;
-      countrySelect.appendChild(option);
+    if (!filtered.length) {
+      countryOptions.innerHTML = `<li class="active" aria-disabled="true">لا توجد نتائج</li>`;
+      return;
+    }
+
+    countryOptions.innerHTML = filtered.map((country) => `
+      <li role="option" data-country-name="${country.name}">
+        <span class="flag">${country.flag}</span>
+        <span>${country.name}</span>
+      </li>
+    `).join("");
+
+    countryOptions.querySelectorAll("li[data-country-name]").forEach((item) => {
+      item.addEventListener("click", () => {
+        const countryName = item.getAttribute("data-country-name");
+        const selected = countries.find((c) => c.name === countryName);
+        if (selected) selectCountry(selected);
+      });
     });
   };
 
   renderOptions();
+
+  trigger.addEventListener("click", () => {
+    if (menu.hidden) openMenu();
+    else closeMenu();
+  });
+
   countrySearch?.addEventListener("input", (e) => renderOptions(e.target.value));
+
+  document.addEventListener("click", (event) => {
+    if (!picker.contains(event.target)) closeMenu();
+  });
 }
 
 /* =========================

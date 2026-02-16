@@ -1,16 +1,3 @@
-# Cloud Function لحذف مستخدمي Firebase Authentication من `authDeletionQueue`
-
-استخدم هذه الفنكشن إذا أردت أن زر الحذف في لوحة الأدمن يحذف المستخدم من Firestore **ومن Firebase Authentication**.
-
-## الفكرة
-- الواجهة تضيف مستندًا في `authDeletionQueue`.
-- Cloud Function (Admin SDK) تقرأ المستند وتحذف مستخدم Auth بواسطة `uid` أو `email`.
-- ثم تنظّف البيانات المرتبطة بالمستخدم في Firestore (certificates/enrollments/notifications/quizAttempts/user_courses/instructorApplications... إلخ).
-- بعدها تحدّث المستند إلى `status: done` أو `status: failed`.
-
-## مثال Node.js (Functions v2)
-
-```js
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 
@@ -18,29 +5,39 @@ admin.initializeApp();
 
 const db = admin.firestore();
 
-async function deleteWhere(collectionName, field, value) {
-  const snap = await db.collection(collectionName).where(field, "==", value).get();
-  if (snap.empty) return 0;
-
-  // Batch delete (مع تقسيم للحد الأقصى 500 عملية لكل batch)
+// Batch delete مع مراعاة حد 500 عملية لكل batch (نستخدم 450 كهوامش)
+async function batchDeleteDocs(docRefs) {
   let deleted = 0;
   let batch = db.batch();
   let opCount = 0;
 
-  for (const docSnap of snap.docs) {
-    batch.delete(docSnap.ref);
+  for (const ref of docRefs) {
+    batch.delete(ref);
     deleted += 1;
     opCount += 1;
 
-    if (opCount === 450) {
+    if (opCount >= 450) {
       await batch.commit();
       batch = db.batch();
       opCount = 0;
     }
   }
 
-  if (opCount > 0) await batch.commit();
+  if (opCount > 0) {
+    await batch.commit();
+  }
+
   return deleted;
+}
+
+async function deleteWhere(collectionName, field, value) {
+  if (!value) return 0;
+
+  const snap = await db.collection(collectionName).where(field, "==", value).get();
+  if (snap.empty) return 0;
+
+  const refs = snap.docs.map((d) => d.ref);
+  return await batchDeleteDocs(refs);
 }
 
 async function purgeLinkedCollections(uid) {
@@ -62,13 +59,25 @@ async function purgeLinkedCollections(uid) {
 }
 
 exports.processAuthDeletionQueue = onDocumentCreated(
-  "authDeletionQueue/{jobId}",
+  {
+    document: "authDeletionQueue/{jobId}",
+    region: "us-central1"
+  },
   async (event) => {
     const snap = event.data;
     if (!snap) return;
 
     const job = snap.data() || {};
     const ref = snap.ref;
+
+    const attempts = Number(job.attempts || 0) + 1;
+
+    // علامة بداية المعالجة
+    await ref.update({
+      attempts,
+      status: "processing",
+      processingAt: admin.firestore.FieldValue.serverTimestamp()
+    });
 
     try {
       let uid = job.uid || null;
@@ -82,8 +91,24 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         throw new Error("No uid/email provided in job");
       }
 
-      // 1) حذف المستخدم من Firebase Authentication
-      await admin.auth().deleteUser(uid);
+      // 1) حذف المستخدم من Firebase Authentication (non-fatal لو user-not-found)
+      let authDeleted = false;
+      let authDeletionError = null;
+
+      try {
+        await admin.auth().deleteUser(uid);
+        authDeleted = true;
+      } catch (authError) {
+        if (authError?.code === "auth/user-not-found") {
+          authDeleted = true; // اعتبرها OK (idempotent)
+        } else {
+          authDeleted = false;
+          authDeletionError = String(authError?.message || authError);
+          // هنا نقرر: بما أن المطلوب "يحذف من Auth و Firestore"
+          // نخليها فشل واضح بدل ما نكمل ونكتب done
+          throw new Error(`Auth deletion failed: ${authDeletionError}`);
+        }
+      }
 
       // 2) تنظيف البيانات المرتبطة بالمستخدم في Firestore
       const cleanup = await purgeLinkedCollections(uid);
@@ -101,7 +126,9 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         status: "done",
         processedAt: admin.firestore.FieldValue.serverTimestamp(),
         deletedUid: uid,
-        cleanup
+        cleanup,
+        authDeleted,
+        authDeletionError
       });
     } catch (error) {
       await ref.update({

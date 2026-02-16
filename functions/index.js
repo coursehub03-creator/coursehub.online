@@ -32,6 +32,7 @@ async function assertAdmin(request) {
   throw new HttpsError("permission-denied", "Only admins can delete users.");
 }
 
+// حذف Query على دفعات (لتفادي limits)
 async function deleteQueryInChunks(queryRef, chunkSize = 300) {
   let deleted = 0;
 
@@ -147,7 +148,7 @@ async function hardDeleteUserEverywhere(uid, email) {
     throw new Error("No uid/email provided or user not found in Auth.");
   }
 
-  // 1) تنظيف Firestore أولًا (كما في codex)
+  // 1) تنظيف Firestore أولًا
   const cleanupResult = await cleanupUserData(resolvedUid, email || null);
 
   // 2) حذف Auth بشكل non-fatal — لا نفشل العملية لو تعذر Auth
@@ -159,8 +160,9 @@ async function hardDeleteUserEverywhere(uid, email) {
     authDeleted = true;
   } catch (authError) {
     if (authError?.code === "auth/user-not-found") {
-      authDeleted = true;
+      authDeleted = true; // idempotent
     } else {
+      authDeleted = false;
       authDeletionError = String(authError?.message || authError);
     }
   }
@@ -229,11 +231,14 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         status: "done",
         deletedUid: result.uid,
         deletedDocsCount: result.deletedDocsCount,
+
         // (اختياري) تفصيل التنظيف للتتبع
         cleanupBreakdown: result.cleanupBreakdown,
+
         // (اختياري) حالة حذف Auth
         authDeleted: result.authDeleted,
         authDeletionError: result.authDeletionError,
+
         processedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
