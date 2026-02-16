@@ -1,7 +1,9 @@
 import { db } from "/js/firebase-config.js";
 import {
   collection,
-  getDocs
+  getDocs,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const grid = document.getElementById("testsGrid");
@@ -11,7 +13,8 @@ async function loadTests() {
   if (!grid || !emptyState) return;
 
   try {
-    const snapshot = await getDocs(collection(db, "courses"));
+    const publishedCoursesQuery = query(collection(db, "courses"), where("status", "==", "published"));
+    const snapshot = await getDocs(publishedCoursesQuery);
     const coursesWithQuizzes = [];
 
     snapshot.forEach((docSnap) => {
