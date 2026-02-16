@@ -1,3 +1,6 @@
+// Cloud Function لحذف مستخدمي Firebase Authentication من `authDeletionQueue`
+// Functions v2 - Firestore Trigger
+
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 
@@ -91,7 +94,7 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         throw new Error("No uid/email provided in job");
       }
 
-      // 1) حذف المستخدم من Firebase Authentication (non-fatal لو user-not-found)
+      // 1) حذف المستخدم من Firebase Authentication (idempotent لو user-not-found)
       let authDeleted = false;
       let authDeletionError = null;
 
@@ -100,10 +103,11 @@ exports.processAuthDeletionQueue = onDocumentCreated(
         authDeleted = true;
       } catch (authError) {
         if (authError?.code === "auth/user-not-found") {
-          authDeleted = true; // idempotent
+          authDeleted = true; // اعتبرها OK
         } else {
           authDeleted = false;
           authDeletionError = String(authError?.message || authError);
+
           // بما أن الهدف حذف Auth + Firestore: نخليها فشل واضح
           throw new Error(`Auth deletion failed: ${authDeletionError}`);
         }

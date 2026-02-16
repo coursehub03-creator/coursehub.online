@@ -22,7 +22,7 @@ import {
   collection
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 /* =========================
    Const / i18n
@@ -537,7 +537,7 @@ if (registerForm) {
           return;
         }
 
-        const workProofUrl = await getDownloadURL(fileRef);
+        const workProofPath = fileRef.fullPath;
 
         const instructorData = {
           uid: createdUser.uid,
@@ -551,7 +551,8 @@ if (registerForm) {
           experienceYears: Number(document.getElementById("regExperience")?.value || 0),
           bio: document.getElementById("regBio")?.value?.trim() || "",
           termsAcceptedAt: serverTimestamp(),
-          workProofUrl,
+          workProofPath,
+          workProofUrl: "",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };

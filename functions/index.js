@@ -65,8 +65,7 @@ async function deleteDocIfExists(collectionName, docId) {
 
 /**
  * تنظيف شامل:
- * - يحذف من عدة collections
- * - يدور على عدة حقول (uid/userId/email/userEmail) لتفادي اختلافات البيانات القديمة/الجديدة
+ * - يدور على عدة حقول (uid/userId/email/userEmail) لتفادي اختلافات البيانات
  * - إضافات: studentProgress + حذف docId مباشر من user_courses
  * - يحذف users/{uid} وما تحته باستخدام recursiveDelete
  * - لو كان الإيميل موجودًا: يمسح أي users docs أخرى بنفس الإيميل (إن وجدت)
@@ -151,7 +150,7 @@ async function hardDeleteUserEverywhere(uid, email) {
   // 1) تنظيف Firestore أولًا
   const cleanupResult = await cleanupUserData(resolvedUid, email || null);
 
-  // 2) حذف Auth بشكل non-fatal — لا نفشل العملية لو تعذر Auth
+  // 2) حذف Auth بشكل non-fatal — لا نفشل العملية لو تعذر Auth (لكن نُرجع الحالة)
   let authDeleted = false;
   let authDeletionError = null;
 

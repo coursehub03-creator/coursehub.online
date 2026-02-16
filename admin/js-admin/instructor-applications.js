@@ -10,8 +10,39 @@ import {
   addDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const list = document.getElementById("applicationsList");
+const storage = getStorage();
+
+async function queueEmail(payload) {
+  try {
+    await addDoc(collection(db, "emailQueue"), {
+      ...payload,
+      createdAt: serverTimestamp(),
+      status: "pending"
+    });
+  } catch (error) {
+    if (error?.code === "permission-denied") {
+      console.warn("emailQueue write blocked by Firestore rules:", error);
+      return;
+    }
+    throw error;
+  }
+}
+
+
+async function resolveWorkProofUrl(app) {
+  if (app.workProofUrl) return app.workProofUrl;
+  if (!app.workProofPath) return "";
+
+  try {
+    return await getDownloadURL(storageRef(storage, app.workProofPath));
+  } catch (error) {
+    console.warn("Failed to resolve workProof URL:", error);
+    return "";
+  }
+}
 
 async function queueEmail(payload) {
   try {
@@ -54,7 +85,13 @@ function renderCard(app){
 async function loadApplications(){
   const q = query(collection(db,"instructorApplications"), where("applicationStatus","==","pending"));
   const snap = await getDocs(q);
-  const apps = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const apps = await Promise.all(
+    snap.docs.map(async (d) => {
+      const data = { id: d.id, ...d.data() };
+      const workProofUrl = await resolveWorkProofUrl(data);
+      return { ...data, workProofUrl };
+    })
+  );
   if(!apps.length){
     list.innerHTML = "<p>لا توجد طلبات معلقة حاليًا.</p>";
     return;
