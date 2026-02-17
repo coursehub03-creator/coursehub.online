@@ -48,7 +48,6 @@
 
 .file-upload{display:grid;gap:8px}
 
-/* Assessment builder (questions) */
 .assessment-questions{display:grid;gap:10px;margin-bottom:10px}
 .question-card{border:1px solid #dbe3f1;background:#f8fbff;border-radius:12px;padding:10px;display:grid;gap:8px}
 .question-head{display:flex;gap:8px;align-items:center}
@@ -56,7 +55,6 @@
 .question-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .question-options input{padding:9px 10px;border:1px solid #d1d5db;border-radius:8px}
 .question-correct{display:flex;align-items:center;gap:8px;color:#334155;font-size:14px}
-
 .submit-actions{display:flex;gap:8px;margin-top:12px}
 .btn{background:#0f3fb8;color:#fff;padding:11px 16px}
 .btn.secondary{background:#334155}

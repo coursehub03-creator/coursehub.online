@@ -84,6 +84,21 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+
+    // طلبات دورات الأساتذة (قبل اعتماد المشرف)
+    match /instructorCourseSubmissions/{submissionId} {
+      // الأستاذ يرسل طلبه لنفسه فقط
+      allow create: if isSignedIn()
+                    && request.resource.data.instructorId == request.auth.uid;
+
+      // الأستاذ يقرأ طلباته + الأدمن يقرأ الجميع
+      allow get: if isAdmin() || (isSignedIn() && resource.data.instructorId == request.auth.uid);
+      allow list: if isAdmin() || isSignedIn();
+
+      // التحديث/الحذف للأدمن (قرار قبول/رفض)
+      allow update, delete: if isAdmin();
+    }
+
     // طابور البريد
     match /emailQueue/{emailId} {
       allow get, list, create, update, delete: if isAdmin();
