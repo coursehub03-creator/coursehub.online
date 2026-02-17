@@ -6,8 +6,11 @@ import {
   doc,
   deleteDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const adminUser = await protectAdmin();
@@ -18,6 +21,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusFilter = document.getElementById("course-status-filter");
   const searchInput = document.getElementById("course-search");
   const categoryFilter = document.getElementById("course-category-filter");
+  const submissionsTbody = document.getElementById("instructor-submissions-list");
+
+  const functions = getFunctions(undefined, "us-central1");
+  const reviewInstructorCourseSubmission = httpsCallable(functions, "reviewInstructorCourseSubmission");
 
   if (!addBtn || !tbody) {
     console.error("عناصر الصفحة غير موجودة");
@@ -105,6 +112,77 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderCourses(filtered);
   };
 
+
+
+  async function loadInstructorSubmissions() {
+    if (!submissionsTbody) return;
+    submissionsTbody.innerHTML = "<tr><td colspan='6'>جارٍ تحميل طلبات الأساتذة...</td></tr>";
+
+    try {
+      const snap = await getDocs(query(collection(db, "instructorCourseSubmissions"), orderBy("createdAt", "desc")));
+      const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      if (!items.length) {
+        submissionsTbody.innerHTML = "<tr><td colspan='6'>لا توجد طلبات من الأساتذة حاليًا.</td></tr>";
+        return;
+      }
+
+      submissionsTbody.innerHTML = items
+        .map((item) => {
+          const lessons = (item.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+          const questions = item.assessmentQuestions?.length || 0;
+          const status = item.status || "pending";
+          const statusText = status === "approved" ? "معتمد" : status === "rejected" ? "مرفوض" : "قيد المراجعة";
+          return `
+          <tr>
+            <td>${item.title || "-"}</td>
+            <td>${item.instructorEmail || "-"}</td>
+            <td>${lessons} درس / ${questions} سؤال</td>
+            <td>${statusText}</td>
+            <td><input type="text" class="submission-reason" data-id="${item.id}" placeholder="سبب الرفض (اختياري)" /></td>
+            <td>
+              <button type="button" class="btn success small submission-approve" data-id="${item.id}">اعتماد</button>
+              <button type="button" class="btn outline small submission-reject" data-id="${item.id}">رفض</button>
+            </td>
+          </tr>
+          `;
+        })
+        .join("");
+    } catch (error) {
+      console.error("فشل تحميل طلبات دورات الأساتذة:", error);
+      submissionsTbody.innerHTML = "<tr><td colspan='6'>تعذر تحميل الطلبات.</td></tr>";
+    }
+  }
+
+  submissionsTbody?.addEventListener("click", async (event) => {
+    const approveBtn = event.target.closest(".submission-approve");
+    const rejectBtn = event.target.closest(".submission-reject");
+    if (!approveBtn && !rejectBtn) return;
+
+    const id = (approveBtn || rejectBtn)?.dataset.id;
+    if (!id) return;
+
+    const reasonInput = submissionsTbody.querySelector(`.submission-reason[data-id="${id}"]`);
+    const reason = reasonInput?.value?.trim() || "";
+
+    try {
+      if (approveBtn) {
+        await reviewInstructorCourseSubmission({ submissionId: id, decision: "approve" });
+      } else {
+        if (!reason) {
+          alert("أدخل سبب الرفض قبل المتابعة.");
+          return;
+        }
+        await reviewInstructorCourseSubmission({ submissionId: id, decision: "reject", reason });
+      }
+
+      await loadInstructorSubmissions();
+      await loadCourses();
+    } catch (error) {
+      console.error("تعذر مراجعة الطلب:", error);
+      alert("حدث خطأ أثناء مراجعة طلب الأستاذ.");
+    }
+  });
   async function setCourseStatus(courseId, status) {
     const payload = {
       status,
@@ -187,6 +265,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   await loadCourses();
+  await loadInstructorSubmissions();
 
   statusFilter?.addEventListener("change", applyFilters);
   categoryFilter?.addEventListener("change", applyFilters);
