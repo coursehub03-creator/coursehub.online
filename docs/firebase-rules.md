@@ -197,9 +197,9 @@ service firebase.storage {
     // ملفات الدورات المرفوعة من الأستاذ قبل مراجعة المشرف
     // المسار المستخدم في الواجهة: instructor-courses/{uid}/...
     match /instructor-courses/{uid}/{allPaths=**} {
-
-      // ✅ حل مشكلة 403: اسمح لأي مستخدم مسجل دخول بالرفع داخل مجلده فقط
-      // حتى لو لم تكن custom claims (role/status) موجودة على التوكن بعد
+      // السماح لأي مستخدم مسجل دخول بالرفع داخل مجلده فقط.
+      // هذا يمنع خطأ 403 (storage/unauthorized) في لوحة الأستاذ
+      // حتى لو لم تكن custom claims (role/status) مضافة على token بعد.
       allow create, update, delete: if isSignedIn() && request.auth.uid == uid;
 
       // القراءة لصاحب الملفات نفسه أو الأدمن

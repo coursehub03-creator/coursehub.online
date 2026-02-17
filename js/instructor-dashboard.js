@@ -149,6 +149,7 @@ function initDynamicLists() {
     if (btn && !btn.dataset.bound) {
       btn.addEventListener("click", () => {
         container.appendChild(createDynamicRow());
+        renderPreview();
       });
       btn.dataset.bound = "1";
     }
@@ -190,6 +191,7 @@ function createModuleCard(data = {}) {
 
   card.querySelector(".add-lesson-btn")?.addEventListener("click", () => {
     lessonsContainer?.appendChild(createLessonRow());
+    renderPreview();
   });
 
   card.querySelector(".module-remove")?.addEventListener("click", () => {
@@ -222,7 +224,10 @@ function initModules() {
   if (!modulesContainer || !addModuleBtn) return;
 
   if (!addModuleBtn.dataset.bound) {
-    addModuleBtn.addEventListener("click", () => modulesContainer.appendChild(createModuleCard()));
+    addModuleBtn.addEventListener("click", () => {
+      modulesContainer.appendChild(createModuleCard());
+      renderPreview();
+    });
     addModuleBtn.dataset.bound = "1";
   }
 
@@ -271,7 +276,10 @@ function initAssessmentBuilder() {
   if (!container || !addBtn) return;
 
   if (!addBtn.dataset.bound) {
-    addBtn.addEventListener("click", () => container.appendChild(createQuestionCard()));
+    addBtn.addEventListener("click", () => {
+      container.appendChild(createQuestionCard());
+      renderPreview();
+    });
     addBtn.dataset.bound = "1";
   }
 
@@ -642,12 +650,12 @@ onAuthStateChanged(auth, async (user) => {
 
         const storageDenied =
           err?.code === "storage/unauthorized" ||
-          /storage\/unauthorized/i.test(err?.code || "") ||
-          /403/i.test(err?.message || "");
+          /storage\/unauthorized/i.test(String(err?.code || "")) ||
+          /403/i.test(String(err?.message || ""));
 
         const denied =
           err?.code === "permission-denied" ||
-          /Missing or insufficient permissions/i.test(err?.message || "");
+          /Missing or insufficient permissions/i.test(String(err?.message || ""));
 
         if (storageDenied) {
           setStatus(
