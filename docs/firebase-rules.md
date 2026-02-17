@@ -191,7 +191,7 @@ service firebase.storage {
       return isAdminByClaim() || isAdminByEmail();
     }
 
-    // ملفات الدورات
+    // ملفات الدورات العامة (يرفعها الأدمن فقط)
     match /courses/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -199,7 +199,6 @@ service firebase.storage {
 
     // ملفات إثبات العمل للأساتذة (PDF)
     match /instructor-applications/{uid}/{fileName} {
-      // المستخدم يرفع ملفه لنفس uid فقط وبنوع PDF
       allow write: if isSignedIn()
                    && request.auth.uid == uid
                    && (
@@ -207,7 +206,6 @@ service firebase.storage {
                         || fileName.matches('(?i).*\\.pdf$')
                       );
 
-      // القراءة للأدمن فقط
       allow read: if isAdmin();
     }
 
