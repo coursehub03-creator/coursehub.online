@@ -734,6 +734,7 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "/instructor-pending.html";
     return;
   }
+}
 
   currentInstructorUid = user.uid;
 
@@ -868,5 +869,592 @@ onAuthStateChanged(auth, async (user) => {
         setStatus("❌ تعذر إرسال الدورة. تحقق من الملفات وحاول مرة أخرى.", true);
       }
     }
+
+    if (!container.children.length) container.appendChild(createDynamicRow());
   });
+}
+
+function createLessonRow(data = {}) {
+  const row = document.createElement("div");
+  row.className = "lesson-row";
+  row.innerHTML = `
+    <input type="text" class="lesson-title" placeholder="عنوان الدرس" value="${esc(data.title || "")}" />
+    <input type="number" class="lesson-duration" min="1" placeholder="الدقائق" value="${data.duration || ""}" />
+    <button type="button" class="icon-btn" title="حذف"><i class="fa-solid fa-trash"></i></button>
+  `;
+  row.querySelector(".icon-btn")?.addEventListener("click", () => {
+    row.remove();
+    renderPreview();
+  });
+  row.querySelectorAll("input").forEach((el) => el.addEventListener("input", renderPreview));
+  return row;
+}
+
+function createModuleCard(data = {}) {
+  const card = document.createElement("div");
+  card.className = "module-card";
+  card.innerHTML = `
+    <div class="module-head">
+      <input type="text" class="module-title" placeholder="اسم الوحدة" value="${esc(data.title || "")}" />
+      <button type="button" class="btn ghost add-lesson-btn"><i class="fa-solid fa-plus"></i> إضافة درس</button>
+      <button type="button" class="icon-btn module-remove" title="حذف الوحدة"><i class="fa-solid fa-trash"></i></button>
+    </div>
+    <div class="module-lessons"></div>
+  `;
+
+  const lessonsContainer = card.querySelector(".module-lessons");
+  (data.lessons || [{}]).forEach((lesson) => lessonsContainer?.appendChild(createLessonRow(lesson)));
+
+  card.querySelector(".add-lesson-btn")?.addEventListener("click", () => {
+    lessonsContainer?.appendChild(createLessonRow());
+    renderPreview();
+  });
+
+  card.querySelector(".module-remove")?.addEventListener("click", () => {
+    card.remove();
+    renderPreview();
+  });
+
+  card.querySelector(".module-title")?.addEventListener("input", renderPreview);
+
+  return card;
+}
+
+function gatherModules() {
+  return [...document.querySelectorAll(".module-card")]
+    .map((moduleCard) => {
+      const title = moduleCard.querySelector(".module-title")?.value?.trim() || "";
+      const lessons = [...moduleCard.querySelectorAll(".lesson-row")]
+        .map((row) => ({
+          title: row.querySelector(".lesson-title")?.value?.trim() || "",
+          duration: Number(row.querySelector(".lesson-duration")?.value || 0)
+        }))
+        .filter((l) => l.title);
+      return { title, lessons };
+    })
+    .filter((m) => m.title || m.lessons.length);
+}
+
+function initModules() {
+  const modulesContainer = document.getElementById("modulesContainer");
+  const addModuleBtn = document.getElementById("addModuleBtn");
+  if (!modulesContainer || !addModuleBtn) return;
+
+  if (!addModuleBtn.dataset.bound) {
+    addModuleBtn.addEventListener("click", () => {
+      modulesContainer.appendChild(createModuleCard());
+      renderPreview();
+    });
+    addModuleBtn.dataset.bound = "1";
+  }
+
+  if (!modulesContainer.children.length) modulesContainer.appendChild(createModuleCard());
+}
+
+function createQuestionCard(data = {}) {
+  const card = document.createElement("div");
+  card.className = "question-card";
+  card.innerHTML = `
+    <div class="question-head">
+      <input type="text" class="question-title" placeholder="نص السؤال" value="${esc(data.question || "")}" />
+      <button type="button" class="icon-btn question-remove" title="حذف السؤال"><i class="fa-solid fa-trash"></i></button>
+    </div>
+    <div class="question-options">
+      <input type="text" class="q-option" placeholder="الخيار 1" value="${esc(data.options?.[0] || "")}">
+      <input type="text" class="q-option" placeholder="الخيار 2" value="${esc(data.options?.[1] || "")}">
+      <input type="text" class="q-option" placeholder="الخيار 3" value="${esc(data.options?.[2] || "")}">
+      <input type="text" class="q-option" placeholder="الخيار 4" value="${esc(data.options?.[3] || "")}">
+    </div>
+    <label class="question-correct">الإجابة الصحيحة:
+      <select class="question-correct-index">
+        <option value="0" ${Number(data.correctIndex || 0) === 0 ? "selected" : ""}>الخيار 1</option>
+        <option value="1" ${Number(data.correctIndex || 0) === 1 ? "selected" : ""}>الخيار 2</option>
+        <option value="2" ${Number(data.correctIndex || 0) === 2 ? "selected" : ""}>الخيار 3</option>
+        <option value="3" ${Number(data.correctIndex || 0) === 3 ? "selected" : ""}>الخيار 4</option>
+      </select>
+    </label>
+  `;
+
+  card.querySelector(".question-remove")?.addEventListener("click", () => {
+    card.remove();
+    renderPreview();
+  });
+
+  card.querySelectorAll("input,select").forEach((el) => el.addEventListener("input", renderPreview));
+  return card;
+}
+
+function initAssessmentBuilder() {
+  const container = document.getElementById("assessmentQuestions");
+  const addBtn = document.getElementById("addQuestionBtn");
+  if (!container || !addBtn) return;
+
+  if (!addBtn.dataset.bound) {
+    addBtn.addEventListener("click", () => {
+      container.appendChild(createQuestionCard());
+      renderPreview();
+    });
+    addBtn.dataset.bound = "1";
+  }
+
+  if (!container.children.length) container.appendChild(createQuestionCard());
+}
+
+function gatherAssessmentQuestions() {
+  return [...document.querySelectorAll(".question-card")]
+    .map((card) => {
+      const question = card.querySelector(".question-title")?.value?.trim() || "";
+      const options = [...card.querySelectorAll(".q-option")].map((opt) => opt.value.trim());
+      const correctIndex = Number(card.querySelector(".question-correct-index")?.value || 0);
+      return { question, options, correctIndex };
+    })
+    .filter((q) => q.question && q.options.filter(Boolean).length >= 2);
+}
+
+/* ===== preview ===== */
+function renderPreview() {
+  const previewTitle = document.getElementById("previewTitle");
+  const previewDescription = document.getElementById("previewDescription");
+  const previewMeta = document.getElementById("previewMeta");
+  const previewObjectives = document.getElementById("previewObjectives");
+  const previewModules = document.getElementById("previewModules");
+  const previewCategoryTag = document.getElementById("previewCategoryTag");
+
+  const title = document.getElementById("courseTitle")?.value?.trim() || "";
+  const description = document.getElementById("courseDescription")?.value?.trim() || "";
+  const category = document.getElementById("courseCategory")?.value?.trim() || "";
+  const level = document.getElementById("courseLevel")?.value || "";
+  const language = document.getElementById("courseLanguage")?.value || "";
+  const duration = document.getElementById("courseDuration")?.value || "";
+  const price = document.getElementById("coursePrice")?.value || "";
+
+  if (previewTitle) previewTitle.textContent = title || "عنوان الدورة";
+  if (previewDescription) previewDescription.textContent = description || "سيظهر وصف الدورة هنا بعد إدخاله.";
+  if (previewCategoryTag) previewCategoryTag.textContent = category || "تصنيف الدورة";
+
+  if (previewMeta) {
+    const modules = gatherModules();
+    const lessonsCount = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+    const questionsCount = gatherAssessmentQuestions().length;
+
+    const chips = [
+      category ? `التصنيف: ${category}` : "",
+      level ? `المستوى: ${level}` : "",
+      language ? `اللغة: ${language}` : "",
+      duration ? `المدة: ${duration} ساعة` : "",
+      price ? `السعر: ${price}$` : "",
+      `الدروس: ${lessonsCount}`,
+      `الأسئلة: ${questionsCount}`
+    ].filter(Boolean);
+
+    previewMeta.innerHTML = chips.map((chip) => `<span>${chip}</span>`).join("");
+  }
+
+  if (previewObjectives) {
+    const objectives = getListValues("objectivesList");
+    previewObjectives.innerHTML = objectives.length
+      ? objectives.map((obj) => `<li>${obj}</li>`).join("")
+      : "<li>لا توجد أهداف مضافة بعد.</li>";
+  }
+
+  if (previewModules) {
+    const modules = gatherModules();
+    previewModules.innerHTML = modules.length
+      ? modules
+          .map(
+            (m, index) => `
+            <div class="preview-module">
+              <h5>الوحدة ${index + 1}: ${m.title || "بدون عنوان"}</h5>
+              <ul>
+                ${
+                  m.lessons.length
+                    ? m.lessons
+                        .map((l) => `<li>${l.title}${l.duration ? ` (${l.duration} دقيقة)` : ""}</li>`)
+                        .join("")
+                    : "<li>لا توجد دروس داخل هذه الوحدة بعد.</li>"
+                }
+              </ul>
+            </div>
+          `
+          )
+          .join("")
+      : "<p>لا توجد وحدات بعد.</p>";
+  }
+}
+
+function bindPreviewInputs() {
+  ["courseTitle", "courseDescription", "courseCategory", "courseLevel", "courseLanguage", "courseDuration", "coursePrice"]
+    .forEach((id) => {
+      document.getElementById(id)?.addEventListener("input", renderPreview);
+      document.getElementById(id)?.addEventListener("change", renderPreview);
+    });
+}
+
+/* ===== cover ===== */
+function setupCoverPreview() {
+  if (coverInput && !coverInput.dataset.bound) {
+    coverInput.addEventListener("change", () => {
+      const file = coverInput.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      if (coverPreview) coverPreview.src = url;
+      if (previewCover) previewCover.src = url;
+    });
+    coverInput.dataset.bound = "1";
+  }
+
+  if (coverUrlInput && !coverUrlInput.dataset.bound) {
+    coverUrlInput.addEventListener("input", () => {
+      const url = coverUrlInput.value.trim();
+      if (!url) return;
+      if (coverPreview) coverPreview.src = url;
+      if (previewCover) previewCover.src = url;
+    });
+    coverUrlInput.dataset.bound = "1";
+  }
+}
+
+/* ===== draft save/load (local + cloud) ===== */
+async function saveDraft() {
+  const payload = {
+    title: document.getElementById("courseTitle")?.value || "",
+    titleEn: document.getElementById("courseTitleEn")?.value || "",
+    category: document.getElementById("courseCategory")?.value || "",
+    price: document.getElementById("coursePrice")?.value || "",
+    level: document.getElementById("courseLevel")?.value || "",
+    language: document.getElementById("courseLanguage")?.value || "",
+    duration: document.getElementById("courseDuration")?.value || "",
+    difficulty: document.getElementById("courseDifficulty")?.value || "",
+    description: document.getElementById("courseDescription")?.value || "",
+    imageUrl: document.getElementById("courseImageUrl")?.value || "",
+    objectives: getListValues("objectivesList"),
+    requirements: getListValues("requirementsList"),
+    outcomes: getListValues("outcomesList"),
+    modules: gatherModules(),
+    assessmentQuestions: gatherAssessmentQuestions(),
+    updatedAt: new Date().toISOString()
+  };
+
+  // 1) local
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+
+  // 2) cloud (اختياري حسب rules)
+  if (currentInstructorUid) {
+    try {
+      await setDoc(
+        doc(db, "instructorCourseDrafts", currentInstructorUid),
+        { ...payload, instructorId: currentInstructorUid, savedAt: serverTimestamp() },
+        { merge: true }
+      );
+    } catch (error) {
+      console.warn("Cloud draft save failed:", error);
+    }
+  }
+
+  setStatus("✅ تم حفظ المسودة (محليًا + سحابيًا لحسابك).");
+}
+
+async function loadDraft(uid) {
+  let draft = null;
+
+  // 1) local first
+  try {
+    draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+  } catch {
+    draft = null;
+  }
+
+  // 2) cloud fallback
+  if (!draft && uid) {
+    try {
+      const cloudDraft = await getDoc(doc(db, "instructorCourseDrafts", uid));
+      if (cloudDraft.exists()) draft = cloudDraft.data();
+    } catch (error) {
+      console.warn("Could not load cloud draft:", error);
+    }
+  }
+
+  if (!draft) return;
+  fillBuilderFromSubmission(draft);
+  setStatus("تم استعادة آخر مسودة محفوظة.");
+}
+
+/* ===== upload ===== */
+async function uploadFiles(user) {
+  let imageUrl = "";
+  let outlineUrl = "";
+
+  const imageFile = document.getElementById("courseImage")?.files?.[0] || null;
+  const imageUrlInput = document.getElementById("courseImageUrl")?.value?.trim() || "";
+  const outlineFile = document.getElementById("courseOutline")?.files?.[0] || null;
+
+  if (imageFile) {
+    const imageRef = ref(storage, `instructor-courses/${user.uid}/cover-${Date.now()}-${imageFile.name}`);
+    await uploadBytes(imageRef, imageFile);
+    imageUrl = await getDownloadURL(imageRef);
+  } else if (imageUrlInput) {
+    imageUrl = imageUrlInput;
+  }
+
+  if (outlineFile) {
+    const outlineRef = ref(storage, `instructor-courses/${user.uid}/outline-${Date.now()}-${outlineFile.name}`);
+    await uploadBytes(outlineRef, outlineFile);
+    outlineUrl = await getDownloadURL(outlineRef);
+  }
+
+  return { imageUrl, outlineUrl };
+}
+
+/* ===== fill builder from submission/draft ===== */
+function fillBuilderFromSubmission(item = {}) {
+  const setVal = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value ?? "";
+  };
+
+  setVal("courseTitle", item.title || "");
+  setVal("courseTitleEn", item.titleEn || "");
+  setVal("courseCategory", item.category || "");
+  setVal("coursePrice", item.price || "");
+  setVal("courseLevel", item.level || "مبتدئ");
+  setVal("courseLanguage", item.language || "العربية");
+  setVal("courseDuration", item.durationHours ?? item.duration ?? "");
+  setVal("courseDifficulty", item.difficulty || "متوازن");
+  setVal("courseDescription", item.description || "");
+  setVal("courseImageUrl", item.imageUrl || item.image || "");
+
+  const loadRows = (containerId, values = []) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+    (values.length ? values : [""]).forEach((v) => container.appendChild(createDynamicRow(v)));
+  };
+
+  loadRows("objectivesList", item.objectives || []);
+  loadRows("requirementsList", item.requirements || []);
+  loadRows("outcomesList", item.outcomes || []);
+
+  const modulesContainer = document.getElementById("modulesContainer");
+  if (modulesContainer) {
+    modulesContainer.innerHTML = "";
+    const modules = Array.isArray(item.modules) && item.modules.length ? item.modules : [{}];
+    modules.forEach((module) => modulesContainer.appendChild(createModuleCard(module)));
+  }
+
+  const questionsContainer = document.getElementById("assessmentQuestions");
+  if (questionsContainer) {
+    questionsContainer.innerHTML = "";
+    const questions =
+      Array.isArray(item.assessmentQuestions) && item.assessmentQuestions.length ? item.assessmentQuestions : [{}];
+    questions.forEach((q) => questionsContainer.appendChild(createQuestionCard(q)));
+  }
+
+  const image = item.image || item.imageUrl || "";
+  if (image) {
+    if (coverPreview) coverPreview.src = image;
+    if (previewCover) previewCover.src = image;
+  }
+
+  renderPreview();
+
+  // switch to info tab
+  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelector('.tab-btn[data-tab="info"]')?.classList.add("active");
+  document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+  document.getElementById("tab-info")?.classList.add("active");
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setStatus("تم تحميل بيانات الدورة للتعديل.");
+}
+
+/* ===== submit + reset ===== */
+function allReviewChecksMarked() {
+  const checks = [...document.querySelectorAll(".review-check")];
+  return checks.every((check) => check.checked);
+}
+
+function resetBuilderState() {
+  form?.reset();
+
+  ["objectivesList", "requirementsList", "outcomesList", "assessmentQuestions"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  });
+
+  const modulesContainer = document.getElementById("modulesContainer");
+  if (modulesContainer) modulesContainer.innerHTML = "";
+
+  initDynamicLists();
+  initModules();
+  initAssessmentBuilder();
+
+  if (coverPreview) coverPreview.src = "/assets/images/default-course.png";
+  if (previewCover) previewCover.src = "/assets/images/default-course.png";
+
+  document.querySelectorAll(".review-check").forEach((check) => (check.checked = false));
+  renderPreview();
+}
+
+async function submitCourse(user) {
+  if (!allReviewChecksMarked()) {
+    setStatus("⚠️ أكمل قائمة المراجعة قبل إرسال الدورة.", true);
+    return;
+  }
+
+  const title = document.getElementById("courseTitle")?.value?.trim();
+  const description = document.getElementById("courseDescription")?.value?.trim();
+  const category = document.getElementById("courseCategory")?.value?.trim();
+  const modules = gatherModules();
+  const assessmentQuestions = gatherAssessmentQuestions();
+
+  if (!title || !description || !category) {
+    setStatus("يرجى إدخال العنوان + الوصف + التصنيف على الأقل.", true);
+    return;
+  }
+
+  if (!modules.length) {
+    setStatus("أضف وحدة واحدة على الأقل مع درس قبل الإرسال.", true);
+    return;
+  }
+
+  if (assessmentQuestions.length < 2) {
+    setStatus("الحد الأدنى المطلوب هو سؤالان في الاختبار.", true);
+    return;
+  }
+
+  setStatus("جاري رفع الطلب...");
+
+  try {
+    const { imageUrl, outlineUrl } = await uploadFiles(user);
+
+    const payload = {
+      instructorId: user.uid,
+      instructorEmail: user.email || "",
+      title,
+      titleEn: document.getElementById("courseTitleEn")?.value?.trim() || "",
+      description,
+      category,
+      price: Number(document.getElementById("coursePrice")?.value || 0),
+      level: document.getElementById("courseLevel")?.value || "",
+      language: document.getElementById("courseLanguage")?.value || "",
+      durationHours: Number(document.getElementById("courseDuration")?.value || 0),
+      difficulty: document.getElementById("courseDifficulty")?.value || "",
+      objectives: getListValues("objectivesList"),
+      requirements: getListValues("requirementsList"),
+      outcomes: getListValues("outcomesList"),
+      modules,
+      assessmentQuestions,
+      image: imageUrl,
+      outlineUrl
+    };
+
+    try {
+      await submitInstructorCourse(payload);
+    } catch (callableError) {
+      console.error("submitInstructorCourse callable failed:", callableError);
+
+      const code = String(callableError?.code || "");
+      const msg = String(callableError?.message || "");
+      const functionNotReady =
+        code.includes("unavailable") ||
+        code.includes("not-found") ||
+        msg.includes("not-found") ||
+        msg.includes("internal") ||
+        msg.includes("Failed to fetch");
+
+      if (functionNotReady) throw new Error("callable-not-ready");
+      throw callableError;
+    }
+
+    localStorage.removeItem(DRAFT_KEY);
+    setStatus("✅ تم إرسال الدورة للمراجعة بنجاح. ستظهر للمشرف ضمن طلبات المراجعة.");
+    resetBuilderState();
+    await loadSubmissions(user.uid);
+    await loadInstructorDrafts(user.uid);
+    await loadPublishedCourses(user.uid);
+    await loadChat(user.uid);
+  } catch (err) {
+    console.error(err);
+
+    const denied =
+      err?.code === "permission-denied" ||
+      String(err?.message || "").includes("Missing or insufficient permissions");
+
+    const callableNotReady = String(err?.message || "").includes("callable-not-ready");
+
+    if (callableNotReady) {
+      setStatus(
+        "❌ خدمة الإرسال غير جاهزة حالياً. تأكد من نشر آخر نسخة من Cloud Functions وربطها بالمنطقة us-central1 (submitInstructorCourse).",
+        true
+      );
+      return;
+    }
+
+    if (denied) {
+      setStatus(
+        "❌ تم رفض الإرسال بسبب الصلاحيات. تأكد أن Cloud Function منشورة وتتحقق من دور الأستاذ (instructor) وحالته (active).",
+        true
+      );
+      return;
+    }
+
+    setStatus("❌ تعذر إرسال الدورة. تحقق من الملفات وحاول مرة أخرى.", true);
+  }
+}
+
+/* ===== auth gate + init ===== */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "/login.html";
+    return;
+  }
+
+  const profile = await getDoc(doc(db, "users", user.uid));
+  const data = profile.exists() ? profile.data() : null;
+
+  if (!data || data.role !== "instructor" || data.status !== "active") {
+    window.location.href = "/instructor-pending.html";
+    return;
+  }
+
+  currentInstructorUid = user.uid;
+
+  setupTabs();
+  setupWorkspaceNav();
+  initDynamicLists();
+  initModules();
+  initAssessmentBuilder();
+  bindPreviewInputs();
+  setupCoverPreview();
+  initDescriptionToolbar();
+
+  await loadDraft(user.uid);
+  renderPreview();
+
+  // save draft (avoid double bind)
+  const saveBtn = document.getElementById("saveDraftBtn");
+  if (saveBtn && !saveBtn.dataset.bound) {
+    saveBtn.addEventListener("click", saveDraft);
+    saveBtn.dataset.bound = "1";
+  }
+
+  // send chat (avoid double bind)
+  if (sendChatBtn && !sendChatBtn.dataset.bound) {
+    sendChatBtn.addEventListener("click", () => sendChatMessage(user));
+    sendChatBtn.dataset.bound = "1";
+  }
+
+  // submit (avoid double bind)
+  if (form && !form.dataset.bound) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await submitCourse(user);
+    });
+    form.dataset.bound = "1";
+  }
+
+  await loadSubmissions(user.uid);
+  await loadInstructorDrafts(user.uid);
+  await loadPublishedCourses(user.uid);
+  await loadChat(user.uid);
 });
