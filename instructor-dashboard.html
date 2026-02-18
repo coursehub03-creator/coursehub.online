@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/header.css" />
   <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="/admin/css-admin/admin.css" />
   <link rel="stylesheet" href="/css/instructor-dashboard.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -28,13 +29,13 @@
 
     <section class="builder-shell">
       <div class="builder-header">
-        <h2>منشئ الدورات للأستاذ</h2>
-        <p>نفس منهج لوحة الإضافة عند المشرف مع مساحة حرية أكبر في التخطيط والتنسيق قبل الإرسال.</p>
+        <h2>منشئ الدورات الاحترافي</h2>
+        <p>نفس قالب لوحة المشرف تمامًا، مع أدوات كتابة وتحكم أكثر احترافية للأستاذ قبل الإرسال للمراجعة.</p>
       </div>
 
       <div class="builder-tabs" id="instructorBuilderTabs">
         <button class="tab-btn active" type="button" data-tab="info"><i class="fa-solid fa-circle-info"></i><span>معلومات الدورة</span></button>
-        <button class="tab-btn" type="button" data-tab="curriculum"><i class="fa-solid fa-layer-group"></i><span>المنهج والمحتوى</span></button>
+        <button class="tab-btn" type="button" data-tab="curriculum"><i class="fa-solid fa-layer-group"></i><span>الدروس والمحتوى</span></button>
         <button class="tab-btn" type="button" data-tab="preview"><i class="fa-solid fa-eye"></i><span>المعاينة</span></button>
         <button class="tab-btn" type="button" data-tab="submit"><i class="fa-solid fa-paper-plane"></i><span>الإرسال للمراجعة</span></button>
       </div>
@@ -90,7 +91,14 @@
 
             <div class="field-group">
               <label for="courseDescription">وصف الدورة</label>
+              <div class="text-toolbar" id="descriptionToolbar">
+                <button type="button" class="toolbar-btn" data-format="h2">عنوان فرعي</button>
+                <button type="button" class="toolbar-btn" data-format="bold">عريض</button>
+                <button type="button" class="toolbar-btn" data-format="bullet">قائمة</button>
+                <button type="button" class="toolbar-btn" data-format="tip">نصيحة</button>
+              </div>
               <textarea id="courseDescription" rows="5" placeholder="اكتب وصفًا احترافيًا يوضح القيمة التعليمية والفئة المستهدفة" required></textarea>
+              <span class="helper-text">يمكنك استخدام شريط الأدوات لتنسيق النص بسرعة مثل قالب المشرف المتقدم.</span>
             </div>
 
             <div class="form-grid">
@@ -175,18 +183,24 @@
         </div>
 
         <div class="tab-content" id="tab-preview">
-          <div class="builder-card preview-card">
-            <img id="previewCover" src="/assets/images/default-course.png" alt="cover preview" class="preview-cover">
-            <div class="preview-content">
-              <h3 id="previewTitle">عنوان الدورة</h3>
-              <p id="previewDescription">سيظهر وصف الدورة هنا بعد إدخاله.</p>
-              <div class="meta-chips" id="previewMeta"></div>
+          <div class="builder-card course-public-preview">
+            <div class="course-public-hero">
+              <div class="course-public-copy">
+                <span class="course-tag" id="previewCategoryTag">تصنيف الدورة</span>
+                <h3 id="previewTitle">عنوان الدورة</h3>
+                <p id="previewDescription">سيظهر وصف الدورة هنا بعد إدخاله.</p>
+                <div class="meta-chips" id="previewMeta"></div>
+              </div>
+              <img id="previewCover" src="/assets/images/default-course.png" alt="cover preview" class="preview-cover">
+            </div>
+
+            <div class="preview-grid-two">
               <div>
-                <h4>الأهداف</h4>
+                <h4>ماذا سيتعلم الطالب؟</h4>
                 <ul id="previewObjectives"></ul>
               </div>
               <div>
-                <h4>الوحدات والدروس</h4>
+                <h4>خطة الوحدات والدروس</h4>
                 <div id="previewModules" class="preview-modules"></div>
               </div>
             </div>
@@ -204,7 +218,7 @@
             </div>
 
             <div class="submit-actions">
-              <button type="button" class="btn secondary" id="saveDraftBtn">حفظ كمسودة محلية</button>
+              <button type="button" class="btn secondary" id="saveDraftBtn">حفظ في مسودتك الخاصة</button>
               <button type="submit" class="btn">إرسال للمراجعة</button>
             </div>
 
