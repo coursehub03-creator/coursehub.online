@@ -15,7 +15,7 @@ import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/
 
 document.addEventListener("DOMContentLoaded", async () => {
   const adminUser = await protectAdmin();
-  console.log("أدمن مسجل:", adminUser.email);
+  console.log("أدمن مسجل:", adminUser?.email || "-");
 
   const addBtn = document.getElementById("add-course-btn");
   const tbody = document.getElementById("courses-list");
@@ -158,6 +158,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
 
       const coursePayload = {
+        // بيانات الكورس الأساسية
         title: item.title || "",
         titleEn: item.titleEn || "",
         description: item.description || "",
@@ -165,19 +166,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         level: item.level || "",
         language: item.language || "",
         duration: Number(item.durationHours || 0),
+        price: Number(item.price || 0),
 
-        // بنية الكورس حسب مشروعكم (عدلها لو عندكم schema مختلف)
+        // ملفات ومحتوى
         image: item.image || "",
         outlineUrl: item.outlineUrl || "",
         lessons: lessonsFlat,
         modules: modules, // نحتفظ بالهيكل أيضًا
 
+        // ميتا
         status: "draft",
         source: "instructor-submission",
         instructorId: item.instructorId || "",
         instructorEmail: item.instructorEmail || "",
         submissionId: item.id,
-
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
