@@ -105,6 +105,18 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // رسائل المحادثة بين الأستاذ والمشرف
+    match /instructorMessages/{messageId} {
+      allow create: if isSignedIn() && (
+        request.resource.data.senderId == request.auth.uid
+      );
+
+      allow get: if isAdmin()
+                 || (isSignedIn() && resource.data.instructorId == request.auth.uid);
+      allow list: if isAdmin() || isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
     // طابور البريد
     match /emailQueue/{emailId} {
       allow get, list, create, update, delete: if isAdmin();
