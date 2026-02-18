@@ -421,7 +421,7 @@ exports.reviewInstructorCourseSubmission = onCall({ region: "us-central1" }, asy
         },
         passScore: 80
       }))),
-      status: "review",
+      status: "draft",
       source: "instructor-submission",
       instructorId: sub.instructorId || "",
       instructorEmail,
@@ -446,7 +446,7 @@ exports.reviewInstructorCourseSubmission = onCall({ region: "us-central1" }, asy
         to: instructorEmail,
         template: "instructor-course-approved",
         subject: "تمت الموافقة على دورة الأستاذ - CourseHub",
-        message: `تمت الموافقة على دورتك (${sub.title || ""}) ونقلها لقائمة الدورات قيد المراجعة.`
+        message: `تمت الموافقة على دورتك (${sub.title || ""}) وتم حفظها كمسودة لدى المشرف لمراجعتها قبل النشر.`
       }).catch(() => {});
     }
 

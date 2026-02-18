@@ -85,6 +85,12 @@ service cloud.firestore {
     }
 
 
+    // مسودات الدورات الخاصة بالأستاذ (خاصة بكل أستاذ)
+    match /instructorCourseDrafts/{instructorId} {
+      allow get, create, update, delete: if isSignedIn() && request.auth.uid == instructorId;
+      allow list: if isAdmin();
+    }
+
     // طلبات دورات الأساتذة (قبل اعتماد المشرف)
     match /instructorCourseSubmissions/{submissionId} {
       // الأستاذ يرسل طلبه لنفسه فقط
