@@ -7,8 +7,22 @@
 .instructor-kpis div{background:#fff;border:1px solid #dbe3f1;border-radius:12px;padding:12px 16px;text-align:center;min-width:120px}
 .instructor-kpis strong{display:block;font-size:22px;color:#0f3fb8}
 
-.builder-shell{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 18px 45px rgba(15,63,184,.08)}
-.builder-header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.builder-shell{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 18px 45px rgba(15,63,184,.08);
+}
+
+.builder-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+}
 .builder-header h2{margin:0 0 6px;color:#111827;font-size:28px;letter-spacing:-.3px}
 .builder-header p{margin:0 0 16px;color:#6b7280}
 
