@@ -64,20 +64,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const archiveAction = `<button type="button" class="btn outline small archive-btn" data-id="${id}">أرشفة</button>`;
     const deleteAction = `<button type="button" class="delete-btn" data-id="${id}">حذف</button>`;
 
-    if (status === "published") {
-      return `${editAction} ${archiveAction} ${deleteAction}`;
-    }
-
-    if (status === "archived") {
-      return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
-    }
-
-    if (status === "review") {
-      return `${editAction} ${publishAction} ${archiveAction} ${deleteAction}`;
-    }
-
-    // draft + unknown
-    return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
+    if (status === "published") return `${editAction} ${archiveAction} ${deleteAction}`;
+    if (status === "archived") return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
+    if (status === "review") return `${editAction} ${publishAction} ${archiveAction} ${deleteAction}`;
+    return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`; // draft + unknown
   };
 
   const renderCourses = (courses) => {
@@ -92,6 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const startedCount = enrollmentsMap.get(id) || 0;
       const completedCount = completionsMap.get(id) || 0;
       const inProgressCount = Math.max(0, startedCount - completedCount);
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${data.title || "-"}</td>
@@ -102,7 +93,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${inProgressCount}</td>
         <td>${renderCourseActions(id, data.status)}</td>
       `;
-
       tbody.appendChild(tr);
     });
   };
@@ -110,12 +100,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const applyFilters = () => {
     const statusValue = statusFilter?.value || "all";
     const categoryValue = categoryFilter?.value || "all";
-    const query = searchInput?.value.toLowerCase().trim() || "";
+    const qText = searchInput?.value.toLowerCase().trim() || "";
 
     const filtered = allCourses.filter(({ data }) => {
       const statusMatch = statusValue === "all" || data.status === statusValue;
       const categoryMatch = categoryValue === "all" || data.category === categoryValue;
-      const searchMatch = !query || (data.title || "").toLowerCase().includes(query);
+      const searchMatch = !qText || (data.title || "").toLowerCase().includes(qText);
       return statusMatch && categoryMatch && searchMatch;
     });
 
@@ -293,11 +283,125 @@ document.addEventListener("DOMContentLoaded", async () => {
     const payload = {
       status,
       updatedAt: serverTimestamp()
-    };
+    });
+  }
 
+  async function loadInstructorSubmissions() {
+    if (!submissionsTbody) return;
+
+    submissionsTbody.innerHTML = "<tr><td colspan='6'>جارٍ تحميل طلبات الأساتذة...</td></tr>";
+
+    try {
+      const snap = await getDocs(query(collection(db, "instructorCourseSubmissions"), orderBy("createdAt", "desc")));
+      const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      submissionsMap = new Map(items.map((item) => [item.id, item]));
+
+      if (!items.length) {
+        submissionsTbody.innerHTML = "<tr><td colspan='6'>لا توجد طلبات من الأساتذة حاليًا.</td></tr>";
+        return;
+      }
+
+      submissionsTbody.innerHTML = items
+        .map((item) => {
+          const lessons = (item.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+          const questions = item.assessmentQuestions?.length || 0;
+          const status = item.status || "pending";
+
+          const statusText =
+            status === "approved"
+              ? "تم التحويل لمسودة المشرف"
+              : status === "rejected"
+              ? "مرفوض"
+              : "قيد المراجعة";
+
+          const editDraftAction = item.linkedCourseId
+            ? `<a class="btn outline small" href="/admin/edit-course.html?id=${item.linkedCourseId}">تعديل المسودة</a>`
+            : "";
+
+          return `
+          <tr>
+            <td>${item.title || "-"}</td>
+            <td>${item.instructorEmail || "-"}</td>
+            <td>${lessons} درس / ${questions} سؤال</td>
+            <td>${statusText}</td>
+            <td><input type="text" class="submission-reason" data-id="${item.id}" placeholder="سبب الرفض (اختياري)" /></td>
+            <td>
+              <button type="button" class="btn small submission-preview" data-id="${item.id}">معاينة</button>
+              <button type="button" class="btn success small submission-approve" data-id="${item.id}">اعتماد كمسودة</button>
+              <button type="button" class="btn outline small submission-reject" data-id="${item.id}">رفض</button>
+              ${editDraftAction}
+            </td>
+          </tr>
+          `;
+        })
+        .join("");
+    } catch (error) {
+      console.error("فشل تحميل طلبات دورات الأساتذة:", error);
+      submissionsTbody.innerHTML = "<tr><td colspan='6'>تعذر تحميل الطلبات.</td></tr>";
+    }
+  }
+
+  submissionsTbody?.addEventListener("click", async (event) => {
+    const previewBtn = event.target.closest(".submission-preview");
+    const approveBtn = event.target.closest(".submission-approve");
+    const rejectBtn = event.target.closest(".submission-reject");
+
+    if (!previewBtn && !approveBtn && !rejectBtn) return;
+
+    const id = (previewBtn || approveBtn || rejectBtn)?.dataset.id;
+    if (!id) return;
+
+    const item = submissionsMap.get(id);
+    if (!item) return;
+
+    if (previewBtn) {
+      alert(buildSubmissionPreview(item));
+      return;
+    }
+
+    const reasonInput = submissionsTbody.querySelector(`.submission-reason[data-id="${id}"]`);
+    const reason = reasonInput?.value?.trim() || "";
+
+    try {
+      if (approveBtn) {
+        if (shouldUseCallable) {
+          await reviewInstructorCourseSubmission({ submissionId: id, decision: "approve" });
+        } else {
+          await fallbackReviewSubmission(item, "approve");
+        }
+      } else {
+        if (!reason) {
+          alert("أدخل سبب الرفض قبل المتابعة.");
+          return;
+        }
+
+        if (shouldUseCallable) {
+          await reviewInstructorCourseSubmission({ submissionId: id, decision: "reject", reason });
+        } else {
+          await fallbackReviewSubmission(item, "reject", reason);
+        }
+      }
+
+      await loadInstructorSubmissions();
+      await loadCourses();
+    } catch (error) {
+      console.warn("reviewInstructorCourseSubmission failed, trying fallback:", error);
+
+      try {
+        await fallbackReviewSubmission(item, approveBtn ? "approve" : "reject", reason);
+        await loadInstructorSubmissions();
+        await loadCourses();
+      } catch (fallbackError) {
+        console.error("تعذر مراجعة الطلب:", fallbackError);
+        alert("حدث خطأ أثناء مراجعة طلب الأستاذ.");
+      }
+    }
+  });
+
+  async function setCourseStatus(courseId, status) {
+    const payload = { status, updatedAt: serverTimestamp() };
     if (status === "published") payload.publishedAt = serverTimestamp();
     if (status === "archived") payload.archivedAt = serverTimestamp();
-
     await updateDoc(doc(db, "courses", courseId), payload);
   }
 
@@ -305,6 +409,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     tbody.innerHTML = "<tr><td colspan='7'>جارٍ تحميل الدورات...</td></tr>";
 
     try {
+      // enrollments (count unique user per course)
       const enrollmentsSnap = await getDocs(collection(db, "enrollments"));
       const enrollmentKeys = new Set();
       enrollmentsMap = new Map();
@@ -317,6 +422,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         enrollmentsMap.set(data.courseId, (enrollmentsMap.get(data.courseId) || 0) + 1);
       });
 
+      // certificates (completions)
       const completionsSnap = await getDocs(collection(db, "certificates"));
       const completionKeys = new Set();
       completionsMap = new Map();
