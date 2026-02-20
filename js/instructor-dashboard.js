@@ -49,6 +49,7 @@ const submitInstructorCourse = httpsCallable(functions, "submitInstructorCourse"
 
 let currentInstructorUid = "";
 let chatUnsubscribe = null;
+let activeWorkspaceTarget = "ws-add";
 
 /* ===== UI helpers ===== */
 function statusBadge(status) {
@@ -73,9 +74,21 @@ function formatDate(value) {
   return date.toLocaleString("ar-EG");
 }
 
-function renderEmpty(el, msg) {
+function renderState(el, kind, msg) {
   if (!el) return;
-  el.innerHTML = `<p>${msg}</p>`;
+  el.innerHTML = `<div class="${kind}-state">${msg}</div>`;
+}
+
+function renderEmpty(el, msg) {
+  renderState(el, "empty", msg);
+}
+
+function renderLoading(el, msg = "جاري التحميل...") {
+  renderState(el, "loading", msg);
+}
+
+function renderError(el, msg) {
+  renderState(el, "error", msg);
 }
 
 /* ===== Text toolbar ===== */
@@ -136,31 +149,49 @@ function setupTabs() {
   });
 }
 
-function setupWorkspaceNav() {
+function setWorkspacePanel(target, { smooth = false } = {}) {
   const links = document.querySelectorAll(".workspace-link");
   const panels = document.querySelectorAll(".workspace-panel");
+  const panelId = target || "ws-add";
+
+  links.forEach((l) => l.classList.toggle("active", l.dataset.target === panelId || (panelId === "ws-add" && l.dataset.action === "open-builder")));
+  panels.forEach((panel) => panel.classList.toggle("active", panel.id === panelId));
+
+  activeWorkspaceTarget = panelId;
+
+  if (panelId === "ws-chat") {
+    markAllInstructorUnreadNow(currentInstructorUid).catch(() => {});
+  }
+
+  if (smooth) {
+    document.querySelector(".instructor-admin-topbar")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function closeMobileSidebar() {
+  const workspace = document.getElementById("instructorWorkspace");
+  const toggleBtn = document.getElementById("workspaceSidebarToggle");
+  if (!workspace) return;
+  workspace.classList.remove("sidebar-open");
+  toggleBtn?.setAttribute("aria-expanded", "false");
+}
+
+function setupWorkspaceNav() {
+  const links = document.querySelectorAll(".workspace-link");
 
   links.forEach((link) => {
     if (link.dataset.bound) return;
 
     link.addEventListener("click", () => {
-      links.forEach((l) => l.classList.remove("active"));
-      link.classList.add("active");
+      const isBuilder = link.dataset.action === "open-builder";
+      const target = isBuilder ? "ws-add" : link.dataset.target;
+      setWorkspacePanel(target, { smooth: !isBuilder });
 
-      if (link.dataset.action === "open-builder") {
+      if (isBuilder) {
         setBuilderTab(link.dataset.builderTab || "info");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
       }
 
-      panels.forEach((p) => p.classList.remove("active"));
-      document.getElementById(link.dataset.target)?.classList.add("active");
-
-      if (link.dataset.target === "ws-chat") {
-        markAllInstructorUnreadNow(currentInstructorUid).catch((error) => {
-          console.warn("Could not mark instructor messages read:", error);
-        });
-      }
+      closeMobileSidebar();
     });
 
     link.dataset.bound = "1";
@@ -169,14 +200,37 @@ function setupWorkspaceNav() {
 
 function setupSidebarToggle() {
   const toggleBtn = document.getElementById("workspaceSidebarToggle");
-  const workspace = document.querySelector(".instructor-workspace");
+  const workspace = document.getElementById("instructorWorkspace");
+  const overlay = document.getElementById("workspaceOverlay");
   if (!toggleBtn || !workspace) return;
 
-  if (toggleBtn.dataset.bound) return;
-  toggleBtn.addEventListener("click", () => {
-    workspace.classList.toggle("sidebar-collapsed");
+  if (!toggleBtn.dataset.bound) {
+    toggleBtn.addEventListener("click", () => {
+      const mobileMode = window.matchMedia("(max-width: 900px)").matches;
+      if (mobileMode) {
+        const willOpen = !workspace.classList.contains("sidebar-open");
+        workspace.classList.toggle("sidebar-open", willOpen);
+        toggleBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        return;
+      }
+
+      workspace.classList.toggle("sidebar-collapsed");
+      const expanded = !workspace.classList.contains("sidebar-collapsed");
+      toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    });
+    toggleBtn.dataset.bound = "1";
+  }
+
+  if (overlay && !overlay.dataset.bound) {
+    overlay.addEventListener("click", closeMobileSidebar);
+    overlay.dataset.bound = "1";
+  }
+
+  window.addEventListener("resize", () => {
+    if (!window.matchMedia("(max-width: 900px)").matches) {
+      workspace.classList.remove("sidebar-open");
+    }
   });
-  toggleBtn.dataset.bound = "1";
 }
 
 /* ===== Dynamic lists ===== */
@@ -528,7 +582,7 @@ function fillBuilderFromSubmission(item = {}) {
   renderPreview();
   setBuilderTab("info");
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.querySelector(".instructor-admin-topbar")?.scrollIntoView({ behavior: "smooth", block: "start" });
   setStatus("تم تحميل بيانات الدورة للتعديل.");
 }
 
@@ -629,6 +683,10 @@ async function uploadFiles(user) {
 
 /* ===== Lists ===== */
 async function loadSubmissions(uid) {
+  renderLoading(pendingListEl, "جاري تحميل الدورات قيد المراجعة...");
+  renderLoading(approvedListEl, "جاري تحميل الدورات المقبولة...");
+  renderLoading(rejectedListEl, "جاري تحميل الدورات المرفوضة...");
+
   try {
     const subSnap = await getDocs(query(collection(db, "instructorCourseSubmissions"), where("instructorId", "==", uid)));
     const submissions = subSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -712,14 +770,15 @@ async function loadSubmissions(uid) {
     if (pendingCount) pendingCount.textContent = "-";
     if (approvedCount) approvedCount.textContent = "-";
 
-    renderEmpty(pendingListEl, "تعذر تحميل الدورات قيد المراجعة.");
-    renderEmpty(approvedListEl, "تعذر تحميل الدورات المقبولة.");
-    renderEmpty(rejectedListEl, "تعذر تحميل الدورات المرفوضة.");
+    renderError(pendingListEl, "تعذر تحميل الدورات قيد المراجعة.");
+    renderError(approvedListEl, "تعذر تحميل الدورات المقبولة.");
+    renderError(rejectedListEl, "تعذر تحميل الدورات المرفوضة.");
   }
 }
 
 async function loadInstructorDrafts(uid) {
   if (!draftsListEl) return;
+  renderLoading(draftsListEl, "جاري تحميل المسودات...");
   try {
     const snap = await getDoc(doc(db, "instructorCourseDrafts", uid));
     if (!snap.exists()) {
@@ -744,13 +803,15 @@ async function loadInstructorDrafts(uid) {
       btn.dataset.bound = "1";
     }
   } catch (error) {
-    console.warn("Could not load instructor drafts:", error);
-    draftsListEl.innerHTML = "<p>تعذر تحميل المسودات حالياً.</p>";
+    console.warn("Could not load instructor drafts");
+    renderError(draftsListEl, "تعذر تحميل المسودات حالياً.");
   }
 }
 
 async function loadPublishedCourses(uid) {
   if (!publishedListEl || !archivedListEl) return;
+  renderLoading(publishedListEl, "جاري تحميل الدورات المنشورة...");
+  renderLoading(archivedListEl, "جاري تحميل الدورات المؤرشفة...");
 
   try {
     const coursesSnap = await getDocs(query(collection(db, "courses"), where("instructorId", "==", uid)));
@@ -793,9 +854,9 @@ async function loadPublishedCourses(uid) {
           .join("")
       : "<p>لا توجد دورات مؤرشفة.</p>";
   } catch (error) {
-    console.warn("Could not load published/archived courses:", error);
-    if (publishedListEl) publishedListEl.innerHTML = "<p>تعذر تحميل الدورات المنشورة.</p>";
-    if (archivedListEl) archivedListEl.innerHTML = "<p>تعذر تحميل الدورات المؤرشفة.</p>";
+    console.warn("Could not load published/archived courses");
+    renderError(publishedListEl, "تعذر تحميل الدورات المنشورة.");
+    renderError(archivedListEl, "تعذر تحميل الدورات المؤرشفة.");
   }
 }
 
@@ -905,8 +966,8 @@ function subscribeChat(uid) {
       }
     },
     (error) => {
-      console.warn("Could not load chat:", error);
-      chatMessagesEl.innerHTML = "<p>تعذر تحميل الرسائل حالياً.</p>";
+      console.warn("Could not load chat");
+      renderError(chatMessagesEl, "تعذر تحميل الرسائل حالياً.");
     }
   );
 }
@@ -1042,7 +1103,7 @@ async function submitCourse(user) {
     try {
       await submitInstructorCourse(payload);
     } catch (callableError) {
-      console.error("submitInstructorCourse callable failed:", callableError);
+      console.warn("submitInstructorCourse callable failed");
 
       const code = String(callableError?.code || "");
       const msg = String(callableError?.message || "");
@@ -1065,7 +1126,7 @@ async function submitCourse(user) {
     await loadInstructorDrafts(user.uid);
     await loadPublishedCourses(user.uid);
   } catch (err) {
-    console.error(err);
+    console.warn("Course submission failed");
 
     const denied =
       err?.code === "permission-denied" ||
@@ -1113,6 +1174,7 @@ onAuthStateChanged(auth, async (user) => {
   setupTabs();
   setupWorkspaceNav();
   setupSidebarToggle();
+  setWorkspacePanel(activeWorkspaceTarget);
   initDynamicLists();
   initModules();
   initAssessmentBuilder();
