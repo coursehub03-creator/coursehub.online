@@ -1,3 +1,11 @@
+/* =========================
+   instructor-dashboard.css (resolved)
+   - تم حل التعارض بدون المساس بالمميزات
+   - احتفظنا بالستايل المتقدم (الـ gradient sidebar + admin topbar + chat polish)
+   - ودمجنا ميزة codex الجديدة (زر طيّ السايدبار + One-layout refresh) بدون ما تكسر الشكل القديم
+   ========================= */
+
+/* Base */
 .instructor-shell{padding:24px 0 40px}
 .instructor-hero{display:flex;justify-content:space-between;gap:16px;background:linear-gradient(135deg,#ffffff,#f6f8ff);border:1px solid #e5e7eb;border-radius:16px;padding:22px;margin-bottom:18px}
 .hero-kicker{margin:0 0 8px;color:#5b6bff;font-weight:700}
@@ -123,7 +131,7 @@
 .badge.approved{background:#dcfce7;color:#166534}
 .badge.rejected{background:#fee2e2;color:#991b1b}
 
-/* Workspace (kept advanced version with brand + gradient) */
+/* Workspace (advanced brand + gradient kept) */
 .instructor-workspace{display:grid;grid-template-columns:280px 1fr;gap:14px}
 .workspace-sidebar{
   border:1px solid #1e3a8a;
@@ -155,21 +163,13 @@
 .workspace-link.active{background:#fff;color:#0f3fb8;border-color:#fff}
 
 .workspace-content{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:14px}
+.workspace-content{min-width:0} /* ✅ من codex: يمنع overflow */
 .workspace-panel{display:none}
 .workspace-panel.active{display:block}
 .workspace-panel h3{margin-top:0}
 
 .submission-item .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .submission-item .reason{color:#991b1b;font-weight:700}
-
-/* Chat */
-.chat-messages{border:1px solid #dbe3f1;border-radius:12px;min-height:220px;max-height:420px;overflow:auto;padding:10px;display:grid;gap:8px;background:#f8fbff}
-.chat-bubble{padding:10px 12px;border-radius:10px;max-width:80%}
-.chat-bubble.instructor{background:#dbeafe;margin-right:auto}
-.chat-bubble.admin{background:#f3f4f6;margin-left:auto}
-.chat-meta{font-size:12px;color:#6b7280;margin-top:4px}
-.chat-compose{display:grid;gap:8px;margin-top:10px}
-.chat-compose textarea{padding:10px;border:1px solid #cfd6e4;border-radius:10px}
 
 /* Admin topbar (kept) */
 .instructor-admin-topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;margin-bottom:16px}
@@ -182,22 +182,7 @@
 /* Sticky sidebar (kept) */
 .workspace-sidebar{position:sticky;top:86px}
 
-/* Responsive */
-@media (max-width:980px){
-  .builder-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .form-grid,.list-editors,.preview-card{grid-template-columns:1fr}
-  .course-public-hero,.preview-grid-two{grid-template-columns:1fr}
-  .preview-cover{min-height:220px}
-  .instructor-workspace{grid-template-columns:1fr}
-  .instructor-admin-topbar{flex-direction:column;align-items:stretch;gap:10px}
-  .topbar-right input{min-width:0;width:100%}
-  .workspace-sidebar{position:static}
-}
-@media (max-width:720px){
-  .instructor-hero{flex-direction:column}
-  .submit-actions{flex-direction:column}
-}
-
+/* Chat badges (kept) */
 .chat-nav-badge{
   display:inline-flex;
   align-items:center;
@@ -221,6 +206,8 @@
   font-size:12px;
   margin-inline-start:8px;
 }
+
+/* Chat (final polished version kept) */
 .chat-messages{
   border:1px solid #dbe3f1;
   border-radius:14px;
@@ -245,7 +232,7 @@
 .chat-compose{display:grid;gap:10px;margin-top:12px}
 .chat-compose textarea{padding:12px;border:1px solid #cfd6e4;border-radius:12px;background:#fff}
 
-/* ===== Instructor one-layout workspace refresh ===== */
+/* ===== codex feature kept: sidebar toggle + collapsed mode (added without overriding gradient theme) ===== */
 .sidebar-toggle-btn{
   width:40px;
   height:40px;
@@ -256,36 +243,8 @@
   font-size:20px;
   cursor:pointer;
 }
-.instructor-workspace{
-  display:grid;
-  grid-template-columns:280px 1fr;
-  gap:16px;
-  align-items:start;
-}
-.workspace-sidebar{
-  position:sticky;
-  top:88px;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  background:#fff;
-  padding:12px;
-}
-.workspace-content{min-width:0}
-.workspace-panel{display:none}
-.workspace-panel.active{display:block}
-.workspace-link{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  padding:10px 12px;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
-  background:#fff;
-}
-.workspace-link.active{background:#eef2ff;border-color:#c7d2fe;color:#312e81}
 
+/* ✅ وضع طيّ السايدبار (الميزة الجديدة) */
 .instructor-workspace.sidebar-collapsed{
   grid-template-columns:1fr;
 }
@@ -293,9 +252,21 @@
   display:none;
 }
 
+/* ✅ خاص بـ id ws-add لو موجود في الـ HTML */
 #ws-add .builder-shell{margin-bottom:0}
 
-@media (max-width: 980px){
+/* Responsive */
+@media (max-width:980px){
+  .builder-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .form-grid,.list-editors,.preview-card{grid-template-columns:1fr}
+  .course-public-hero,.preview-grid-two{grid-template-columns:1fr}
+  .preview-cover{min-height:220px}
   .instructor-workspace{grid-template-columns:1fr}
+  .instructor-admin-topbar{flex-direction:column;align-items:stretch;gap:10px}
+  .topbar-right input{min-width:0;width:100%}
   .workspace-sidebar{position:static}
+}
+@media (max-width:720px){
+  .instructor-hero{flex-direction:column}
+  .submit-actions{flex-direction:column}
 }

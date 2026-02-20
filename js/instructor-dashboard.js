@@ -167,7 +167,6 @@ function setupWorkspaceNav() {
   });
 }
 
-
 function setupSidebarToggle() {
   const toggleBtn = document.getElementById("workspaceSidebarToggle");
   const workspace = document.querySelector(".instructor-workspace");
@@ -430,7 +429,9 @@ function renderPreview() {
               <ul>
                 ${
                   m.lessons.length
-                    ? m.lessons.map((l) => `<li>${l.title}${l.duration ? ` (${l.duration} دقيقة)` : ""}</li>`).join("")
+                    ? m.lessons
+                        .map((l) => `<li>${l.title}${l.duration ? ` (${l.duration} دقيقة)` : ""}</li>`)
+                        .join("")
                     : "<li>لا توجد دروس داخل هذه الوحدة بعد.</li>"
                 }
               </ul>
@@ -896,6 +897,7 @@ function subscribeChat(uid) {
 
       renderChatMessages(items);
       updateChatBadges(items);
+
       try {
         await markChatMessagesReadByInstructor(items);
       } catch (error) {
