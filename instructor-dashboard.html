@@ -56,7 +56,7 @@
     <!-- Topbar -->
     <section class="instructor-admin-topbar card">
       <div class="topbar-left">
-        <button type="button" id="workspaceSidebarToggle" class="sidebar-toggle-btn" aria-label="تبديل القائمة">☰</button>
+        <button type="button" id="workspaceSidebarToggle" class="sidebar-toggle-btn" aria-label="تبديل القائمة" aria-controls="instructorWorkspace" aria-expanded="false">☰</button>
         <h2>لوحة الأستاذ</h2>
       </div>
       <div class="topbar-right">
@@ -337,32 +337,32 @@
 
         <!-- ✅ باقي Panels -->
         <div id="ws-drafts" class="workspace-panel">
-          <h3>مسوداتي الخاصة</h3>
+          <h3 class="panel-heading">مسوداتي الخاصة</h3>
           <div id="draftsList" class="submission-list"></div>
         </div>
 
         <div id="ws-pending" class="workspace-panel">
-          <h3>الدورات قيد المراجعة</h3>
+          <h3 class="panel-heading">الدورات قيد المراجعة</h3>
           <div id="pendingList" class="submission-list"></div>
         </div>
 
         <div id="ws-approved" class="workspace-panel">
-          <h3>الدورات المقبولة</h3>
+          <h3 class="panel-heading">الدورات المقبولة</h3>
           <div id="approvedList" class="submission-list"></div>
         </div>
 
         <div id="ws-rejected" class="workspace-panel">
-          <h3>الدورات المرفوضة (مع الأسباب)</h3>
+          <h3 class="panel-heading">الدورات المرفوضة (مع الأسباب)</h3>
           <div id="rejectedList" class="submission-list"></div>
         </div>
 
         <div id="ws-published" class="workspace-panel">
-          <h3>الدورات المنشورة</h3>
+          <h3 class="panel-heading">الدورات المنشورة</h3>
           <div id="publishedList" class="submission-list"></div>
         </div>
 
         <div id="ws-archived" class="workspace-panel">
-          <h3>الدورات المؤرشفة</h3>
+          <h3 class="panel-heading">الدورات المؤرشفة</h3>
           <div id="archivedList" class="submission-list"></div>
         </div>
 
@@ -375,6 +375,7 @@
           </div>
         </div>
       </div>
+      <div class="workspace-overlay" id="workspaceOverlay"></div>
     </section>
   </main>
 
@@ -383,17 +384,5 @@
   <script src="/js/main.js" defer></script>
   <script type="module" src="/js/instructor-dashboard.js?v=20260220"></script>
 
-  <!-- ✅ دعم زر طي السايدبار بدون كسر أي ميزة -->
-  <script>
-    (function () {
-      const btn = document.getElementById("workspaceSidebarToggle");
-      const ws = document.getElementById("instructorWorkspace");
-      if (!btn || !ws) return;
-
-      btn.addEventListener("click", () => {
-        ws.classList.toggle("sidebar-collapsed");
-      });
-    })();
-  </script>
 </body>
 </html>
