@@ -15,7 +15,7 @@ import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/
 
 document.addEventListener("DOMContentLoaded", async () => {
   const adminUser = await protectAdmin();
-  console.log("أدمن مسجل:", adminUser.email);
+  console.log("أدمن مسجل:", adminUser?.email || "-");
 
   const addBtn = document.getElementById("add-course-btn");
   const tbody = document.getElementById("courses-list");
@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const functions = getFunctions(undefined, "us-central1");
   const reviewInstructorCourseSubmission = httpsCallable(functions, "reviewInstructorCourseSubmission");
 
+  // أحيانًا callable يفشل من هوست غير مسموح/غير متوقع (CORS/blocked/preview)
   const callableAllowedHosts = new Set([
     "localhost",
     "127.0.0.1",
@@ -64,20 +65,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const archiveAction = `<button type="button" class="btn outline small archive-btn" data-id="${id}">أرشفة</button>`;
     const deleteAction = `<button type="button" class="delete-btn" data-id="${id}">حذف</button>`;
 
-    if (status === "published") {
-      return `${editAction} ${archiveAction} ${deleteAction}`;
-    }
-
-    if (status === "archived") {
-      return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
-    }
-
-    if (status === "review") {
-      return `${editAction} ${publishAction} ${archiveAction} ${deleteAction}`;
-    }
-
-    // draft + unknown
-    return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
+    if (status === "published") return `${editAction} ${archiveAction} ${deleteAction}`;
+    if (status === "archived") return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
+    if (status === "review") return `${editAction} ${publishAction} ${archiveAction} ${deleteAction}`;
+    return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`; // draft + unknown
   };
 
   const renderCourses = (courses) => {
@@ -92,6 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const startedCount = enrollmentsMap.get(id) || 0;
       const completedCount = completionsMap.get(id) || 0;
       const inProgressCount = Math.max(0, startedCount - completedCount);
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${data.title || "-"}</td>
@@ -102,7 +94,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${inProgressCount}</td>
         <td>${renderCourseActions(id, data.status)}</td>
       `;
-
       tbody.appendChild(tr);
     });
   };
@@ -110,12 +101,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const applyFilters = () => {
     const statusValue = statusFilter?.value || "all";
     const categoryValue = categoryFilter?.value || "all";
-    const query = searchInput?.value.toLowerCase().trim() || "";
+    const qText = searchInput?.value.toLowerCase().trim() || "";
 
     const filtered = allCourses.filter(({ data }) => {
       const statusMatch = statusValue === "all" || data.status === statusValue;
       const categoryMatch = categoryValue === "all" || data.category === categoryValue;
-      const searchMatch = !query || (data.title || "").toLowerCase().includes(query);
+      const searchMatch = !qText || (data.title || "").toLowerCase().includes(qText);
       return statusMatch && categoryMatch && searchMatch;
     });
 
@@ -124,27 +115,51 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function buildSubmissionPreview(item) {
     const modules = Array.isArray(item.modules) ? item.modules : [];
-    const moduleLines = modules.map((m, idx) => {
-      const lessons = Array.isArray(m.lessons) ? m.lessons : [];
-      const lessonTitles = lessons.map((l) => `- ${l.title || "بدون عنوان"}`).join("\n");
-      return `الوحدة ${idx + 1}: ${m.title || "بدون عنوان"}\n${lessonTitles}`;
-    }).join("\n\n");
+    const moduleLines = modules
+      .map((m, idx) => {
+        const lessons = Array.isArray(m.lessons) ? m.lessons : [];
+        const lessonTitles = lessons.map((l) => `- ${l.title || "بدون عنوان"}`).join("\n");
+        return `الوحدة ${idx + 1}: ${m.title || "بدون عنوان"}\n${lessonTitles}`;
+      })
+      .join("\n\n");
 
     return [
       `العنوان: ${item.title || "-"}`,
       `التصنيف: ${item.category || "-"}`,
+      `المستوى: ${item.level || "-"}`,
+      `اللغة: ${item.language || "-"}`,
+      `السعر: ${item.price ?? 0}$`,
       `الوصف: ${item.description || "-"}`,
       `عدد الوحدات: ${modules.length}`,
       `عدد أسئلة الاختبار: ${item.assessmentQuestions?.length || 0}`,
+      item.image ? `صورة الغلاف: ${item.image}` : "",
+      item.outlineUrl ? `ملف المنهج: ${item.outlineUrl}` : "",
       "",
       "المنهج:",
       moduleLines || "لا توجد وحدات"
-    ].join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
   async function fallbackReviewSubmission(item, decision, reason = "") {
+    // fallback هذا ينفذ نفس فكرة Cloud Function لكن من لوحة الأدمن (أنت أدمن أصلاً)
     if (decision === "approve") {
+      const modules = Array.isArray(item.modules) ? item.modules : [];
+
+      const lessonsFlat = (modules || []).flatMap((m) =>
+        (m.lessons || []).map((lesson) => ({
+          title: lesson.title || "",
+          duration: lesson.duration || "",
+          summary: "",
+          slides: [],
+          quiz: { questions: (item.assessmentQuestions || []).slice(0, 50) },
+          passScore: 80
+        }))
+      );
+
       const coursePayload = {
+        // بيانات الكورس الأساسية
         title: item.title || "",
         titleEn: item.titleEn || "",
         description: item.description || "",
@@ -152,16 +167,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         level: item.level || "",
         language: item.language || "",
         duration: Number(item.durationHours || 0),
-        modules: Array.isArray(item.modules) ? item.modules.length : 0,
+        price: Number(item.price || 0),
+
+        // ملفات ومحتوى
         image: item.image || "",
-        lessons: (item.modules || []).flatMap((m) => (m.lessons || []).map((lesson) => ({
-          title: lesson.title || "",
-          duration: lesson.duration || "",
-          summary: "",
-          slides: [],
-          quiz: { questions: (item.assessmentQuestions || []).slice(0, 10) },
-          passScore: 80
-        }))),
+        outlineUrl: item.outlineUrl || "",
+        lessons: lessonsFlat,
+        modules: modules, // نحتفظ بالهيكل أيضًا
+
+        // ميتا
         status: "draft",
         source: "instructor-submission",
         instructorId: item.instructorId || "",
@@ -172,12 +186,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
 
       const courseRef = await addDoc(collection(db, "courses"), coursePayload);
+
       await updateDoc(doc(db, "instructorCourseSubmissions", item.id), {
         status: "approved",
         reviewReason: "",
         linkedCourseId: courseRef.id,
         updatedAt: serverTimestamp()
       });
+
       return;
     }
 
@@ -188,9 +204,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-
   async function loadInstructorSubmissions() {
     if (!submissionsTbody) return;
+
     submissionsTbody.innerHTML = "<tr><td colspan='6'>جارٍ تحميل طلبات الأساتذة...</td></tr>";
 
     try {
@@ -208,10 +224,18 @@ document.addEventListener("DOMContentLoaded", async () => {
           const lessons = (item.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
           const questions = item.assessmentQuestions?.length || 0;
           const status = item.status || "pending";
-          const statusText = status === "approved" ? "تم التحويل لمسودة المشرف" : status === "rejected" ? "مرفوض" : "قيد المراجعة";
+
+          const statusText =
+            status === "approved"
+              ? "تم التحويل لمسودة المشرف"
+              : status === "rejected"
+              ? "مرفوض"
+              : "قيد المراجعة";
+
           const editDraftAction = item.linkedCourseId
             ? `<a class="btn outline small" href="/admin/edit-course.html?id=${item.linkedCourseId}">تعديل المسودة</a>`
             : "";
+
           return `
           <tr>
             <td>${item.title || "-"}</td>
@@ -235,10 +259,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // event delegation لتفادي تكرار listeners
   submissionsTbody?.addEventListener("click", async (event) => {
     const previewBtn = event.target.closest(".submission-preview");
     const approveBtn = event.target.closest(".submission-approve");
     const rejectBtn = event.target.closest(".submission-reject");
+
     if (!previewBtn && !approveBtn && !rejectBtn) return;
 
     const id = (previewBtn || approveBtn || rejectBtn)?.dataset.id;
@@ -279,6 +305,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       await loadCourses();
     } catch (error) {
       console.warn("reviewInstructorCourseSubmission failed, trying fallback:", error);
+
       try {
         await fallbackReviewSubmission(item, approveBtn ? "approve" : "reject", reason);
         await loadInstructorSubmissions();
@@ -289,15 +316,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   });
-  async function setCourseStatus(courseId, status) {
-    const payload = {
-      status,
-      updatedAt: serverTimestamp()
-    };
 
+  async function setCourseStatus(courseId, status) {
+    const payload = { status, updatedAt: serverTimestamp() };
     if (status === "published") payload.publishedAt = serverTimestamp();
     if (status === "archived") payload.archivedAt = serverTimestamp();
-
     await updateDoc(doc(db, "courses", courseId), payload);
   }
 
@@ -305,6 +328,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     tbody.innerHTML = "<tr><td colspan='7'>جارٍ تحميل الدورات...</td></tr>";
 
     try {
+      // enrollments (count unique user per course)
       const enrollmentsSnap = await getDocs(collection(db, "enrollments"));
       const enrollmentKeys = new Set();
       enrollmentsMap = new Map();
@@ -317,6 +341,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         enrollmentsMap.set(data.courseId, (enrollmentsMap.get(data.courseId) || 0) + 1);
       });
 
+      // certificates (completions)
       const completionsSnap = await getDocs(collection(db, "certificates"));
       const completionKeys = new Set();
       completionsMap = new Map();
