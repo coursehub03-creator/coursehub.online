@@ -12,11 +12,26 @@ window.addEventListener("unhandledrejection", (event) => {
   }
 });
 
+// main.js - تحميل CSS، Header، Footer وإدارة حالة المستخدم
+
+// تجاهل أخطاء إضافات المتصفح الخارجية التي لا تخص كود المنصة
+window.addEventListener("unhandledrejection", (event) => {
+  const reasonText = String(event?.reason?.message || event?.reason || "");
+  if (
+    reasonText.includes("Receiving end does not exist") ||
+    reasonText.includes("Could not establish connection") ||
+    reasonText.includes("The message port closed before a response was received")
+  ) {
+    event.preventDefault();
+  }
+});
+
+// ✅ إضافة codex: تجاهل بعض أخطاء إضافات المتصفح (errors) أيضًا
 window.addEventListener("error", (event) => {
   const message = String(event?.message || "");
   if (
-    message.includes("Receiving end does not exist")
-    || message.includes("Could not establish connection")
+    message.includes("Receiving end does not exist") ||
+    message.includes("Could not establish connection")
   ) {
     event.preventDefault();
   }

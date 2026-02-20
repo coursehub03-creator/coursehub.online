@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/admin/css-admin/admin.css" />
   <link rel="stylesheet" href="/css/instructor-dashboard.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <script>
     // منع ضوضاء أخطاء إضافات المتصفح قبل تحميل أي سكربتات defer/module
     window.addEventListener("unhandledrejection", function (event) {
@@ -20,6 +21,7 @@
     });
   </script>
 </head>
+
 <body>
   <div id="header-placeholder"></div>
 
@@ -36,7 +38,7 @@
       </div>
     </section>
 
-
+    <!-- Topbar -->
     <section class="instructor-admin-topbar card">
       <div class="topbar-left">
         <span class="menu-icon">☰</span>
@@ -48,20 +50,31 @@
       </div>
     </section>
 
+    <!-- Builder -->
     <section class="builder-shell">
       <div class="builder-header">
         <h2>منشئ الدورات الاحترافي</h2>
         <p>نفس قالب لوحة المشرف تمامًا، مع أدوات كتابة وتحكم أكثر احترافية للأستاذ قبل الإرسال للمراجعة.</p>
       </div>
 
+      <!-- Tabs (main naming: curriculum + submit) -->
       <div class="builder-tabs" id="instructorBuilderTabs">
-        <button class="tab-btn active" type="button" data-tab="info"><i class="fa-solid fa-circle-info"></i><span>معلومات الدورة</span></button>
-        <button class="tab-btn" type="button" data-tab="lessons"><i class="fa-solid fa-layer-group"></i><span>الدروس</span></button>
-        <button class="tab-btn" type="button" data-tab="preview"><i class="fa-solid fa-eye"></i><span>المعاينة</span></button>
-        <button class="tab-btn" type="button" data-tab="publish"><i class="fa-solid fa-paper-plane"></i><span>النشر</span></button>
+        <button class="tab-btn active" type="button" data-tab="info">
+          <i class="fa-solid fa-circle-info"></i><span>معلومات الدورة</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="curriculum">
+          <i class="fa-solid fa-layer-group"></i><span>الدروس والمحتوى</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="preview">
+          <i class="fa-solid fa-eye"></i><span>المعاينة</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="submit">
+          <i class="fa-solid fa-paper-plane"></i><span>الإرسال للمراجعة</span>
+        </button>
       </div>
 
       <form id="instructorCourseForm" class="instructor-builder-form" novalidate>
+        <!-- INFO -->
         <div class="tab-content active" id="tab-info">
           <div class="builder-card">
             <div class="form-grid">
@@ -140,7 +153,8 @@
           </div>
         </div>
 
-        <div class="tab-content" id="tab-lessons">
+        <!-- CURRICULUM -->
+        <div class="tab-content" id="tab-curriculum">
           <div class="builder-card">
             <div class="builder-card-head">
               <h3>عناصر إضافية تمنحك حرية أكبر</h3>
@@ -203,6 +217,7 @@
           </div>
         </div>
 
+        <!-- PREVIEW -->
         <div class="tab-content" id="tab-preview">
           <div class="builder-card course-public-preview">
             <div class="course-public-hero">
@@ -228,7 +243,8 @@
           </div>
         </div>
 
-        <div class="tab-content" id="tab-publish">
+        <!-- SUBMIT -->
+        <div class="tab-content" id="tab-submit">
           <div class="builder-card">
             <h3>قائمة مراجعة قبل الإرسال</h3>
             <div class="review-list">
@@ -249,21 +265,55 @@
       </form>
     </section>
 
+    <!-- Workspace -->
     <section class="card instructor-workspace">
       <aside class="workspace-sidebar">
         <div class="workspace-brand">
           <h3>Instructor Panel</h3>
           <p>لوحة الأستاذ</p>
         </div>
+
         <ul class="workspace-menu">
-          <li><button type="button" class="workspace-link" data-action="open-builder" data-builder-tab="info"><span>➕</span><strong>إضافة دورة</strong></button></li>
-          <li><button type="button" class="workspace-link active" data-target="ws-drafts"><span>📝</span><strong>المسودات</strong></button></li>
-          <li><button type="button" class="workspace-link" data-target="ws-pending"><span>⏳</span><strong>قيد المراجعة</strong></button></li>
-          <li><button type="button" class="workspace-link" data-target="ws-approved"><span>✅</span><strong>المقبولة</strong></button></li>
-          <li><button type="button" class="workspace-link" data-target="ws-rejected"><span>❌</span><strong>المرفوضة</strong></button></li>
-          <li><button type="button" class="workspace-link" data-target="ws-published"><span>🎓</span><strong>المنشورة</strong></button></li>
-          <li><button type="button" class="workspace-link" data-target="ws-archived"><span>🗂️</span><strong>المؤرشفة</strong></button></li>
-          <li><button type="button" class="workspace-link" data-target="ws-chat"><span>💬</span><strong>الرسائل</strong></button></li>
+          <li>
+            <button type="button" class="workspace-link" data-action="open-builder" data-builder-tab="info">
+              <span>➕</span><strong>إضافة دورة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link active" data-target="ws-drafts">
+              <span>📝</span><strong>المسودات</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-pending">
+              <span>⏳</span><strong>قيد المراجعة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-approved">
+              <span>✅</span><strong>المقبولة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-rejected">
+              <span>❌</span><strong>المرفوضة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-published">
+              <span>🎓</span><strong>المنشورة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-archived">
+              <span>🗂️</span><strong>المؤرشفة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-chat">
+              <span>💬</span><strong>الرسائل</strong>
+            </button>
+          </li>
         </ul>
       </aside>
 
