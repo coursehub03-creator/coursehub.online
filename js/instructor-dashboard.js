@@ -19,11 +19,14 @@ const DRAFT_KEY = "coursehub_instructor_course_draft_v3";
 /* ===== DOM ===== */
 const form = document.getElementById("instructorCourseForm");
 const statusEl = document.getElementById("instructorFormStatus");
+
 const listEl = document.getElementById("instructorSubmissions"); // optional (لو عندك قائمة عامة)
 const draftsListEl = document.getElementById("draftsList");
+const pendingListEl = document.getElementById("pendingList");
 const approvedListEl = document.getElementById("approvedList");
 const rejectedListEl = document.getElementById("rejectedList");
 const publishedListEl = document.getElementById("publishedList");
+const archivedListEl = document.getElementById("archivedList");
 
 const chatMessagesEl = document.getElementById("instructorChatMessages");
 const chatInputEl = document.getElementById("instructorChatInput");
@@ -31,19 +34,12 @@ const sendChatBtn = document.getElementById("sendInstructorChatBtn");
 
 const pendingCount = document.getElementById("pendingCount");
 const approvedCount = document.getElementById("approvedCount");
-let currentInstructorUid = "";
 
 const coverInput = document.getElementById("courseImage");
 const coverUrlInput = document.getElementById("courseImageUrl");
 const coverPreview = document.getElementById("coverPreview");
 const previewCover = document.getElementById("previewCover");
 
-const coverInput = document.getElementById("courseImage");
-const coverUrlInput = document.getElementById("courseImageUrl");
-const coverPreview = document.getElementById("coverPreview");
-const previewCover = document.getElementById("previewCover");
-
-/* ===== Functions ===== */
 const functions = getFunctions(undefined, "us-central1");
 const submitInstructorCourse = httpsCallable(functions, "submitInstructorCourse");
 
@@ -618,8 +614,20 @@ async function loadSubmissions(uid) {
     if (pendingCount) pendingCount.textContent = String(p);
     if (approvedCount) approvedCount.textContent = String(a);
 
+    const pending = submissions.filter((i) => i.status === "pending");
     const approved = submissions.filter((i) => i.status === "approved");
     const rejected = submissions.filter((i) => i.status === "rejected");
+
+    if (pendingListEl) {
+      pendingListEl.innerHTML = pending.length
+        ? pending
+            .map(
+              (item) =>
+                `<div class="submission-item"><h4>${item.title || "-"}</h4><p>${statusBadge("pending")}</p><p>تم الإرسال: ${formatDate(item.createdAt)}</p></div>`
+            )
+            .join("")
+        : "<p>لا توجد دورات قيد المراجعة.</p>";
+    }
 
     if (approvedListEl) {
       approvedListEl.innerHTML = approved.length
@@ -679,6 +687,7 @@ async function loadSubmissions(uid) {
     if (pendingCount) pendingCount.textContent = "-";
     if (approvedCount) approvedCount.textContent = "-";
 
+    renderEmpty(pendingListEl, "تعذر تحميل الدورات قيد المراجعة.");
     renderEmpty(approvedListEl, "تعذر تحميل الدورات المقبولة.");
     renderEmpty(rejectedListEl, "تعذر تحميل الدورات المرفوضة.");
   }
@@ -716,18 +725,14 @@ async function loadInstructorDrafts(uid) {
 }
 
 async function loadPublishedCourses(uid) {
-  if (!publishedListEl) return;
+  if (!publishedListEl || !archivedListEl) return;
 
   try {
-    const coursesSnap = await getDocs(
-      query(collection(db, "courses"), where("instructorId", "==", uid), where("status", "==", "published"))
-    );
+    const coursesSnap = await getDocs(query(collection(db, "courses"), where("instructorId", "==", uid)));
     const courses = coursesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-    if (!courses.length) {
-      publishedListEl.innerHTML = "<p>لا توجد دورات منشورة بعد.</p>";
-      return;
-    }
+    const published = courses.filter((c) => c.status === "published");
+    const archived = courses.filter((c) => c.status === "archived");
 
     const certsSnap = await getDocs(collection(db, "certificates"));
     const certCount = new Map();
@@ -737,19 +742,35 @@ async function loadPublishedCourses(uid) {
       certCount.set(c.courseId, (certCount.get(c.courseId) || 0) + 1);
     });
 
-    publishedListEl.innerHTML = courses
-      .map(
-        (course) =>
-          `<div class="submission-item">
-            <h4>${course.title || "-"}</h4>
-            <p><span class="badge approved">منشورة</span></p>
-            <p>عدد الطلبة الذين أنهوا الدورة وحصلوا على الشهادة: <strong>${certCount.get(course.id) || 0}</strong></p>
-          </div>`
-      )
-      .join("");
+    publishedListEl.innerHTML = published.length
+      ? published
+          .map(
+            (course) =>
+              `<div class="submission-item">
+                <h4>${course.title || "-"}</h4>
+                <p><span class="badge approved">منشورة</span></p>
+                <p>عدد الطلبة الذين أنهوا الدورة وحصلوا على الشهادة: <strong>${certCount.get(course.id) || 0}</strong></p>
+              </div>`
+          )
+          .join("")
+      : "<p>لا توجد دورات منشورة بعد.</p>";
+
+    archivedListEl.innerHTML = archived.length
+      ? archived
+          .map(
+            (course) =>
+              `<div class="submission-item">
+                <h4>${course.title || "-"}</h4>
+                <p><span class="badge pending">مؤرشفة</span></p>
+                <p>آخر تحديث: ${formatDate(course.updatedAt || course.archivedAt || course.createdAt)}</p>
+              </div>`
+          )
+          .join("")
+      : "<p>لا توجد دورات مؤرشفة.</p>";
   } catch (error) {
-    console.warn("Could not load published courses:", error);
-    publishedListEl.innerHTML = "<p>تعذر تحميل الدورات المنشورة.</p>";
+    console.warn("Could not load published/archived courses:", error);
+    if (publishedListEl) publishedListEl.innerHTML = "<p>تعذر تحميل الدورات المنشورة.</p>";
+    if (archivedListEl) archivedListEl.innerHTML = "<p>تعذر تحميل الدورات المؤرشفة.</p>";
   }
 }
 

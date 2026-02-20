@@ -10,7 +10,18 @@
   <link rel="stylesheet" href="/admin/css-admin/admin.css" />
   <link rel="stylesheet" href="/css/instructor-dashboard.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <script>
+    // منع ضوضاء أخطاء إضافات المتصفح قبل تحميل أي سكربتات defer/module
+    window.addEventListener("unhandledrejection", function (event) {
+      const text = String((event && event.reason && event.reason.message) || (event && event.reason) || "");
+      if (text.includes("Receiving end does not exist") || text.includes("Could not establish connection")) {
+        event.preventDefault();
+      }
+    });
+  </script>
 </head>
+
 <body>
   <div id="header-placeholder"></div>
 
@@ -39,13 +50,14 @@
       </div>
     </section>
 
+    <!-- Builder -->
     <section class="builder-shell">
       <div class="builder-header">
         <h2>منشئ الدورات الاحترافي</h2>
         <p>نفس قالب لوحة المشرف تمامًا، مع أدوات كتابة وتحكم أكثر احترافية للأستاذ قبل الإرسال للمراجعة.</p>
       </div>
 
-      <!-- Tabs (main branch naming: curriculum + submit) -->
+      <!-- Tabs (main naming: curriculum + submit) -->
       <div class="builder-tabs" id="instructorBuilderTabs">
         <button class="tab-btn active" type="button" data-tab="info">
           <i class="fa-solid fa-circle-info"></i><span>معلومات الدورة</span>
@@ -62,6 +74,7 @@
       </div>
 
       <form id="instructorCourseForm" class="instructor-builder-form" novalidate>
+        <!-- INFO -->
         <div class="tab-content active" id="tab-info">
           <div class="builder-card">
             <div class="form-grid">
@@ -140,6 +153,7 @@
           </div>
         </div>
 
+        <!-- CURRICULUM -->
         <div class="tab-content" id="tab-curriculum">
           <div class="builder-card">
             <div class="builder-card-head">
@@ -203,6 +217,7 @@
           </div>
         </div>
 
+        <!-- PREVIEW -->
         <div class="tab-content" id="tab-preview">
           <div class="builder-card course-public-preview">
             <div class="course-public-hero">
@@ -228,6 +243,7 @@
           </div>
         </div>
 
+        <!-- SUBMIT -->
         <div class="tab-content" id="tab-submit">
           <div class="builder-card">
             <h3>قائمة مراجعة قبل الإرسال</h3>
@@ -249,6 +265,7 @@
       </form>
     </section>
 
+    <!-- Workspace -->
     <section class="card instructor-workspace">
       <aside class="workspace-sidebar">
         <div class="workspace-brand">
@@ -264,27 +281,37 @@
           </li>
           <li>
             <button type="button" class="workspace-link active" data-target="ws-drafts">
-              <span>📝</span><strong>مسوداتي</strong>
+              <span>📝</span><strong>المسودات</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-pending">
+              <span>⏳</span><strong>قيد المراجعة</strong>
             </button>
           </li>
           <li>
             <button type="button" class="workspace-link" data-target="ws-approved">
-              <span>✅</span><strong>الدورات المقبولة</strong>
+              <span>✅</span><strong>المقبولة</strong>
             </button>
           </li>
           <li>
             <button type="button" class="workspace-link" data-target="ws-rejected">
-              <span>❌</span><strong>الدورات المرفوضة</strong>
+              <span>❌</span><strong>المرفوضة</strong>
             </button>
           </li>
           <li>
             <button type="button" class="workspace-link" data-target="ws-published">
-              <span>🎓</span><strong>الدورات المنشورة</strong>
+              <span>🎓</span><strong>المنشورة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-archived">
+              <span>🗂️</span><strong>المؤرشفة</strong>
             </button>
           </li>
           <li>
             <button type="button" class="workspace-link" data-target="ws-chat">
-              <span>💬</span><strong>محادثة المشرف</strong>
+              <span>💬</span><strong>الرسائل</strong>
             </button>
           </li>
         </ul>
@@ -294,6 +321,11 @@
         <div id="ws-drafts" class="workspace-panel active">
           <h3>مسوداتي الخاصة</h3>
           <div id="draftsList" class="submission-list"></div>
+        </div>
+
+        <div id="ws-pending" class="workspace-panel">
+          <h3>الدورات قيد المراجعة</h3>
+          <div id="pendingList" class="submission-list"></div>
         </div>
 
         <div id="ws-approved" class="workspace-panel">
@@ -311,6 +343,11 @@
           <div id="publishedList" class="submission-list"></div>
         </div>
 
+        <div id="ws-archived" class="workspace-panel">
+          <h3>الدورات المؤرشفة</h3>
+          <div id="archivedList" class="submission-list"></div>
+        </div>
+
         <div id="ws-chat" class="workspace-panel">
           <h3>التحدث مع المشرف</h3>
           <div id="instructorChatMessages" class="chat-messages"></div>
@@ -326,6 +363,6 @@
   <div id="footer-placeholder"></div>
 
   <script src="/js/main.js" defer></script>
-  <script type="module" src="/js/instructor-dashboard.js"></script>
+  <script type="module" src="/js/instructor-dashboard.js?v=20260220"></script>
 </body>
 </html>
