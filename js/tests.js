@@ -44,7 +44,7 @@ async function loadTests() {
         <div class="card-content">
           <h3>${course.title}</h3>
           <p>${course.description || defaultDescription}</p>
-          <a href="/course-player.html?id=${course.id}" class="btn">${startLabel}</a>
+          <a href="/course/player.html?courseId=${course.id}" class="btn">${startLabel}</a>
         </div>
       </div>
     `).join("");

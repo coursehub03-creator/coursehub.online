@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مشغل الدورة التفاعلي | CourseHub</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/css/student-player.css">
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main class="student-player">
+    <header class="player-topbar card">
+      <button id="sidebarToggle" class="icon-btn" type="button">☰</button>
+      <div class="player-progress-wrap">
+        <div class="player-progress-meta">
+          <strong id="globalProgressText">0%</strong>
+          <span>التقدم العام</span>
+        </div>
+        <div class="progress-track"><span id="globalProgressBar"></span></div>
+      </div>
+      <div class="player-xp">
+        <strong id="xpValue">0 XP</strong>
+        <small id="badgeValue">لا توجد badges</small>
+      </div>
+      <button id="resumeBtn" class="btn primary" type="button">اكمل من حيث توقفت</button>
+    </header>
+
+    <div id="playerOverlay" class="player-overlay"></div>
+
+    <section class="player-layout">
+      <aside id="playerSidebar" class="player-sidebar card">
+        <div class="sidebar-head">
+          <h2 id="sidebarCourseTitle">الدورة</h2>
+          <button id="focusBtn" type="button" class="btn ghost">وضع التركيز</button>
+        </div>
+        <input id="lessonSearch" type="search" placeholder="بحث داخل الدروس...">
+        <ul id="lessonsList" class="lessons-list"></ul>
+      </aside>
+
+      <section class="player-main card">
+        <div id="stepContainer" class="step-container"></div>
+        <footer class="step-actions">
+          <button id="prevStepBtn" class="btn ghost" type="button">السابق</button>
+          <div id="stepMeta" class="step-meta">-</div>
+          <button id="nextStepBtn" class="btn primary" type="button">التالي</button>
+        </footer>
+      </section>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script type="module" src="/js/main.js"></script>
+  <script type="module" src="/js/student-player.js"></script>
+</body>
+</html>
