@@ -13,6 +13,16 @@
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <script>
+    // تجاهل ضوضاء إضافات المتصفح التي تظهر كـ Uncaught (in promise)
+    window.addEventListener("unhandledrejection", function (event) {
+      const text = String((event && event.reason && event.reason.message) || (event && event.reason) || "");
+      if (text.includes("Receiving end does not exist") || text.includes("Could not establish connection")) {
+        event.preventDefault();
+      }
+    });
+  </script>
+
   <!-- ✅ إبقائه مرة واحدة فقط -->
   <script type="module" src="js/main.js" defer></script>
 
@@ -37,9 +47,28 @@
       try {
         const lang = localStorage.getItem("coursehub_lang") || "ar";
         const viewCourseLabel = lang === "en" ? "View course" : "عرض الدورة";
-        const q = query(collection(db, "courses"), where("status", "==", "published"), orderBy("createdAt", "desc"), limit(3));
-        const snapshot = await getDocs(q);
-        const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let snapshot;
+
+        try {
+          const q = query(
+            collection(db, "courses"),
+            where("status", "==", "published"),
+            orderBy("createdAt", "desc"),
+            limit(3)
+          );
+          snapshot = await getDocs(q);
+        } catch (queryError) {
+          // fallback بدون composite index: نقرأ آخر الدورات ثم نفلتر المنشورة فقط
+          if (queryError?.code !== "failed-precondition") throw queryError;
+
+          const fallbackQuery = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(15));
+          snapshot = await getDocs(fallbackQuery);
+        }
+
+        const courses = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(course => course.status === "published")
+          .slice(0, 3);
         const container = document.querySelector('.popular-courses .courses-grid');
         if (!container) return;
 
