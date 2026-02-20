@@ -19,7 +19,11 @@ import {
   getDoc,
   serverTimestamp,
   setDoc,
-  collection
+  collection,
+  getDocs,
+  query,
+  where,
+  limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -164,6 +168,45 @@ async function getUserMeta(uid) {
   }
 }
 
+async function getUserMetaByEmail(email) {
+  if (!email) return null;
+
+  try {
+    const rawEmail = String(email).trim();
+    const variants = rawEmail.toLowerCase() === rawEmail ? [rawEmail] : [rawEmail, rawEmail.toLowerCase()];
+
+    for (const candidate of variants) {
+      const byEmailQuery = query(
+        collection(db, "users"),
+        where("email", "==", candidate),
+        limit(1)
+      );
+      const snap = await getDocs(byEmailQuery);
+      if (!snap.empty) {
+        const firstDoc = snap.docs[0];
+        return { uid: firstDoc.id, ...firstDoc.data() };
+      }
+    }
+
+    return null;
+  } catch (e) {
+    console.error("getUserMetaByEmail error:", e);
+    return null;
+  }
+}
+
+async function resolveUserMeta(user) {
+  if (!user?.uid) return null;
+
+  const directMeta = await getUserMeta(user.uid);
+  if (directMeta) return { uid: user.uid, ...directMeta };
+
+  const emailMeta = await getUserMetaByEmail(user.email || "");
+  if (emailMeta) return emailMeta;
+
+  return null;
+}
+
 async function saveUserProfile(user, profileData = {}, options = {}) {
   if (!user?.uid) return;
 
@@ -174,13 +217,17 @@ async function saveUserProfile(user, profileData = {}, options = {}) {
     email: user.email || "",
     emailVerified: !!user.emailVerified,
     picture: user.photoURL || DEFAULT_AVATAR,
-    role: options.forceRole || existingMeta?.role || "student",
-    status:
-      options.forceStatus ||
-      existingMeta?.status ||
-      (user.emailVerified ? "active" : "pending_verification"),
     updatedAt: serverTimestamp()
   };
+
+  const resolvedRole = options.forceRole || existingMeta?.role;
+  const resolvedStatus =
+    options.forceStatus ||
+    existingMeta?.status ||
+    (options.isNewUser ? (user.emailVerified ? "active" : "pending_verification") : null);
+
+  if (resolvedRole) payload.role = resolvedRole;
+  if (resolvedStatus) payload.status = resolvedStatus;
 
   const fullNameFromFields = `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim();
   if (user.displayName || fullNameFromFields) {
@@ -364,7 +411,7 @@ if (loginForm) {
       }
 
       // instructor status enforcement + auto-activate if pending_verification and verified
-      const meta = await getUserMeta(user.uid);
+      const meta = await resolveUserMeta(user);
       const role = meta?.role || "student";
 
       if (role === "instructor") {
@@ -374,7 +421,7 @@ if (loginForm) {
           await setDoc(doc(db, "users", user.uid), { role: "instructor", status: "active", reviewReason: "" }, { merge: true });
         }
 
-        const refreshedMeta = await getUserMeta(user.uid);
+        const refreshedMeta = await resolveUserMeta(user);
         if (refreshedMeta?.status !== "active") {
           await signOut(auth);
           setText(errorMsg, getInstructorBlockMessage(refreshedMeta));
@@ -424,7 +471,7 @@ if (loginForm) {
       }
 
       // instructor enforcement + auto-activate
-      const meta = await getUserMeta(user.uid);
+      const meta = await resolveUserMeta(user);
       const role = meta?.role || "student";
 
       if (role === "instructor") {
@@ -433,7 +480,7 @@ if (loginForm) {
           await setDoc(doc(db, "users", user.uid), { role: "instructor", status: "active", reviewReason: "" }, { merge: true });
         }
 
-        const refreshedMeta = await getUserMeta(user.uid);
+        const refreshedMeta = await resolveUserMeta(user);
         if (refreshedMeta?.status !== "active") {
           await signOut(auth);
           setText(errorMsg || registerMsg, getInstructorBlockMessage(refreshedMeta));
