@@ -39,6 +39,12 @@ service cloud.firestore {
       return isAdminByClaim() || isAdminByEmail();
     }
 
+    function isInstructor() {
+      return isSignedIn()
+             && request.auth.token.role == "instructor"
+             && request.auth.token.status == "active";
+    }
+
     // المستخدمون
     match /users/{userId} {
       // يقرأ نفسه + الأدمن يقرأ الجميع
@@ -75,6 +81,39 @@ service cloud.firestore {
       allow list: if isAdmin();
 
       // التعديل/الحذف للأدمن فقط
+      allow update, delete: if isAdmin();
+    }
+
+
+    // مسودات الدورات الخاصة بالأستاذ (خاصة بكل أستاذ)
+    match /instructorCourseDrafts/{instructorId} {
+      allow get, create, update, delete: if isSignedIn() && request.auth.uid == instructorId;
+      allow list: if isAdmin();
+    }
+
+    // طلبات دورات الأساتذة (قبل اعتماد المشرف)
+    match /instructorCourseSubmissions/{submissionId} {
+      // الأستاذ يرسل طلبه لنفسه فقط
+      allow create: if isSignedIn()
+                    && request.resource.data.instructorId == request.auth.uid;
+
+      // الأستاذ يقرأ طلباته + الأدمن يقرأ الجميع
+      allow get: if isAdmin() || (isSignedIn() && resource.data.instructorId == request.auth.uid);
+      allow list: if isAdmin() || isSignedIn();
+
+      // التحديث/الحذف للأدمن (قرار قبول/رفض)
+      allow update, delete: if isAdmin();
+    }
+
+    // رسائل المحادثة بين الأستاذ والمشرف
+    match /instructorMessages/{messageId} {
+      allow create: if isSignedIn() && (
+        request.resource.data.senderId == request.auth.uid
+      );
+
+      allow get: if isAdmin()
+                 || (isSignedIn() && resource.data.instructorId == request.auth.uid);
+      allow list: if isAdmin() || isSignedIn();
       allow update, delete: if isAdmin();
     }
 
@@ -189,6 +228,17 @@ service firebase.storage {
       // القراءة للأدمن فقط
       allow read: if isAdmin();
     }
+
+    // ملفات الدورات المرفوعة من الأستاذ قبل مراجعة المشرف
+    // المسار المستخدم في الواجهة: instructor-courses/{uid}/...
+    match /instructor-courses/{uid}/{allPaths=**} {
+      // السماح لأي مستخدم مسجل دخول بالرفع داخل مجلده فقط.
+      // هذا يمنع خطأ 403 (storage/unauthorized) في لوحة الأستاذ
+      // حتى لو لم تكن custom claims (role/status) مضافة على token بعد.
+      allow create, update, delete: if isSignedIn() && request.auth.uid == uid;
+
+      // القراءة لصاحب الملفات نفسه أو الأدمن
+      allow read: if (isSignedIn() && request.auth.uid == uid) || isAdmin();
+    }
   }
 }
-
