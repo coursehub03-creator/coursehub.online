@@ -1189,7 +1189,7 @@ async function submitCourse(user) {
 
     const lessons = [];
     for (const lesson of draftLessons) {
-      const slides = await slideBuilder.getSlidesForSave(lesson.id, storage);
+      const slides = await slideBuilder.getSlidesForSave(lesson.id, storage, user.uid);
       const quiz = quizBuilder.getQuiz(lesson.id);
       lessons.push({
         title: lesson.title,
@@ -1265,9 +1265,25 @@ async function submitCourse(user) {
 } catch (err) {
   console.warn("Course submission failed", err);
 
+  const code = String(err?.code || "");
+  const msg = String(err?.message || "");
+
   const denied =
-    err?.code === "permission-denied" ||
-    String(err?.message || "").includes("Missing or insufficient permissions");
+    code === "permission-denied" ||
+    msg.includes("Missing or insufficient permissions");
+
+  const storageUnauthorized =
+    code === "storage/unauthorized" ||
+    msg.includes("storage/unauthorized") ||
+    msg.includes("User does not have permission to access");
+
+  if (storageUnauthorized) {
+    setStatus(
+      "❌ فشل رفع ملفات السلايدات إلى Firebase Storage (403). تم تحديث مسار الرفع، لكن يجب أن تسمح Storage Rules بالكتابة إلى المسار instructor-courses/{uid}/slides/.",
+      true
+    );
+    return;
+  }
 
   if (denied) {
     setStatus(

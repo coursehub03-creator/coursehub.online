@@ -318,16 +318,17 @@ export class SlideBuilder {
     });
   }
 
-  async getSlidesForSave(lessonId, storage) {
+  async getSlidesForSave(lessonId, storage, ownerId = "") {
     const slides = this.slides[lessonId] || [];
     const prepared = [];
 
     for (const slide of slides) {
       let finalMediaUrl = slide.mediaUrl;
       if (slide.mediaFile) {
+        const safeOwnerId = ownerId || "anonymous";
         const mediaRef = ref(
           storage,
-          `courses/slides/${lessonId}/${Date.now()}_${slide.mediaFile.name}`
+          `instructor-courses/${safeOwnerId}/slides/${lessonId}/${Date.now()}_${slide.mediaFile.name}`
         );
         await uploadBytes(mediaRef, slide.mediaFile);
         finalMediaUrl = await getDownloadURL(mediaRef);
