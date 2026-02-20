@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>دردشة الأساتذة | CourseHub Admin</title>
+  <title>دردشة الأساتذة | لوحة التحكم</title>
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/header.css" />
   <link rel="stylesheet" href="/css/footer.css" />
@@ -18,16 +18,23 @@
         <div id="topbar-placeholder"></div>
         <div class="admin-content">
           <h1>دردشة الأساتذة</h1>
-          <div class="card" style="display:grid;grid-template-columns:300px 1fr;gap:14px;min-height:520px;">
-            <aside>
+
+          <div class="card admin-chat-shell">
+            <aside class="admin-chat-sidebar">
               <h3>قائمة الأساتذة</h3>
-              <div id="chatInstructorsList" style="display:grid;gap:8px;"></div>
+              <div id="chatInstructorsList" class="admin-chat-instructors-list"></div>
             </aside>
-            <section>
-              <h3 id="chatWithTitle">اختر أستاذًا لبدء المحادثة</h3>
-              <div id="adminChatMessages" style="border:1px solid #e5e7eb;border-radius:10px;min-height:360px;max-height:460px;overflow:auto;padding:10px;display:grid;gap:8px;background:#f8fafc"></div>
-              <div style="display:grid;gap:8px;margin-top:10px;">
-                <textarea id="adminChatInput" rows="3" placeholder="اكتب رسالة للمحاضر..." style="padding:10px;border:1px solid #d1d5db;border-radius:8px;"></textarea>
+
+            <section class="admin-chat-main">
+              <div class="admin-chat-header-row">
+                <h3 id="chatWithTitle">اختر أستاذًا لبدء المحادثة</h3>
+                <button id="deleteChatBtn" type="button" class="btn danger" hidden>حذف المحادثة</button>
+              </div>
+
+              <div id="adminChatMessages" class="admin-chat-messages"></div>
+
+              <div class="admin-chat-compose">
+                <textarea id="adminChatInput" rows="3" placeholder="اكتب رسالة احترافية وواضحة للأستاذ..."></textarea>
                 <button id="adminSendChatBtn" class="btn">إرسال</button>
               </div>
             </section>

@@ -12,13 +12,27 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <script>
-    // منع ضوضاء أخطاء إضافات المتصفح قبل تحميل أي سكربتات defer/module
-    window.addEventListener("unhandledrejection", function (event) {
-      const text = String((event && event.reason && event.reason.message) || (event && event.reason) || "");
-      if (text.includes("Receiving end does not exist") || text.includes("Could not establish connection")) {
-        event.preventDefault();
-      }
-    });
+    // منع ضوضاء إضافات المتصفح قبل تحميل أي سكربتات defer/module
+    (function () {
+      const shouldIgnore = (value) => {
+        const msg = String((value && value.message) || value || "");
+        return msg.includes("Receiving end does not exist") || msg.includes("Could not establish connection");
+      };
+
+      window.addEventListener("unhandledrejection", function (event) {
+        if (shouldIgnore(event && event.reason)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+
+      window.addEventListener("error", function (event) {
+        if (shouldIgnore(event && event.message)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+    })();
   </script>
 </head>
 
@@ -41,7 +55,7 @@
     <!-- Topbar -->
     <section class="instructor-admin-topbar card">
       <div class="topbar-left">
-        <span class="menu-icon">☰</span>
+        <button type="button" id="workspaceSidebarToggle" class="sidebar-toggle-btn" aria-label="تبديل القائمة">☰</button>
         <h2>لوحة الأستاذ</h2>
       </div>
       <div class="topbar-right">
@@ -50,8 +64,61 @@
       </div>
     </section>
 
-    <!-- Builder -->
-    <section class="builder-shell">
+    <!-- Workspace -->
+    <section class="card instructor-workspace">
+      <aside class="workspace-sidebar">
+        <div class="workspace-brand">
+          <h3>Instructor Panel</h3>
+          <p>لوحة الأستاذ</p>
+        </div>
+
+        <ul class="workspace-menu">
+          <li>
+            <button type="button" class="workspace-link active" data-target="ws-add">
+              <span>➕</span><strong>إضافة دورة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-drafts">
+              <span>📝</span><strong>المسودات</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-pending">
+              <span>⏳</span><strong>قيد المراجعة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-approved">
+              <span>✅</span><strong>المقبولة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-rejected">
+              <span>❌</span><strong>المرفوضة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-published">
+              <span>🎓</span><strong>المنشورة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-archived">
+              <span>🗂️</span><strong>المؤرشفة</strong>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="workspace-link" data-target="ws-chat">
+              <span>💬</span><strong>الرسائل</strong><span id="chatNavBadge" class="chat-nav-badge" hidden>0</span>
+            </button>
+          </li>
+        </ul>
+      </aside>
+
+      <div class="workspace-content">
+        <div id="ws-add" class="workspace-panel active">
+          <section class="builder-shell">
       <div class="builder-header">
         <h2>منشئ الدورات الاحترافي</h2>
         <p>نفس قالب لوحة المشرف تمامًا، مع أدوات كتابة وتحكم أكثر احترافية للأستاذ قبل الإرسال للمراجعة.</p>
@@ -263,62 +330,10 @@
           </div>
         </div>
       </form>
-    </section>
-
-    <!-- Workspace -->
-    <section class="card instructor-workspace">
-      <aside class="workspace-sidebar">
-        <div class="workspace-brand">
-          <h3>Instructor Panel</h3>
-          <p>لوحة الأستاذ</p>
+          </section>
         </div>
 
-        <ul class="workspace-menu">
-          <li>
-            <button type="button" class="workspace-link" data-action="open-builder" data-builder-tab="info">
-              <span>➕</span><strong>إضافة دورة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link active" data-target="ws-drafts">
-              <span>📝</span><strong>المسودات</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-pending">
-              <span>⏳</span><strong>قيد المراجعة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-approved">
-              <span>✅</span><strong>المقبولة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-rejected">
-              <span>❌</span><strong>المرفوضة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-published">
-              <span>🎓</span><strong>المنشورة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-archived">
-              <span>🗂️</span><strong>المؤرشفة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-chat">
-              <span>💬</span><strong>الرسائل</strong>
-            </button>
-          </li>
-        </ul>
-      </aside>
-
-      <div class="workspace-content">
-        <div id="ws-drafts" class="workspace-panel active">
+        <div id="ws-drafts" class="workspace-panel">
           <h3>مسوداتي الخاصة</h3>
           <div id="draftsList" class="submission-list"></div>
         </div>
@@ -349,7 +364,7 @@
         </div>
 
         <div id="ws-chat" class="workspace-panel">
-          <h3>التحدث مع المشرف</h3>
+          <h3>التحدث مع المشرف <span id="chatPanelBadge" class="chat-panel-badge" hidden>0 جديد</span></h3>
           <div id="instructorChatMessages" class="chat-messages"></div>
           <div class="chat-compose">
             <textarea id="instructorChatInput" rows="3" placeholder="اكتب رسالتك للمشرف..."></textarea>

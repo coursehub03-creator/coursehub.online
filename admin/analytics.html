@@ -5,6 +5,30 @@
   <title>التحليلات | لوحة التحكم</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script>
+    // كتم ضوضاء إضافات المتصفح التي تظهر قبل تحميل السكربتات المؤجلة
+    (function () {
+      const isExtensionNoise = (value) => {
+        const msg = String((value && value.message) || value || "");
+        return msg.includes("Receiving end does not exist") || msg.includes("Could not establish connection");
+      };
+
+      window.addEventListener("unhandledrejection", function (event) {
+        if (isExtensionNoise(event && event.reason)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+
+      window.addEventListener("error", function (event) {
+        if (isExtensionNoise(event && event.message)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+    })();
+  </script>
+
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
