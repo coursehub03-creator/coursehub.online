@@ -3,11 +3,15 @@ import { protectAdmin } from "./admin-guard.js";
 import {
   collection,
   getDocs,
+  addDoc,
   doc,
   deleteDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const adminUser = await protectAdmin();
@@ -18,6 +22,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusFilter = document.getElementById("course-status-filter");
   const searchInput = document.getElementById("course-search");
   const categoryFilter = document.getElementById("course-category-filter");
+  const submissionsTbody = document.getElementById("instructor-submissions-list");
+
+  const functions = getFunctions(undefined, "us-central1");
+  const reviewInstructorCourseSubmission = httpsCallable(functions, "reviewInstructorCourseSubmission");
+
+  const callableAllowedHosts = new Set([
+    "localhost",
+    "127.0.0.1",
+    "coursehub-23ed2.web.app",
+    "coursehub-23ed2.firebaseapp.com"
+  ]);
+  const shouldUseCallable = callableAllowedHosts.has(window.location.hostname);
 
   if (!addBtn || !tbody) {
     console.error("عناصر الصفحة غير موجودة");
@@ -32,6 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let allCourses = [];
   let enrollmentsMap = new Map();
   let completionsMap = new Map();
+  let submissionsMap = new Map();
 
   const statusBadge = (status) => {
     if (status === "published") return "<span class='badge success'>منشورة</span>";
@@ -105,6 +122,173 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderCourses(filtered);
   };
 
+  function buildSubmissionPreview(item) {
+    const modules = Array.isArray(item.modules) ? item.modules : [];
+    const moduleLines = modules.map((m, idx) => {
+      const lessons = Array.isArray(m.lessons) ? m.lessons : [];
+      const lessonTitles = lessons.map((l) => `- ${l.title || "بدون عنوان"}`).join("\n");
+      return `الوحدة ${idx + 1}: ${m.title || "بدون عنوان"}\n${lessonTitles}`;
+    }).join("\n\n");
+
+    return [
+      `العنوان: ${item.title || "-"}`,
+      `التصنيف: ${item.category || "-"}`,
+      `الوصف: ${item.description || "-"}`,
+      `عدد الوحدات: ${modules.length}`,
+      `عدد أسئلة الاختبار: ${item.assessmentQuestions?.length || 0}`,
+      "",
+      "المنهج:",
+      moduleLines || "لا توجد وحدات"
+    ].join("\n");
+  }
+
+  async function fallbackReviewSubmission(item, decision, reason = "") {
+    if (decision === "approve") {
+      const coursePayload = {
+        title: item.title || "",
+        titleEn: item.titleEn || "",
+        description: item.description || "",
+        category: item.category || "",
+        level: item.level || "",
+        language: item.language || "",
+        duration: Number(item.durationHours || 0),
+        modules: Array.isArray(item.modules) ? item.modules.length : 0,
+        image: item.image || "",
+        lessons: (item.modules || []).flatMap((m) => (m.lessons || []).map((lesson) => ({
+          title: lesson.title || "",
+          duration: lesson.duration || "",
+          summary: "",
+          slides: [],
+          quiz: { questions: (item.assessmentQuestions || []).slice(0, 10) },
+          passScore: 80
+        }))),
+        status: "draft",
+        source: "instructor-submission",
+        instructorId: item.instructorId || "",
+        instructorEmail: item.instructorEmail || "",
+        submissionId: item.id,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      const courseRef = await addDoc(collection(db, "courses"), coursePayload);
+      await updateDoc(doc(db, "instructorCourseSubmissions", item.id), {
+        status: "approved",
+        reviewReason: "",
+        linkedCourseId: courseRef.id,
+        updatedAt: serverTimestamp()
+      });
+      return;
+    }
+
+    await updateDoc(doc(db, "instructorCourseSubmissions", item.id), {
+      status: "rejected",
+      reviewReason: reason,
+      updatedAt: serverTimestamp()
+    });
+  }
+
+
+  async function loadInstructorSubmissions() {
+    if (!submissionsTbody) return;
+    submissionsTbody.innerHTML = "<tr><td colspan='6'>جارٍ تحميل طلبات الأساتذة...</td></tr>";
+
+    try {
+      const snap = await getDocs(query(collection(db, "instructorCourseSubmissions"), orderBy("createdAt", "desc")));
+      const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      submissionsMap = new Map(items.map((item) => [item.id, item]));
+
+      if (!items.length) {
+        submissionsTbody.innerHTML = "<tr><td colspan='6'>لا توجد طلبات من الأساتذة حاليًا.</td></tr>";
+        return;
+      }
+
+      submissionsTbody.innerHTML = items
+        .map((item) => {
+          const lessons = (item.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+          const questions = item.assessmentQuestions?.length || 0;
+          const status = item.status || "pending";
+          const statusText = status === "approved" ? "تم التحويل لمسودة المشرف" : status === "rejected" ? "مرفوض" : "قيد المراجعة";
+          const editDraftAction = item.linkedCourseId
+            ? `<a class="btn outline small" href="/admin/edit-course.html?id=${item.linkedCourseId}">تعديل المسودة</a>`
+            : "";
+          return `
+          <tr>
+            <td>${item.title || "-"}</td>
+            <td>${item.instructorEmail || "-"}</td>
+            <td>${lessons} درس / ${questions} سؤال</td>
+            <td>${statusText}</td>
+            <td><input type="text" class="submission-reason" data-id="${item.id}" placeholder="سبب الرفض (اختياري)" /></td>
+            <td>
+              <button type="button" class="btn small submission-preview" data-id="${item.id}">معاينة</button>
+              <button type="button" class="btn success small submission-approve" data-id="${item.id}">اعتماد كمسودة</button>
+              <button type="button" class="btn outline small submission-reject" data-id="${item.id}">رفض</button>
+              ${editDraftAction}
+            </td>
+          </tr>
+          `;
+        })
+        .join("");
+    } catch (error) {
+      console.error("فشل تحميل طلبات دورات الأساتذة:", error);
+      submissionsTbody.innerHTML = "<tr><td colspan='6'>تعذر تحميل الطلبات.</td></tr>";
+    }
+  }
+
+  submissionsTbody?.addEventListener("click", async (event) => {
+    const previewBtn = event.target.closest(".submission-preview");
+    const approveBtn = event.target.closest(".submission-approve");
+    const rejectBtn = event.target.closest(".submission-reject");
+    if (!previewBtn && !approveBtn && !rejectBtn) return;
+
+    const id = (previewBtn || approveBtn || rejectBtn)?.dataset.id;
+    if (!id) return;
+
+    const item = submissionsMap.get(id);
+    if (!item) return;
+
+    if (previewBtn) {
+      alert(buildSubmissionPreview(item));
+      return;
+    }
+
+    const reasonInput = submissionsTbody.querySelector(`.submission-reason[data-id="${id}"]`);
+    const reason = reasonInput?.value?.trim() || "";
+
+    try {
+      if (approveBtn) {
+        if (shouldUseCallable) {
+          await reviewInstructorCourseSubmission({ submissionId: id, decision: "approve" });
+        } else {
+          await fallbackReviewSubmission(item, "approve");
+        }
+      } else {
+        if (!reason) {
+          alert("أدخل سبب الرفض قبل المتابعة.");
+          return;
+        }
+
+        if (shouldUseCallable) {
+          await reviewInstructorCourseSubmission({ submissionId: id, decision: "reject", reason });
+        } else {
+          await fallbackReviewSubmission(item, "reject", reason);
+        }
+      }
+
+      await loadInstructorSubmissions();
+      await loadCourses();
+    } catch (error) {
+      console.warn("reviewInstructorCourseSubmission failed, trying fallback:", error);
+      try {
+        await fallbackReviewSubmission(item, approveBtn ? "approve" : "reject", reason);
+        await loadInstructorSubmissions();
+        await loadCourses();
+      } catch (fallbackError) {
+        console.error("تعذر مراجعة الطلب:", fallbackError);
+        alert("حدث خطأ أثناء مراجعة طلب الأستاذ.");
+      }
+    }
+  });
   async function setCourseStatus(courseId, status) {
     const payload = {
       status,
@@ -187,6 +371,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   await loadCourses();
+  await loadInstructorSubmissions();
 
   statusFilter?.addEventListener("change", applyFilters);
   categoryFilter?.addEventListener("change", applyFilters);

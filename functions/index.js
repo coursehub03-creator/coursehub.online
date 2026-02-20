@@ -301,6 +301,178 @@ exports.approveInstructorApplication = onCall({ region: "us-central1" }, async (
   return { ok: true, decision: "rejected" };
 });
 
+
+
+// Callable: إرسال دورة من الأستاذ للمراجعة (يتجاوز مشاكل صلاحيات Firestore من الواجهة)
+exports.submitInstructorCourse = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+
+  const uid = request.auth.uid;
+  const email = request.auth.token?.email || "";
+  const payload = request.data || {};
+
+  const userSnap = await db.collection("users").doc(uid).get();
+  const userMeta = userSnap.data() || {};
+  if (String(userMeta.role || "") !== "instructor" || String(userMeta.status || "") !== "active") {
+    throw new HttpsError("permission-denied", "Only active instructors can submit courses.");
+  }
+
+  const title = String(payload.title || "").trim();
+  const description = String(payload.description || "").trim();
+  const category = String(payload.category || "").trim();
+  const modules = Array.isArray(payload.modules) ? payload.modules : [];
+  const assessmentQuestions = Array.isArray(payload.assessmentQuestions) ? payload.assessmentQuestions : [];
+
+  if (!title || !description || !category) {
+    throw new HttpsError("invalid-argument", "title, description and category are required.");
+  }
+
+  if (!modules.length) {
+    throw new HttpsError("invalid-argument", "At least one module is required.");
+  }
+
+  if (assessmentQuestions.length < 2) {
+    throw new HttpsError("invalid-argument", "At least 2 assessment questions are required.");
+  }
+
+  const submission = {
+    instructorId: uid,
+    instructorEmail: email,
+    title,
+    titleEn: String(payload.titleEn || "").trim(),
+    description,
+    category,
+    price: Number(payload.price || 0),
+    level: String(payload.level || "").trim(),
+    language: String(payload.language || "").trim(),
+    durationHours: Number(payload.durationHours || 0),
+    difficulty: String(payload.difficulty || "").trim(),
+    objectives: Array.isArray(payload.objectives) ? payload.objectives : [],
+    requirements: Array.isArray(payload.requirements) ? payload.requirements : [],
+    outcomes: Array.isArray(payload.outcomes) ? payload.outcomes : [],
+    modules,
+    assessmentQuestions,
+    image: String(payload.image || ""),
+    outlineUrl: String(payload.outlineUrl || ""),
+    status: "pending",
+    reviewReason: "",
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  const ref = await db.collection("instructorCourseSubmissions").add(submission);
+
+  for (const adminEmail of ADMIN_EMAILS) {
+    await queueEmail({
+      to: adminEmail,
+      template: "instructor-course-submitted",
+      subject: "طلب دورة جديد من أستاذ - CourseHub",
+      message: `تم إرسال دورة جديدة للمراجعة بعنوان: ${title}
+Submission ID: ${ref.id}`
+    }).catch(() => {});
+  }
+
+  return { ok: true, submissionId: ref.id };
+});
+
+// Callable: اعتماد/رفض دورة الأستاذ من المشرف
+exports.reviewInstructorCourseSubmission = onCall({ region: "us-central1" }, async (request) => {
+  await assertAdmin(request);
+
+  const submissionId = String(request.data?.submissionId || "").trim();
+  const decision = String(request.data?.decision || "").trim().toLowerCase();
+  const reason = String(request.data?.reason || "").trim();
+
+  if (!submissionId) throw new HttpsError("invalid-argument", "submissionId is required.");
+  if (!["approve", "reject"].includes(decision)) {
+    throw new HttpsError("invalid-argument", "decision must be approve/reject.");
+  }
+  if (decision === "reject" && !reason) {
+    throw new HttpsError("invalid-argument", "reason is required when rejecting.");
+  }
+
+  const subRef = db.collection("instructorCourseSubmissions").doc(submissionId);
+  const subSnap = await subRef.get();
+  if (!subSnap.exists) throw new HttpsError("not-found", "Submission not found.");
+
+  const sub = subSnap.data() || {};
+  const instructorEmail = String(sub.instructorEmail || "");
+
+  if (decision === "approve") {
+    const coursePayload = {
+      title: sub.title || "",
+      titleEn: sub.titleEn || "",
+      description: sub.description || "",
+      category: sub.category || "",
+      level: sub.level || "",
+      language: sub.language || "",
+      duration: sub.durationHours || 0,
+      modules: sub.modules?.length || 0,
+      image: sub.image || "",
+      lessons: (sub.modules || []).flatMap((m) => (m.lessons || []).map((lesson) => ({
+        title: lesson.title || "",
+        duration: lesson.duration || "",
+        summary: "",
+        slides: [],
+        quiz: {
+          questions: (sub.assessmentQuestions || []).slice(0, 10)
+        },
+        passScore: 80
+      }))),
+      status: "draft",
+      source: "instructor-submission",
+      instructorId: sub.instructorId || "",
+      instructorEmail,
+      submissionId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    const courseRef = await db.collection("courses").add(coursePayload);
+
+    await subRef.set({
+      status: "approved",
+      reviewReason: "",
+      reviewedBy: request.auth.uid,
+      reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+      linkedCourseId: courseRef.id,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    if (instructorEmail) {
+      await queueEmail({
+        to: instructorEmail,
+        template: "instructor-course-approved",
+        subject: "تمت الموافقة على دورة الأستاذ - CourseHub",
+        message: `تمت الموافقة على دورتك (${sub.title || ""}) وتم حفظها كمسودة لدى المشرف لمراجعتها قبل النشر.`
+      }).catch(() => {});
+    }
+
+    return { ok: true, status: "approved", courseId: courseRef.id };
+  }
+
+  await subRef.set({
+    status: "rejected",
+    reviewReason: reason,
+    reviewedBy: request.auth.uid,
+    reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  if (instructorEmail) {
+    await queueEmail({
+      to: instructorEmail,
+      template: "instructor-course-rejected",
+      subject: "نتيجة مراجعة الدورة - CourseHub",
+      message: `تم رفض دورتك (${sub.title || ""}). السبب: ${reason}`
+    }).catch(() => {});
+  }
+
+  return { ok: true, status: "rejected" };
+});
+
 // Firestore Trigger: معالجة طابور الحذف authDeletionQueue
 exports.processAuthDeletionQueue = onDocumentCreated(
   {
