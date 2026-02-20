@@ -1,5 +1,17 @@
 // main.js - تحميل CSS، Header، Footer وإدارة حالة المستخدم
 
+// تجاهل أخطاء إضافات المتصفح الخارجية التي لا تخص كود المنصة
+window.addEventListener("unhandledrejection", (event) => {
+  const reasonText = String(event?.reason?.message || event?.reason || "");
+  if (
+    reasonText.includes("Receiving end does not exist")
+    || reasonText.includes("Could not establish connection")
+    || reasonText.includes("The message port closed before a response was received")
+  ) {
+    event.preventDefault();
+  }
+});
+
 // ===============================
 // تحميل CSS ديناميكيًا إذا لم يكن موجودًا
 // ===============================

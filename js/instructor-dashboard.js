@@ -31,6 +31,12 @@ const sendChatBtn = document.getElementById("sendInstructorChatBtn");
 
 const pendingCount = document.getElementById("pendingCount");
 const approvedCount = document.getElementById("approvedCount");
+let currentInstructorUid = "";
+
+const coverInput = document.getElementById("courseImage");
+const coverUrlInput = document.getElementById("courseImageUrl");
+const coverPreview = document.getElementById("coverPreview");
+const previewCover = document.getElementById("previewCover");
 
 const coverInput = document.getElementById("courseImage");
 const coverUrlInput = document.getElementById("courseImageUrl");
