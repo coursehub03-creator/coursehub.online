@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instructor Builder 2.0 | CourseHub</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/css/instructor-builder.css">
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <main class="builder2 container">
+    <section class="wizard-head card">
+      <h1>منشئ الدورات الجديد (Wizard)</h1>
+      <div class="wizard-steps" id="wizardSteps"></div>
+    </section>
+
+    <form id="builderForm" class="card builder-form">
+      <div class="wizard-panel active" data-step="0">
+        <h2>1) معلومات الدورة</h2>
+        <div class="grid-2">
+          <input id="title" placeholder="عنوان الدورة" required>
+          <input id="category" placeholder="التصنيف" required>
+          <input id="price" type="number" min="0" placeholder="السعر">
+          <input id="level" placeholder="المستوى">
+          <input id="language" placeholder="اللغة" value="العربية">
+          <input id="durationHours" type="number" min="1" placeholder="المدة بالساعات">
+          <input id="image" placeholder="رابط صورة الغلاف">
+          <input id="coverImage" type="file" accept="image/*">
+        </div>
+        <img id="coverPreview" src="/assets/images/default-course.png" alt="cover" style="width:200px;border-radius:10px;margin-top:10px;">
+        <textarea id="description" rows="5" placeholder="وصف الدورة"></textarea>
+      </div>
+
+      <div class="wizard-panel" data-step="1">
+        <h2>2) بناء الدروس والخطوات</h2>
+        <div id="lessonsBuilder"></div>
+        <button class="btn ghost" id="addLesson" type="button">+ إضافة Lesson</button>
+      </div>
+
+      <div class="wizard-panel" data-step="2">
+        <h2>3) Checkpoints</h2>
+        <p>يمكنك إضافة checkpointQuiz ضمن الخطوات داخل كل درس (Template جاهز).</p>
+        <div id="checkpointHint" class="hint"></div>
+      </div>
+
+      <div class="wizard-panel" data-step="3">
+        <h2>4) المعاينة النهائية</h2>
+        <div id="playerPreview" class="preview-shell"></div>
+        <ul class="checklist">
+          <li>✅ تأكد من وجود عنوان ووصف واضح.</li>
+          <li>✅ تأكد من إضافة Summary لكل درس.</li>
+          <li>✅ تأكد من نقطة Checkpoint واحدة على الأقل.</li>
+        </ul>
+      </div>
+
+      <footer class="wizard-actions">
+        <button type="button" class="btn ghost" id="prevWizard">السابق</button>
+        <div>
+          <button type="button" class="btn ghost" id="saveDraft">حفظ مسودة</button>
+          <button type="button" class="btn ghost" id="nextWizard">التالي</button>
+          <button type="submit" class="btn primary" id="submitCourse">إرسال الدورة</button>
+        </div>
+      </footer>
+      <p id="builderStatus"></p>
+    </form>
+  </main>
+  <div id="footer-placeholder"></div>
+
+  <script type="module" src="/js/main.js"></script>
+  <script type="module" src="/js/instructor-builder.js"></script>
+</body>
+</html>

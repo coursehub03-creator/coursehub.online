@@ -1,12 +1,11 @@
-import { db, storage } from "/js/firebase-config.js";
-import { addDoc, collection, doc, getDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { auth, db, storage } from "/js/firebase-config.js";
+import { addDoc, collection, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getDownloadURL, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-const LOCAL_DRAFT_KEY = "coursehub_admin_builder2_draft";
+const LOCAL_DRAFT_KEY = "coursehub_builder2_draft";
 const STEP_TEMPLATES = ["text", "video", "image", "exercise", "checkpointQuiz", "summary"];
 
-let authUser = null;
+let user;
 let wizardStep = 0;
 let state = {
   title: "",
@@ -14,20 +13,19 @@ let state = {
   description: "",
   image: "",
   price: 0,
-  level: "مبتدئ",
+  level: "",
   language: "العربية",
   durationHours: 0,
   lessons: []
 };
-
-const auth = getAuth();
 
 document.addEventListener("DOMContentLoaded", () => {
   initWizard();
   bindEvents();
 
   auth.onAuthStateChanged(async (u) => {
-    authUser = u;
+    if (!u) return (window.location.href = "/login.html");
+    user = u;
     await restoreDraft();
     await maybeLoadMigrationCourse();
     renderLessons();
@@ -38,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function initWizard() {
   const labels = ["معلومات", "Lessons", "Checkpoints", "Preview"];
   document.getElementById("wizardSteps").innerHTML = labels
-    .map((label, idx) => `<div class="wizard-step ${idx === 0 ? "active" : ""}">${idx + 1}. ${label}</div>`)
+    .map((label, idx) => `<div class="wizard-step ${idx === 0 ? "active" : ""}" data-wizard-dot="${idx}">${idx + 1}. ${label}</div>`)
     .join("");
 }
 
@@ -63,9 +61,9 @@ function bindEvents() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     document.getElementById("coverPreview").src = url;
-    document.getElementById("previewCover").src = url;
   });
 }
+
 
 function setStep(next) {
   wizardStep = Math.max(0, Math.min(3, next));
@@ -77,15 +75,30 @@ function setStep(next) {
 }
 
 function addLesson() {
-  state.lessons.push({ id: crypto.randomUUID(), title: `Lesson ${state.lessons.length + 1}`, duration: "", summary: "", steps: [] });
+  state.lessons.push({
+    id: crypto.randomUUID(),
+    title: `Lesson ${state.lessons.length + 1}`,
+    duration: "",
+    summary: "",
+    steps: []
+  });
   renderLessons();
   debouncedAutosave();
 }
 
-function addStep(lessonId, type) {
+function addStep(lessonId, type = "text") {
   const lesson = state.lessons.find((l) => l.id === lessonId);
   if (!lesson) return;
-  lesson.steps.push({ id: crypto.randomUUID(), type, title: `${type} step`, content: "", mediaUrl: "", options: type === "checkpointQuiz" ? ["خيار 1", "خيار 2"] : [], correctIndex: 0, points: 10 });
+  lesson.steps.push({
+    id: crypto.randomUUID(),
+    type,
+    title: `${type} step`,
+    content: "",
+    mediaUrl: "",
+    options: type === "checkpointQuiz" ? ["خيار 1", "خيار 2"] : [],
+    correctIndex: 0,
+    points: 10
+  });
   renderLessons();
   debouncedAutosave();
 }
@@ -125,7 +138,8 @@ function renderLessons() {
             </div>
           </div>`).join("")}
       </div>
-    </article>`).join("");
+    </article>
+  `).join("");
 
   bindLessonEvents();
   renderPreview();
@@ -133,7 +147,8 @@ function renderLessons() {
 
 function bindLessonEvents() {
   document.querySelectorAll(".lesson-card").forEach((card) => {
-    const lesson = state.lessons.find((l) => l.id === card.dataset.lessonId);
+    const lessonId = card.dataset.lessonId;
+    const lesson = state.lessons.find((l) => l.id === lessonId);
     if (!lesson) return;
 
     card.querySelectorAll("[data-lesson-field]").forEach((input) => {
@@ -145,20 +160,20 @@ function bindLessonEvents() {
     });
 
     card.querySelector("[data-lesson-move='up']")?.addEventListener("click", () => {
-      const idx = state.lessons.findIndex((l) => l.id === lesson.id);
+      const idx = state.lessons.findIndex((l) => l.id === lessonId);
       moveItem(state.lessons, idx, idx - 1);
       renderLessons();
       debouncedAutosave();
     });
 
     card.querySelector("[data-lesson-move='down']")?.addEventListener("click", () => {
-      const idx = state.lessons.findIndex((l) => l.id === lesson.id);
+      const idx = state.lessons.findIndex((l) => l.id === lessonId);
       moveItem(state.lessons, idx, idx + 1);
       renderLessons();
       debouncedAutosave();
     });
 
-    card.querySelectorAll("[data-add-step]").forEach((btn) => btn.addEventListener("click", () => addStep(lesson.id, btn.dataset.addStep)));
+    card.querySelectorAll("[data-add-step]").forEach((btn) => btn.addEventListener("click", () => addStep(lessonId, btn.dataset.addStep)));
 
     card.querySelectorAll(".step-row").forEach((stepRow) => {
       const step = lesson.steps.find((s) => s.id === stepRow.dataset.stepId);
@@ -200,76 +215,62 @@ function renderPreview() {
   const firstLesson = state.lessons[0];
   const firstStep = firstLesson?.steps?.[0];
   document.getElementById("playerPreview").innerHTML = `
-    <div class="course-public-hero">
-      <div class="course-public-copy">
-        <span class="course-tag">${state.category || "تصنيف الدورة"}</span>
-        <h3>${state.title || "عنوان الدورة"}</h3>
-        <p>${state.description || "وصف الدورة"}</p>
-      </div>
-      <img id="previewCover" src="${document.getElementById("coverPreview").src || "/assets/images/default-course.png"}" class="preview-cover" alt="cover preview">
-    </div>
+    <h3>${state.title || "عنوان الدورة"}</h3>
+    <p>${state.description || "وصف الدورة"}</p>
     <hr>
     <strong>${firstLesson?.title || "أضف Lesson لعرض المعاينة"}</strong>
-    <p>${firstStep?.title || "أضف Step"}</p>
-    <div>${firstStep?.content || ""}</div>`;
+    <p>${firstStep?.title || "أضف Step من Templates"}</p>
+    <div>${firstStep?.content || ""}</div>
+  `;
 
   const checkpoints = state.lessons.flatMap((l) => l.steps).filter((s) => s.type === "checkpointQuiz").length;
   document.getElementById("checkpointHint").textContent = `عدد checkpoints الحالية: ${checkpoints}`;
 }
 
-async function uploadCoverIfNeeded() {
-  const coverInput = document.getElementById("coverImage");
-  const file = coverInput?.files?.[0];
-  if (!file) return state.image || "";
-  const coverRef = ref(storage, `courses/covers/${Date.now()}_${file.name}`);
-  await uploadBytes(coverRef, file);
-  return getDownloadURL(coverRef);
-}
-
 async function saveDraft(showMessage = false) {
   const payload = getPayload("draft");
-  localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify({ ...payload, updatedAt: new Date().toISOString() }));
-  if (authUser?.uid) {
-    await setDoc(doc(db, "adminCourseDrafts", authUser.uid), { ...payload, updatedAt: serverTimestamp() }, { merge: true });
+  localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
+  if (user?.uid) {
+    await setDoc(doc(db, "instructorCourseDrafts", user.uid), { ...payload, updatedAt: serverTimestamp() }, { merge: true });
   }
-  if (showMessage) setStatus("✅ تم حفظ المسودة");
+  if (showMessage) setStatus("✅ تم حفظ المسودة محليًا وسحابيًا");
 }
 
 async function restoreDraft() {
   const local = safeParse(localStorage.getItem(LOCAL_DRAFT_KEY));
-  const remoteSnap = authUser?.uid ? await getDoc(doc(db, "adminCourseDrafts", authUser.uid)) : null;
+  const remoteSnap = user?.uid ? await getDoc(doc(db, "instructorCourseDrafts", user.uid)) : null;
   const remote = remoteSnap?.exists() ? remoteSnap.data() : null;
   state = pickLatestDraft(local, remote) || state;
 
-  fillInfoFields();
-}
-
-function fillInfoFields() {
-  ["title", "category", "description", "image", "price", "level", "language", "durationHours"].forEach((key) => {
-    const el = document.getElementById(key);
-    if (!el) return;
-    el.value = state[key] ?? "";
+  Object.keys(state).forEach((key) => {
+    const input = document.getElementById(key);
+    if (input && typeof state[key] !== "object") input.value = state[key] ?? "";
   });
   document.getElementById("coverPreview").src = state.image || "/assets/images/default-course.png";
+  renderLessons();
 }
 
 async function submitCourse(event) {
   event.preventDefault();
   try {
     state.image = document.getElementById("image").value || state.image;
-    const uploadedImage = await uploadCoverIfNeeded();
-    if (uploadedImage) state.image = uploadedImage;
-    const payload = getPayload("published");
+    const coverFile = document.getElementById("coverImage")?.files?.[0];
+    if (coverFile) {
+      const coverRef = ref(storage, `courses/covers/${Date.now()}_${coverFile.name}`);
+      await uploadBytes(coverRef, coverFile);
+      state.image = await getDownloadURL(coverRef);
+    }
+    const payload = getPayload("pending");
     await addDoc(collection(db, "courses"), payload);
-    setStatus("✅ تم إنشاء الدورة بنجاح");
+    setStatus("✅ تم إرسال الدورة للمراجعة");
     localStorage.removeItem(LOCAL_DRAFT_KEY);
   } catch (error) {
     console.error(error);
-    setStatus("❌ فشل إنشاء الدورة", true);
+    setStatus("❌ فشل إرسال الدورة", true);
   }
 }
 
-function getPayload(status) {
+function getPayload(status = "draft") {
   const lessons = state.lessons.map((lesson) => ({
     id: lesson.id,
     title: lesson.title,
@@ -284,18 +285,6 @@ function getPayload(status) {
       options: step.options || [],
       correctIndex: Number(step.correctIndex || 0),
       points: Number(step.points || 10)
-    })),
-    slides: lesson.steps.filter((step) => step.type !== "checkpointQuiz").map((step) => ({
-      id: step.id,
-      type: step.type,
-      title: step.title,
-      text: step.content,
-      mediaUrl: step.mediaUrl
-    })),
-    quiz: lesson.steps.filter((step) => step.type === "checkpointQuiz").map((step) => ({
-      question: step.title,
-      options: step.options || [],
-      correct: Number(step.correctIndex || 0)
     }))
   }));
 
@@ -307,18 +296,18 @@ function getPayload(status) {
     level: state.level,
     language: state.language,
     durationHours: Number(state.durationHours || 0),
-    duration: Number(state.durationHours || 0),
     image: state.image,
+    instructorId: user?.uid || "",
     status,
     lessons,
     modules: lessons.map((lesson) => ({ title: lesson.title })),
     assessmentQuestions: lessons.flatMap((lesson) => lesson.steps.filter((step) => step.type === "checkpointQuiz").map((step) => ({
       question: step.title,
       options: step.options || [],
-      correctIndex: Number(step.correctIndex || 0)
+      correctIndex: step.correctIndex || 0
     }))),
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
+    createdAt: serverTimestamp()
   };
 }
 
@@ -328,26 +317,41 @@ async function maybeLoadMigrationCourse() {
   const snap = await getDoc(doc(db, "courses", courseId));
   if (!snap.exists()) return;
   const data = snap.data();
+
+  const migratedLessons = Array.isArray(data.lessons) && data.lessons.length
+    ? data.lessons
+    : migrateLegacyToLessons(data.modules || [], data.assessmentQuestions || []);
+
   state = {
     ...state,
     title: data.title || "",
-    category: data.category || "",
     description: data.description || "",
-    image: data.image || "",
-    price: Number(data.price || 0),
-    level: data.level || "مبتدئ",
+    category: data.category || "",
+    price: data.price || 0,
+    level: data.level || "",
     language: data.language || "العربية",
-    durationHours: Number(data.durationHours || data.duration || 0),
-    lessons: Array.isArray(data.lessons) && data.lessons.length ? data.lessons.map(normalizeLesson) : migrateLegacyToLessons(data.modules || [], data.assessmentQuestions || [])
+    durationHours: data.durationHours || 0,
+    image: data.image || "",
+    lessons: migratedLessons.map(normalizeLesson)
   };
-  fillInfoFields();
+
+  Object.keys(state).forEach((key) => {
+    const input = document.getElementById(key);
+    if (input && typeof state[key] !== "object") input.value = state[key] ?? "";
+  });
+
+  document.getElementById("coverPreview").src = state.image || "/assets/images/default-course.png";
+  renderLessons();
+  setStatus("ℹ️ تم استيراد محتوى النظام القديم بنجاح");
 }
+
 
 function normalizeLesson(lesson, idx) {
   const rawSteps = Array.isArray(lesson.steps) && lesson.steps.length ? lesson.steps : [
     ...(lesson.slides || []).map((slide, i) => ({ id: slide.id || `${lesson.id || idx}-slide-${i}`, type: slide.type || "text", title: slide.title || `Slide ${i + 1}`, content: slide.content || slide.text || "", mediaUrl: slide.mediaUrl || "" })),
     ...(lesson.quiz || []).map((q, i) => ({ id: `${lesson.id || idx}-quiz-${i}`, type: "checkpointQuiz", title: q.question || `Quiz ${i + 1}`, options: q.options || [], correctIndex: Number(q.correct ?? q.correctIndex ?? 0) }))
   ];
+
   return {
     id: lesson.id || `lesson-${idx + 1}`,
     title: lesson.title || `Lesson ${idx + 1}`,
@@ -366,19 +370,34 @@ function normalizeLesson(lesson, idx) {
   };
 }
 
-function migrateLegacyToLessons(modules, questions) {
+function migrateLegacyToLessons(modules, assessmentQuestions) {
   return (modules || []).map((module, idx) => ({
     id: `legacy-${idx + 1}`,
     title: module.title || `Module ${idx + 1}`,
-    duration: "",
+    duration: module.duration || "",
     summary: "",
     steps: [
       { id: `legacy-${idx + 1}-text`, type: "text", title: module.title || "مقدمة", content: module.description || "مقدمة سريعة" },
-      { id: `legacy-${idx + 1}-exercise`, type: "exercise", title: "تطبيق", content: "نفّذ تمرينًا بسيطًا" },
-      { id: `legacy-${idx + 1}-quiz`, type: "checkpointQuiz", title: questions[idx]?.question || "Checkpoint", options: questions[idx]?.options || ["خيار 1", "خيار 2"], correctIndex: Number(questions[idx]?.correctIndex || 0) },
-      { id: `legacy-${idx + 1}-summary`, type: "summary", title: "ملخص", content: "مراجعة سريعة." }
+      { id: `legacy-${idx + 1}-exercise`, type: "exercise", title: "طبّق", content: "طبّق المفهوم في تمرين بسيط" },
+      {
+        id: `legacy-${idx + 1}-quiz`,
+        type: "checkpointQuiz",
+        title: (assessmentQuestions[idx] && assessmentQuestions[idx].question) || "سؤال سريع",
+        options: (assessmentQuestions[idx] && assessmentQuestions[idx].options) || ["خيار 1", "خيار 2"],
+        correctIndex: (assessmentQuestions[idx] && assessmentQuestions[idx].correctIndex) || 0
+      },
+      { id: `legacy-${idx + 1}-summary`, type: "summary", title: "ملخص", content: "راجع أهم النقاط." }
     ]
   }));
+}
+
+function pickLatestDraft(local, remote) {
+  if (!local && !remote) return null;
+  if (!local) return remote;
+  if (!remote) return local;
+  const localAt = new Date(local.updatedAt || 0).getTime();
+  const remoteAt = new Date(remote.updatedAt?.toDate ? remote.updatedAt.toDate() : remote.updatedAt || 0).getTime();
+  return remoteAt > localAt ? remote : local;
 }
 
 function setStatus(msg, isError = false) {
@@ -387,17 +406,16 @@ function setStatus(msg, isError = false) {
   el.textContent = msg;
 }
 
-function pickLatestDraft(local, remote) {
-  if (!local && !remote) return null;
-  if (!local) return remote;
-  if (!remote) return local;
-  const localAt = new Date(local.updatedAt || 0).getTime();
-  const remoteRaw = remote.updatedAt?.toDate ? remote.updatedAt.toDate() : remote.updatedAt;
-  const remoteAt = new Date(remoteRaw || 0).getTime();
-  return remoteAt > localAt ? remote : local;
+function safeParse(value) {
+  try { return JSON.parse(value); } catch { return null; }
 }
 
-function safeParse(v) { try { return JSON.parse(v); } catch { return null; } }
-function esc(v = "") { return String(v).replace(/"/g, "&quot;"); }
+function esc(value = "") {
+  return String(value).replace(/"/g, "&quot;");
+}
+
 let saveTimer;
-function debouncedAutosave() { clearTimeout(saveTimer); saveTimer = setTimeout(() => saveDraft(false).catch(() => {}), 700); }
+function debouncedAutosave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveDraft(false).catch(() => {}), 700);
+}
