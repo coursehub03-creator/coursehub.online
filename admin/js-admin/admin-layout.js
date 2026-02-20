@@ -1,8 +1,26 @@
+import { db } from "/js/firebase-config.js";
+import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 // admin-layout.js
 // =====================================
 // تحميل Sidebar و Topbar لجميع صفحات الأدمن
 // + إطلاق حدث بعد اكتمال التحميل
 // =====================================
+
+
+function setupAdminChatNavBadge() {
+  const badge = document.getElementById("adminChatNavBadge");
+  if (!badge) return;
+
+  onSnapshot(collection(db, "instructorMessages"), (snap) => {
+    const unreadCount = snap.docs
+      .map((docSnap) => docSnap.data())
+      .filter((msg) => msg.senderRole === "instructor" && !msg.readByAdmin).length;
+
+    badge.hidden = unreadCount === 0;
+    badge.textContent = unreadCount > 99 ? "99+" : String(unreadCount);
+  });
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const sidebarPlaceholder = document.getElementById("sidebar-placeholder");
@@ -78,6 +96,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         emitAdminSearch();
       }
     });
+
+    setupAdminChatNavBadge();
 
     // إطلاق حدث مخصص لباقي ملفات الأدمن
     document.dispatchEvent(new Event("adminLayoutLoaded"));

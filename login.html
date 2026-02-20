@@ -5,6 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول - CourseHub</title>
 
+  <script>
+    // منع ضوضاء أخطاء إضافات المتصفح بأسرع وقت ممكن قبل أي defer/module
+    (function () {
+      const shouldIgnore = (value) => {
+        const message = String((value && value.message) || value || "");
+        return message.includes("Receiving end does not exist") || message.includes("Could not establish connection");
+      };
+
+      const rejectHandler = function (event) {
+        if (shouldIgnore(event && event.reason)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      };
+
+      const errorHandler = function (event) {
+        if (shouldIgnore(event && event.message)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      };
+
+      window.addEventListener("unhandledrejection", rejectHandler, true);
+      window.addEventListener("error", errorHandler, true);
+      window.onunhandledrejection = rejectHandler;
+      window.onerror = function (message) {
+        if (shouldIgnore(message)) return true;
+        return false;
+      };
+    })();
+  </script>
+
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">

@@ -9,7 +9,9 @@ import {
   doc,
   getDoc,
   setDoc,
-  serverTimestamp
+  serverTimestamp,
+  onSnapshot,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
@@ -31,6 +33,8 @@ const archivedListEl = document.getElementById("archivedList");
 const chatMessagesEl = document.getElementById("instructorChatMessages");
 const chatInputEl = document.getElementById("instructorChatInput");
 const sendChatBtn = document.getElementById("sendInstructorChatBtn");
+const chatNavBadgeEl = document.getElementById("chatNavBadge");
+const chatPanelBadgeEl = document.getElementById("chatPanelBadge");
 
 const pendingCount = document.getElementById("pendingCount");
 const approvedCount = document.getElementById("approvedCount");
@@ -44,6 +48,7 @@ const functions = getFunctions(undefined, "us-central1");
 const submitInstructorCourse = httpsCallable(functions, "submitInstructorCourse");
 
 let currentInstructorUid = "";
+let chatUnsubscribe = null;
 
 /* ===== UI helpers ===== */
 function statusBadge(status) {
@@ -150,6 +155,12 @@ function setupWorkspaceNav() {
 
       panels.forEach((p) => p.classList.remove("active"));
       document.getElementById(link.dataset.target)?.classList.add("active");
+
+      if (link.dataset.target === "ws-chat") {
+        markAllInstructorUnreadNow(currentInstructorUid).catch((error) => {
+          console.warn("Could not mark instructor messages read:", error);
+        });
+      }
     });
 
     link.dataset.bound = "1";
@@ -775,52 +786,141 @@ async function loadPublishedCourses(uid) {
 }
 
 /* ===== Chat ===== */
-async function loadChat(uid) {
-  if (!chatMessagesEl) return;
-  try {
-    const snap = await getDocs(query(collection(db, "instructorMessages"), where("instructorId", "==", uid)));
-    const items = snap.docs
-      .map((d) => d.data())
-      .sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-    if (!items.length) {
-      chatMessagesEl.innerHTML = "<p>لا توجد رسائل بعد.</p>";
-      return;
-    }
+function updateChatBadges(items) {
+  const unreadCount = items.filter((msg) => msg.senderRole === "admin" && !msg.readByInstructor).length;
 
-    chatMessagesEl.innerHTML = items
-      .map((msg) => {
-        const role = msg.senderRole === "admin" ? "admin" : "instructor";
-        return `<div class="chat-bubble ${role}">
-          ${msg.text || ""}
-          <div class="chat-meta">${role === "admin" ? "المشرف" : "أنت"} • ${formatDate(msg.createdAt)}</div>
-        </div>`;
-      })
-      .join("");
+  if (chatNavBadgeEl) {
+    chatNavBadgeEl.hidden = unreadCount === 0;
+    chatNavBadgeEl.textContent = unreadCount > 99 ? "99+" : String(unreadCount);
+  }
 
-    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-  } catch (error) {
-    console.warn("Could not load chat:", error);
-    chatMessagesEl.innerHTML = "<p>تعذر تحميل الرسائل حالياً.</p>";
+  if (chatPanelBadgeEl) {
+    chatPanelBadgeEl.hidden = unreadCount === 0;
+    chatPanelBadgeEl.textContent = `${unreadCount} جديد`;
   }
 }
 
-async function sendChatMessage(user) {
+function renderChatMessages(items) {
+  if (!chatMessagesEl) return;
+
+  if (!items.length) {
+    chatMessagesEl.innerHTML = '<p class="helper-text">لا توجد رسائل بعد.</p>';
+    return;
+  }
+
+  chatMessagesEl.innerHTML = items
+    .map((msg) => {
+      const role = msg.senderRole === "admin" ? "admin" : "instructor";
+      return `<article class="chat-bubble ${role}">
+        <p>${escapeHtml(msg.text || "")}</p>
+        <div class="chat-meta">${role === "admin" ? "المشرف" : "أنت"} • ${formatDate(msg.createdAt)}</div>
+      </article>`;
+    })
+    .join("");
+
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+}
+
+async function markAllInstructorUnreadNow(uid) {
+  if (!uid) return;
+
+  const snap = await getDocs(query(collection(db, "instructorMessages"), where("instructorId", "==", uid)));
+  const unreadDocs = snap.docs.filter((d) => {
+    const msg = d.data();
+    return msg.senderRole === "admin" && !msg.readByInstructor;
+  });
+
+  if (!unreadDocs.length) return;
+
+  const batch = writeBatch(db);
+  unreadDocs.forEach((msgDoc) => batch.update(msgDoc.ref, { readByInstructor: true }));
+  await batch.commit();
+}
+
+async function markChatMessagesReadByInstructor(items) {
+  const chatPanelActive = document.getElementById("ws-chat")?.classList.contains("active");
+  if (!chatPanelActive) return;
+
+  const unread = items.filter((msg) => msg.senderRole === "admin" && !msg.readByInstructor && msg.id);
+  if (!unread.length) return;
+
+  const batch = writeBatch(db);
+  unread.forEach((msg) => {
+    batch.update(doc(db, "instructorMessages", msg.id), { readByInstructor: true });
+  });
+  await batch.commit();
+}
+
+function subscribeChat(uid) {
+  if (!chatMessagesEl) return;
+  if (chatUnsubscribe) chatUnsubscribe();
+
+  chatUnsubscribe = onSnapshot(
+    query(collection(db, "instructorMessages"), where("instructorId", "==", uid)),
+    async (snap) => {
+      const items = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+
+      renderChatMessages(items);
+      updateChatBadges(items);
+      await markChatMessagesReadByInstructor(items);
+    },
+    (error) => {
+      console.warn("Could not load chat:", error);
+      chatMessagesEl.innerHTML = "<p>تعذر تحميل الرسائل حالياً.</p>";
+    }
+  );
+}
+
+async function notifyAdminsAboutInstructorMessage(text, instructorName) {
+  try {
+    const adminsSnap = await getDocs(query(collection(db, "users"), where("role", "==", "admin")));
+    const jobs = adminsSnap.docs.map((adminDoc) =>
+      addDoc(collection(db, "notifications"), {
+        userId: adminDoc.id,
+        title: "رسالة جديدة من أستاذ",
+        message: `${instructorName || "أستاذ"}: ${text.length > 90 ? `${text.slice(0, 90)}...` : text}`,
+        link: "/admin/instructor-chat.html",
+        read: false,
+        createdAt: serverTimestamp()
+      })
+    );
+    await Promise.all(jobs);
+  } catch (error) {
+    console.warn("Could not notify admins about instructor message:", error);
+  }
+}
+
+async function sendChatMessage(user, profileData) {
   const text = chatInputEl?.value?.trim();
   if (!text) return;
 
   try {
     await addDoc(collection(db, "instructorMessages"), {
       instructorId: user.uid,
+      instructorName: profileData?.name || user.displayName || "",
       instructorEmail: user.email || "",
       senderId: user.uid,
       senderRole: "instructor",
       text,
+      readByAdmin: false,
+      readByInstructor: true,
       createdAt: serverTimestamp()
     });
 
+    await notifyAdminsAboutInstructorMessage(text, profileData?.name || user.displayName || "أستاذ");
+
     if (chatInputEl) chatInputEl.value = "";
-    await loadChat(user.uid);
   } catch (error) {
     console.error("Failed to send chat message:", error);
     setStatus("تعذر إرسال الرسالة للمشرف حالياً.", true);
@@ -935,7 +1035,6 @@ async function submitCourse(user) {
     await loadSubmissions(user.uid);
     await loadInstructorDrafts(user.uid);
     await loadPublishedCourses(user.uid);
-    await loadChat(user.uid);
   } catch (err) {
     console.error(err);
 
@@ -1001,7 +1100,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   if (sendChatBtn && !sendChatBtn.dataset.bound) {
-    sendChatBtn.addEventListener("click", () => sendChatMessage(user));
+    sendChatBtn.addEventListener("click", () => sendChatMessage(user, data));
     sendChatBtn.dataset.bound = "1";
   }
 
@@ -1016,5 +1115,5 @@ onAuthStateChanged(auth, async (user) => {
   await loadSubmissions(user.uid);
   await loadInstructorDrafts(user.uid);
   await loadPublishedCourses(user.uid);
-  await loadChat(user.uid);
+  subscribeChat(user.uid);
 });
