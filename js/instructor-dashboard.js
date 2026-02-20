@@ -54,6 +54,7 @@ const submitInstructorCourse = httpsCallable(functions, "submitInstructorCourse"
 let currentInstructorUid = "";
 let chatUnsubscribe = null;
 let activeWorkspaceTarget = "ws-add";
+let activeWorkspaceTarget = "ws-add";
 let lessonBuilder = null;
 let slideBuilder = null;
 let quizBuilder = null;
@@ -1232,22 +1233,24 @@ async function submitCourse(user) {
     let usedFallbackPath = false;
 
     try {
-      await submitInstructorCourse(payload);
-    } catch (callableError) {
-      const code = String(callableError?.code || "");
-      const msg = String(callableError?.message || "");
-      const functionNotReady =
-        code.includes("unavailable") ||
-        code.includes("not-found") ||
-        msg.includes("not-found") ||
-        msg.includes("internal") ||
-        msg.includes("Failed to fetch");
+  await submitInstructorCourse(payload);
+} catch (callableError) {
+  console.warn("submitInstructorCourse callable failed", callableError);
 
-      if (!functionNotReady) throw callableError;
+  const code = String(callableError?.code || "");
+  const msg = String(callableError?.message || "");
+  const functionNotReady =
+    code.includes("unavailable") ||
+    code.includes("not-found") ||
+    msg.includes("not-found") ||
+    msg.includes("internal") ||
+    msg.includes("Failed to fetch");
 
-      await addDoc(collection(db, "instructorCourseSubmissions"), payload);
-      usedFallbackPath = true;
-    }
+  if (!functionNotReady) throw callableError;
+
+  await addDoc(collection(db, "instructorCourseSubmissions"), payload);
+  usedFallbackPath = true;
+}
 
     localStorage.removeItem(DRAFT_KEY);
     setStatus(
@@ -1260,21 +1263,23 @@ async function submitCourse(user) {
     await loadSubmissions(user.uid);
     await loadInstructorDrafts(user.uid);
     await loadPublishedCourses(user.uid);
-  } catch (err) {
-    const denied =
-      err?.code === "permission-denied" ||
-      String(err?.message || "").includes("Missing or insufficient permissions");
+} catch (err) {
+  console.warn("Course submission failed", err);
 
-    if (denied) {
-      setStatus(
-        "❌ تم رفض الإرسال بسبب الصلاحيات. تأكد أن الأستاذ دوره instructor وحالته active، وأن Cloud Function تتحقق من ذلك.",
-        true
-      );
-      return;
-    }
+  const denied =
+    err?.code === "permission-denied" ||
+    String(err?.message || "").includes("Missing or insufficient permissions");
 
-    setStatus("❌ تعذر إرسال الدورة. تحقق من الاتصال وإعدادات Cloud Functions/CORS ثم حاول مرة أخرى.", true);
+  if (denied) {
+    setStatus(
+      "❌ تم رفض الإرسال بسبب الصلاحيات. تأكد أن الأستاذ دوره instructor وحالته active، وأن Cloud Function تتحقق من ذلك.",
+      true
+    );
+    return;
   }
+
+  setStatus("❌ تعذر إرسال الدورة. تحقق من الاتصال وإعدادات Cloud Functions/CORS ثم حاول مرة أخرى.", true);
+}
 }
 
 /* ===== Auth gate + init ===== */
