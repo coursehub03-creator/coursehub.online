@@ -3,7 +3,8 @@ import {
   initializeFirestore,
   persistentLocalCache,
   persistentSingleTabManager,
-  persistentMultipleTabManager
+  persistentMultipleTabManager,
+  setLogLevel
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -20,6 +21,9 @@ const firebaseConfig = {
 };
 
 export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+
+// تقليل ضوضاء سجلات Firestore (مثل تحذيرات update time الطفيفة الناتجة عن فروق زمن بسيطة)
+setLogLevel("error");
 
 export const auth = getAuth(app);
 
