@@ -311,7 +311,7 @@
           </li>
           <li>
             <button type="button" class="workspace-link" data-target="ws-chat">
-              <span>💬</span><strong>الرسائل</strong>
+              <span>💬</span><strong>الرسائل</strong><span id="chatNavBadge" class="chat-nav-badge" hidden>0</span>
             </button>
           </li>
         </ul>
@@ -349,7 +349,7 @@
         </div>
 
         <div id="ws-chat" class="workspace-panel">
-          <h3>التحدث مع المشرف</h3>
+          <h3>التحدث مع المشرف <span id="chatPanelBadge" class="chat-panel-badge" hidden>0 جديد</span></h3>
           <div id="instructorChatMessages" class="chat-messages"></div>
           <div class="chat-compose">
             <textarea id="instructorChatInput" rows="3" placeholder="اكتب رسالتك للمشرف..."></textarea>
