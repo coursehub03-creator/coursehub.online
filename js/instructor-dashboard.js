@@ -167,6 +167,18 @@ function setupWorkspaceNav() {
   });
 }
 
+function setupSidebarToggle() {
+  const toggleBtn = document.getElementById("workspaceSidebarToggle");
+  const workspace = document.querySelector(".instructor-workspace");
+  if (!toggleBtn || !workspace) return;
+
+  if (toggleBtn.dataset.bound) return;
+  toggleBtn.addEventListener("click", () => {
+    workspace.classList.toggle("sidebar-collapsed");
+  });
+  toggleBtn.dataset.bound = "1";
+}
+
 /* ===== Dynamic lists ===== */
 function createDynamicRow(value = "") {
   const row = document.createElement("div");
@@ -417,7 +429,9 @@ function renderPreview() {
               <ul>
                 ${
                   m.lessons.length
-                    ? m.lessons.map((l) => `<li>${l.title}${l.duration ? ` (${l.duration} دقيقة)` : ""}</li>`).join("")
+                    ? m.lessons
+                        .map((l) => `<li>${l.title}${l.duration ? ` (${l.duration} دقيقة)` : ""}</li>`)
+                        .join("")
                     : "<li>لا توجد دروس داخل هذه الوحدة بعد.</li>"
                 }
               </ul>
@@ -833,17 +847,22 @@ function renderChatMessages(items) {
 async function markAllInstructorUnreadNow(uid) {
   if (!uid) return;
 
-  const snap = await getDocs(query(collection(db, "instructorMessages"), where("instructorId", "==", uid)));
-  const unreadDocs = snap.docs.filter((d) => {
-    const msg = d.data();
-    return msg.senderRole === "admin" && !msg.readByInstructor;
-  });
+  try {
+    const snap = await getDocs(query(collection(db, "instructorMessages"), where("instructorId", "==", uid)));
+    const unreadDocs = snap.docs.filter((d) => {
+      const msg = d.data();
+      return msg.senderRole === "admin" && !msg.readByInstructor;
+    });
 
-  if (!unreadDocs.length) return;
+    if (!unreadDocs.length) return;
 
-  const batch = writeBatch(db);
-  unreadDocs.forEach((msgDoc) => batch.update(msgDoc.ref, { readByInstructor: true }));
-  await batch.commit();
+    const batch = writeBatch(db);
+    unreadDocs.forEach((msgDoc) => batch.update(msgDoc.ref, { readByInstructor: true }));
+    await batch.commit();
+  } catch (error) {
+    if (error?.code === "permission-denied") return;
+    throw error;
+  }
 }
 
 async function markChatMessagesReadByInstructor(items) {
@@ -853,11 +872,16 @@ async function markChatMessagesReadByInstructor(items) {
   const unread = items.filter((msg) => msg.senderRole === "admin" && !msg.readByInstructor && msg.id);
   if (!unread.length) return;
 
-  const batch = writeBatch(db);
-  unread.forEach((msg) => {
-    batch.update(doc(db, "instructorMessages", msg.id), { readByInstructor: true });
-  });
-  await batch.commit();
+  try {
+    const batch = writeBatch(db);
+    unread.forEach((msg) => {
+      batch.update(doc(db, "instructorMessages", msg.id), { readByInstructor: true });
+    });
+    await batch.commit();
+  } catch (error) {
+    if (error?.code === "permission-denied") return;
+    throw error;
+  }
 }
 
 function subscribeChat(uid) {
@@ -873,7 +897,12 @@ function subscribeChat(uid) {
 
       renderChatMessages(items);
       updateChatBadges(items);
-      await markChatMessagesReadByInstructor(items);
+
+      try {
+        await markChatMessagesReadByInstructor(items);
+      } catch (error) {
+        console.warn("Could not mark instructor messages as read:", error);
+      }
     },
     (error) => {
       console.warn("Could not load chat:", error);
@@ -1083,6 +1112,7 @@ onAuthStateChanged(auth, async (user) => {
 
   setupTabs();
   setupWorkspaceNav();
+  setupSidebarToggle();
   initDynamicLists();
   initModules();
   initAssessmentBuilder();
