@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    location.href = `/course-player.html?id=${courseId}`;
+    location.href = `/course/player.html?courseId=${courseId}`;
   });
 
   // تشغيل التحميل
