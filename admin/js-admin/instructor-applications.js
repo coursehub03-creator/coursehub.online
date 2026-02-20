@@ -16,9 +16,18 @@ import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/
 const list = document.getElementById("applicationsList");
 const storage = getStorage();
 
-// استخدام Callable Function هو الأكثر احترافية (ويتفادى مشاكل الصلاحيات عند الكتابة من الواجهة)
 const functions = getFunctions(undefined, "us-central1");
 const approveInstructorApplication = httpsCallable(functions, "approveInstructorApplication");
+
+// على الدومين المخصص coursehub.online تم رصد CORS من Cloud Functions
+// لذلك نجعل callable اختياريًا ونستخدم fallback المباشر بدون إظهار أخطاء مزعجة للمشرف.
+const callableAllowedHosts = new Set([
+  "localhost",
+  "127.0.0.1",
+  "coursehub-23ed2.web.app",
+  "coursehub-23ed2.firebaseapp.com"
+]);
+const shouldUseCallable = callableAllowedHosts.has(window.location.hostname);
 
 async function queueEmail(payload) {
   try {
@@ -104,11 +113,34 @@ async function loadApplications() {
       btn.disabled = true;
 
       try {
-        // المسار الأفضل: Cloud Function (صلاحيات + منطق مركزي)
-        await approveInstructorApplication({
-          applicationId: id,
-          decision: "approve"
-        });
+        // Cloud Function اختيارية فقط في البيئات المسموح بها.
+        if (shouldUseCallable) {
+          await approveInstructorApplication({
+            applicationId: id,
+            decision: "approve"
+          });
+        } else {
+          await updateDoc(doc(db, "instructorApplications", id), {
+            applicationStatus: "approved",
+            reviewedAt: serverTimestamp(),
+            reviewReason: ""
+          });
+
+          // تفعيل أولي مع انتظار التحقق/التفعيل بدل active مباشرة
+          await updateDoc(doc(db, "users", app.uid), {
+            status: "pending_verification",
+            role: "instructor",
+            reviewReason: ""
+          });
+
+          await queueEmail({
+            to: app.email,
+            template: "instructor-approved",
+            subject: "تم قبول طلب الأستاذ - CourseHub",
+            message:
+              "تمت الموافقة المبدئية على طلبك. افتح صفحة التفعيل وسجل دخولك لتأكيد البريد الإلكتروني."
+          });
+        }
       } catch (error) {
         // fallback احتياطي إذا فشلت الدالة (مثلاً غير منشورة/خطأ شبكة)
         console.warn("approveInstructorApplication callable failed, fallback:", error);
@@ -119,7 +151,7 @@ async function loadApplications() {
           reviewReason: ""
         });
 
-        // الأكثر احترافية: تفعيل أولي مع انتظار التحقق/التفعيل بدل active مباشرة
+        // تفعيل أولي مع انتظار التحقق/التفعيل بدل active مباشرة
         await updateDoc(doc(db, "users", app.uid), {
           status: "pending_verification",
           role: "instructor",
@@ -158,12 +190,32 @@ async function loadApplications() {
       btn.disabled = true;
 
       try {
-        // المسار الأفضل: Cloud Function
-        await approveInstructorApplication({
-          applicationId: id,
-          decision: "reject",
-          reason
-        });
+        if (shouldUseCallable) {
+          await approveInstructorApplication({
+            applicationId: id,
+            decision: "reject",
+            reason
+          });
+        } else {
+          await updateDoc(doc(db, "instructorApplications", id), {
+            applicationStatus: "rejected",
+            reviewedAt: serverTimestamp(),
+            reviewReason: reason
+          });
+
+          await updateDoc(doc(db, "users", app.uid), {
+            status: "rejected",
+            role: "instructor",
+            reviewReason: reason
+          });
+
+          await queueEmail({
+            to: app.email,
+            template: "instructor-rejected",
+            subject: "نتيجة طلب الأستاذ - CourseHub",
+            message: `تم رفض طلبك للأسباب التالية: ${reason}`
+          });
+        }
       } catch (error) {
         // fallback
         console.warn("reject via callable failed, fallback:", error);

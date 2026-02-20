@@ -7,7 +7,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
@@ -36,4 +36,12 @@ export const db = initializeFirestore(app, {
 });
 
 export const storage = getStorage(app);
-export const analytics = getAnalytics(app);
+export let analytics = null;
+
+isSupported()
+  .then((supported) => {
+    if (supported) analytics = getAnalytics(app);
+  })
+  .catch(() => {
+    analytics = null;
+  });
