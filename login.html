@@ -10,6 +10,16 @@
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/login.css">
 
+  <script>
+    // منع ضوضاء أخطاء إضافات المتصفح قبل تحميل سكربتات defer/module
+    window.addEventListener("unhandledrejection", function (event) {
+      const text = String((event && event.reason && event.reason.message) || (event && event.reason) || "");
+      if (text.includes("Receiving end does not exist") || text.includes("Could not establish connection")) {
+        event.preventDefault();
+      }
+    });
+  </script>
+
   <script type="module" src="js/main.js" defer></script>
   <script type="module" src="js/auth.js" defer></script>
 </head>
