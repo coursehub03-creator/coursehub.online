@@ -146,6 +146,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // fallback هذا ينفذ نفس فكرة Cloud Function لكن من لوحة الأدمن (أنت أدمن أصلاً)
     if (decision === "approve") {
       const modules = Array.isArray(item.modules) ? item.modules : [];
+
       const lessonsFlat = (modules || []).flatMap((m) =>
         (m.lessons || []).map((lesson) => ({
           title: lesson.title || "",
@@ -258,6 +259,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // event delegation لتفادي تكرار listeners
   submissionsTbody?.addEventListener("click", async (event) => {
     const previewBtn = event.target.closest(".submission-preview");
     const approveBtn = event.target.closest(".submission-approve");
