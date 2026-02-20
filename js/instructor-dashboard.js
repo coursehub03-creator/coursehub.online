@@ -54,7 +54,6 @@ const submitInstructorCourse = httpsCallable(functions, "submitInstructorCourse"
 let currentInstructorUid = "";
 let chatUnsubscribe = null;
 let activeWorkspaceTarget = "ws-add";
-let activeWorkspaceTarget = "ws-add";
 let lessonBuilder = null;
 let slideBuilder = null;
 let quizBuilder = null;
