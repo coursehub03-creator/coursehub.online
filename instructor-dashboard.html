@@ -225,64 +225,18 @@
               <!-- CURRICULUM -->
               <div class="tab-content" id="tab-curriculum">
                 <div class="builder-card">
-                  <div class="builder-card-head">
-                    <h3>عناصر إضافية تمنحك حرية أكبر</h3>
-                    <p>أضف الأهداف والمتطلبات ومخرجات التعلم كبنود ديناميكية.</p>
+                  <div class="builder-header">
+                    <h2>بناء الدروس والسلايدات</h2>
+                    <p>أضف محتوى السلايدات (نصوص + صور + فيديو) مع ضبط الخطوط والألوان وترتيب العناصر داخل كل سلايد.</p>
                   </div>
 
-                  <div class="list-editors">
-                    <div class="dynamic-list" data-list="objectives">
-                      <div class="dynamic-head">
-                        <h4>أهداف الدورة</h4>
-                        <button type="button" class="add-row-btn" data-target="objectives"><i class="fa-solid fa-plus"></i> إضافة هدف</button>
-                      </div>
-                      <div id="objectivesList" class="rows-container"></div>
-                    </div>
+                  <div id="lessonsContainer"></div>
+                  <div id="lessonsEmpty" class="empty-state">لم تتم إضافة أي درس بعد.</div>
 
-                    <div class="dynamic-list" data-list="requirements">
-                      <div class="dynamic-head">
-                        <h4>المتطلبات المسبقة</h4>
-                        <button type="button" class="add-row-btn" data-target="requirements"><i class="fa-solid fa-plus"></i> إضافة متطلب</button>
-                      </div>
-                      <div id="requirementsList" class="rows-container"></div>
-                    </div>
-
-                    <div class="dynamic-list" data-list="outcomes">
-                      <div class="dynamic-head">
-                        <h4>مخرجات التعلم</h4>
-                        <button type="button" class="add-row-btn" data-target="outcomes"><i class="fa-solid fa-plus"></i> إضافة مخرج</button>
-                      </div>
-                      <div id="outcomesList" class="rows-container"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="builder-card">
-                  <div class="builder-card-head">
-                    <h3>خطة المنهج (Modules/Lessons)</h3>
-                    <p>قابل للتوسعة بالكامل: أضف عددًا غير محدود من الوحدات والدروس.</p>
-                  </div>
-                  <div id="modulesContainer" class="modules-container"></div>
-                  <button type="button" class="btn ghost" id="addModuleBtn"><i class="fa-solid fa-plus"></i> إضافة وحدة جديدة</button>
-                </div>
-
-                <div class="builder-card">
-                  <div class="builder-card-head">
-                    <h3>بناء اختبار الدورة (Quiz Builder)</h3>
-                    <p>أنشئ بنك أسئلة كامل ليتم مراجعته من المشرف قبل نشر الدورة.</p>
-                  </div>
-                  <div id="assessmentQuestions" class="assessment-questions"></div>
-                  <button type="button" class="btn ghost" id="addQuestionBtn"><i class="fa-solid fa-plus"></i> إضافة سؤال</button>
-                </div>
-
-                <div class="builder-card">
-                  <div class="builder-card-head">
-                    <h3>ملف المنهج/الخطة</h3>
-                    <p>ارفع ملف PDF/DOC/DOCX لإضافة مرجعية تفصيلية للمراجعين.</p>
-                  </div>
-                  <label class="file-upload">اختيار الملف
-                    <input id="courseOutline" type="file" accept=".pdf,.doc,.docx" />
-                  </label>
+                  <button type="button" id="addLessonBtn" class="btn ghost add-lesson-main-btn">
+                    <i class="fa-solid fa-plus"></i>
+                    إضافة درس
+                  </button>
                 </div>
               </div>
 

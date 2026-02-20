@@ -120,7 +120,50 @@
 .chat-meta{font-size:12px;color:var(--ins-text-muted);margin-top:6px}
 .chat-compose{display:grid;gap:10px;margin-top:12px}
 
-.loading-state,.empty-state,.error-state{padding:18px;border-radius:12px;text-align:center;border:1px dashed var(--ins-border);background:#fbfcff;color:var(--ins-text-muted)}
+/* Admin-like lesson/slide builder for instructor */
+.add-lesson-main-btn{margin-top:10px}
+.lesson-card,.slide-card,.quiz-card{
+  background:var(--ins-surface);
+  border:1px solid var(--ins-border);
+  border-radius:14px;
+  padding:14px;
+  box-shadow:var(--ins-shadow)
+}
+.lesson-card + .lesson-card{margin-top:14px}
+.lesson-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.lesson-body{display:grid;gap:10px}
+.lesson-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lesson-number{font-size:.86rem;color:var(--ins-text-muted);margin-bottom:6px}
+.slides-container,.quiz-container{display:grid;gap:10px}
+.slide-card{display:grid;gap:10px}
+.slide-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.slide-config{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.slide-text-tools{display:flex;gap:8px;flex-wrap:wrap}
+.slide-preview{border:1px dashed var(--ins-border);border-radius:12px;padding:14px;background:#f8fafc;min-height:180px}
+.slide-preview.media-left{display:grid;grid-template-columns:1fr 1.2fr;gap:12px}
+.slide-preview.media-right{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}
+.slide-preview.media-top{display:grid;grid-template-columns:1fr;gap:12px}
+.slide-media{
+  width:100%;
+  min-height:140px;
+  border-radius:10px;
+  background:#e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#64748b
+}
+.slide-media img,.slide-media video{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.quiz-card label{display:flex;align-items:center;gap:8px;margin:6px 0}
+
+.loading-state,.empty-state,.error-state{
+  padding:18px;
+  border-radius:12px;
+  text-align:center;
+  border:1px dashed var(--ins-border);
+  background:#fbfcff;
+  color:var(--ins-text-muted)
+}
 .error-state{border-color:#fecaca;color:#991b1b;background:#fff7f7}
 .status{margin:10px 0 0;line-height:1.8;white-space:pre-line}
 
@@ -149,5 +192,8 @@
   .instructor-shell{padding-top:14px}
   .instructor-hero{flex-direction:column}
   .submit-actions{display:grid;grid-template-columns:1fr;gap:8px}
-  .lesson-row{grid-template-columns:1fr}
+  .lesson-row,
+  .lesson-meta,
+  .slide-preview.media-left,
+  .slide-preview.media-right{grid-template-columns:1fr}
 }

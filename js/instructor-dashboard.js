@@ -15,6 +15,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+import { LessonBuilder } from "/admin/js-admin/lesson-builder.js";
+import { SlideBuilder } from "/admin/js-admin/slide-builder.js";
+import { QuizBuilder } from "/admin/js-admin/quiz-builder.js";
 
 const DRAFT_KEY = "coursehub_instructor_course_draft_v3";
 
@@ -43,6 +46,7 @@ const coverInput = document.getElementById("courseImage");
 const coverUrlInput = document.getElementById("courseImageUrl");
 const coverPreview = document.getElementById("coverPreview");
 const previewCover = document.getElementById("previewCover");
+const addLessonBtn = document.getElementById("addLessonBtn");
 
 const functions = getFunctions(undefined, "us-central1");
 const submitInstructorCourse = httpsCallable(functions, "submitInstructorCourse");
@@ -50,6 +54,10 @@ const submitInstructorCourse = httpsCallable(functions, "submitInstructorCourse"
 let currentInstructorUid = "";
 let chatUnsubscribe = null;
 let activeWorkspaceTarget = "ws-add";
+let activeWorkspaceTarget = "ws-add";
+let lessonBuilder = null;
+let slideBuilder = null;
+let quizBuilder = null;
 
 /* ===== UI helpers ===== */
 function statusBadge(status) {
@@ -89,6 +97,52 @@ function renderLoading(el, msg = "جاري التحميل...") {
 
 function renderError(el, msg) {
   renderState(el, "error", msg);
+}
+
+function ensureLessonBuilders() {
+  if (lessonBuilder && slideBuilder && quizBuilder) return;
+  lessonBuilder = new LessonBuilder("lessonsContainer");
+  slideBuilder = new SlideBuilder();
+  quizBuilder = new QuizBuilder();
+}
+
+function getLessonData() {
+  if (!lessonBuilder) return [];
+  return lessonBuilder.getData().map((lesson) => ({
+    id: lesson.id,
+    title: lesson.title || "",
+    duration: lesson.duration || "",
+    summary: lesson.summary || "",
+    slides: slideBuilder?.getSlides(lesson.id) || [],
+    quiz: quizBuilder?.getQuiz(lesson.id) || []
+  }));
+}
+
+function buildLegacyModulesFromLessons(lessons) {
+  return lessons
+    .filter((lesson) => lesson.title)
+    .map((lesson) => ({
+      title: lesson.title,
+      lessons: (lesson.slides || []).map((slide, index) => ({
+        title: slide.title || `سلايد ${index + 1}`,
+        duration: Number(lesson.duration || 0)
+      }))
+    }));
+}
+
+function buildLegacyQuestionsFromLessons(lessons) {
+  const questions = [];
+  lessons.forEach((lesson) => {
+    (lesson.quiz || []).forEach((q) => {
+      if (!q.question) return;
+      questions.push({
+        question: q.question,
+        options: Array.isArray(q.options) ? q.options : [],
+        correctIndex: Number(q.correct || 0)
+      });
+    });
+  });
+  return questions;
 }
 
 /* ===== Text toolbar ===== */
@@ -335,35 +389,57 @@ function createModuleCard(data = {}) {
 }
 
 function gatherModules() {
-  return [...document.querySelectorAll(".module-card")]
-    .map((moduleCard) => {
-      const title = moduleCard.querySelector(".module-title")?.value?.trim() || "";
-      const lessons = [...moduleCard.querySelectorAll(".lesson-row")]
-        .map((row) => ({
-          title: row.querySelector(".lesson-title")?.value?.trim() || "",
-          duration: Number(row.querySelector(".lesson-duration")?.value || 0)
-        }))
-        .filter((l) => l.title);
-      return { title, lessons };
-    })
-    .filter((m) => m.title || m.lessons.length);
+  const lessons = getLessonData();
+  return buildLegacyModulesFromLessons(lessons);
 }
 
 function initModules() {
-  const modulesContainer = document.getElementById("modulesContainer");
-  const addModuleBtn = document.getElementById("addModuleBtn");
-  if (!modulesContainer || !addModuleBtn) return;
+  ensureLessonBuilders();
 
-  if (!addModuleBtn.dataset.bound) {
-    addModuleBtn.addEventListener("click", () => {
-      modulesContainer.appendChild(createModuleCard());
+  if (addLessonBtn && !addLessonBtn.dataset.bound) {
+    addLessonBtn.addEventListener("click", () => {
+      lessonBuilder.addLesson();
       renderPreview();
     });
-    addModuleBtn.dataset.bound = "1";
+    addLessonBtn.dataset.bound = "1";
   }
 
-  if (!modulesContainer.children.length) modulesContainer.appendChild(createModuleCard());
+  const lessonsContainer = document.getElementById("lessonsContainer");
+  if (lessonsContainer && !lessonsContainer.dataset.boundPreview) {
+    lessonsContainer.addEventListener("input", () => renderPreview());
+    lessonsContainer.addEventListener("change", () => renderPreview());
+    lessonsContainer.dataset.boundPreview = "1";
+  }
+
+  if (!document.body.dataset.lessonDelegationBound) {
+    document.body.addEventListener("click", (event) => {
+      const slideBtn = event.target.closest(".add-slide");
+      if (slideBtn) {
+        const lessonCard = slideBtn.closest(".lesson-card");
+        const lessonId = lessonCard?.id?.replace("lesson-", "");
+        const slidesContainer = lessonCard?.querySelector(".slides-container");
+        if (lessonId && slidesContainer) {
+          slideBuilder.addSlide(lessonId, slidesContainer);
+          renderPreview();
+        }
+        return;
+      }
+
+      const quizBtn = event.target.closest(".add-quiz");
+      if (quizBtn) {
+        const lessonCard = quizBtn.closest(".lesson-card");
+        const lessonId = lessonCard?.id?.replace("lesson-", "");
+        const quizContainer = lessonCard?.querySelector(".quiz-container");
+        if (lessonId && quizContainer) {
+          quizBuilder.addQuiz(lessonId, quizContainer);
+          renderPreview();
+        }
+      }
+    });
+    document.body.dataset.lessonDelegationBound = "1";
+  }
 }
+
 
 /* ===== Quiz ===== */
 function createQuestionCard(data = {}) {
@@ -400,30 +476,12 @@ function createQuestionCard(data = {}) {
 }
 
 function initAssessmentBuilder() {
-  const container = document.getElementById("assessmentQuestions");
-  const addBtn = document.getElementById("addQuestionBtn");
-  if (!container || !addBtn) return;
-
-  if (!addBtn.dataset.bound) {
-    addBtn.addEventListener("click", () => {
-      container.appendChild(createQuestionCard());
-      renderPreview();
-    });
-    addBtn.dataset.bound = "1";
-  }
-
-  if (!container.children.length) container.appendChild(createQuestionCard());
+  ensureLessonBuilders();
 }
 
 function gatherAssessmentQuestions() {
-  return [...document.querySelectorAll(".question-card")]
-    .map((card) => {
-      const question = card.querySelector(".question-title")?.value?.trim() || "";
-      const options = [...card.querySelectorAll(".q-option")].map((opt) => opt.value.trim());
-      const correctIndex = Number(card.querySelector(".question-correct-index")?.value || 0);
-      return { question, options, correctIndex };
-    })
-    .filter((q) => q.question && q.options.filter(Boolean).length >= 2);
+  const lessons = getLessonData();
+  return buildLegacyQuestionsFromLessons(lessons);
 }
 
 /* ===== Preview ===== */
@@ -448,9 +506,9 @@ function renderPreview() {
   if (previewCategoryTag) previewCategoryTag.textContent = category || "تصنيف الدورة";
 
   if (previewMeta) {
-    const modules = gatherModules();
-    const lessonsCount = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
-    const questionsCount = gatherAssessmentQuestions().length;
+    const lessons = getLessonData();
+    const lessonsCount = lessons.length;
+    const questionsCount = buildLegacyQuestionsFromLessons(lessons).length;
 
     const chips = [
       category ? `التصنيف: ${category}` : "",
@@ -473,27 +531,23 @@ function renderPreview() {
   }
 
   if (previewModules) {
-    const modules = gatherModules();
-    previewModules.innerHTML = modules.length
-      ? modules
+    const lessons = getLessonData();
+    previewModules.innerHTML = lessons.length
+      ? lessons
           .map(
-            (m, index) => `
+            (lesson, index) => `
             <div class="preview-module">
-              <h5>الوحدة ${index + 1}: ${m.title || "بدون عنوان"}</h5>
+              <h5>الدرس ${index + 1}: ${lesson.title || "بدون عنوان"}</h5>
               <ul>
-                ${
-                  m.lessons.length
-                    ? m.lessons
-                        .map((l) => `<li>${l.title}${l.duration ? ` (${l.duration} دقيقة)` : ""}</li>`)
-                        .join("")
-                    : "<li>لا توجد دروس داخل هذه الوحدة بعد.</li>"
-                }
+                <li>المدة: ${lesson.duration || "-"} دقيقة</li>
+                <li>عدد السلايدات: ${(lesson.slides || []).length}</li>
+                <li>عدد أسئلة الاختبار: ${(lesson.quiz || []).length}</li>
               </ul>
             </div>
           `
           )
           .join("")
-      : "<p>لا توجد وحدات بعد.</p>";
+      : "<p>لا توجد دروس بعد.</p>";
   }
 }
 
@@ -558,20 +612,78 @@ function fillBuilderFromSubmission(item = {}) {
   loadRows("requirementsList", item.requirements || []);
   loadRows("outcomesList", item.outcomes || []);
 
-  const modulesContainer = document.getElementById("modulesContainer");
-  if (modulesContainer) {
-    modulesContainer.innerHTML = "";
-    const modules = Array.isArray(item.modules) && item.modules.length ? item.modules : [{}];
-    modules.forEach((module) => modulesContainer.appendChild(createModuleCard(module)));
+  ensureLessonBuilders();
+  const lessonsContainer = document.getElementById("lessonsContainer");
+  const lessonsFromItem = Array.isArray(item.lessons) && item.lessons.length
+    ? item.lessons
+    : (Array.isArray(item.modules) ? item.modules.map((m) => ({
+      title: m.title || "",
+      duration: m.lessons?.[0]?.duration || "",
+      summary: "",
+      slides: (m.lessons || []).map((lesson) => ({
+        title: lesson.title || "",
+        text: "",
+        type: "text"
+      })),
+      quiz: []
+    })) : []);
+
+  if (lessonsContainer) lessonsContainer.innerHTML = "";
+  if (lessonBuilder) {
+    lessonBuilder.lessons = [];
+  }
+  if (slideBuilder) {
+    slideBuilder.slides = {};
+  }
+  if (quizBuilder) {
+    quizBuilder.quizzes = {};
   }
 
-  const questionsContainer = document.getElementById("assessmentQuestions");
-  if (questionsContainer) {
-    questionsContainer.innerHTML = "";
-    const questions =
-      Array.isArray(item.assessmentQuestions) && item.assessmentQuestions.length ? item.assessmentQuestions : [{}];
-    questions.forEach((q) => questionsContainer.appendChild(createQuestionCard(q)));
-  }
+  lessonsFromItem.forEach((lessonItem) => {
+    lessonBuilder.addLesson();
+    const lesson = lessonBuilder.lessons[lessonBuilder.lessons.length - 1];
+    if (!lesson) return;
+
+    lesson.title = lessonItem.title || "";
+    lesson.duration = lessonItem.duration || "";
+    lesson.summary = lessonItem.summary || "";
+
+    const lessonCard = document.getElementById(`lesson-${lesson.id}`);
+    lessonCard?.querySelector(".lesson-title")?.setAttribute("value", lesson.title);
+    if (lessonCard?.querySelector(".lesson-title")) lessonCard.querySelector(".lesson-title").value = lesson.title;
+    if (lessonCard?.querySelector(".lesson-duration")) lessonCard.querySelector(".lesson-duration").value = lesson.duration;
+    if (lessonCard?.querySelector(".lesson-summary")) lessonCard.querySelector(".lesson-summary").value = lesson.summary;
+
+    const slidesContainer = lessonCard?.querySelector(".slides-container");
+    (lessonItem.slides || []).forEach((slide) => {
+      slideBuilder.addSlide(lesson.id, slidesContainer);
+      const createdSlide = (slideBuilder.slides[lesson.id] || [])[slideBuilder.slides[lesson.id].length - 1];
+      if (!createdSlide) return;
+      createdSlide.type = slide.type || "text";
+      createdSlide.title = slide.title || "";
+      createdSlide.text = slide.text || slide.content || "";
+      createdSlide.mediaUrl = slide.mediaUrl || "";
+      createdSlide.mediaPreview = slide.mediaUrl || "";
+      createdSlide.textColor = slide.style?.textColor || "#0f172a";
+      createdSlide.backgroundColor = slide.style?.backgroundColor || "#ffffff";
+      createdSlide.fontSize = Number(slide.style?.fontSize || 24);
+      createdSlide.fontWeight = Number(slide.style?.fontWeight || 600);
+      createdSlide.textAlign = slide.style?.textAlign || "right";
+      createdSlide.layout = slide.style?.layout || "media-right";
+    });
+
+    const quizContainer = lessonCard?.querySelector(".quiz-container");
+    (lessonItem.quiz || []).forEach((q) => {
+      quizBuilder.addQuiz(lesson.id, quizContainer);
+      const createdQuiz = (quizBuilder.quizzes[lesson.id] || [])[quizBuilder.quizzes[lesson.id].length - 1];
+      if (!createdQuiz) return;
+      createdQuiz.question = q.question || "";
+      createdQuiz.options = Array.isArray(q.options) ? q.options : ["", "", "", ""];
+      createdQuiz.correct = Number(q.correct ?? q.correctIndex ?? 0);
+    });
+  });
+
+  lessonBuilder.updateEmptyState();
 
   const image = item.image || item.imageUrl || "";
   if (image) {
@@ -602,6 +714,7 @@ async function saveDraft() {
     objectives: getListValues("objectivesList"),
     requirements: getListValues("requirementsList"),
     outcomes: getListValues("outcomesList"),
+    lessons: getLessonData(),
     modules: gatherModules(),
     assessmentQuestions: gatherAssessmentQuestions(),
     updatedAt: new Date().toISOString()
@@ -1027,13 +1140,15 @@ function allReviewChecksMarked() {
 function resetBuilderState() {
   form?.reset();
 
-  ["objectivesList", "requirementsList", "outcomesList", "assessmentQuestions"].forEach((id) => {
+  ["objectivesList", "requirementsList", "outcomesList", "assessmentQuestions", "lessonsContainer"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = "";
   });
 
-  const modulesContainer = document.getElementById("modulesContainer");
-  if (modulesContainer) modulesContainer.innerHTML = "";
+  if (lessonBuilder) lessonBuilder.lessons = [];
+  if (slideBuilder) slideBuilder.slides = {};
+  if (quizBuilder) quizBuilder.quizzes = {};
+  lessonBuilder?.updateEmptyState();
 
   initDynamicLists();
   initModules();
@@ -1056,21 +1171,15 @@ async function submitCourse(user) {
   const title = document.getElementById("courseTitle")?.value?.trim();
   const description = document.getElementById("courseDescription")?.value?.trim();
   const category = document.getElementById("courseCategory")?.value?.trim();
-  const modules = gatherModules();
-  const assessmentQuestions = gatherAssessmentQuestions();
+  const draftLessons = getLessonData();
 
   if (!title || !description || !category) {
     setStatus("يرجى إدخال العنوان + الوصف + التصنيف على الأقل.", true);
     return;
   }
 
-  if (!modules.length) {
-    setStatus("أضف وحدة واحدة على الأقل مع درس قبل الإرسال.", true);
-    return;
-  }
-
-  if (assessmentQuestions.length < 2) {
-    setStatus("الحد الأدنى المطلوب هو سؤالان في الاختبار.", true);
+  if (!draftLessons.length) {
+    setStatus("أضف درسًا واحدًا على الأقل قبل الإرسال.", true);
     return;
   }
 
@@ -1078,6 +1187,23 @@ async function submitCourse(user) {
 
   try {
     const { imageUrl, outlineUrl } = await uploadFiles(user);
+
+    const lessons = [];
+    for (const lesson of draftLessons) {
+      const slides = await slideBuilder.getSlidesForSave(lesson.id, storage);
+      const quiz = quizBuilder.getQuiz(lesson.id);
+      lessons.push({
+        title: lesson.title,
+        duration: lesson.duration || "",
+        summary: lesson.summary || "",
+        slides,
+        quiz,
+        passScore: 80
+      });
+    }
+
+    const modules = buildLegacyModulesFromLessons(lessons);
+    const assessmentQuestions = buildLegacyQuestionsFromLessons(lessons);
 
     const payload = {
       instructorId: user.uid,
@@ -1094,64 +1220,66 @@ async function submitCourse(user) {
       objectives: getListValues("objectivesList"),
       requirements: getListValues("requirementsList"),
       outcomes: getListValues("outcomesList"),
+      lessons,
       modules,
       assessmentQuestions,
       image: imageUrl,
-      outlineUrl
+      outlineUrl,
+      status: "pending",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     };
 
+    let usedFallbackPath = false;
+
     try {
-      await submitInstructorCourse(payload);
-    } catch (callableError) {
-      console.warn("submitInstructorCourse callable failed");
+  await submitInstructorCourse(payload);
+} catch (callableError) {
+  console.warn("submitInstructorCourse callable failed", callableError);
 
-      const code = String(callableError?.code || "");
-      const msg = String(callableError?.message || "");
-      const functionNotReady =
-        code.includes("unavailable") ||
-        code.includes("not-found") ||
-        msg.includes("not-found") ||
-        msg.includes("internal") ||
-        msg.includes("Failed to fetch");
+  const code = String(callableError?.code || "");
+  const msg = String(callableError?.message || "");
+  const functionNotReady =
+    code.includes("unavailable") ||
+    code.includes("not-found") ||
+    msg.includes("not-found") ||
+    msg.includes("internal") ||
+    msg.includes("Failed to fetch");
 
-      if (functionNotReady) throw new Error("callable-not-ready");
-      throw callableError;
-    }
+  if (!functionNotReady) throw callableError;
+
+  await addDoc(collection(db, "instructorCourseSubmissions"), payload);
+  usedFallbackPath = true;
+}
 
     localStorage.removeItem(DRAFT_KEY);
-    setStatus("✅ تم إرسال الدورة للمراجعة بنجاح. ستظهر للمشرف ضمن طلبات المراجعة.");
+    setStatus(
+      usedFallbackPath
+        ? "✅ تم إرسال الدورة عبر المسار الاحتياطي بنجاح (تعطل مؤقت بخدمة Cloud Function)."
+        : "✅ تم إرسال الدورة للمراجعة بنجاح. ستظهر للمشرف ضمن طلبات المراجعة."
+    );
     resetBuilderState();
 
     await loadSubmissions(user.uid);
     await loadInstructorDrafts(user.uid);
     await loadPublishedCourses(user.uid);
-  } catch (err) {
-    console.warn("Course submission failed");
+} catch (err) {
+  console.warn("Course submission failed", err);
 
-    const denied =
-      err?.code === "permission-denied" ||
-      String(err?.message || "").includes("Missing or insufficient permissions");
+  const denied =
+    err?.code === "permission-denied" ||
+    String(err?.message || "").includes("Missing or insufficient permissions");
 
-    const callableNotReady = String(err?.message || "").includes("callable-not-ready");
-
-    if (callableNotReady) {
-      setStatus(
-        "❌ خدمة الإرسال غير جاهزة حالياً. تأكد من نشر Cloud Functions وربطها بالمنطقة us-central1 (submitInstructorCourse).",
-        true
-      );
-      return;
-    }
-
-    if (denied) {
-      setStatus(
-        "❌ تم رفض الإرسال بسبب الصلاحيات. تأكد أن الأستاذ دوره instructor وحالته active، وأن Cloud Function تتحقق من ذلك.",
-        true
-      );
-      return;
-    }
-
-    setStatus("❌ تعذر إرسال الدورة. تحقق من الملفات وحاول مرة أخرى.", true);
+  if (denied) {
+    setStatus(
+      "❌ تم رفض الإرسال بسبب الصلاحيات. تأكد أن الأستاذ دوره instructor وحالته active، وأن Cloud Function تتحقق من ذلك.",
+      true
+    );
+    return;
   }
+
+  setStatus("❌ تعذر إرسال الدورة. تحقق من الاتصال وإعدادات Cloud Functions/CORS ثم حاول مرة أخرى.", true);
+}
 }
 
 /* ===== Auth gate + init ===== */
