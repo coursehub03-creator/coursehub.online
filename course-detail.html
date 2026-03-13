@@ -3,121 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تفاصيل الدورة - CourseHub</title>
-
-  <!-- CSS الموقع -->
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/header.css">
-  <link rel="stylesheet" href="/css/footer.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <style>
-    .course-detail {
-      max-width: 900px;
-      margin: auto;
-      padding: 30px 20px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-    }
-    .course-detail h2 { margin-top: 0; }
-    .course-detail img {
-      width: 100%;
-      max-height: 320px;
-      object-fit: cover;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-    .btn {
-      display: inline-block;
-      padding: 12px 24px;
-      background: #1c3faa;
-      color: #fff;
-      border-radius: 8px;
-      text-decoration: none;
-      margin-top: 20px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .btn:hover { background: #1451a1; }
-    .rating {
-      font-size: 16px;
-      color: #f1c40f;
-      margin-bottom: 15px;
-    }
-    .empty-msg {
-      text-align: center;
-      font-size: 16px;
-      color: #666;
-      margin-top: 20px;
-    }
-  </style>
+  <title>تفاصيل الدورة | CourseHub</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/coursehub-ui.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="js/course-detail.js" defer></script>
 </head>
-
 <body>
-
-  <!-- Header -->
   <div id="header-placeholder"></div>
-
-  <section class="course-detail" id="courseDetail">
-    <h2>تحميل الدورة...</h2>
-
-    <img src="" alt="Course Image" id="courseImage">
-
-    <div class="rating" id="courseRating"></div>
-
-    <p id="courseDesc"></p>
-
-    <!-- زر تشغيل المشغل -->
-    <a href="#" class="btn" id="joinBtn">
-      ▶️ ابدأ الدورة
-    </a>
-  </section>
-
-  <section class="course-reviews container">
-    <h2>تقييمات المتعلمين</h2>
-    <div class="reviews-summary">
-      <div>
-        <strong id="reviewsAverage">0.0</strong>
-        <span>متوسط التقييم</span>
-      </div>
-      <div>
-        <strong id="reviewsCount">0</strong>
-        <span>مراجعة</span>
-      </div>
-    </div>
-
-    <div class="reviews-list" id="reviewsList"></div>
-    <div class="empty-state" id="reviewsEmpty">لا توجد مراجعات بعد.</div>
-
-    <form id="reviewForm" class="review-form">
-      <h3>أضف تقييمك</h3>
-      <label>
-        التقييم
-        <select id="reviewRating" required>
-          <option value="">اختر</option>
-          <option value="5">5 - ممتاز</option>
-          <option value="4">4 - جيد جدًا</option>
-          <option value="3">3 - جيد</option>
-          <option value="2">2 - مقبول</option>
-          <option value="1">1 - ضعيف</option>
-        </select>
-      </label>
-      <label>
-        ملاحظاتك
-        <textarea id="reviewComment" rows="4" placeholder="شاركنا تجربتك مع الدورة"></textarea>
-      </label>
-      <button type="submit" class="btn">إرسال المراجعة</button>
-    </form>
-  </section>
-
-  <!-- Footer -->
+  <main class="section container course-detail-layout">
+    <section class="ch-card" style="padding:18px">
+      <span class="ch-badge published" id="courseStatus">published</span>
+      <h1 id="courseTitle">تحميل...</h1>
+      <p id="courseSubtitle">مسار احترافي يركز على التطبيق العملي.</p>
+      <p id="courseMeta" class="meta"></p>
+      <img id="courseImage" src="assets/images/default-course.png" alt="course" width="1000" height="440" style="width:100%;border-radius:12px;object-fit:cover">
+      <h3>ماذا ستتعلم</h3><ul id="outcomes"></ul>
+      <h3>المهارات المكتسبة</h3><p id="skills">تحليل، تطبيق، بناء مشاريع.</p>
+      <h3>المنهاج الدراسي</h3><div id="curriculum" class="ch-card" style="padding:12px"></div>
+      <h3>FAQ</h3><p>يمكنك الوصول مدى الحياة للدورة بعد التسجيل.</p>
+    </section>
+    <aside class="ch-card sticky-cta">
+      <h3>سجل الآن</h3>
+      <p id="coursePrice">مجاني</p>
+      <a class="ch-btn primary" id="joinBtn" href="course-player.html">ابدأ التعلّم</a>
+      <a class="ch-btn secondary" href="courses.html" style="margin-top:8px">دورات مشابهة</a>
+      <hr>
+      <p class="meta">شهادة إتمام عند استكمال 100% من المحتوى والاختبار.</p>
+    </aside>
+  </main>
   <div id="footer-placeholder"></div>
-
-  <!-- JS -->
-  <script type="module" src="/js/course-detail.js"></script>
-  <script type="module" src="/js/reviews.js"></script>
-  <script type="module" src="/js/main.js" defer></script>
-
 </body>
 </html>

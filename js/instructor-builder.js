@@ -1,532 +1,83 @@
-import { auth, db, storage } from "/js/firebase-config.js";
-import { addDoc, collection, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getDownloadURL, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+const steps = ["Basic Info","Media","Curriculum","Pricing","Landing","Review"];
+let currentStep = 0;
+let lessons = [];
+const key = "coursehub_builder_v3";
 
-const LOCAL_DRAFT_KEY = "coursehub_builder2_draft";
-const STEP_TEMPLATES = ["text", "video", "image", "exercise", "checkpointQuiz", "summary"];
-
-let user;
-let wizardStep = 0;
-let state = {
-  title: "",
-  category: "",
-  description: "",
-  image: "",
-  price: 0,
-  level: "",
-  language: "العربية",
-  durationHours: 0,
-  lessons: []
-};
-
-document.addEventListener("DOMContentLoaded", () => {
-  initWizard();
-  bindEvents();
-
-  auth.onAuthStateChanged(async (u) => {
-    if (!u) return (window.location.href = "/login.html");
-    user = u;
-    await restoreDraft();
-    await maybeLoadMigrationCourse();
-    renderLessons();
-    setStep(0);
-  });
-});
-
-function initWizard() {
-  const labels = ["معلومات", "Lessons", "Checkpoints", "Preview"];
-  document.getElementById("wizardSteps").innerHTML = labels
-    .map(
-      (label, idx) =>
-        `<div class="wizard-step ${idx === 0 ? "active" : ""}" data-wizard-dot="${idx}">${idx + 1}. ${label}</div>`
-    )
-    .join("");
-}
-
-function bindEvents() {
-  document.getElementById("nextWizard")?.addEventListener("click", () => setStep(wizardStep + 1));
-  document.getElementById("prevWizard")?.addEventListener("click", () => setStep(wizardStep - 1));
-  document.getElementById("addLesson")?.addEventListener("click", addLesson);
-  document.getElementById("saveDraft")?.addEventListener("click", () => saveDraft(true));
-  document.getElementById("builderForm")?.addEventListener("submit", submitCourse);
-
-  ["title", "category", "description", "image", "price", "level", "language", "durationHours"].forEach((id) => {
-    document.getElementById(id)?.addEventListener("input", () => {
-      const el = document.getElementById(id);
-      state[id] = el.type === "number" ? Number(el.value || 0) : el.value;
-      debouncedAutosave();
-      renderPreview();
-    });
-  });
-
-  document.getElementById("coverImage")?.addEventListener("change", () => {
-    const file = document.getElementById("coverImage")?.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    const preview = document.getElementById("coverPreview");
-    if (preview) preview.src = url;
-  });
-}
-
-function setStep(next) {
-  wizardStep = Math.max(0, Math.min(3, next));
-  document.querySelectorAll(".wizard-panel").forEach((panel, idx) => panel.classList.toggle("active", idx === wizardStep));
-  document.querySelectorAll(".wizard-step").forEach((dot, idx) => dot.classList.toggle("active", idx === wizardStep));
-  const submitBtn = document.getElementById("submitCourse");
-  const nextBtn = document.getElementById("nextWizard");
-  if (submitBtn) submitBtn.style.display = wizardStep === 3 ? "inline-flex" : "none";
-  if (nextBtn) nextBtn.style.display = wizardStep === 3 ? "none" : "inline-flex";
-  renderPreview();
-}
-
-function addLesson() {
-  state.lessons.push({
-    id: crypto.randomUUID(),
-    title: `Lesson ${state.lessons.length + 1}`,
-    duration: "",
-    summary: "",
-    steps: []
-  });
-  renderLessons();
-  debouncedAutosave();
-}
-
-function addStep(lessonId, type = "text") {
-  const lesson = state.lessons.find((l) => l.id === lessonId);
-  if (!lesson) return;
-
-  lesson.steps.push({
-    id: crypto.randomUUID(),
-    type,
-    title: `${type} step`,
-    content: "",
-    mediaUrl: "",
-    options: type === "checkpointQuiz" ? ["خيار 1", "خيار 2"] : [],
-    correctIndex: 0,
-    points: 10
-  });
-
-  renderLessons();
-  debouncedAutosave();
-}
-
-function moveItem(arr, from, to) {
-  if (to < 0 || to >= arr.length) return;
-  const [item] = arr.splice(from, 1);
-  arr.splice(to, 0, item);
+function stepDots() {
+  const wrap = document.getElementById("builderSteps");
+  wrap.innerHTML = steps.map((s, i) => `<span class="step-dot ${i===currentStep?"active":""}">${i+1}. ${s}</span>`).join("");
+  document.querySelectorAll(".wizard-panel").forEach((p, i) => p.hidden = i !== currentStep);
 }
 
 function renderLessons() {
-  const root = document.getElementById("lessonsBuilder");
-  if (!root) return;
-
-  root.innerHTML = state.lessons
-    .map(
-      (lesson, lessonIndex) => `
-    <article class="lesson-card" data-lesson-id="${lesson.id}">
-      <header>
-        <input data-lesson-field="title" value="${esc(lesson.title)}" placeholder="عنوان الدرس">
-        <input data-lesson-field="duration" value="${esc(lesson.duration)}" placeholder="المدة">
-        <button type="button" class="btn ghost" data-lesson-move="up" ${lessonIndex === 0 ? "disabled" : ""}>↑</button>
-        <button type="button" class="btn ghost" data-lesson-move="down" ${
-          lessonIndex === state.lessons.length - 1 ? "disabled" : ""
-        }>↓</button>
-      </header>
-
-      <textarea data-lesson-field="summary" placeholder="ملخص الدرس">${lesson.summary || ""}</textarea>
-
-      <div class="step-actions-inline">
-        ${STEP_TEMPLATES.map((type) => `<button type="button" class="btn ghost" data-add-step="${type}">+ ${type}</button>`).join(
-          ""
-        )}
-      </div>
-
-      <div class="steps-list">
-        ${lesson.steps
-          .map(
-            (step, stepIndex) => `
-          <div class="step-row" data-step-id="${step.id}">
-            <input data-step-field="title" value="${esc(step.title)}" placeholder="عنوان الخطوة">
-            <select data-step-field="type">
-              ${STEP_TEMPLATES.map(
-                (type) => `<option value="${type}" ${step.type === type ? "selected" : ""}>${type}</option>`
-              ).join("")}
-            </select>
-            <textarea data-step-field="content" placeholder="المحتوى">${step.content || ""}</textarea>
-            <input data-step-field="mediaUrl" value="${esc(step.mediaUrl || "")}" placeholder="mediaUrl">
-            ${
-              step.type === "checkpointQuiz"
-                ? `<input data-step-field="options" value="${esc((step.options || []).join("|"))}" placeholder="خيارات مفصولة |">`
-                : ""
-            }
-            <div class="step-actions-inline">
-              <button type="button" class="btn ghost" data-step-move="up" ${stepIndex === 0 ? "disabled" : ""}>↑</button>
-              <button type="button" class="btn ghost" data-step-move="down" ${
-                stepIndex === lesson.steps.length - 1 ? "disabled" : ""
-              }>↓</button>
-              <button type="button" class="btn ghost" data-step-delete>حذف</button>
-            </div>
-          </div>`
-          )
-          .join("")}
-      </div>
-    </article>
-  `
-    )
-    .join("");
-
-  bindLessonEvents();
-  renderPreview();
+  const root = document.getElementById("lessons");
+  root.innerHTML = lessons.map((l, i) => `<div class="lesson-row"><input class="ch-input" value="${l.title}" data-i="${i}" data-f="title"><select class="ch-select" data-i="${i}" data-f="type"><option ${l.type==='video'?'selected':''}>video</option><option ${l.type==='text'?'selected':''}>text</option><option ${l.type==='quiz'?'selected':''}>quiz</option><option ${l.type==='assignment'?'selected':''}>assignment</option></select><select class="ch-select" data-i="${i}" data-f="status"><option ${l.status==='draft'?'selected':''}>draft</option><option ${l.status==='published'?'selected':''}>published</option></select><div><button class="ch-btn secondary" type="button" data-move="up" data-i="${i}">↑</button> <button class="ch-btn secondary" type="button" data-move="down" data-i="${i}">↓</button></div></div>`).join('');
 }
 
-function bindLessonEvents() {
-  document.querySelectorAll(".lesson-card").forEach((card) => {
-    const lessonId = card.dataset.lessonId;
-    const lesson = state.lessons.find((l) => l.id === lessonId);
-    if (!lesson) return;
+function collectState() {
+  const obj = {
+    title: val("title"), subtitle: val("subtitle"), slug: val("slug"), category: val("category"), level: val("level"), language: val("language"),
+    description: val("description"), cover: val("cover"), previewVideo: val("previewVideo"), price: val("price"), visibility: val("visibility"),
+    headline: val("headline"), faq: val("faq"), lessons, status: "draft"
+  };
+  return obj;
+}
+const val = (id) => document.getElementById(id)?.value || "";
 
-    card.querySelectorAll("[data-lesson-field]").forEach((input) => {
-      input.addEventListener("input", () => {
-        lesson[input.dataset.lessonField] = input.value;
-        debouncedAutosave();
-        renderPreview();
-      });
-    });
+function completionScore(st) {
+  const checks = [st.title, st.category, st.description, st.cover, st.price, st.headline, st.lessons.length > 0];
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
 
-    card.querySelector("[data-lesson-move='up']")?.addEventListener("click", () => {
-      const idx = state.lessons.findIndex((l) => l.id === lessonId);
-      moveItem(state.lessons, idx, idx - 1);
-      renderLessons();
-      debouncedAutosave();
-    });
+function refreshSidebar() {
+  const st = collectState();
+  const score = completionScore(st);
+  document.getElementById("completion").textContent = `${score}%`;
+  document.getElementById("moduleCount").textContent = st.lessons.length;
+  document.getElementById("publishedLessons").textContent = st.lessons.filter((l) => l.status === "published").length;
+  const missing = [];
+  if (!st.title) missing.push("أضف عنوان الدورة");
+  if (!st.description) missing.push("أضف وصفاً تفصيلياً");
+  if (!st.cover) missing.push("أضف صورة الغلاف");
+  if (!st.lessons.length) missing.push("أضف درساً واحداً على الأقل");
+  document.getElementById("missingChecklist").innerHTML = missing.map((m) => `<li>${m}</li>`).join("") || "<li>جاهز للنشر المبدئي ✅</li>";
+  document.getElementById("qualityScore").textContent = `Quality score: ${score}/100`;
+  document.getElementById("missing").textContent = missing.length ? `حقول ناقصة: ${missing.join("، ")}` : "كل شيء جاهز للإرسال.";
+}
 
-    card.querySelector("[data-lesson-move='down']")?.addEventListener("click", () => {
-      const idx = state.lessons.findIndex((l) => l.id === lessonId);
-      moveItem(state.lessons, idx, idx + 1);
-      renderLessons();
-      debouncedAutosave();
-    });
+function saveDraft(showToast = false) {
+  const st = collectState();
+  localStorage.setItem(key, JSON.stringify(st));
+  document.getElementById("lastSaved").textContent = new Date().toLocaleTimeString("ar");
+  if (showToast) toast("تم حفظ المسودة بنجاح");
+  refreshSidebar();
+}
 
-    card.querySelectorAll("[data-add-step]").forEach((btn) =>
-      btn.addEventListener("click", () => addStep(lessonId, btn.dataset.addStep))
-    );
+function restore() {
+  const raw = localStorage.getItem(key);
+  if (!raw) return;
+  const st = JSON.parse(raw);
+  Object.entries(st).forEach(([k,v]) => { if (document.getElementById(k)) document.getElementById(k).value = v; });
+  lessons = st.lessons || [];
+}
 
-    card.querySelectorAll(".step-row").forEach((stepRow) => {
-      const step = lesson.steps.find((s) => s.id === stepRow.dataset.stepId);
-      if (!step) return;
+function toast(msg){const d=document.createElement('div');d.className='ch-toast';d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
 
-      stepRow.querySelectorAll("[data-step-field]").forEach((field) => {
-        field.addEventListener("input", () => {
-          const key = field.dataset.stepField;
+document.addEventListener("DOMContentLoaded", () => {
+  restore(); stepDots(); renderLessons(); refreshSidebar();
 
-          if (key === "type") {
-            const nextType = field.value;
-            step.type = nextType;
-            if (nextType === "checkpointQuiz" && (!Array.isArray(step.options) || !step.options.length)) {
-              step.options = ["خيار 1", "خيار 2"];
-              step.correctIndex = 0;
-            }
-            if (nextType !== "checkpointQuiz") {
-              step.options = [];
-              step.correctIndex = 0;
-            }
-            renderLessons();
-            debouncedAutosave();
-            return;
-          }
-
-          step[key] =
-            key === "options"
-              ? field.value
-                  .split("|")
-                  .map((v) => v.trim())
-                  .filter(Boolean)
-              : field.value;
-
-          debouncedAutosave();
-          renderPreview();
-        });
-      });
-
-      stepRow.querySelector("[data-step-delete]")?.addEventListener("click", () => {
-        lesson.steps = lesson.steps.filter((s) => s.id !== step.id);
-        renderLessons();
-        debouncedAutosave();
-      });
-
-      stepRow.querySelector("[data-step-move='up']")?.addEventListener("click", () => {
-        const idx = lesson.steps.findIndex((s) => s.id === step.id);
-        moveItem(lesson.steps, idx, idx - 1);
-        renderLessons();
-        debouncedAutosave();
-      });
-
-      stepRow.querySelector("[data-step-move='down']")?.addEventListener("click", () => {
-        const idx = lesson.steps.findIndex((s) => s.id === step.id);
-        moveItem(lesson.steps, idx, idx + 1);
-        renderLessons();
-        debouncedAutosave();
-      });
-    });
+  document.getElementById("addLesson").addEventListener("click", () => { lessons.push({ title:`Lesson ${lessons.length+1}`, type:"video", status:"draft" }); renderLessons(); saveDraft(); });
+  document.getElementById("lessons").addEventListener("input", (e) => {
+    const i = Number(e.target.dataset.i); const f = e.target.dataset.f; if (Number.isInteger(i) && f) lessons[i][f]=e.target.value; saveDraft();
   });
-}
-
-function renderPreview() {
-  const firstLesson = state.lessons[0];
-  const firstStep = firstLesson?.steps?.[0];
-  const preview = document.getElementById("playerPreview");
-  if (!preview) return;
-
-  preview.innerHTML = `
-    <h3>${state.title || "عنوان الدورة"}</h3>
-    <p>${state.description || "وصف الدورة"}</p>
-    <hr>
-    <strong>${firstLesson?.title || "أضف Lesson لعرض المعاينة"}</strong>
-    <p>${firstStep?.title || "أضف Step من Templates"}</p>
-    <div>${firstStep?.content || ""}</div>
-  `;
-
-  const checkpoints = state.lessons.flatMap((l) => l.steps).filter((s) => s.type === "checkpointQuiz").length;
-  const hint = document.getElementById("checkpointHint");
-  if (hint) hint.textContent = `عدد checkpoints الحالية: ${checkpoints}`;
-}
-
-async function saveDraft(showMessage = false) {
-  const payload = getPayload("draft");
-  localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
-
-  if (user?.uid) {
-    await setDoc(
-      doc(db, "instructorCourseDrafts", user.uid),
-      { ...payload, updatedAt: serverTimestamp() },
-      { merge: true }
-    );
-  }
-
-  if (showMessage) setStatus("✅ تم حفظ المسودة محليًا وسحابيًا");
-}
-
-async function restoreDraft() {
-  const local = safeParse(localStorage.getItem(LOCAL_DRAFT_KEY));
-  const remoteSnap = user?.uid ? await getDoc(doc(db, "instructorCourseDrafts", user.uid)) : null;
-  const remote = remoteSnap?.exists() ? remoteSnap.data() : null;
-
-  state = pickLatestDraft(local, remote) || state;
-
-  Object.keys(state).forEach((key) => {
-    const input = document.getElementById(key);
-    if (input && typeof state[key] !== "object") input.value = state[key] ?? "";
+  document.getElementById("lessons").addEventListener("click", (e)=>{
+    const b = e.target.closest("[data-move]"); if(!b) return; const i=Number(b.dataset.i), dir=b.dataset.move==='up'?-1:1, t=i+dir; if(t<0||t>=lessons.length) return; [lessons[i],lessons[t]]=[lessons[t],lessons[i]]; renderLessons(); saveDraft();
   });
 
-  const coverPreview = document.getElementById("coverPreview");
-  if (coverPreview) coverPreview.src = state.image || "/assets/images/default-course.png";
-
-  renderLessons();
-}
-
-async function submitCourse(event) {
-  event.preventDefault();
-
-  try {
-    // 1) keep image field in sync
-    state.image = document.getElementById("image")?.value || state.image;
-
-    // 2) upload cover file if chosen
-    const coverFile = document.getElementById("coverImage")?.files?.[0];
-    if (coverFile) {
-      const coverRef = ref(storage, `courses/covers/${Date.now()}_${coverFile.name}`);
-      await uploadBytes(coverRef, coverFile);
-      state.image = await getDownloadURL(coverRef);
-    }
-
-    const payload = getPayload("pending");
-    await addDoc(collection(db, "courses"), payload);
-
-    setStatus("✅ تم إرسال الدورة للمراجعة");
-    localStorage.removeItem(LOCAL_DRAFT_KEY);
-  } catch (error) {
-    console.error(error);
-    setStatus("❌ فشل إرسال الدورة", true);
-  }
-}
-
-function getPayload(status = "draft") {
-  const lessons = state.lessons.map((lesson) => ({
-    id: lesson.id,
-    title: lesson.title,
-    duration: lesson.duration,
-    summary: lesson.summary,
-    steps: lesson.steps.map((step) => ({
-      id: step.id,
-      type: step.type,
-      title: step.title,
-      content: step.content,
-      mediaUrl: step.mediaUrl,
-      options: step.options || [],
-      correctIndex: Number(step.correctIndex || 0),
-      points: Number(step.points || 10)
-    }))
-  }));
-
-  return {
-    title: state.title,
-    description: state.description,
-    category: state.category,
-    price: Number(state.price || 0),
-    level: state.level,
-    language: state.language,
-    durationHours: Number(state.durationHours || 0),
-    image: state.image,
-    instructorId: user?.uid || "",
-    status,
-    lessons,
-
-    // legacy-friendly fields (minimal but compatible)
-    modules: lessons.map((lesson) => ({ title: lesson.title })),
-    assessmentQuestions: lessons.flatMap((lesson) =>
-      lesson.steps
-        .filter((step) => step.type === "checkpointQuiz")
-        .map((step) => ({
-          question: step.title,
-          options: step.options || [],
-          correctIndex: Number(step.correctIndex || 0)
-        }))
-    ),
-
-    updatedAt: serverTimestamp(),
-    createdAt: serverTimestamp()
-  };
-}
-
-async function maybeLoadMigrationCourse() {
-  const courseId = new URLSearchParams(window.location.search).get("courseId");
-  if (!courseId) return;
-
-  const snap = await getDoc(doc(db, "courses", courseId));
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-
-  const migratedLessons =
-    Array.isArray(data.lessons) && data.lessons.length ? data.lessons : migrateLegacyToLessons(data.modules || [], data.assessmentQuestions || []);
-
-  state = {
-    ...state,
-    title: data.title || "",
-    description: data.description || "",
-    category: data.category || "",
-    price: data.price || 0,
-    level: data.level || "",
-    language: data.language || "العربية",
-    durationHours: data.durationHours || 0,
-    image: data.image || "",
-    lessons: migratedLessons.map(normalizeLesson)
-  };
-
-  Object.keys(state).forEach((key) => {
-    const input = document.getElementById(key);
-    if (input && typeof state[key] !== "object") input.value = state[key] ?? "";
-  });
-
-  const coverPreview = document.getElementById("coverPreview");
-  if (coverPreview) coverPreview.src = state.image || "/assets/images/default-course.png";
-
-  renderLessons();
-  setStatus("ℹ️ تم استيراد محتوى النظام القديم بنجاح");
-}
-
-function normalizeLesson(lesson, idx) {
-  const rawSteps =
-    Array.isArray(lesson.steps) && lesson.steps.length
-      ? lesson.steps
-      : [
-          ...(lesson.slides || []).map((slide, i) => ({
-            id: slide.id || `${lesson.id || idx}-slide-${i}`,
-            type: slide.type || "text",
-            title: slide.title || `Slide ${i + 1}`,
-            content: slide.content || slide.text || "",
-            mediaUrl: slide.mediaUrl || ""
-          })),
-          ...(lesson.quiz || []).map((q, i) => ({
-            id: `${lesson.id || idx}-quiz-${i}`,
-            type: "checkpointQuiz",
-            title: q.question || `Quiz ${i + 1}`,
-            options: q.options || [],
-            correctIndex: Number(q.correct ?? q.correctIndex ?? 0)
-          }))
-        ];
-
-  return {
-    id: lesson.id || `lesson-${idx + 1}`,
-    title: lesson.title || `Lesson ${idx + 1}`,
-    duration: lesson.duration || "",
-    summary: lesson.summary || "",
-    steps: rawSteps.map((step, i) => ({
-      id: step.id || `step-${i + 1}`,
-      type: step.type || "text",
-      title: step.title || `Step ${i + 1}`,
-      content: step.content || step.text || "",
-      mediaUrl: step.mediaUrl || "",
-      options: step.options || [],
-      correctIndex: Number(step.correctIndex ?? step.correct ?? 0),
-      points: Number(step.points || 10)
-    }))
-  };
-}
-
-function migrateLegacyToLessons(modules, assessmentQuestions) {
-  return (modules || []).map((module, idx) => ({
-    id: `legacy-${idx + 1}`,
-    title: module.title || `Module ${idx + 1}`,
-    duration: module.duration || "",
-    summary: "",
-    steps: [
-      { id: `legacy-${idx + 1}-text`, type: "text", title: module.title || "مقدمة", content: module.description || "مقدمة سريعة" },
-      { id: `legacy-${idx + 1}-exercise`, type: "exercise", title: "طبّق", content: "طبّق المفهوم في تمرين بسيط" },
-      {
-        id: `legacy-${idx + 1}-quiz`,
-        type: "checkpointQuiz",
-        title: (assessmentQuestions[idx] && assessmentQuestions[idx].question) || "سؤال سريع",
-        options: (assessmentQuestions[idx] && assessmentQuestions[idx].options) || ["خيار 1", "خيار 2"],
-        correctIndex: (assessmentQuestions[idx] && assessmentQuestions[idx].correctIndex) || 0
-      },
-      { id: `legacy-${idx + 1}-summary`, type: "summary", title: "ملخص", content: "راجع أهم النقاط." }
-    ]
-  }));
-}
-
-function pickLatestDraft(local, remote) {
-  if (!local && !remote) return null;
-  if (!local) return remote;
-  if (!remote) return local;
-
-  const localAt = new Date(local.updatedAt || 0).getTime();
-  const remoteAt = new Date(remote.updatedAt?.toDate ? remote.updatedAt.toDate() : remote.updatedAt || 0).getTime();
-
-  return remoteAt > localAt ? remote : local;
-}
-
-function setStatus(msg, isError = false) {
-  const el = document.getElementById("builderStatus");
-  if (!el) return;
-  el.style.color = isError ? "#b91c1c" : "#1d4ed8";
-  el.textContent = msg;
-}
-
-function safeParse(value) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
-
-function esc(value = "") {
-  return String(value).replace(/"/g, "&quot;");
-}
-
-let saveTimer;
-function debouncedAutosave() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => saveDraft(false).catch(() => {}), 700);
-}
+  document.getElementById("nextStep").addEventListener("click", ()=>{ currentStep = Math.min(steps.length-1, currentStep+1); stepDots(); refreshSidebar(); });
+  document.getElementById("prevStep").addEventListener("click", ()=>{ currentStep = Math.max(0, currentStep-1); stepDots(); });
+  document.getElementById("saveDraft").addEventListener("click", ()=> saveDraft(true));
+  document.getElementById("builderForm").addEventListener("input", ()=> saveDraft(false));
+  document.getElementById("builderForm").addEventListener("submit", (e)=>{e.preventDefault(); document.getElementById("courseState").textContent="in_review"; document.getElementById("courseState").className="ch-badge in_review"; saveDraft(); toast("تم إرسال الدورة للمراجعة");});
+  window.addEventListener("beforeunload", (e)=>{e.preventDefault(); e.returnValue="";});
+});
