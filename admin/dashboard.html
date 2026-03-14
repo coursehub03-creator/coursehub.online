@@ -8,29 +8,80 @@
   <link rel="stylesheet" href="/css/app-shell.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="css-admin/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script type="module" src="/js/main.js" defer></script>
 </head>
 <body>
   <div id="header-placeholder"></div>
+
   <main class="app-shell" style="grid-template-columns:260px 1fr">
-    <aside class="app-sidebar"><h2>Admin</h2><ul class="app-nav"><li><a class="active" href="#">Dashboard</a></li><li><a href="#">إدارة المستخدمين</a></li><li><a href="#">إدارة الدورات</a></li><li><a href="#">مراجعات النشر</a></li><li><a href="#">التقارير والتحليلات</a></li><li><a href="#">التصنيفات</a></li><li><a href="#">الشهادات</a></li><li><a href="#">الصلاحيات</a></li></ul></aside>
+    <aside class="app-sidebar">
+      <h2>Admin</h2>
+      <ul class="app-nav">
+        <li><a class="active" href="#">Dashboard</a></li>
+        <li><a href="#">إدارة المستخدمين</a></li>
+        <li><a href="#">إدارة الدورات</a></li>
+        <li><a href="#">مراجعات النشر</a></li>
+        <li><a href="#">التقارير والتحليلات</a></li>
+        <li><a href="#">التصنيفات</a></li>
+        <li><a href="#">الشهادات</a></li>
+        <li><a href="#">الصلاحيات</a></li>
+      </ul>
+    </aside>
+
     <section class="app-main">
-      <div class="app-topbar"><input class="ch-input" style="max-width:320px" placeholder="بحث في النظام"><div>Moderation queue • الحساب</div></div>
-      <div class="app-header"><h1>Admin Dashboard</h1></div>
-      <div class="app-grid-3">
-        <article class="ch-card metric-card"><strong>18,450</strong><span>إجمالي الطلاب</span></article>
-        <article class="ch-card metric-card"><strong>322</strong><span>إجمالي المدرسين</span></article>
-        <article class="ch-card metric-card"><strong>412</strong><span>إجمالي الدورات</span></article>
+      <div class="app-topbar">
+        <input class="ch-input" style="max-width:320px" placeholder="بحث في النظام">
+        <div>Moderation queue • الحساب</div>
       </div>
+
+      <div class="app-header">
+        <h1>Admin Dashboard</h1>
+      </div>
+
+      <div class="app-grid-3">
+        <article class="ch-card metric-card" id="usersCard"><strong>0</strong><span>المستخدمون</span></article>
+        <article class="ch-card metric-card" id="coursesCard"><strong>0</strong><span>الدورات</span></article>
+        <article class="ch-card metric-card" id="certificatesCard"><strong>0</strong><span>الشهادات</span></article>
+        <article class="ch-card metric-card" id="testsCard"><strong>0</strong><span>الاختبارات</span></article>
+      </div>
+
       <article class="ch-card" style="padding:16px">
         <h3>Review Queue</h3>
-        <table class="data-table"><thead><tr><th>الدورة</th><th>المالك</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>
-          <tr><td>React Foundations</td><td>محمد علاء</td><td><span class="ch-badge in_review">in_review</span></td><td><button class="ch-btn secondary">مراجعة</button></td></tr>
-          <tr><td>AI for Teams</td><td>ريم الحربي</td><td><span class="ch-badge draft">draft</span></td><td><button class="ch-btn secondary">متابعة</button></td></tr>
-        </tbody></table>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الدورة</th>
+              <th>المالك</th>
+              <th>الحالة</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>React Foundations</td>
+              <td>محمد علاء</td>
+              <td><span class="ch-badge in_review">in_review</span></td>
+              <td><button class="ch-btn secondary">مراجعة</button></td>
+            </tr>
+            <tr>
+              <td>AI for Teams</td>
+              <td>ريم الحربي</td>
+              <td><span class="ch-badge draft">draft</span></td>
+              <td><button class="ch-btn secondary">متابعة</button></td>
+            </tr>
+          </tbody>
+        </table>
       </article>
     </section>
   </main>
+
   <div id="footer-placeholder"></div>
+
+  <script type="module" src="/js/footer.js"></script>
+  <script type="module" src="js-admin/admin-guard.js"></script>
+  <script type="module" src="js-admin/admin-layout.js"></script>
+  <script type="module" src="js-admin/dashboard.js"></script>
 </body>
 </html>

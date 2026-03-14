@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>التصنيفات | لوحة التحكم</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="css-admin/admin.css" />
+</head>
+<body>
+<div id="header-placeholder"></div>
+<main class="admin-wrapper">
+  <div class="admin-layout">
+    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
+    <section class="admin-main">
+      <div id="topbar-placeholder"></div>
+      <div class="admin-content">
+        <h1>إدارة التصنيفات</h1>
+        <p class="helper-text">إضافة/تعديل/حذف التصنيفات المستخدمة في الدورات.</p>
+        <div class="admin-toolbar" style="display:flex;gap:10px;align-items:center;margin:12px 0;">
+          <input id="newCategoryName" type="text" placeholder="اسم التصنيف" />
+          <button id="addCategoryBtn" class="btn">إضافة</button>
+        </div>
+        <table>
+          <thead><tr><th>التصنيف</th><th>الإجراءات</th></tr></thead>
+          <tbody id="categoriesRows"><tr><td colspan="2">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<div id="footer-placeholder"></div>
+<script type="module" src="/js/main.js" defer></script>
+<script type="module" src="/js/footer.js"></script>
+<script type="module" src="js-admin/admin-guard.js"></script>
+<script type="module" src="js-admin/admin-layout.js"></script>
+<script type="module" src="js-admin/categories.js"></script>
+</body>
+</html>
