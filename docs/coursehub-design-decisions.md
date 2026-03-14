@@ -18,3 +18,10 @@
 - نفس design tokens للحالات والأزرار والبطاقات والجداول.
 - نفس مفهوم status badges عبر الدورات (`draft`, `in_review`, `published`, `archived`).
 - builder يرفع حالة الدورة إلى `in_review` قبل الموافقة الإدارية.
+
+## تحديثات تجربة الأستاذ (مرحلة التحسين)
+- تم تحويل تنقل الأستاذ إلى روابط حقيقية تعمل بين كل الصفحات المطلوبة: Dashboard, Courses, Builder, Students, Tests, Reports, Settings.
+- تم ربط إحصائيات الأستاذ ببيانات Firestore الفعلية (courses/enrollments/certificates/quizAttempts/submissions) بدلاً من أرقام ثابتة.
+- Course Builder أصبح يدعم اختيار صور وفيديو من الجهاز مع معاينة مباشرة ورفع اختياري إلى Storage.
+- تم إظهار حالة مراجعات المسؤول وسبب الرفض داخل واجهة الأستاذ ليسهل إعادة التعديل ثم إعادة الإرسال.
+- زر "أنشئ دورتك" أصبح مرئياً فقط للمستخدم صاحب دور instructor.

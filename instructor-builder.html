@@ -5,57 +5,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Course Builder | CourseHub</title>
   <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
   <link rel="stylesheet" href="css/coursehub-ui.css">
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <script type="module" src="js/main.js" defer></script>
   <script type="module" src="js/instructor-builder.js" defer></script>
+  <script type="module" src="js/instructor-portal.js" defer></script>
 </head>
-<body>
+<body data-instructor-page="builder">
   <div id="header-placeholder"></div>
-  <main class="section container builder-layout">
-    <section class="ch-card" style="padding:16px">
-      <h1>Course Builder</h1>
-      <div class="stepper" id="builderSteps"></div>
-      <form id="builderForm">
-        <div class="wizard-panel" data-step="0">
-          <h3>Step 1: Basic Info</h3>
-          <div class="app-grid-2">
-            <label>العنوان<input class="ch-input" id="title" required></label>
-            <label>Subtitle<input class="ch-input" id="subtitle"></label>
-            <label>Slug<input class="ch-input" id="slug"></label>
-            <label>التصنيف<input class="ch-input" id="category"></label>
-            <label>المستوى<input class="ch-input" id="level"></label>
-            <label>اللغة<input class="ch-input" id="language" value="العربية"></label>
+
+  <main class="app-shell">
+    <aside class="app-sidebar">
+      <h2>Instructor Studio</h2>
+      <ul class="app-nav">
+        <li><a href="/instructor-dashboard.html" data-nav="dashboard">لوحة التحكم</a></li>
+        <li><a href="/instructor-courses.html" data-nav="courses">دوراتي</a></li>
+        <li><a href="/instructor-builder.html" data-nav="builder">إنشاء دورة</a></li>
+        <li><a href="/instructor-students.html" data-nav="students">الطلاب والتقدم</a></li>
+        <li><a href="/instructor-tests.html" data-nav="tests">الاختبارات</a></li>
+        <li><a href="/instructor-reports.html" data-nav="reports">التقارير</a></li>
+        <li><a href="/instructor-settings.html" data-nav="settings">الإعدادات</a></li>
+      </ul>
+    </aside>
+
+    <section class="app-main">
+      <div class="app-header">
+        <h1>Course Builder الاحترافي</h1>
+        <div class="stepper" id="builderSteps"></div>
+      </div>
+
+      <section class="ch-card" style="padding:16px">
+        <form id="builderForm">
+          <div class="wizard-panel" data-step="0">
+            <h3>Step 1: Basic Info</h3>
+            <div class="app-grid-2">
+              <label>العنوان<input class="ch-input" id="title" required></label>
+              <label>Subtitle<input class="ch-input" id="subtitle"></label>
+              <label>Slug<input class="ch-input" id="slug"></label>
+              <label>التصنيف<input class="ch-input" id="category"></label>
+              <label>المستوى<input class="ch-input" id="level"></label>
+              <label>اللغة<input class="ch-input" id="language" value="العربية"></label>
+            </div>
+            <label>الوصف التفصيلي<textarea class="ch-textarea" id="description"></textarea></label>
           </div>
-          <label>الوصف التفصيلي<textarea class="ch-textarea" id="description"></textarea></label>
-        </div>
 
-        <div class="wizard-panel" data-step="1" hidden><h3>Step 2: Media & Branding</h3><label>رابط صورة الغلاف<input class="ch-input" id="cover"></label><label>فيديو تعريفي<input class="ch-input" id="previewVideo"></label></div>
-
-        <div class="wizard-panel" data-step="2" hidden>
-          <h3>Step 3: Curriculum Builder</h3>
-          <div id="lessons"></div>
-          <button type="button" class="ch-btn secondary" id="addLesson">+ إضافة Lesson</button>
-        </div>
-
-        <div class="wizard-panel" data-step="3" hidden><h3>Step 4: Pricing & Access</h3><label>السعر<input type="number" class="ch-input" id="price"></label><label>الوصول<select id="visibility" class="ch-select"><option>public</option><option>private</option><option>hidden</option></select></label></div>
-        <div class="wizard-panel" data-step="4" hidden><h3>Step 5: Landing Page</h3><label>Headline<input class="ch-input" id="headline"></label><label>FAQ<textarea class="ch-textarea" id="faq"></textarea></label></div>
-        <div class="wizard-panel" data-step="5" hidden><h3>Step 6: Review & Publish</h3><p id="qualityScore"></p><div id="missing"></div></div>
-
-        <div class="action-sticky">
-          <div>
-            <button class="ch-btn secondary" type="button" id="prevStep">السابق</button>
-            <button class="ch-btn secondary" type="button" id="nextStep">التالي</button>
+          <div class="wizard-panel" data-step="1" hidden>
+            <h3>Step 2: Media & Branding</h3>
+            <div class="app-grid-2">
+              <label>صورة الغلاف (من الجهاز)<input type="file" class="ch-input" id="coverFile" accept="image/*"></label>
+              <label>فيديو تعريفي (من الجهاز)<input type="file" class="ch-input" id="previewVideoFile" accept="video/*"></label>
+              <label>رابط صورة الغلاف<input class="ch-input" id="cover" placeholder="https://..."></label>
+              <label>رابط فيديو تعريفي<input class="ch-input" id="previewVideo" placeholder="https://..."></label>
+            </div>
+            <div class="app-grid-2" style="margin-top:12px">
+              <div class="ch-card" style="padding:12px">
+                <strong>معاينة الغلاف</strong>
+                <img id="coverPreview" alt="preview" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px" src="assets/images/default-course.png">
+              </div>
+              <div class="ch-card" style="padding:12px">
+                <strong>معاينة الفيديو</strong>
+                <video id="videoPreview" controls style="width:100%;max-height:220px;border-radius:10px;margin-top:8px"></video>
+              </div>
+            </div>
           </div>
-          <div>
-            <button class="ch-btn secondary" type="button" id="saveDraft">حفظ مسودة</button>
-            <button class="ch-btn primary" type="submit">Submit for Review</button>
+
+          <div class="wizard-panel" data-step="2" hidden>
+            <h3>Step 3: Curriculum Builder</h3>
+            <div id="lessons"></div>
+            <button type="button" class="ch-btn secondary" id="addLesson">+ إضافة Lesson</button>
           </div>
-        </div>
-      </form>
+
+          <div class="wizard-panel" data-step="3" hidden>
+            <h3>Step 4: Pricing & Access</h3>
+            <label>السعر<input type="number" class="ch-input" id="price"></label>
+            <label>الوصول<select id="visibility" class="ch-select"><option>public</option><option>private</option><option>hidden</option></select></label>
+          </div>
+
+          <div class="wizard-panel" data-step="4" hidden>
+            <h3>Step 5: Landing Page</h3>
+            <label>Headline<input class="ch-input" id="headline"></label>
+            <label>FAQ<textarea class="ch-textarea" id="faq"></textarea></label>
+          </div>
+
+          <div class="wizard-panel" data-step="5" hidden>
+            <h3>Step 6: Review & Publish</h3>
+            <p id="qualityScore"></p>
+            <div id="missing"></div>
+            <p id="reviewStatusHint" class="meta"></p>
+          </div>
+
+          <div class="action-sticky">
+            <div>
+              <button class="ch-btn secondary" type="button" id="prevStep">السابق</button>
+              <button class="ch-btn secondary" type="button" id="nextStep">التالي</button>
+            </div>
+            <div>
+              <button class="ch-btn secondary" type="button" id="saveDraft">حفظ مسودة</button>
+              <button class="ch-btn primary" type="submit">إرسال للمراجعة</button>
+            </div>
+          </div>
+        </form>
+      </section>
     </section>
-    <aside class="ch-card" style="padding:16px;height:fit-content;position:sticky;top:14px">
+
+    <aside class="ch-card" style="padding:16px;height:fit-content;position:sticky;top:14px;margin-top:24px">
       <h3>Builder Sidebar</h3>
       <p>الحالة: <span class="ch-badge draft" id="courseState">draft</span></p>
       <p>آخر حفظ: <span id="lastSaved">--</span></p>
@@ -63,8 +118,12 @@
       <p>عدد الوحدات: <span id="moduleCount">0</span></p>
       <p>عدد الدروس المنشورة: <span id="publishedLessons">0</span></p>
       <ul id="missingChecklist"></ul>
+      <hr>
+      <h4>مراجعات المسؤول</h4>
+      <div id="submissionFeedback">لا توجد مراجعات بعد.</div>
     </aside>
   </main>
+
   <div id="footer-placeholder"></div>
 </body>
 </html>

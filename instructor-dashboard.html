@@ -9,25 +9,55 @@
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="js/instructor-portal.js" defer></script>
 </head>
-<body>
+<body data-instructor-page="dashboard">
   <div id="header-placeholder"></div>
+
   <main class="app-shell">
-    <aside class="app-sidebar"><h2>الأستاذ</h2><ul class="app-nav"><li><a class="active" href="#">لوحة التحكم</a></li><li><a href="#">دوراتي</a></li><li><a href="instructor-builder.html">إنشاء دورة</a></li><li><a href="#">الطلاب والتقدم</a></li><li><a href="#">الاختبارات</a></li><li><a href="#">التقارير</a></li><li><a href="settings.html">الإعدادات</a></li></ul></aside>
+    <aside class="app-sidebar">
+      <h2>Instructor Studio</h2>
+      <ul class="app-nav">
+        <li><a href="/instructor-dashboard.html" data-nav="dashboard">لوحة التحكم</a></li>
+        <li><a href="/instructor-courses.html" data-nav="courses">دوراتي</a></li>
+        <li><a href="/instructor-builder.html" data-nav="builder">إنشاء دورة</a></li>
+        <li><a href="/instructor-students.html" data-nav="students">الطلاب والتقدم</a></li>
+        <li><a href="/instructor-tests.html" data-nav="tests">الاختبارات</a></li>
+        <li><a href="/instructor-reports.html" data-nav="reports">التقارير</a></li>
+        <li><a href="/instructor-settings.html" data-nav="settings">الإعدادات</a></li>
+      </ul>
+    </aside>
+
     <section class="app-main">
-      <div class="app-topbar"><input class="ch-input" style="max-width:320px" placeholder="ابحث في محتوى دوراتك"><div>إشعارات الجودة • الحساب</div></div>
-      <div class="app-header"><div class="app-breadcrumb">لوحة الأستاذ / Dashboard</div><h1>نظرة تشغيلية على دوراتك</h1></div>
+      <div class="app-topbar">
+        <input class="ch-input" style="max-width:320px" placeholder="ابحث داخل لوحة الأستاذ">
+        <div id="instructorName">الأستاذ</div>
+      </div>
+
+      <div class="app-header">
+        <div class="app-breadcrumb">لوحة الأستاذ / Dashboard</div>
+        <h1>إحصائيات حقيقية لحسابك</h1>
+      </div>
+
       <div class="app-grid-3">
-        <article class="ch-card metric-card"><strong>1260</strong><span>إجمالي الطلاب</span></article>
-        <article class="ch-card metric-card"><strong>71%</strong><span>معدل الإكمال</span></article>
-        <article class="ch-card metric-card"><strong>$4,860</strong><span>الإيراد الشهري</span></article>
+        <article class="ch-card metric-card"><strong id="metricStudents">0</strong><span>إجمالي الطلاب المسجلين</span></article>
+        <article class="ch-card metric-card"><strong id="metricCompletions">0</strong><span>طلاب أكملوا دوراتك</span></article>
+        <article class="ch-card metric-card"><strong id="metricCompletionRate">0%</strong><span>متوسط الإكمال</span></article>
       </div>
-      <div class="app-grid-2">
-        <article class="ch-card" style="padding:16px"><h3>حالة الدورات</h3><p><span class="ch-badge published">Published: 4</span> <span class="ch-badge draft">Draft: 2</span> <span class="ch-badge in_review">In Review: 1</span></p></article>
-        <article class="ch-card" style="padding:16px"><h3>مهام سريعة</h3><a class="ch-btn primary" href="instructor-builder.html">إنشاء درس جديد</a></article>
+
+      <div class="app-grid-3">
+        <article class="ch-card metric-card"><strong id="metricPublished">0</strong><span>دورات منشورة</span></article>
+        <article class="ch-card metric-card"><strong id="metricDraft">0</strong><span>مسودات</span></article>
+        <article class="ch-card metric-card"><strong id="metricInReview">0</strong><span>قيد المراجعة</span></article>
       </div>
+
+      <article class="ch-card" style="padding:16px">
+        <h3>آخر قرارات المراجعة من المسؤول</h3>
+        <div id="latestReviews">جاري التحميل...</div>
+      </article>
     </section>
   </main>
+
   <div id="footer-placeholder"></div>
 </body>
 </html>
