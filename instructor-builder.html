@@ -15,6 +15,7 @@
 </head>
 <body data-instructor-page="builder">
   <div id="header-placeholder"></div>
+
   <main class="app-shell">
     <aside class="app-sidebar">
       <h2>Instructor Studio</h2>
@@ -30,7 +31,11 @@
     </aside>
 
     <section class="app-main">
-      <div class="app-header"><h1>Course Builder الاحترافي</h1><div class="stepper" id="builderSteps"></div></div>
+      <div class="app-header">
+        <h1>Course Builder الاحترافي</h1>
+        <div class="stepper" id="builderSteps"></div>
+      </div>
+
       <section class="ch-card" style="padding:16px">
         <form id="builderForm">
           <div class="wizard-panel" data-step="0">
@@ -55,8 +60,14 @@
               <label>رابط فيديو تعريفي<input class="ch-input" id="previewVideo" placeholder="https://..."></label>
             </div>
             <div class="app-grid-2" style="margin-top:12px">
-              <div class="ch-card" style="padding:12px"><strong>معاينة الغلاف</strong><img id="coverPreview" alt="preview" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px" src="assets/images/default-course.png"></div>
-              <div class="ch-card" style="padding:12px"><strong>معاينة الفيديو</strong><video id="videoPreview" controls style="width:100%;max-height:220px;border-radius:10px;margin-top:8px"></video></div>
+              <div class="ch-card" style="padding:12px">
+                <strong>معاينة الغلاف</strong>
+                <img id="coverPreview" alt="preview" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px" src="assets/images/default-course.png">
+              </div>
+              <div class="ch-card" style="padding:12px">
+                <strong>معاينة الفيديو</strong>
+                <video id="videoPreview" controls style="width:100%;max-height:220px;border-radius:10px;margin-top:8px"></video>
+              </div>
             </div>
           </div>
 
@@ -112,6 +123,7 @@
       <div id="submissionFeedback">لا توجد مراجعات بعد.</div>
     </aside>
   </main>
+
   <div id="footer-placeholder"></div>
 </body>
 </html>
