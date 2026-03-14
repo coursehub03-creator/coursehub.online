@@ -5,41 +5,21 @@
   <title>لوحة التحكم | CourseHub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS الموقع العام -->
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
-
-  <!-- CSS الأدمن -->
   <link rel="stylesheet" href="css-admin/admin.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-
 <body>
-
-<!-- ===== Header الموقع ===== -->
 <div id="header-placeholder"></div>
-
-<!-- ===== محتوى الأدمن ===== -->
 <main class="admin-wrapper">
-
   <div class="admin-layout">
-
-    <!-- Sidebar -->
-    <aside class="admin-sidebar">
-      <div id="sidebar-placeholder"></div>
-    </aside>
-
-    <!-- Main -->
+    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
     <section class="admin-main">
-
-      <!-- Topbar -->
       <div id="topbar-placeholder"></div>
-
-      <!-- Content -->
       <div class="admin-content">
         <h1>لوحة التحكم</h1>
-
         <div class="admin-cards">
           <div class="card" id="usersCard">👤 المستخدمون: <span>0</span></div>
           <div class="card" id="coursesCard">📚 الدورات: <span>0</span></div>
@@ -47,24 +27,14 @@
           <div class="card" id="testsCard">🧪 الاختبارات: <span>0</span></div>
         </div>
       </div>
-
     </section>
-
   </div>
-
 </main>
-
-<!-- ===== Footer الموقع ===== -->
 <div id="footer-placeholder"></div>
-
-<!-- ===== JS الموقع ===== -->
 <script type="module" src="/js/main.js" defer></script>
 <script type="module" src="/js/footer.js"></script>
-
-<!-- ===== JS الأدمن ===== -->
 <script type="module" src="js-admin/admin-guard.js"></script>
 <script type="module" src="js-admin/admin-layout.js"></script>
 <script type="module" src="js-admin/dashboard.js"></script>
-
 </body>
 </html>

@@ -1,64 +1,17 @@
-<!-- sidebar.html -->
 <nav class="sidebar-nav">
   <div class="sidebar-header">
     <h2>CourseHub Admin</h2>
   </div>
 
   <ul class="sidebar-menu">
-    <li>
-      <a href="dashboard.html">
-        <span class="menu-icon">🏠</span>
-        <span class="menu-text">لوحة التحكم</span>
-      </a>
-    </li>
-    <li>
-      <a href="analytics.html">
-        <span class="menu-icon">📈</span>
-        <span class="menu-text">التحليلات</span>
-      </a>
-    </li>
-    <li>
-      <a href="users.html">
-        <span class="menu-icon">👤</span>
-        <span class="menu-text">المستخدمون</span>
-      </a>
-    </li>
-    <li>
-      <a href="instructor-applications.html">
-        <span class="menu-icon">🎓</span>
-        <span class="menu-text">طلبات الأساتذة</span>
-      </a>
-    </li>
-    <li>
-      <a href="courses-admin.html">
-        <span class="menu-icon">📚</span>
-        <span class="menu-text">الدورات</span>
-      </a>
-    </li>
-    <li>
-      <a href="certificates-admin.html">
-        <span class="menu-icon">🏆</span>
-        <span class="menu-text">الشهادات</span>
-      </a>
-    </li>
-    <li>
-      <a href="tests-admin.html">
-        <span class="menu-icon">🧪</span>
-        <span class="menu-text">الاختبارات</span>
-      </a>
-    </li>
-    <li>
-      <a href="instructor-chat.html">
-        <span class="menu-icon">💬</span>
-        <span class="menu-text">دردشة الأساتذة <span id="adminChatNavBadge" class="admin-chat-nav-badge" hidden>0</span></span>
-      </a>
-    </li>
-    <li>
-      <a href="settings-admin.html">
-        <span class="menu-icon">⚙️</span>
-        <span class="menu-text">الإعدادات</span>
-      </a>
-    </li>
+    <li><a href="dashboard.html"><span class="menu-icon">🏠</span><span class="menu-text">Dashboard</span></a></li>
+    <li><a href="users.html"><span class="menu-icon">👤</span><span class="menu-text">إدارة المستخدمين</span></a></li>
+    <li><a href="courses-admin.html"><span class="menu-icon">📚</span><span class="menu-text">إدارة الدورات</span></a></li>
+    <li><a href="courses-admin.html#submissions"><span class="menu-icon">📝</span><span class="menu-text">مراجعات النشر</span></a></li>
+    <li><a href="analytics.html"><span class="menu-icon">📈</span><span class="menu-text">التقارير والتحليلات</span></a></li>
+    <li><a href="categories.html"><span class="menu-icon">🗂️</span><span class="menu-text">التصنيفات</span></a></li>
+    <li><a href="certificates-admin.html"><span class="menu-icon">🏆</span><span class="menu-text">الشهادات</span></a></li>
+    <li><a href="permissions.html"><span class="menu-icon">🔐</span><span class="menu-text">الصلاحيات</span></a></li>
   </ul>
 
   <div class="sidebar-footer">
@@ -67,7 +20,6 @@
 </nav>
 
 <script>
-  // تحديث سنة الحقوق Sidebar
   document.addEventListener("DOMContentLoaded", () => {
     const yearEl = document.getElementById("year-sidebar");
     if (yearEl) yearEl.textContent = new Date().getFullYear();

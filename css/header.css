@@ -316,3 +316,14 @@ html[data-theme="dark"] .notification-item.unread {
     width: 100%;
   }
 }
+
+
+.header-role-link {
+  background: #ffffff;
+  color: #1c3faa;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+.header-role-link:hover { background:#e8eeff; }

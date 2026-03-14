@@ -61,9 +61,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     await Promise.all(loadPromises);
 
     const currentPath = window.location.pathname.split("/").pop();
+    const currentHash = window.location.hash || "";
     const sidebarLinks = document.querySelectorAll(".sidebar-menu a");
     sidebarLinks.forEach((link) => {
-      link.classList.toggle("active", link.getAttribute("href") === currentPath);
+      const href = link.getAttribute("href") || "";
+      const [path, hash] = href.split("#");
+      const pathMatch = path === currentPath;
+      const hashMatch = !hash || (`#${hash}` === currentHash);
+      link.classList.toggle("active", pathMatch && hashMatch);
     });
 
     const sidebarToggle = document.getElementById("sidebar-toggle");

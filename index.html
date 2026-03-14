@@ -3,188 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>CourseHub - تعلم واحصل على شهادتك</title>
-  <meta name="description" content="CourseHub – تعلم أي مهارة، احصل على شهادتك، وابدأ رحلتك التعليمية الآن.">
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>CourseHub | منصة تعليم احترافية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/coursehub-ui.css">
   <link rel="stylesheet" href="css/header.css">
-  <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/footer.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <script>
-    // تجاهل ضوضاء إضافات المتصفح التي تظهر كـ Uncaught (in promise)
-    window.addEventListener("unhandledrejection", function (event) {
-      const text = String((event && event.reason && event.reason.message) || (event && event.reason) || "");
-      if (text.includes("Receiving end does not exist") || text.includes("Could not establish connection")) {
-        event.preventDefault();
-      }
-    });
-  </script>
-
-  <!-- ✅ إبقائه مرة واحدة فقط -->
   <script type="module" src="js/main.js" defer></script>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDa84fRquyZah629wkTZACFVVZ7Gmnk1MY",
-      authDomain: "coursehub-23ed2.firebaseapp.com",
-      projectId: "coursehub-23ed2",
-      storageBucket: "coursehub-23ed2.firebasestorage.app",
-      messagingSenderId: "367073521017",
-      appId: "1:367073521017:web:67f5fd3be4c6407247d3a8"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // عرض أحدث 3 دورات
-    async function loadLatestCourses() {
-      try {
-        const lang = localStorage.getItem("coursehub_lang") || "ar";
-        const viewCourseLabel = lang === "en" ? "View course" : "عرض الدورة";
-        let snapshot;
-
-        try {
-          const q = query(
-            collection(db, "courses"),
-            where("status", "==", "published"),
-            orderBy("createdAt", "desc"),
-            limit(3)
-          );
-          snapshot = await getDocs(q);
-        } catch (queryError) {
-          // fallback بدون composite index: نقرأ آخر الدورات ثم نفلتر المنشورة فقط
-          if (queryError?.code !== "failed-precondition") throw queryError;
-
-          const fallbackQuery = query(collection(db, "courses"), orderBy("createdAt", "desc"), limit(15));
-          snapshot = await getDocs(fallbackQuery);
-        }
-
-        const courses = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(course => course.status === "published")
-          .slice(0, 3);
-        const container = document.querySelector('.popular-courses .courses-grid');
-        if (!container) return;
-
-        container.innerHTML = "";
-
-        courses.forEach(course => {
-          const div = document.createElement('div');
-          div.className = 'card';
-          div.innerHTML = `
-            <img src="${course.image || 'assets/images/default-course.png'}" alt="${course.title || ""}">
-            <div class="card-content">
-              <h3>${course.title || ""}</h3>
-              <p>${course.description || ""}</p>
-              <a href="course-detail.html?id=${course.id}" class="btn btn-card">${viewCourseLabel}</a>
-            </div>
-          `;
-          container.appendChild(div);
-        });
-
-      } catch (err) {
-        console.error("خطأ في تحميل أحدث الدورات:", err);
-      }
-    }
-
-    loadLatestCourses();
-  </script>
+  <script type="module" src="js/landing.js" defer></script>
 </head>
 <body>
   <div id="header-placeholder"></div>
 
-  <section class="hero">
-    <div class="hero-content">
-      <span class="hero-badge" data-i18n-html-en="<i class='fa fa-award'></i> Professional learning platform"><i class="fa fa-award"></i> منصة تعلم احترافية</span>
-      <h1 data-i18n-en="Start your learning journey now!">ابدأ رحلتك التعليمية الآن!</h1>
-      <p data-i18n-en="Join thousands of learners and grow your skills fast with our professional courses.">انضم إلى آلاف الطلاب وطور مهاراتك بسرعة مع دوراتنا الاحترافية.</p>
-      <div class="hero-stats">
-        <div>
-          <strong>120+</strong>
-          <span data-i18n-en="Professional courses">دورة احترافية</span>
-        </div>
-        <div>
-          <strong>18K</strong>
-          <span data-i18n-en="Active learners">طالب نشط</span>
-        </div>
-        <div>
-          <strong>4.9/5</strong>
-          <span data-i18n-en="Learner ratings">تقييمات المتعلمين</span>
-        </div>
-      </div>
-      <a href="courses.html" class="btn btn-hero" data-i18n-en="Explore courses">استكشف الدورات</a>
-    </div>
-  </section>
-
-  <section class="features container">
-    <div class="feature">
-      <i class="fa fa-users fa-2x"></i>
-      <h3 data-i18n-en="Thousands of learners">آلاف الطلاب</h3>
-      <p data-i18n-en="Join a huge community of learners worldwide.">انضم إلى مجتمع ضخم من المتعلمين حول العالم.</p>
-    </div>
-    <div class="feature">
-      <i class="fa fa-certificate fa-2x"></i>
-      <h3 data-i18n-en="Accredited certificates">شهادات معتمدة</h3>
-      <p data-i18n-en="Get an official certificate upon successful completion.">احصل على شهادة رسمية عند إتمام الدورة بنجاح.</p>
-    </div>
-    <div class="feature">
-      <i class="fa fa-laptop-code fa-2x"></i>
-      <h3 data-i18n-en="Professional courses">دورات احترافية</h3>
-      <p data-i18n-en="Learn from experts and start your career path quickly.">تعلم من خبراء وابدأ مسارك المهني بسرعة.</p>
-    </div>
-  </section>
-
-  <section class="popular-courses container">
-    <h2 data-i18n-en="Most popular courses">الدورات الأكثر شعبية</h2>
-    <div class="courses-grid" data-i18n-skip="true">
-      <!-- سيتم ملؤها ديناميكيًا -->
-    </div>
-  </section>
-
-  <section class="container">
-    <div class="test-promo">
+  <section class="landing-hero">
+    <div class="container">
       <div>
-        <h2 data-i18n-en="Test your skills after completing courses">اختبر مهاراتك بعد إنهاء الدورات</h2>
-        <p data-i18n-en="Prepare for hands-on tests and get instant feedback.">جهّز نفسك للاختبارات العملية واحصل على تقييم فوري لمستواك.</p>
+        <span class="ch-badge published">تعلم أسرع • قياس تقدم واضح • شهادات قابلة للتحقق</span>
+        <h1>منصة تعلم عملية تربط الطالب والمدرب والإدارة في نظام واحد.</h1>
+        <p>ابحث عن دورة، ابدأ بخطة واضحة، وتتبع تقدمك حتى الشهادة مع اختبارات وتوصيات ذكية.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="ch-btn primary" href="courses.html">ابدأ التعلم الآن</a>
+          <a class="ch-btn secondary" href="instructor-builder.html" data-role-only="instructor" style="display:none">أنشئ دورتك</a>
+        </div>
       </div>
-      <a href="tests.html" data-i18n-en="View tests">عرض الاختبارات</a>
-    </div>
-  </section>
-
-  <section class="container">
-    <h2 data-i18n-en="Learning steps in CourseHub">خطوات التعلم في CourseHub</h2>
-    <div class="learning-steps">
-      <div class="learning-step">
-        <i class="fa fa-compass"></i>
-        <h3 data-i18n-en="Choose a path">اختر المسار</h3>
-        <p data-i18n-en="Explore courses and paths that match your goals.">استكشف الدورات والمسارات التي تناسب طموحاتك.</p>
-      </div>
-      <div class="learning-step">
-        <i class="fa fa-play-circle"></i>
-        <h3 data-i18n-en="Follow the lessons">تابع الدروس</h3>
-        <p data-i18n-en="Learn with interactive lessons and high-quality media.">تعلّم عبر دروس تفاعلية ووسائط تعليمية عالية الجودة.</p>
-      </div>
-      <div class="learning-step">
-        <i class="fa fa-medal"></i>
-        <h3 data-i18n-en="Earn your certificate">احصل على الشهادة</h3>
-        <p data-i18n-en="Complete the tests and earn a professional certificate in your name.">أكمل الاختبارات واحصل على شهادة احترافية باسمك.</p>
+      <div class="hero-panel">
+        <h3>ابحث عن دورة</h3>
+        <input class="ch-input" placeholder="مثال: تحليل البيانات، تصميم UI، React">
+        <div class="trust-bar">
+          <div>+18K طالب</div><div>4.9/5 تقييم</div><div>120+ دورة</div><div>95% رضا</div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="container">
-    <div class="cta-strip">
-      <div>
-        <h3 data-i18n-en="Ready to join?">جاهز للانضمام؟</h3>
-        <p data-i18n-en="Start today and invest your time in learning a new skill with a professional certificate.">ابدأ اليوم واستثمر وقتك في تعلم مهارة جديدة بشهادة احترافية.</p>
-      </div>
-      <a href="register.html" class="btn" data-i18n-en="Get started">ابدأ الآن</a>
+  <section class="section container">
+    <div class="section-head"><h2>دورات مميزة</h2><a href="courses.html">عرض الكل</a></div>
+    <div class="cards-3" id="featuredCourses"></div>
+  </section>
+
+  <section class="section container">
+    <div class="section-head"><h2>المسارات التعليمية</h2></div>
+    <div class="cards-3">
+      <article class="ch-card" style="padding:16px"><h3>Web Development</h3><p>من HTML حتى مشاريع React كاملة.</p></article>
+      <article class="ch-card" style="padding:16px"><h3>Data & AI</h3><p>مهارات التحليل وذكاء الأعمال.</p></article>
+      <article class="ch-card" style="padding:16px"><h3>Productivity & Design</h3><p>تصميم تجارب تعلم قوية واحترافية.</p></article>
+    </div>
+  </section>
+
+  <section class="section container">
+    <div class="section-head"><h2>كيف تعمل المنصة؟</h2></div>
+    <div class="cards-3">
+      <article class="ch-card" style="padding:16px"><h3>1) اختر دورة</h3><p>فلترة متقدمة حسب المستوى، اللغة، والمدة.</p></article>
+      <article class="ch-card" style="padding:16px"><h3>2) تعلم وتدرّب</h3><p>مشغل منظم + اختبارات + تقدم لحظي.</p></article>
+      <article class="ch-card" style="padding:16px"><h3>3) احصل على شهادة</h3><p>شهادة موثقة بعد استيفاء متطلبات الإكمال.</p></article>
+    </div>
+  </section>
+
+  <section class="section container">
+    <div class="section-head"><h2>آراء المتعلمين</h2></div>
+    <div class="cards-3" id="testimonials"></div>
+  </section>
+
+  <section class="section container">
+    <div class="section-head"><h2>FAQ</h2></div>
+    <div class="ch-card" style="padding:16px">
+      <div class="faq-item"><strong>هل يمكن التعلم من الهاتف؟</strong><p>نعم، جميع الصفحات responsive.</p></div>
+      <div class="faq-item"><strong>هل الشهادات معتمدة؟</strong><p>يمكن التحقق منها عبر صفحة Verify Certificate.</p></div>
+      <div class="faq-item"><strong>هل يمكن للمدرب معاينة الدورة قبل النشر؟</strong><p>نعم، عبر Preview as student داخل Course Builder.</p></div>
     </div>
   </section>
 

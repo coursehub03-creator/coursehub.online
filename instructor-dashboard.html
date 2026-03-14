@@ -1,343 +1,54 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة الأستاذ | CourseHub</title>
-
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/header.css" />
-  <link rel="stylesheet" href="/css/footer.css" />
-  <link rel="stylesheet" href="/admin/css-admin/admin.css" />
-  <link rel="stylesheet" href="/css/instructor-dashboard.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <script>
-    // منع ضوضاء إضافات المتصفح قبل تحميل أي سكربتات defer/module
-    (function () {
-      const shouldIgnore = (value) => {
-        const msg = String((value && value.message) || value || "");
-        return msg.includes("Receiving end does not exist") || msg.includes("Could not establish connection");
-      };
-
-      window.addEventListener("unhandledrejection", function (event) {
-        if (shouldIgnore(event && event.reason)) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        }
-      }, true);
-
-      window.addEventListener("error", function (event) {
-        if (shouldIgnore(event && event.message)) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        }
-      }, true);
-    })();
-  </script>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <script type="module" src="js/main.js" defer></script>
+  <script type="module" src="js/instructor-portal.js" defer></script>
 </head>
-
-<body>
+<body data-instructor-page="dashboard">
   <div id="header-placeholder"></div>
+  <main class="app-shell">
+    <aside class="app-sidebar">
+      <h2>Instructor Studio</h2>
+      <ul class="app-nav">
+        <li><a href="/instructor-dashboard.html" data-nav="dashboard">لوحة التحكم</a></li>
+        <li><a href="/instructor-courses.html" data-nav="courses">دوراتي</a></li>
+        <li><a href="/instructor-builder.html" data-nav="builder">إنشاء دورة</a></li>
+        <li><a href="/instructor-students.html" data-nav="students">الطلاب والتقدم</a></li>
+        <li><a href="/instructor-tests.html" data-nav="tests">الاختبارات</a></li>
+        <li><a href="/instructor-reports.html" data-nav="reports">التقارير</a></li>
+        <li><a href="/instructor-settings.html" data-nav="settings">الإعدادات</a></li>
+      </ul>
+    </aside>
 
-  <main class="instructor-shell container">
-    <section class="instructor-hero">
-      <div>
-        <p class="hero-kicker">Instructor Studio</p>
-        <h1>لوحة تحكم الأستاذ الاحترافية</h1>
-        <p>ابنِ دورتك بنفس تجربة لوحة المشرف: معلومات شاملة، تخطيط مناهج مرن، معاينة مباشرة، ثم إرسال للمراجعة.</p>
-        <a class="btn primary" href="/instructor-builder.html">الانتقال إلى Builder 2.0</a>
+    <section class="app-main">
+      <div class="app-topbar"><input class="ch-input" style="max-width:320px" placeholder="ابحث داخل لوحة الأستاذ"><div id="instructorName">الأستاذ</div></div>
+      <div class="app-header"><div class="app-breadcrumb">لوحة الأستاذ / Dashboard</div><h1>إحصائيات حقيقية لحسابك</h1></div>
+
+      <div class="app-grid-3">
+        <article class="ch-card metric-card"><strong id="metricStudents">0</strong><span>إجمالي الطلاب المسجلين</span></article>
+        <article class="ch-card metric-card"><strong id="metricCompletions">0</strong><span>طلاب أكملوا دوراتك</span></article>
+        <article class="ch-card metric-card"><strong id="metricCompletionRate">0%</strong><span>متوسط الإكمال</span></article>
       </div>
-      <div class="instructor-kpis">
-        <div><strong id="pendingCount">0</strong><span>قيد المراجعة</span></div>
-        <div><strong id="approvedCount">0</strong><span>معتمدة</span></div>
+
+      <div class="app-grid-3">
+        <article class="ch-card metric-card"><strong id="metricPublished">0</strong><span>دورات منشورة</span></article>
+        <article class="ch-card metric-card"><strong id="metricDraft">0</strong><span>مسودات</span></article>
+        <article class="ch-card metric-card"><strong id="metricInReview">0</strong><span>قيد المراجعة</span></article>
       </div>
-    </section>
 
-    <!-- Topbar -->
-    <section class="instructor-admin-topbar card">
-      <div class="topbar-left">
-        <button type="button" id="workspaceSidebarToggle" class="sidebar-toggle-btn" aria-label="تبديل القائمة" aria-controls="instructorWorkspace" aria-expanded="false">☰</button>
-        <h2>لوحة الأستاذ</h2>
-      </div>
-      <div class="topbar-right">
-        <input type="text" placeholder="ابحث في دوراتك..." aria-label="بحث" />
-        <button type="button" class="btn ghost">🔎</button>
-      </div>
-    </section>
-
-    <!-- Workspace -->
-    <section class="card instructor-workspace" id="instructorWorkspace">
-      <aside class="workspace-sidebar">
-        <div class="workspace-brand">
-          <h3>Instructor Panel</h3>
-          <p>لوحة الأستاذ</p>
-        </div>
-
-        <!-- ✅ قائمة واحدة فقط (حل التعارض) -->
-        <ul class="workspace-menu">
-          <li>
-            <button type="button" class="workspace-link active" data-action="open-builder" data-builder-tab="info" data-target="ws-add">
-              <span>➕</span><strong>إضافة دورة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-drafts">
-              <span>📝</span><strong>المسودات</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-pending">
-              <span>⏳</span><strong>قيد المراجعة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-approved">
-              <span>✅</span><strong>المقبولة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-rejected">
-              <span>❌</span><strong>المرفوضة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-published">
-              <span>🎓</span><strong>المنشورة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-archived">
-              <span>🗂️</span><strong>المؤرشفة</strong>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="workspace-link" data-target="ws-chat">
-              <span>💬</span><strong>الرسائل</strong><span id="chatNavBadge" class="chat-nav-badge" hidden>0</span>
-            </button>
-          </li>
-        </ul>
-      </aside>
-
-      <div class="workspace-content">
-        <!-- ✅ Panel: Add course (builder) -->
-        <div id="ws-add" class="workspace-panel active">
-          <section class="builder-shell">
-            <div class="builder-header">
-              <h2>منشئ الدورات الاحترافي</h2>
-              <p>نفس قالب لوحة المشرف تمامًا، مع أدوات كتابة وتحكم أكثر احترافية للأستاذ قبل الإرسال للمراجعة.</p>
-            </div>
-
-            <div class="builder-tabs" id="instructorBuilderTabs">
-              <button class="tab-btn active" type="button" data-tab="info">
-                <i class="fa-solid fa-circle-info"></i><span>معلومات الدورة</span>
-              </button>
-              <button class="tab-btn" type="button" data-tab="curriculum">
-                <i class="fa-solid fa-layer-group"></i><span>الدروس والمحتوى</span>
-              </button>
-              <button class="tab-btn" type="button" data-tab="preview">
-                <i class="fa-solid fa-eye"></i><span>المعاينة</span>
-              </button>
-              <button class="tab-btn" type="button" data-tab="submit">
-                <i class="fa-solid fa-paper-plane"></i><span>الإرسال للمراجعة</span>
-              </button>
-            </div>
-
-            <form id="instructorCourseForm" class="instructor-builder-form" novalidate>
-              <!-- INFO -->
-              <div class="tab-content active" id="tab-info">
-                <div class="builder-card">
-                  <div class="form-grid">
-                    <div class="field-group">
-                      <label for="courseTitle">عنوان الدورة</label>
-                      <input id="courseTitle" type="text" placeholder="مثال: أساسيات تطوير واجهات الويب الحديثة" required />
-                    </div>
-                    <div class="field-group">
-                      <label for="courseTitleEn">عنوان الدورة (بالإنجليزية)</label>
-                      <input id="courseTitleEn" type="text" placeholder="Modern Front-End Foundations" />
-                    </div>
-                    <div class="field-group">
-                      <label for="courseCategory">التصنيف</label>
-                      <input id="courseCategory" type="text" placeholder="مثال: تطوير الويب" required />
-                    </div>
-                    <div class="field-group">
-                      <label for="coursePrice">السعر (USD)</label>
-                      <input id="coursePrice" type="number" min="0" step="0.01" placeholder="49.99" required />
-                    </div>
-                    <div class="field-group">
-                      <label for="courseLevel">المستوى</label>
-                      <select id="courseLevel">
-                        <option value="مبتدئ">مبتدئ</option>
-                        <option value="متوسط">متوسط</option>
-                        <option value="متقدم">متقدم</option>
-                      </select>
-                    </div>
-                    <div class="field-group">
-                      <label for="courseLanguage">لغة الدورة</label>
-                      <select id="courseLanguage">
-                        <option value="العربية">العربية</option>
-                        <option value="English">English</option>
-                      </select>
-                    </div>
-                    <div class="field-group">
-                      <label for="courseDuration">المدة (ساعات)</label>
-                      <input id="courseDuration" type="number" min="1" placeholder="12" />
-                    </div>
-                    <div class="field-group">
-                      <label for="courseDifficulty">شدة/إيقاع الدورة</label>
-                      <select id="courseDifficulty">
-                        <option value="خفيف">خفيف</option>
-                        <option value="متوازن">متوازن</option>
-                        <option value="مكثف">مكثف</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="field-group">
-                    <label for="courseDescription">وصف الدورة</label>
-                    <div class="text-toolbar" id="descriptionToolbar">
-                      <button type="button" class="toolbar-btn" data-format="h2">عنوان فرعي</button>
-                      <button type="button" class="toolbar-btn" data-format="bold">عريض</button>
-                      <button type="button" class="toolbar-btn" data-format="bullet">قائمة</button>
-                      <button type="button" class="toolbar-btn" data-format="tip">نصيحة</button>
-                    </div>
-                    <textarea id="courseDescription" rows="5" placeholder="اكتب وصفًا احترافيًا يوضح القيمة التعليمية والفئة المستهدفة" required></textarea>
-                    <span class="helper-text">يمكنك استخدام شريط الأدوات لتنسيق النص بسرعة مثل قالب المشرف المتقدم.</span>
-                  </div>
-
-                  <div class="form-grid">
-                    <div class="field-group">
-                      <label for="courseImage">صورة الغلاف</label>
-                      <input id="courseImage" type="file" accept="image/*" />
-                    </div>
-                    <div class="field-group">
-                      <label for="courseImageUrl">رابط صورة الغلاف (اختياري)</label>
-                      <input id="courseImageUrl" type="url" placeholder="https://example.com/cover.jpg" />
-                    </div>
-                  </div>
-
-                  <div class="cover-preview-wrap">
-                    <p class="helper-text">معاينة الغلاف</p>
-                    <img id="coverPreview" src="/assets/images/default-course.png" alt="معاينة الغلاف">
-                  </div>
-                </div>
-              </div>
-
-              <!-- CURRICULUM -->
-              <div class="tab-content" id="tab-curriculum">
-                <div class="builder-card">
-                  <div class="builder-header">
-                    <h2>بناء الدروس والسلايدات</h2>
-                    <p>أضف محتوى السلايدات (نصوص + صور + فيديو) مع ضبط الخطوط والألوان وترتيب العناصر داخل كل سلايد.</p>
-                  </div>
-
-                  <div id="lessonsContainer"></div>
-                  <div id="lessonsEmpty" class="empty-state">لم تتم إضافة أي درس بعد.</div>
-
-                  <button type="button" id="addLessonBtn" class="btn ghost add-lesson-main-btn">
-                    <i class="fa-solid fa-plus"></i>
-                    إضافة درس
-                  </button>
-                </div>
-              </div>
-
-              <!-- PREVIEW -->
-              <div class="tab-content" id="tab-preview">
-                <div class="builder-card course-public-preview">
-                  <div class="course-public-hero">
-                    <div class="course-public-copy">
-                      <span class="course-tag" id="previewCategoryTag">تصنيف الدورة</span>
-                      <h3 id="previewTitle">عنوان الدورة</h3>
-                      <p id="previewDescription">سيظهر وصف الدورة هنا بعد إدخاله.</p>
-                      <div class="meta-chips" id="previewMeta"></div>
-                    </div>
-                    <img id="previewCover" src="/assets/images/default-course.png" alt="cover preview" class="preview-cover">
-                  </div>
-
-                  <div class="preview-grid-two">
-                    <div>
-                      <h4>ماذا سيتعلم الطالب؟</h4>
-                      <ul id="previewObjectives"></ul>
-                    </div>
-                    <div>
-                      <h4>خطة الوحدات والدروس</h4>
-                      <div id="previewModules" class="preview-modules"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- SUBMIT -->
-              <div class="tab-content" id="tab-submit">
-                <div class="builder-card">
-                  <h3>قائمة مراجعة قبل الإرسال</h3>
-                  <div class="review-list">
-                    <label><input type="checkbox" class="review-check"> عنوان واضح + وصف احترافي</label>
-                    <label><input type="checkbox" class="review-check"> صورة غلاف مناسبة</label>
-                    <label><input type="checkbox" class="review-check"> أهداف ومخرجات تعلم واضحة</label>
-                    <label><input type="checkbox" class="review-check"> هيكل منهج منظّم بوحدات/دروس</label>
-                  </div>
-
-                  <div class="submit-actions">
-                    <button type="button" class="btn secondary" id="saveDraftBtn">حفظ في مسودتك الخاصة</button>
-                    <button type="submit" class="btn">إرسال للمراجعة</button>
-                  </div>
-
-                  <p id="instructorFormStatus" class="status"></p>
-                </div>
-              </div>
-            </form>
-          </section>
-        </div>
-
-        <!-- ✅ باقي Panels -->
-        <div id="ws-drafts" class="workspace-panel">
-          <h3 class="panel-heading">مسوداتي الخاصة</h3>
-          <div id="draftsList" class="submission-list"></div>
-        </div>
-
-        <div id="ws-pending" class="workspace-panel">
-          <h3 class="panel-heading">الدورات قيد المراجعة</h3>
-          <div id="pendingList" class="submission-list"></div>
-        </div>
-
-        <div id="ws-approved" class="workspace-panel">
-          <h3 class="panel-heading">الدورات المقبولة</h3>
-          <div id="approvedList" class="submission-list"></div>
-        </div>
-
-        <div id="ws-rejected" class="workspace-panel">
-          <h3 class="panel-heading">الدورات المرفوضة (مع الأسباب)</h3>
-          <div id="rejectedList" class="submission-list"></div>
-        </div>
-
-        <div id="ws-published" class="workspace-panel">
-          <h3 class="panel-heading">الدورات المنشورة</h3>
-          <div id="publishedList" class="submission-list"></div>
-        </div>
-
-        <div id="ws-archived" class="workspace-panel">
-          <h3 class="panel-heading">الدورات المؤرشفة</h3>
-          <div id="archivedList" class="submission-list"></div>
-        </div>
-
-        <div id="ws-chat" class="workspace-panel">
-          <h3>التحدث مع المشرف <span id="chatPanelBadge" class="chat-panel-badge" hidden>0 جديد</span></h3>
-          <div id="instructorChatMessages" class="chat-messages"></div>
-          <div class="chat-compose">
-            <textarea id="instructorChatInput" rows="3" placeholder="اكتب رسالتك للمشرف..."></textarea>
-            <button type="button" class="btn" id="sendInstructorChatBtn">إرسال</button>
-          </div>
-        </div>
-      </div>
-      <div class="workspace-overlay" id="workspaceOverlay"></div>
+      <article class="ch-card" style="padding:16px">
+        <h3>آخر قرارات المراجعة من المسؤول</h3>
+        <div id="latestReviews">جاري التحميل...</div>
+      </article>
     </section>
   </main>
-
   <div id="footer-placeholder"></div>
-
-  <script src="/js/main.js" defer></script>
-  <script type="module" src="/js/instructor-dashboard.js?v=20260220"></script>
-
 </body>
 </html>

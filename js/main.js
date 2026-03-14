@@ -239,6 +239,7 @@ function setupNotifications() {
     if (!notifications.length) {
       notifItems.innerHTML = `<div class="notification-empty">${notificationText[lang].emptyShort}</div>`;
     } else {
+    applyRoleBasedUI(null);
       notifItems.innerHTML = notifications
         .slice(0, 5)
         .map(
@@ -290,6 +291,7 @@ function renderNotificationsPage(listContainer, userId) {
       const lang = getCurrentLang();
       listContainer.innerHTML = `<div class="notification-empty-state">${notificationText[lang].emptyList}</div>`;
     } else {
+    applyRoleBasedUI(null);
       const lang = getCurrentLang();
       listContainer.innerHTML = notifications
         .map(
@@ -576,6 +578,15 @@ function applyTheme(theme) {
   toggle.innerHTML = `<i class="fa ${icon}"></i> ${label}`;
 }
 
+
+function applyRoleBasedUI(user) {
+  const role = user?.role === "user" ? "student" : (user?.role || "guest");
+  document.querySelectorAll("[data-role-only]").forEach((el) => {
+    const required = el.getAttribute("data-role-only");
+    el.style.display = role === required ? "" : "none";
+  });
+}
+
 // ===============================
 // إدارة حالة المستخدم
 // ===============================
@@ -642,14 +653,18 @@ function setupUserState() {
       }
     }
 
+    applyRoleBasedUI(user);
+
     if (adminLink) {
       if (adminEmails.includes(user.email)) {
         adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
       } else {
+    applyRoleBasedUI(null);
         adminLink.innerHTML = "";
       }
     }
   } else {
+    applyRoleBasedUI(null);
     if (loginLink) loginLink.style.display = "block";
     if (userInfo) userInfo.style.display = "none";
     if (adminLink) adminLink.innerHTML = "";

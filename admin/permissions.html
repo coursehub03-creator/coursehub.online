@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الصلاحيات | لوحة التحكم</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="css-admin/admin.css" />
+</head>
+<body>
+<div id="header-placeholder"></div>
+<main class="admin-wrapper">
+  <div class="admin-layout">
+    <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
+    <section class="admin-main">
+      <div id="topbar-placeholder"></div>
+      <div class="admin-content">
+        <h1>إدارة الصلاحيات</h1>
+        <p class="helper-text">غيّر دور المستخدم وحالته بشكل مباشر. يتم حفظ التعديلات في مجموعة users.</p>
+        <div class="table-toolbar">
+          <div class="table-search">
+            <input id="permissionsSearch" type="text" placeholder="ابحث بالاسم أو البريد" />
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>المستخدم</th><th>البريد</th><th>الدور</th><th>الحالة</th><th>حفظ</th></tr>
+          </thead>
+          <tbody id="permissionsRows"><tr><td colspan="5">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<div id="footer-placeholder"></div>
+<script type="module" src="/js/main.js" defer></script>
+<script type="module" src="/js/footer.js"></script>
+<script type="module" src="js-admin/admin-guard.js"></script>
+<script type="module" src="js-admin/admin-layout.js"></script>
+<script type="module" src="js-admin/permissions.js"></script>
+</body>
+</html>
