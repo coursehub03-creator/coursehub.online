@@ -1,101 +1,16 @@
-import { db, auth } from "/js/firebase-config.js";
-import {
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { demoCourses } from "./coursehub-demo-data.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id") || "demo-1";
+const course = demoCourses.find((c) => c.id === id) || demoCourses[0];
 
-  // اقرأ courseId من الرابط
-  const params = new URLSearchParams(window.location.search);
-  const courseId = params.get("id");
-
-  // تحقق مبكر
-  if (!courseId) {
-    alert("❌ لم يتم العثور على معرف الدورة (courseId)");
-    throw new Error("Missing courseId in URL");
-  }
-
-  // عناصر الصفحة
-  const courseDetail = document.getElementById("courseDetail");
-  const courseImage = document.getElementById("courseImage");
-  const courseDesc = document.getElementById("courseDesc");
-  const courseRating = document.getElementById("courseRating");
-  const joinBtn = document.getElementById("joinBtn");
-
-  if (!courseDetail || !joinBtn) {
-    console.error("❌ عناصر الصفحة غير موجودة");
-    return;
-  }
-
-  let currentUser = null;
-
-  // مراقبة تسجيل الدخول
-  auth.onAuthStateChanged(user => {
-    currentUser = user;
-  });
-
-  // تحميل بيانات الدورة
-  async function loadCourse() {
-    try {
-      const courseRef = doc(db, "courses", courseId);
-      const snap = await getDoc(courseRef);
-
-      if (!snap.exists()) {
-        courseDetail.innerHTML =
-          "<p class='empty-msg'>الدورة غير موجودة</p>";
-        return;
-      }
-
-      const course = snap.data();
-      if (course.status !== "published") {
-        courseDetail.innerHTML = "<p class='empty-msg'>هذه الدورة غير متاحة حالياً للطلاب.</p>";
-        joinBtn.style.display = "none";
-        return;
-      }
-      const lang = localStorage.getItem("coursehub_lang") || "ar";
-      const titleText = lang === "en" ? course.titleEn || course.title : course.title;
-      const descriptionText = lang === "en" ? course.descriptionEn || course.description : course.description;
-
-      const titleEl = courseDetail.querySelector("h2");
-      if (titleEl) titleEl.textContent = titleText || "بدون عنوان";
-
-      if (courseImage) {
-        courseImage.src = course.image || "/assets/images/default-course.png";
-      }
-
-      if (courseDesc)
-        courseDesc.textContent = descriptionText || "";
-
-      if (courseRating) {
-        courseRating.textContent = course.rating
-          ? `⭐ ${course.rating} / 5`
-          : "";
-      }
-
-    } catch (err) {
-      console.error("❌ خطأ أثناء تحميل الدورة:", err);
-      courseDetail.innerHTML =
-        "<p class='empty-msg'>حدث خطأ أثناء تحميل الدورة</p>";
-    }
-  }
-
-  // زر الانضمام
-  joinBtn.addEventListener("click", () => {
-
-    if (!currentUser) {
-      alert("يرجى تسجيل الدخول");
-      return;
-    }
-
-    if (!courseId) {
-      alert("خطأ: معرف الدورة غير موجود");
-      return;
-    }
-
-    location.href = `/course/player.html?courseId=${courseId}`;
-  });
-
-  // تشغيل التحميل
-  await loadCourse();
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("courseTitle").textContent = course.title;
+  document.getElementById("courseStatus").textContent = course.status;
+  document.getElementById("courseStatus").className = `ch-badge ${course.status}`;
+  document.getElementById("courseMeta").textContent = `${course.instructor} • ${course.duration} • ${course.level} • ⭐ ${course.rating} (${course.students} طالب)`;
+  document.getElementById("coursePrice").textContent = `السعر: ${course.price}`;
+  document.getElementById("outcomes").innerHTML = course.outcomes.map((x) => `<li>${x}</li>`).join("");
+  document.getElementById("curriculum").innerHTML = ["الوحدة 1: المقدمة","الوحدة 2: الأساسيات","الوحدة 3: التطبيق العملي","الوحدة 4: اختبار نهائي"].map((x) => `<p>${x}</p>`).join("");
+  document.getElementById("joinBtn").href = `course-player.html?id=${course.id}`;
 });
