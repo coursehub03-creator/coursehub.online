@@ -1061,3 +1061,66 @@
 @media (max-width: 900px) {
   .admin-chat-shell{grid-template-columns:1fr}
 }
+
+/* ============================= */
+/* Courses admin professional layout */
+/* ============================= */
+.courses-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.instructors-panel {
+  padding: 12px;
+  position: sticky;
+  top: 14px;
+}
+
+.instructor-list {
+  display: grid;
+  gap: 8px;
+  max-height: 640px;
+  overflow: auto;
+}
+
+.instructor-item {
+  border: 1px solid var(--admin-border);
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  text-align: right;
+  display: grid;
+  gap: 8px;
+}
+
+.instructor-item small {
+  color: var(--admin-muted);
+}
+
+.instructor-item.active {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+}
+
+.instructor-stats-mini {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.courses-main-panel {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .courses-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .instructors-panel {
+    position: static;
+  }
+}

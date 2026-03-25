@@ -18,14 +18,30 @@
       <div id="topbar-placeholder"></div>
       <div class="admin-content">
         <h1>إدارة التصنيفات</h1>
-        <p class="helper-text">إضافة/تعديل/حذف التصنيفات المستخدمة في الدورات.</p>
-        <div class="admin-toolbar" style="display:flex;gap:10px;align-items:center;margin:12px 0;">
-          <input id="newCategoryName" type="text" placeholder="اسم التصنيف" />
-          <button id="addCategoryBtn" class="btn">إضافة</button>
+        <p class="helper-text">تصنيفات حقيقية مرتبطة بالدورات (إضافة + تعديل + حذف + بحث).</p>
+
+        <div class="table-toolbar">
+          <div class="table-filters" style="flex:1; min-width:320px;">
+            <input id="newCategoryName" type="text" placeholder="اسم التصنيف" />
+            <input id="newCategoryDescription" type="text" placeholder="وصف مختصر (اختياري)" />
+            <button id="addCategoryBtn" class="btn">إضافة تصنيف</button>
+          </div>
+          <div class="table-search">
+            <input id="categoriesSearch" type="text" placeholder="ابحث في التصنيفات" />
+          </div>
         </div>
+
         <table>
-          <thead><tr><th>التصنيف</th><th>الإجراءات</th></tr></thead>
-          <tbody id="categoriesRows"><tr><td colspan="2">جاري التحميل...</td></tr></tbody>
+          <thead>
+            <tr>
+              <th>التصنيف</th>
+              <th>الوصف</th>
+              <th>عدد الدورات</th>
+              <th>آخر تعديل</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="categoriesRows"><tr><td colspan="5">جاري التحميل...</td></tr></tbody>
         </table>
       </div>
     </section>

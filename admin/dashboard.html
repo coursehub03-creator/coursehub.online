@@ -4,84 +4,145 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة المسؤول | CourseHub</title>
-  <link rel="stylesheet" href="/css/design-system.css">
-  <link rel="stylesheet" href="/css/app-shell.css">
+  <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
   <link rel="stylesheet" href="css-admin/admin.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <script type="module" src="/js/main.js" defer></script>
 </head>
 <body>
-  <div id="header-placeholder"></div>
+<div id="header-placeholder"></div>
 
-  <main class="app-shell" style="grid-template-columns:260px 1fr">
-    <aside class="app-sidebar">
-      <h2>Admin</h2>
-      <ul class="app-nav">
-        <li><a class="active" href="#">Dashboard</a></li>
-        <li><a href="#">إدارة المستخدمين</a></li>
-        <li><a href="#">إدارة الدورات</a></li>
-        <li><a href="#">مراجعات النشر</a></li>
-        <li><a href="#">التقارير والتحليلات</a></li>
-        <li><a href="#">التصنيفات</a></li>
-        <li><a href="#">الشهادات</a></li>
-        <li><a href="#">الصلاحيات</a></li>
-      </ul>
+<main class="admin-wrapper">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div id="sidebar-placeholder"></div>
     </aside>
 
-    <section class="app-main">
-      <div class="app-topbar">
-        <input class="ch-input" style="max-width:320px" placeholder="بحث في النظام">
-        <div>Moderation queue • الحساب</div>
-      </div>
+    <section class="admin-main">
+      <div id="topbar-placeholder"></div>
 
-      <div class="app-header">
-        <h1>Admin Dashboard</h1>
-      </div>
+      <div class="admin-content">
+        <div class="page-header">
+          <div>
+            <h1>لوحة التحكم الموحّدة</h1>
+            <p class="helper-text">إحصاءات النظام + طابور المراجعة + إدارة المستخدمين في صفحة واحدة.</p>
+          </div>
+        </div>
 
-      <div class="app-grid-3">
-        <article class="ch-card metric-card" id="usersCard"><strong>0</strong><span>المستخدمون</span></article>
-        <article class="ch-card metric-card" id="coursesCard"><strong>0</strong><span>الدورات</span></article>
-        <article class="ch-card metric-card" id="certificatesCard"><strong>0</strong><span>الشهادات</span></article>
-        <article class="ch-card metric-card" id="testsCard"><strong>0</strong><span>الاختبارات</span></article>
-      </div>
+        <section class="admin-stats">
+          <article class="card">
+            <p class="card-title">المستخدمون</p>
+            <p class="card-value" id="usersCard">0</p>
+          </article>
+          <article class="card">
+            <p class="card-title">الدورات</p>
+            <p class="card-value" id="coursesCard">0</p>
+          </article>
+          <article class="card">
+            <p class="card-title">الشهادات</p>
+            <p class="card-value" id="certificatesCard">0</p>
+          </article>
+          <article class="card">
+            <p class="card-title">الاختبارات</p>
+            <p class="card-value" id="testsCard">0</p>
+          </article>
+        </section>
 
-      <article class="ch-card" style="padding:16px">
-        <h3>Review Queue</h3>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>الدورة</th>
-              <th>المالك</th>
-              <th>الحالة</th>
-              <th>إجراء</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>React Foundations</td>
-              <td>محمد علاء</td>
-              <td><span class="ch-badge in_review">in_review</span></td>
-              <td><button class="ch-btn secondary">مراجعة</button></td>
-            </tr>
-            <tr>
-              <td>AI for Teams</td>
-              <td>ريم الحربي</td>
-              <td><span class="ch-badge draft">draft</span></td>
-              <td><button class="ch-btn secondary">متابعة</button></td>
-            </tr>
-          </tbody>
-        </table>
-      </article>
+        <article class="card" style="padding:16px; margin-bottom: 20px;">
+          <div class="card-header">
+            <h2>Review Queue</h2>
+          </div>
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>الدورة</th>
+                <th>المالك</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>React Foundations</td>
+                <td>محمد علاء</td>
+                <td><span class="badge warning">in_review</span></td>
+                <td><button class="btn outline">مراجعة</button></td>
+              </tr>
+              <tr>
+                <td>AI for Teams</td>
+                <td>ريم الحربي</td>
+                <td><span class="badge neutral">draft</span></td>
+                <td><button class="btn outline">متابعة</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <section class="card" style="padding:16px;">
+          <div class="page-header" style="margin-bottom: 0;">
+            <div>
+              <h2>إدارة المستخدمين</h2>
+              <p class="helper-text">فلترة حسب الدور والحالة وتحليل النشاط.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn outline" type="button">
+                <i class="fa-solid fa-user-plus"></i>
+                إضافة مستخدم
+              </button>
+            </div>
+          </div>
+
+          <div class="table-toolbar">
+            <div class="table-filters">
+              <select id="user-role-filter">
+                <option value="all">كل الأدوار</option>
+                <option value="student">طالب</option>
+                <option value="instructor">مدرّس</option>
+                <option value="admin">مشرف</option>
+              </select>
+
+              <select id="user-status-filter">
+                <option value="all">كل الحالات</option>
+                <option value="active">نشط</option>
+                <option value="pending">بانتظار التفعيل</option>
+                <option value="blocked">محظور</option>
+              </select>
+            </div>
+
+            <div class="table-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="user-search" placeholder="ابحث عن مستخدم..." />
+            </div>
+          </div>
+
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>البريد الإلكتروني</th>
+                <th>الدور</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="users-list">
+              <!-- سيتم تعبئتها ديناميكيًا بواسطة users.js -->
+            </tbody>
+          </table>
+        </section>
+      </div>
     </section>
-  </main>
+  </div>
+</main>
 
-  <div id="footer-placeholder"></div>
+<div id="footer-placeholder"></div>
 
-  <script type="module" src="/js/footer.js"></script>
-  <script type="module" src="js-admin/admin-guard.js"></script>
-  <script type="module" src="js-admin/admin-layout.js"></script>
-  <script type="module" src="js-admin/dashboard.js"></script>
+<script type="module" src="/js/main.js" defer></script>
+<script type="module" src="/js/footer.js"></script>
+<script type="module" src="js-admin/admin-guard.js"></script>
+<script type="module" src="js-admin/admin-layout.js"></script>
+<script type="module" src="js-admin/dashboard.js"></script>
+<script type="module" src="js-admin/users.js"></script>
 </body>
 </html>
