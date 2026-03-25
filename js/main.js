@@ -654,14 +654,14 @@ function setupUserState() {
 
     applyRoleBasedUI(user);
 
-    if (adminLink) {
-      const isAdmin = user.role === "admin" || adminEmails.includes(String(user.email || "").toLowerCase());
-      if (isAdmin) {
-        adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
-      } else {
-    applyRoleBasedUI(null);
-        adminLink.innerHTML = "";
-      }
+      if (adminLink) {
+      const isAdmin =
+        user.role === "admin" ||
+        adminEmails.includes(String(user.email || "").toLowerCase());
+
+      adminLink.innerHTML = isAdmin
+        ? `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`
+        : "";
     }
   } else {
     applyRoleBasedUI(null);

@@ -20,26 +20,33 @@ export function protectAdmin() {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, async (user) => {
       try {
-        // ❌ غير مسجل دخول → تسجيل دخول Google
+        // غير مسجل دخول → تسجيل دخول Google
         if (!user) {
           const provider = new GoogleAuthProvider();
           const result = await signInWithPopup(auth, provider);
           user = result.user;
         }
 
-        if (ADMIN_EMAILS.includes(String(user.email || "").toLowerCase())) {
+        const normalizedEmail = String(user?.email || "").toLowerCase();
+
+        // سماح مباشر للأدمنات المعروفين
+        if (ADMIN_EMAILS.includes(normalizedEmail)) {
           resolve(user);
           return;
         }
 
         let role = "";
+
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
           role = userDoc.exists() ? String(userDoc.data()?.role || "") : "";
         } catch (error) {
           const cached = JSON.parse(localStorage.getItem("coursehub_user") || "null");
           role = String(cached?.role || "");
-          console.warn("تعذر قراءة users/{uid} أثناء التحقق من الأدمن. تم استخدام localStorage كحل بديل.", error);
+          console.warn(
+            "تعذر قراءة users/{uid} أثناء التحقق من الأدمن. تم استخدام localStorage كحل بديل.",
+            error
+          );
         }
 
         if (role !== "admin") {
@@ -49,7 +56,6 @@ export function protectAdmin() {
         }
 
         resolve(user);
-
       } catch (err) {
         console.error("خطأ في التحقق من الأدمن:", err);
         alert("حدث خطأ أثناء التحقق من الصلاحيات");

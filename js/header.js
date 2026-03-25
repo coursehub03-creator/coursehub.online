@@ -25,9 +25,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const path = window.location.pathname.split("/").pop();
     const searchBar = headerPlaceholder?.querySelector("#headerSearchBar");
     if (searchBar) {
-      searchBar.style.display = (path === "index.html" || path === "courses.html") ? "flex" : "none";
+      searchBar.style.display =
+        (path === "index.html" || path === "courses.html") ? "flex" : "none";
     }
-
   } catch (err) {
     console.error("فشل تحميل الهيدر أو الفوتر:", err);
   }
@@ -41,7 +41,11 @@ export function setupUserState() {
   const loginLink = document.getElementById("login-link");
   const userInfo = document.getElementById("user-info");
   const adminLink = document.getElementById("admin-link");
-  const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
+
+  const adminEmails = [
+    "kaleadsalous30@gmail.com",
+    "coursehub03@gmail.com"
+  ];
 
   if (user) {
     // إخفاء رابط تسجيل الدخول
@@ -51,7 +55,7 @@ export function setupUserState() {
     if (userInfo) {
       userInfo.style.display = "flex";
       userInfo.innerHTML = `
-        <img src="${(user.picture || "/assets/images/admin-avatar.png")}" class="user-pic" alt="${user.name}">
+        <img src="${user.picture || "/assets/images/admin-avatar.png"}" class="user-pic" alt="${user.name}">
         <span class="user-name">${user.name}</span>
         <div class="dropdown-menu">
             <a href="/profile.html">الملف الشخصي</a>
@@ -63,19 +67,24 @@ export function setupUserState() {
       `;
 
       const dropdown = userInfo.querySelector(".dropdown-menu");
-      const toggleDropdown = e => {
+      const toggleDropdown = (e) => {
         e.stopPropagation();
         dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
       };
-      userInfo.querySelector(".user-pic").addEventListener("click", toggleDropdown);
-      userInfo.querySelector(".user-name").addEventListener("click", toggleDropdown);
-      document.addEventListener("click", () => { dropdown.style.display = "none"; });
-      dropdown.addEventListener("click", e => e.stopPropagation());
+
+      userInfo.querySelector(".user-pic")?.addEventListener("click", toggleDropdown);
+      userInfo.querySelector(".user-name")?.addEventListener("click", toggleDropdown);
+
+      document.addEventListener("click", () => {
+        dropdown.style.display = "none";
+      });
+
+      dropdown.addEventListener("click", (e) => e.stopPropagation());
 
       // تسجيل الخروج
       const logoutLink = document.getElementById("logout-link");
       if (logoutLink) {
-        logoutLink.addEventListener("click", e => {
+        logoutLink.addEventListener("click", (e) => {
           e.preventDefault();
           localStorage.removeItem("coursehub_user");
           if (loginLink) loginLink.style.display = "block";
@@ -88,14 +97,16 @@ export function setupUserState() {
 
     // عرض رابط الإدارة فقط للأدمنين
     if (adminLink) {
-      const isAdmin = user.role === "admin" || adminEmails.includes(String(user.email || "").toLowerCase());
+      const isAdmin =
+        user.role === "admin" ||
+        adminEmails.includes(String(user.email || "").toLowerCase());
+
       if (isAdmin) {
         adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
       } else {
         adminLink.innerHTML = "";
       }
     }
-
   } else {
     // حالة عدم تسجيل الدخول
     if (loginLink) loginLink.style.display = "block";
