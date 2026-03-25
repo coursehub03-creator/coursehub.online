@@ -3,14 +3,14 @@
 // حماية صفحات الأدمن (Google Auth فقط)
 // ====================
 
-import { auth } from "/js/firebase-config.js";
+import { auth, db } from "/js/firebase-config.js";
 import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// الإيميلات المسموح لها بالدخول كأدمن
 const ADMIN_EMAILS = [
   "kaleadsalous30@gmail.com",
   "coursehub03@gmail.com"
@@ -27,14 +27,27 @@ export function protectAdmin() {
           user = result.user;
         }
 
-        // ❌ ليس أدمن
-        if (!ADMIN_EMAILS.includes(user.email)) {
+        if (ADMIN_EMAILS.includes(String(user.email || "").toLowerCase())) {
+          resolve(user);
+          return;
+        }
+
+        let role = "";
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          role = userDoc.exists() ? String(userDoc.data()?.role || "") : "";
+        } catch (error) {
+          const cached = JSON.parse(localStorage.getItem("coursehub_user") || "null");
+          role = String(cached?.role || "");
+          console.warn("تعذر قراءة users/{uid} أثناء التحقق من الأدمن. تم استخدام localStorage كحل بديل.", error);
+        }
+
+        if (role !== "admin") {
           alert("غير مسموح بالدخول إلى هذه الصفحة");
           window.location.href = "/index.html";
           return;
         }
 
-        // ✅ أدمن
         resolve(user);
 
       } catch (err) {
