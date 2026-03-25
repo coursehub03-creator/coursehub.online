@@ -595,6 +595,7 @@ function setupUserState() {
   const loginLink = document.getElementById("login-link");
   const userInfo = document.getElementById("user-info");
   const adminLink = document.getElementById("admin-link");
+  const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
 
   if (user) {
     if (loginLink) loginLink.style.display = "none";
@@ -653,13 +654,14 @@ function setupUserState() {
 
     applyRoleBasedUI(user);
 
-    if (adminLink) {
-      if (user.role === "admin") {
-        adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
-      } else {
-    applyRoleBasedUI(null);
-        adminLink.innerHTML = "";
-      }
+      if (adminLink) {
+      const isAdmin =
+        user.role === "admin" ||
+        adminEmails.includes(String(user.email || "").toLowerCase());
+
+      adminLink.innerHTML = isAdmin
+        ? `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`
+        : "";
     }
   } else {
     applyRoleBasedUI(null);

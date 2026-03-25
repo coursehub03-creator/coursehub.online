@@ -9,11 +9,22 @@ document.addEventListener("DOMContentLoaded", () => {
     "add-course.html"
   ];
 
-  const isAdminPage = adminPages.some(page => path.endsWith(page));
+  const adminEmails = [
+    "kaleadsalous30@gmail.com",
+    "coursehub03@gmail.com"
+  ];
+
+  const isAdminPage = adminPages.some((page) => path.endsWith(page));
 
   if (isAdminPage) {
-    if (!user || user.role !== "admin") {
-      // ⛔ مهم جدًا
+    const isAdmin =
+      !!user &&
+      (
+        user.role === "admin" ||
+        adminEmails.includes(String(user.email || "").toLowerCase())
+      );
+
+    if (!isAdmin) {
       window.location.replace("../login.html");
     }
   }
