@@ -222,38 +222,69 @@ function setupUserState() {
     if (adminLink) adminLink.innerHTML = "";
   }
 }
+
 /* ===== Language / Theme / Notifications (Safe defaults) ===== */
-const translationObserver = new MutationObserver(() => {
-  const lang = localStorage.getItem("coursehub_lang") || "ar";
-  applyTranslations(lang);
+let isApplyingTranslations = false;
+let translationQueued = false;
+
+const translationObserver = new MutationObserver((mutations) => {
+  if (isApplyingTranslations || translationQueued) return;
+
+  const shouldTranslate = mutations.some((mutation) => {
+    if (mutation.type !== "childList") return false;
+    return [...mutation.addedNodes].some((node) => {
+      if (!(node instanceof Element)) return false;
+      return (
+        node.matches?.("[data-i18n-en], [data-i18n-placeholder-en], [data-i18n-aria-label-en]") ||
+        node.querySelector?.("[data-i18n-en], [data-i18n-placeholder-en], [data-i18n-aria-label-en]")
+      );
+    });
+  });
+
+  if (!shouldTranslate) return;
+
+  translationQueued = true;
+  queueMicrotask(() => {
+    translationQueued = false;
+    const lang = localStorage.getItem("coursehub_lang") || "ar";
+    applyTranslations(lang);
+  });
 });
 
 function applyTranslations(lang) {
-  const isEnglish = lang === "en";
-  document.documentElement.lang = isEnglish ? "en" : "ar";
-  document.documentElement.dir = isEnglish ? "ltr" : "rtl";
+  isApplyingTranslations = true;
+  try {
+    const isEnglish = lang === "en";
+    document.documentElement.lang = isEnglish ? "en" : "ar";
+    document.documentElement.dir = isEnglish ? "ltr" : "rtl";
 
-  document.querySelectorAll("[data-i18n-en]").forEach((el) => {
-    if (el.hasAttribute("data-i18n-skip")) return;
-    const arText = el.dataset.i18nAr || el.textContent;
-    if (!el.dataset.i18nAr) el.dataset.i18nAr = arText;
-    el.textContent = isEnglish ? el.dataset.i18nEn : el.dataset.i18nAr;
-  });
+    document.querySelectorAll("[data-i18n-en]").forEach((el) => {
+      if (el.hasAttribute("data-i18n-skip")) return;
+      const arText = el.dataset.i18nAr || el.textContent;
+      if (!el.dataset.i18nAr) el.dataset.i18nAr = arText;
+      el.textContent = isEnglish ? el.dataset.i18nEn : el.dataset.i18nAr;
+    });
 
-  document.querySelectorAll("[data-i18n-placeholder-en]").forEach((el) => {
-    const arPlaceholder = el.dataset.i18nPlaceholderAr || el.getAttribute("placeholder") || "";
-    if (!el.dataset.i18nPlaceholderAr) el.dataset.i18nPlaceholderAr = arPlaceholder;
-    el.setAttribute(
-      "placeholder",
-      isEnglish ? el.dataset.i18nPlaceholderEn : el.dataset.i18nPlaceholderAr
-    );
-  });
+    document.querySelectorAll("[data-i18n-placeholder-en]").forEach((el) => {
+      const arPlaceholder = el.dataset.i18nPlaceholderAr || el.getAttribute("placeholder") || "";
+      if (!el.dataset.i18nPlaceholderAr) el.dataset.i18nPlaceholderAr = arPlaceholder;
+      el.setAttribute(
+        "placeholder",
+        isEnglish ? el.dataset.i18nPlaceholderEn : el.dataset.i18nPlaceholderAr
+      );
+    });
 
-  document.querySelectorAll("[data-i18n-aria-label-en]").forEach((el) => {
-    const arLabel = el.dataset.i18nAriaLabelAr || el.getAttribute("aria-label") || "";
-    if (!el.dataset.i18nAriaLabelAr) el.dataset.i18nAriaLabelAr = arLabel;
-    el.setAttribute("aria-label", isEnglish ? el.dataset.i18nAriaLabelEn : el.dataset.i18nAriaLabelAr);
-  });
+    document.querySelectorAll("[data-i18n-aria-label-en]").forEach((el) => {
+      const arLabel = el.dataset.i18nAriaLabelAr || el.getAttribute("aria-label") || "";
+      if (!el.dataset.i18nAriaLabelAr) el.dataset.i18nAriaLabelAr = arLabel;
+      el.setAttribute(
+        "aria-label",
+        isEnglish ? el.dataset.i18nAriaLabelEn : el.dataset.i18nAriaLabelAr
+      );
+    });
+  } finally {
+    isApplyingTranslations = false;
+  }
 }
 
 function setupLanguageToggle() {
