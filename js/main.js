@@ -222,3 +222,112 @@ function setupUserState() {
     if (adminLink) adminLink.innerHTML = "";
   }
 }
+/* ===== Language / Theme / Notifications (Safe defaults) ===== */
+const translationObserver = new MutationObserver(() => {
+  const lang = localStorage.getItem("coursehub_lang") || "ar";
+  applyTranslations(lang);
+});
+
+function applyTranslations(lang) {
+  const isEnglish = lang === "en";
+  document.documentElement.lang = isEnglish ? "en" : "ar";
+  document.documentElement.dir = isEnglish ? "ltr" : "rtl";
+
+  document.querySelectorAll("[data-i18n-en]").forEach((el) => {
+    if (el.hasAttribute("data-i18n-skip")) return;
+    const arText = el.dataset.i18nAr || el.textContent;
+    if (!el.dataset.i18nAr) el.dataset.i18nAr = arText;
+    el.textContent = isEnglish ? el.dataset.i18nEn : el.dataset.i18nAr;
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder-en]").forEach((el) => {
+    const arPlaceholder = el.dataset.i18nPlaceholderAr || el.getAttribute("placeholder") || "";
+    if (!el.dataset.i18nPlaceholderAr) el.dataset.i18nPlaceholderAr = arPlaceholder;
+    el.setAttribute(
+      "placeholder",
+      isEnglish ? el.dataset.i18nPlaceholderEn : el.dataset.i18nPlaceholderAr
+    );
+  });
+
+  document.querySelectorAll("[data-i18n-aria-label-en]").forEach((el) => {
+    const arLabel = el.dataset.i18nAriaLabelAr || el.getAttribute("aria-label") || "";
+    if (!el.dataset.i18nAriaLabelAr) el.dataset.i18nAriaLabelAr = arLabel;
+    el.setAttribute("aria-label", isEnglish ? el.dataset.i18nAriaLabelEn : el.dataset.i18nAriaLabelAr);
+  });
+}
+
+function setupLanguageToggle() {
+  const btn = document.getElementById("langBtn");
+  if (!btn) return;
+
+  const currentLang = localStorage.getItem("coursehub_lang") || "ar";
+  applyTranslations(currentLang);
+  btn.innerHTML = currentLang === "en" ? '<i class="fa fa-globe"></i> English' : '<i class="fa fa-globe"></i> عربي';
+
+  btn.addEventListener("click", () => {
+    const nextLang = (localStorage.getItem("coursehub_lang") || "ar") === "ar" ? "en" : "ar";
+    localStorage.setItem("coursehub_lang", nextLang);
+    applyTranslations(nextLang);
+    btn.innerHTML = nextLang === "en" ? '<i class="fa fa-globe"></i> English' : '<i class="fa fa-globe"></i> عربي';
+  });
+}
+
+function setupThemeToggle() {
+  const btn = document.getElementById("themeToggle");
+  if (!btn) return;
+
+  const applyTheme = (theme) => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("coursehub_theme", theme);
+  };
+
+  applyTheme(localStorage.getItem("coursehub_theme") || "light");
+
+  btn.addEventListener("click", () => {
+    const current = localStorage.getItem("coursehub_theme") || "light";
+    applyTheme(current === "light" ? "dark" : "light");
+  });
+}
+
+const escapeHtml = (value) =>
+  String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
+function setupNotifications() {
+  const btn = document.getElementById("notifBtn");
+  const menu = document.getElementById("notificationMenu");
+  const items = document.getElementById("notificationItems");
+  const badge = document.getElementById("notifBadge");
+
+  if (!btn || !menu) return;
+
+  const notifications = JSON.parse(localStorage.getItem("coursehub_notifications") || "[]");
+
+  if (items) {
+    if (!notifications.length) {
+      items.innerHTML = "<div class='notification-empty'>لا توجد إشعارات جديدة</div>";
+    } else {
+      items.innerHTML = notifications
+        .slice(0, 5)
+        .map((n) => `<div class='notification-item'>${escapeHtml(n?.text || "")}</div>`)
+        .join("");
+    }
+  }
+
+  if (badge) badge.textContent = String(notifications.length || 0);
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menu.classList.toggle("open");
+    menu.style.display = menu.classList.contains("open") ? "block" : "none";
+  });
+
+  document.addEventListener("click", () => {
+    menu.classList.remove("open");
+    menu.style.display = "none";
+  });
+}

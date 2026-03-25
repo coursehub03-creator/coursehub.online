@@ -99,7 +99,8 @@ service cloud.firestore {
 
       // الأستاذ يقرأ طلباته + الأدمن يقرأ الجميع
       allow get: if isAdmin() || (isSignedIn() && resource.data.instructorId == request.auth.uid);
-      allow list: if isAdmin() || isSignedIn();
+      // لا تسمح list لكل المستخدمين
+      allow list: if isAdmin();
 
       // التحديث/الحذف للأدمن (قرار قبول/رفض)
       allow update, delete: if isAdmin();
@@ -112,8 +113,9 @@ service cloud.firestore {
       );
 
       allow get: if isAdmin()
-                 || (isSignedIn() && resource.data.instructorId == request.auth.uid);
-      allow list: if isAdmin() || isSignedIn();
+                 || (isSignedIn() && resource.data.instructorId == request.auth.uid)
+                 || (isSignedIn() && resource.data.senderId == request.auth.uid);
+      allow list: if isAdmin();
       allow update, delete: if isAdmin();
     }
 
@@ -133,12 +135,18 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // تصنيفات الدورات (مطلوبة لصفحة إدارة الدورات)
+    match /courseCategories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
     // التسجيلات (بدء/استكمال الدورة)
     match /enrollments/{docId} {
       // قراءة المستند: مالكه أو الأدمن
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      // السماح للمستخدم بجلب تسجيلاته عبر query where(userId == auth.uid)
-      allow list: if isAdmin() || isSignedIn();
+      // لا تسمح list لكل المستخدمين
+      allow list: if isAdmin();
 
       // الإنشاء: userId يجب يطابق uid الحالي
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
@@ -150,7 +158,8 @@ service cloud.firestore {
     // الشهادات العامة
     match /certificates/{certId} {
       allow read: if true; // للتحقق من الشهادة
-      allow create: if isSignedIn();
+      // الأفضل: الأدمن فقط أو Cloud Functions فقط
+      allow create: if isAdmin();
       allow update, delete: if isAdmin();
       allow list: if isAdmin();
     }
@@ -158,10 +167,12 @@ service cloud.firestore {
     // إشعارات المستخدم
     match /notifications/{notifId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      // السماح للمستخدم بجلب إشعاراته عبر query where(userId == auth.uid)
-      allow list: if isAdmin() || isSignedIn();
+      // لا تسمح list لكل المستخدمين
+      allow list: if isAdmin();
 
-      allow create: if isSignedIn();
+      // فقط الأدمن، أو اسمح للمستخدم لو الإشعار له هو فقط
+      allow create: if isAdmin()
+                    || (isSignedIn() && request.resource.data.userId == request.auth.uid);
       allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
     }
@@ -169,16 +180,17 @@ service cloud.firestore {
     // مراجعات الدورات
     match /courseReviews/{reviewId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin();
-      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if true;
     }
 
     // محاولات الاختبارات
     match /quizAttempts/{attemptId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      // السماح للمستخدم بجلب محاولاته عبر query where(userId == auth.uid)
-      allow list: if isAdmin() || isSignedIn();
+      // لا تسمح list لكل المستخدمين
+      allow list: if isAdmin();
 
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
