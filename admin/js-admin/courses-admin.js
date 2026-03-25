@@ -86,7 +86,6 @@ async function initCoursesAdmin() {
     });
   }
 
-  // ✅ الدمج الصحيح هنا
   const getInstructorName = (course) => {
     if (course.instructorName) return course.instructorName;
     if (course.instructorId && userNameMap.has(course.instructorId))
@@ -98,14 +97,12 @@ async function initCoursesAdmin() {
   const getCourseInstructorKey = (course) =>
     course.instructorId || course.instructorEmail || "unknown";
 
-  /* ===== باقي الكود بدون تغيير (لأنه سليم) ===== */
-
   async function loadCategories() {
     try {
       const snap = await getDocs(collection(db, "courseCategories"));
       allCategories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     } catch (e) {
-      if (!isPermissionDenied(e)) throw e;
+      console.warn("تعذر تحميل التصنيفات:", e);
       allCategories = [];
     }
 
@@ -131,25 +128,23 @@ async function initCoursesAdmin() {
         uid: d.data().uid || d.id
       }));
     } catch (e) {
-      if (!isPermissionDenied(e)) throw e;
+      console.warn("تعذر تحميل المستخدمين:", e);
       allUsers = [];
     }
 
     fillUserMaps();
   }
 
-  /* ===== تحميل البيانات ===== */
   async function loadCourses() {
     try {
       const snap = await getDocs(collection(db, "courses"));
       allCourses = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     } catch (e) {
-      if (isPermissionDenied(e)) {
-        tbody.innerHTML = "<tr><td colspan='8'>لا تملك صلاحية</td></tr>";
-        allCourses = [];
-        return;
-      }
-      throw e;
+      console.warn("تعذر تحميل الدورات:", e);
+      tbody.innerHTML = isPermissionDenied(e)
+        ? "<tr><td colspan='8'>لا تملك صلاحية لقراءة الدورات.</td></tr>"
+        : "<tr><td colspan='8'>تعذر تحميل الدورات حالياً.</td></tr>";
+      allCourses = [];
     }
   }
 
@@ -158,18 +153,15 @@ async function initCoursesAdmin() {
       const snap = await getDocs(collection(db, "instructorCourseSubmissions"));
       allSubmissions = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     } catch (e) {
-      if (isPermissionDenied(e)) {
-        submissionsTbody.innerHTML =
-          "<tr><td colspan='6'>لا تملك صلاحية لطلبات الأساتذة.</td></tr>";
-        allSubmissions = [];
-        return;
-      }
-      throw e;
+      console.warn("تعذر تحميل طلبات الأساتذة:", e);
+      submissionsTbody.innerHTML = isPermissionDenied(e)
+        ? "<tr><td colspan='6'>لا تملك صلاحية لطلبات الأساتذة.</td></tr>"
+        : "<tr><td colspan='6'>تعذر تحميل طلبات الأساتذة حالياً.</td></tr>";
+      allSubmissions = [];
     }
   }
 
-  /* ===== تشغيل ===== */
-  await Promise.all([
+  await Promise.allSettled([
     loadUsers(),
     loadCategories(),
     loadCourses(),
