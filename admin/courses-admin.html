@@ -28,7 +28,7 @@
         <div class="page-header">
           <div>
             <h1>إدارة الدورات</h1>
-            <p class="helper-text">تتبّع الحالات (مسودة، قيد المراجعة، منشورة، مؤرشفة) مع إمكانية الأرشفة وإعادة النشر والتعديل قبل النشر.</p>
+            <p class="helper-text">تنظيم احترافي حسب الأستاذ + حالات النشر + مراجعات نشر فعالة.</p>
           </div>
           <div class="page-actions">
             <button type="button" id="add-course-btn" class="btn">
@@ -38,55 +38,79 @@
           </div>
         </div>
 
-        <div class="table-toolbar">
-          <div class="table-filters">
-            <select id="course-status-filter">
-              <option value="all">كل الحالات</option>
-              <option value="draft">مسودة</option>
-              <option value="review">قيد المراجعة</option>
-              <option value="published">منشورة</option>
-              <option value="archived">مؤرشفة</option>
-            </select>
-            <select id="course-category-filter">
-              <option value="all">كل التصنيفات</option>
-              <option value="tech">تقنية</option>
-              <option value="design">تصميم</option>
-              <option value="business">أعمال</option>
-            </select>
-          </div>
-          <div class="table-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input
-              type="text"
-              id="course-search"
-              placeholder="ابحث عن دورة..."
-            />
-          </div>
+        <div class="courses-layout">
+          <aside class="card instructors-panel">
+            <div class="card-header">
+              <h3>الأساتذة</h3>
+              <span id="instructorsCount" class="badge primary">0</span>
+            </div>
+            <div class="table-search" style="margin: 10px 0;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="instructor-search" placeholder="ابحث عن أستاذ..." />
+            </div>
+            <div class="instructor-list" id="instructors-list"></div>
+          </aside>
+
+          <section class="courses-main-panel">
+            <div class="table-toolbar">
+              <div class="table-filters">
+                <select id="course-status-filter">
+                  <option value="all">كل الحالات</option>
+                  <option value="draft">مسودة</option>
+                  <option value="review">قيد المراجعة</option>
+                  <option value="published">منشورة</option>
+                  <option value="archived">مؤرشفة</option>
+                </select>
+                <select id="course-category-filter">
+                  <option value="all">كل التصنيفات</option>
+                </select>
+              </div>
+              <div class="table-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="course-search" placeholder="ابحث عن دورة..." />
+              </div>
+            </div>
+
+            <table class="courses-table">
+              <thead>
+                <tr>
+                  <th>عنوان الدورة</th>
+                  <th>الأستاذ</th>
+                  <th>التصنيف</th>
+                  <th>الحالة</th>
+                  <th>بدأوا</th>
+                  <th>أكملوا</th>
+                  <th>غير مكتمل</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="courses-list">
+                <!-- يتم تعبئتها من JS -->
+              </tbody>
+            </table>
+          </section>
         </div>
 
-        <table class="courses-table">
-          <thead>
-            <tr>
-              <th>عنوان الدورة</th>
-              <th>الوصف</th>
-              <th>الحالة</th>
-              <th>بدأوا</th>
-              <th>أكملوا</th>
-              <th>غير مكتمل</th>
-              <th>الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="courses-list">
-            <!-- يتم تعبئتها من JS -->
-          </tbody>
-        </table>
-
-
-        <section class="builder-card" style="margin-top:18px;">
+        <section class="builder-card" id="submissions" style="margin-top:18px;">
           <div class="page-header" style="margin-bottom:10px;">
             <div>
-              <h2 style="margin:0;">طلبات دورات الأساتذة</h2>
-              <p class="helper-text">مراجعة واعتماد/رفض الدورات المرسلة من لوحة الأستاذ.</p>
+              <h2 style="margin:0;">مراجعات النشر (طلبات الأساتذة)</h2>
+              <p class="helper-text">اعتماد/رفض احترافي مع ملاحظات وربط المسودة الناتجة تلقائيًا.</p>
+            </div>
+          </div>
+
+          <div class="table-toolbar">
+            <div class="table-filters">
+              <select id="submission-status-filter">
+                <option value="all">كل حالات الطلبات</option>
+                <option value="pending">قيد المراجعة</option>
+                <option value="approved">معتمدة</option>
+                <option value="rejected">مرفوضة</option>
+              </select>
+            </div>
+            <div class="table-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="submission-search" placeholder="ابحث بعنوان الطلب أو البريد..." />
             </div>
           </div>
 
