@@ -7,35 +7,12 @@ document.addEventListener("adminLayoutLoaded", init);
 let allCategories = [];
 let courseUsageMap = new Map();
 
-async function init() {
-  await protectAdmin();
-  document.getElementById("addCategoryBtn")?.addEventListener("click", addCategory);
-  document.getElementById("categoriesSearch")?.addEventListener("input", renderCategories);
-  await loadCategories();
-}
-
-async function loadCourseUsage() {
-  const snap = await getDocs(collection(db, "courses"));
-  courseUsageMap = new Map();
-  snap.forEach((docSnap) => {
-    const cat = String(docSnap.data()?.category || "").trim();
-    if (!cat) return;
-    courseUsageMap.set(cat, (courseUsageMap.get(cat) || 0) + 1);
-  });
-}
-
-async function loadCategories() {
-  const rows = document.getElementById("categoriesRows");
-  try {
-    await loadCourseUsage();
-    const snap = await getDocs(collection(db, "courseCategories"));
-    allCategories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderCategories();
-  } catch (e) {
-    console.error(e);
-    rows.innerHTML = "<tr><td colspan='5'>تعذر تحميل التصنيفات.</td></tr>";
-  }
-}
+/* ===== Helpers ===== */
+const isPermissionDenied = (error) => {
+  const code = String(error?.code || "").toLowerCase();
+  const message = String(error?.message || "").toLowerCase();
+  return code.includes("permission-denied") || message.includes("insufficient permissions");
+};
 
 function formatDate(dateLike) {
   if (!dateLike) return "-";
@@ -44,6 +21,58 @@ function formatDate(dateLike) {
   return new Intl.DateTimeFormat("ar", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
+/* ===== Init ===== */
+async function init() {
+  try {
+    await protectAdmin();
+    document.getElementById("addCategoryBtn")?.addEventListener("click", addCategory);
+    document.getElementById("categoriesSearch")?.addEventListener("input", renderCategories);
+    await loadCategories();
+  } catch (error) {
+    console.error("فشل تهيئة صفحة التصنيفات:", error);
+  }
+}
+
+/* ===== Load Data ===== */
+async function loadCourseUsage() {
+  try {
+    const snap = await getDocs(collection(db, "courses"));
+    courseUsageMap = new Map();
+
+    snap.forEach((docSnap) => {
+      const cat = String(docSnap.data()?.category || "").trim();
+      if (!cat) return;
+      courseUsageMap.set(cat, (courseUsageMap.get(cat) || 0) + 1);
+    });
+  } catch (error) {
+    if (isPermissionDenied(error)) {
+      courseUsageMap = new Map();
+      return;
+    }
+    throw error;
+  }
+}
+
+async function loadCategories() {
+  const rows = document.getElementById("categoriesRows");
+
+  try {
+    await loadCourseUsage();
+
+    const snap = await getDocs(collection(db, "courseCategories"));
+    allCategories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    renderCategories();
+  } catch (e) {
+    console.error(e);
+
+    rows.innerHTML = isPermissionDenied(e)
+      ? "<tr><td colspan='5'>لا تملك صلاحية قراءة التصنيفات (courseCategories).</td></tr>"
+      : "<tr><td colspan='5'>تعذر تحميل التصنيفات.</td></tr>";
+  }
+}
+
+/* ===== Render ===== */
 function renderCategories() {
   const rows = document.getElementById("categoriesRows");
   const q = (document.getElementById("categoriesSearch")?.value || "").toLowerCase().trim();
@@ -63,6 +92,7 @@ function renderCategories() {
 
   rows.innerHTML = items.map((x) => {
     const usage = courseUsageMap.get(x.name) || 0;
+
     return `
       <tr>
         <td><strong>${x.name || "-"}</strong></td>
@@ -81,9 +111,11 @@ function renderCategories() {
   rows.querySelectorAll("[data-edit]").forEach((btn) => btn.addEventListener("click", onEdit));
 }
 
+/* ===== Actions ===== */
 async function addCategory() {
   const nameInput = document.getElementById("newCategoryName");
   const descInput = document.getElementById("newCategoryDescription");
+
   const name = nameInput?.value?.trim();
   const description = descInput?.value?.trim() || "";
 
@@ -92,22 +124,35 @@ async function addCategory() {
     return;
   }
 
-  const duplicate = allCategories.some((item) => String(item.name || "").trim().toLowerCase() === name.toLowerCase());
+  const duplicate = allCategories.some(
+    (item) => String(item.name || "").trim().toLowerCase() === name.toLowerCase()
+  );
+
   if (duplicate) {
     alert("هذا التصنيف موجود مسبقًا.");
     return;
   }
 
-  await addDoc(collection(db, "courseCategories"), {
-    name,
-    description,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
+  try {
+    await addDoc(collection(db, "courseCategories"), {
+      name,
+      description,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
 
-  nameInput.value = "";
-  if (descInput) descInput.value = "";
-  await loadCategories();
+    nameInput.value = "";
+    if (descInput) descInput.value = "";
+
+    await loadCategories();
+  } catch (error) {
+    console.error(error);
+    alert(
+      isPermissionDenied(error)
+        ? "لا تملك صلاحية إضافة تصنيف. تحقق من قواعد Firestore."
+        : "تعذر إضافة التصنيف."
+    );
+  }
 }
 
 async function onEdit(event) {
@@ -127,19 +172,33 @@ async function onEdit(event) {
   const nextDescription = prompt("وصف مختصر", current.description || "");
   if (nextDescription === null) return;
 
-  const duplicate = allCategories.some((item) => item.id !== id && String(item.name || "").trim().toLowerCase() === cleanedName.toLowerCase());
+  const duplicate = allCategories.some(
+    (item) =>
+      item.id !== id &&
+      String(item.name || "").trim().toLowerCase() === cleanedName.toLowerCase()
+  );
+
   if (duplicate) {
     alert("اسم التصنيف مستخدم بالفعل.");
     return;
   }
 
-  await updateDoc(doc(db, "courseCategories", id), {
-    name: cleanedName,
-    description: nextDescription.trim(),
-    updatedAt: serverTimestamp()
-  });
+  try {
+    await updateDoc(doc(db, "courseCategories", id), {
+      name: cleanedName,
+      description: nextDescription.trim(),
+      updatedAt: serverTimestamp()
+    });
 
-  await loadCategories();
+    await loadCategories();
+  } catch (error) {
+    console.error(error);
+    alert(
+      isPermissionDenied(error)
+        ? "لا تملك صلاحية تعديل التصنيف."
+        : "تعذر تعديل التصنيف."
+    );
+  }
 }
 
 async function onDelete(event) {
@@ -148,12 +207,23 @@ async function onDelete(event) {
   if (!current) return;
 
   const usage = courseUsageMap.get(current.name) || 0;
+
   if (usage > 0) {
     alert("لا يمكن حذف تصنيف مرتبط بدورات حالية. قم بتغيير التصنيف من الدورات أولاً.");
     return;
   }
 
   if (!confirm(`هل تريد حذف التصنيف "${current.name}"؟`)) return;
-  await deleteDoc(doc(db, "courseCategories", id));
-  await loadCategories();
+
+  try {
+    await deleteDoc(doc(db, "courseCategories", id));
+    await loadCategories();
+  } catch (error) {
+    console.error(error);
+    alert(
+      isPermissionDenied(error)
+        ? "لا تملك صلاحية حذف التصنيف."
+        : "تعذر حذف التصنيف."
+    );
+  }
 }
