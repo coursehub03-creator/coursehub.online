@@ -222,6 +222,7 @@ function setupUserState() {
     if (adminLink) adminLink.innerHTML = "";
   }
 }
+
 /* ===== Language / Theme / Notifications (Safe defaults) ===== */
 let isApplyingTranslations = false;
 let translationQueued = false;
@@ -276,7 +277,10 @@ function applyTranslations(lang) {
     document.querySelectorAll("[data-i18n-aria-label-en]").forEach((el) => {
       const arLabel = el.dataset.i18nAriaLabelAr || el.getAttribute("aria-label") || "";
       if (!el.dataset.i18nAriaLabelAr) el.dataset.i18nAriaLabelAr = arLabel;
-      el.setAttribute("aria-label", isEnglish ? el.dataset.i18nAriaLabelEn : el.dataset.i18nAriaLabelAr);
+      el.setAttribute(
+        "aria-label",
+        isEnglish ? el.dataset.i18nAriaLabelEn : el.dataset.i18nAriaLabelAr
+      );
     });
   } finally {
     isApplyingTranslations = false;
