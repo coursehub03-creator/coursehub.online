@@ -11,13 +11,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const isAdminPage = adminPages.some(page => path.endsWith(page));
 
-  const adminEmails = [
-    "kaleadsalous30@gmail.com",
-    "coursehub03@gmail.com"
-  ];
-
   if (isAdminPage) {
-    if (!user || !adminEmails.includes(user.email)) {
+    if (!user || user.role !== "admin") {
       // ⛔ مهم جدًا
       window.location.replace("../login.html");
     }

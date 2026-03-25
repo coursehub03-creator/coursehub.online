@@ -3,18 +3,13 @@
 // حماية صفحات الأدمن (Google Auth فقط)
 // ====================
 
-import { auth } from "/js/firebase-config.js";
+import { auth, db } from "/js/firebase-config.js";
 import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-// الإيميلات المسموح لها بالدخول كأدمن
-const ADMIN_EMAILS = [
-  "kaleadsalous30@gmail.com",
-  "coursehub03@gmail.com"
-];
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export function protectAdmin() {
   return new Promise((resolve) => {
@@ -27,14 +22,15 @@ export function protectAdmin() {
           user = result.user;
         }
 
-        // ❌ ليس أدمن
-        if (!ADMIN_EMAILS.includes(user.email)) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const role = userDoc.exists() ? String(userDoc.data()?.role || "") : "";
+
+        if (role !== "admin") {
           alert("غير مسموح بالدخول إلى هذه الصفحة");
           window.location.href = "/index.html";
           return;
         }
 
-        // ✅ أدمن
         resolve(user);
 
       } catch (err) {

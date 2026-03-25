@@ -42,9 +42,6 @@ export function setupUserState() {
   const userInfo = document.getElementById("user-info");
   const adminLink = document.getElementById("admin-link");
 
-  // قائمة بريدية للأدمنين
-  const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
-
   if (user) {
     // إخفاء رابط تسجيل الدخول
     if (loginLink) loginLink.style.display = "none";
@@ -90,7 +87,7 @@ export function setupUserState() {
 
     // عرض رابط الإدارة فقط للأدمنين
     if (adminLink) {
-      if (adminEmails.includes(user.email)) {
+      if (user.role === "admin") {
         adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
       } else {
         adminLink.innerHTML = "";
