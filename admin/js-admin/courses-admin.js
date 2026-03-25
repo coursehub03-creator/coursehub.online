@@ -13,7 +13,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
+  initCoursesAdmin().catch((error) => {
+    console.error("فشل تهيئة إدارة الدورات:", error);
+    alert("تعذر تحميل لوحة الدورات. تحقق من الصلاحيات أو قواعد Firestore.");
+  });
+});
+
+async function initCoursesAdmin() {
   const adminUser = await protectAdmin();
   console.log("أدمن مسجل:", adminUser?.email || "-");
 
@@ -23,23 +30,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   const searchInput = document.getElementById("course-search");
   const categoryFilter = document.getElementById("course-category-filter");
   const submissionsTbody = document.getElementById("instructor-submissions-list");
+  const instructorsList = document.getElementById("instructors-list");
+  const instructorsCount = document.getElementById("instructorsCount");
+  const instructorSearch = document.getElementById("instructor-search");
+  const submissionStatusFilter = document.getElementById("submission-status-filter");
+  const submissionSearch = document.getElementById("submission-search");
 
   const functions = getFunctions(undefined, "us-central1");
   const reviewInstructorCourseSubmission = httpsCallable(functions, "reviewInstructorCourseSubmission");
 
-  // أحيانًا callable يفشل من هوست غير مسموح/غير متوقع (CORS/blocked/preview)
-  const callableAllowedHosts = new Set([
-    "localhost",
-    "127.0.0.1",
-    "coursehub-23ed2.web.app",
-    "coursehub-23ed2.firebaseapp.com"
-  ]);
+  const callableAllowedHosts = new Set(["localhost", "127.0.0.1", "coursehub-23ed2.web.app", "coursehub-23ed2.firebaseapp.com"]);
   const shouldUseCallable = callableAllowedHosts.has(window.location.hostname);
 
-  if (!addBtn || !tbody) {
-    console.error("عناصر الصفحة غير موجودة");
-    return;
-  }
+  if (!addBtn || !tbody) return;
 
   addBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -47,9 +50,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   let allCourses = [];
+  let allUsers = [];
+  let allCategories = [];
   let enrollmentsMap = new Map();
   let completionsMap = new Map();
   let submissionsMap = new Map();
+  let selectedInstructorId = "all";
+
+  const isPermissionDenied = (error) => {
+    const code = String(error?.code || "").toLowerCase();
+    const message = String(error?.message || "").toLowerCase();
+    return code.includes("permission-denied") || message.includes("insufficient permissions");
+  };
 
   const statusBadge = (status) => {
     if (status === "published") return "<span class='badge success'>منشورة</span>";
@@ -57,6 +69,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (status === "archived") return "<span class='badge neutral'>مؤرشفة</span>";
     return "<span class='badge neutral'>مسودة</span>";
   };
+
+  const submissionStatusBadge = (status) => {
+    if (status === "approved") return "<span class='badge success'>معتمدة</span>";
+    if (status === "rejected") return "<span class='badge danger'>مرفوضة</span>";
+    return "<span class='badge warning'>قيد المراجعة</span>";
+  };
+
+  const userNameMap = new Map();
+  const userEmailMap = new Map();
+
+  const getInstructorName = (course) => {
+    if (course.instructorId && userNameMap.has(course.instructorId)) return userNameMap.get(course.instructorId);
+    return course.instructorName || course.instructorEmail || "غير محدد";
+  };
+
+  const getCourseInstructorKey = (course) => course.instructorId || course.instructorEmail || "unknown";
 
   const renderCourseActions = (id, status) => {
     const editAction = `<a class="btn outline small" href="/admin/edit-course.html?id=${id}">تعديل</a>`;
@@ -68,14 +96,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (status === "published") return `${editAction} ${archiveAction} ${deleteAction}`;
     if (status === "archived") return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
     if (status === "review") return `${editAction} ${publishAction} ${archiveAction} ${deleteAction}`;
-    return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`; // draft + unknown
+    return `${editAction} ${reviewAction} ${publishAction} ${deleteAction}`;
   };
 
   const renderCourses = (courses) => {
     tbody.innerHTML = "";
-
     if (!courses.length) {
-      tbody.innerHTML = "<tr><td colspan='7'>لا توجد دورات حالياً</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='8'>لا توجد دورات مطابقة للفلاتر.</td></tr>";
       return;
     }
 
@@ -83,11 +110,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       const startedCount = enrollmentsMap.get(id) || 0;
       const completedCount = completionsMap.get(id) || 0;
       const inProgressCount = Math.max(0, startedCount - completedCount);
+      const instructorName = getInstructorName(data);
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${data.title || "-"}</td>
-        <td>${data.description || "-"}</td>
+        <td>${instructorName}</td>
+        <td>${data.category || "-"}</td>
         <td>${statusBadge(data.status)}</td>
         <td>${startedCount}</td>
         <td>${completedCount}</td>
@@ -98,6 +127,66 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   };
 
+  const renderInstructors = () => {
+    const qText = instructorSearch?.value?.toLowerCase().trim() || "";
+    const instructors = allUsers
+      .filter((u) => (u.role === "instructor" || (u.role || "") === "teacher"))
+      .map((u) => {
+        const key = u.uid || u.id;
+        const courses = allCourses.filter(({ data }) => getCourseInstructorKey(data) === key || (u.email && data.instructorEmail === u.email));
+        const published = courses.filter((c) => c.data.status === "published").length;
+        const unpublished = courses.length - published;
+        return {
+          key,
+          name: u.name || u.displayName || u.fullName || u.email || "أستاذ",
+          email: u.email || "",
+          total: courses.length,
+          published,
+          unpublished
+        };
+      })
+      .filter((item) => !qText || item.name.toLowerCase().includes(qText) || item.email.toLowerCase().includes(qText))
+      .sort((a, b) => b.total - a.total);
+
+    if (instructorsCount) instructorsCount.textContent = String(instructors.length);
+
+    const allItem = `
+      <button type="button" class="instructor-item ${selectedInstructorId === "all" ? "active" : ""}" data-id="all">
+        <div>
+          <strong>كل الأساتذة</strong>
+          <small>عرض جميع الدورات</small>
+        </div>
+      </button>
+    `;
+
+    if (!instructorsList) return;
+
+    if (!instructors.length) {
+      instructorsList.innerHTML = `${allItem}<p class="helper-text" style="padding:10px;">لا يوجد أساتذة مطابقون أو لا توجد صلاحية لقراءة المستخدمين.</p>`;
+    } else {
+      instructorsList.innerHTML = allItem + instructors.map((ins) => `
+        <button type="button" class="instructor-item ${selectedInstructorId === ins.key ? "active" : ""}" data-id="${ins.key}">
+          <div>
+            <strong>${ins.name}</strong>
+            <small>${ins.email || "بدون بريد"}</small>
+          </div>
+          <div class="instructor-stats-mini">
+            <span class="badge success">${ins.published} منشورة</span>
+            <span class="badge neutral">${ins.unpublished} غير منشورة</span>
+          </div>
+        </button>
+      `).join("");
+    }
+
+    instructorsList.querySelectorAll(".instructor-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedInstructorId = btn.dataset.id || "all";
+        renderInstructors();
+        applyFilters();
+      });
+    });
+  };
+
   const applyFilters = () => {
     const statusValue = statusFilter?.value || "all";
     const categoryValue = categoryFilter?.value || "all";
@@ -105,9 +194,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const filtered = allCourses.filter(({ data }) => {
       const statusMatch = statusValue === "all" || data.status === statusValue;
-      const categoryMatch = categoryValue === "all" || data.category === categoryValue;
-      const searchMatch = !qText || (data.title || "").toLowerCase().includes(qText);
-      return statusMatch && categoryMatch && searchMatch;
+      const categoryMatch = categoryValue === "all" || (data.category || "") === categoryValue;
+      const searchMatch = !qText || (data.title || "").toLowerCase().includes(qText) || (data.description || "").toLowerCase().includes(qText);
+
+      const instructorMatch =
+        selectedInstructorId === "all" ||
+        getCourseInstructorKey(data) === selectedInstructorId ||
+        (userEmailMap.get(selectedInstructorId) && data.instructorEmail === userEmailMap.get(selectedInstructorId));
+
+      return statusMatch && categoryMatch && searchMatch && instructorMatch;
     });
 
     renderCourses(filtered);
@@ -115,16 +210,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function buildSubmissionPreview(item) {
     const modules = Array.isArray(item.modules) ? item.modules : [];
-    const moduleLines = modules
-      .map((m, idx) => {
-        const lessons = Array.isArray(m.lessons) ? m.lessons : [];
-        const lessonTitles = lessons.map((l) => `- ${l.title || "بدون عنوان"}`).join("\n");
-        return `الوحدة ${idx + 1}: ${m.title || "بدون عنوان"}\n${lessonTitles}`;
-      })
-      .join("\n\n");
+    const moduleLines = modules.map((m, idx) => {
+      const lessons = Array.isArray(m.lessons) ? m.lessons : [];
+      const lessonTitles = lessons.map((l) => `- ${l.title || "بدون عنوان"}`).join("
+");
+      return `الوحدة ${idx + 1}: ${m.title || "بدون عنوان"}
+${lessonTitles}`;
+    }).join("
+
+");
 
     return [
       `العنوان: ${item.title || "-"}`,
+      `الأستاذ: ${item.instructorEmail || "-"}`,
       `التصنيف: ${item.category || "-"}`,
       `المستوى: ${item.level || "-"}`,
       `اللغة: ${item.language || "-"}`,
@@ -137,17 +235,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       "",
       "المنهج:",
       moduleLines || "لا توجد وحدات"
-    ]
-      .filter(Boolean)
-      .join("\n");
+    ].filter(Boolean).join("
+");
   }
 
   async function fallbackReviewSubmission(item, decision, reason = "") {
-    // fallback هذا ينفذ نفس فكرة Cloud Function لكن من لوحة الأدمن (أنت أدمن أصلاً)
     if (decision === "approve") {
       const modules = Array.isArray(item.modules) ? item.modules : [];
-
-      const lessonsFlat = (modules || []).flatMap((m) =>
+      const lessonsFlat = modules.flatMap((m) =>
         (m.lessons || []).map((lesson) => ({
           title: lesson.title || "",
           duration: lesson.duration || "",
@@ -159,7 +254,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
 
       const coursePayload = {
-        // بيانات الكورس الأساسية
         title: item.title || "",
         titleEn: item.titleEn || "",
         description: item.description || "",
@@ -168,18 +262,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         language: item.language || "",
         duration: Number(item.durationHours || 0),
         price: Number(item.price || 0),
-
-        // ملفات ومحتوى
         image: item.image || "",
         outlineUrl: item.outlineUrl || "",
         lessons: lessonsFlat,
-        modules: modules, // نحتفظ بالهيكل أيضًا
-
-        // ميتا
+        modules,
         status: "draft",
         source: "instructor-submission",
         instructorId: item.instructorId || "",
         instructorEmail: item.instructorEmail || "",
+        instructorName: item.instructorName || "",
         submissionId: item.id,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -193,7 +284,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         linkedCourseId: courseRef.id,
         updatedAt: serverTimestamp()
       });
-
       return;
     }
 
@@ -204,72 +294,75 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  function renderSubmissions() {
+    if (!submissionsTbody) return;
+    const statusValue = submissionStatusFilter?.value || "all";
+    const qText = submissionSearch?.value?.toLowerCase().trim() || "";
+
+    const items = [...submissionsMap.values()].filter((item) => {
+      const status = item.status || "pending";
+      const statusMatch = statusValue === "all" || status === statusValue;
+      const searchMatch = !qText || (item.title || "").toLowerCase().includes(qText) || (item.instructorEmail || "").toLowerCase().includes(qText);
+      return statusMatch && searchMatch;
+    });
+
+    if (!items.length) {
+      submissionsTbody.innerHTML = "<tr><td colspan='6'>لا توجد طلبات مطابقة للفلاتر.</td></tr>";
+      return;
+    }
+
+    submissionsTbody.innerHTML = items.map((item) => {
+      const lessons = (item.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+      const questions = item.assessmentQuestions?.length || 0;
+      const editDraftAction = item.linkedCourseId
+        ? `<a class="btn outline small" href="/admin/edit-course.html?id=${item.linkedCourseId}">تعديل المسودة</a>`
+        : "";
+
+      return `
+        <tr>
+          <td>${item.title || "-"}</td>
+          <td>${item.instructorEmail || "-"}</td>
+          <td>${lessons} درس / ${questions} سؤال</td>
+          <td>${submissionStatusBadge(item.status || "pending")}</td>
+          <td><input type="text" class="submission-reason" data-id="${item.id}" value="${item.reviewReason || ""}" placeholder="سبب الرفض (إلزامي عند الرفض)" /></td>
+          <td>
+            <button type="button" class="btn small submission-preview" data-id="${item.id}">معاينة</button>
+            <button type="button" class="btn success small submission-approve" data-id="${item.id}">اعتماد كمسودة</button>
+            <button type="button" class="btn outline small submission-reject" data-id="${item.id}">رفض</button>
+            ${editDraftAction}
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
   async function loadInstructorSubmissions() {
     if (!submissionsTbody) return;
-
     submissionsTbody.innerHTML = "<tr><td colspan='6'>جارٍ تحميل طلبات الأساتذة...</td></tr>";
 
     try {
       const snap = await getDocs(query(collection(db, "instructorCourseSubmissions"), orderBy("createdAt", "desc")));
       const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       submissionsMap = new Map(items.map((item) => [item.id, item]));
-
-      if (!items.length) {
-        submissionsTbody.innerHTML = "<tr><td colspan='6'>لا توجد طلبات من الأساتذة حاليًا.</td></tr>";
+      renderSubmissions();
+    } catch (error) {
+      if (isPermissionDenied(error)) {
+        submissionsTbody.innerHTML = "<tr><td colspan='6'>لا تملك صلاحية قراءة طلبات النشر (instructorCourseSubmissions).</td></tr>";
         return;
       }
-
-      submissionsTbody.innerHTML = items
-        .map((item) => {
-          const lessons = (item.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
-          const questions = item.assessmentQuestions?.length || 0;
-          const status = item.status || "pending";
-
-          const statusText =
-            status === "approved"
-              ? "تم التحويل لمسودة المشرف"
-              : status === "rejected"
-              ? "مرفوض"
-              : "قيد المراجعة";
-
-          const editDraftAction = item.linkedCourseId
-            ? `<a class="btn outline small" href="/admin/edit-course.html?id=${item.linkedCourseId}">تعديل المسودة</a>`
-            : "";
-
-          return `
-          <tr>
-            <td>${item.title || "-"}</td>
-            <td>${item.instructorEmail || "-"}</td>
-            <td>${lessons} درس / ${questions} سؤال</td>
-            <td>${statusText}</td>
-            <td><input type="text" class="submission-reason" data-id="${item.id}" placeholder="سبب الرفض (اختياري)" /></td>
-            <td>
-              <button type="button" class="btn small submission-preview" data-id="${item.id}">معاينة</button>
-              <button type="button" class="btn success small submission-approve" data-id="${item.id}">اعتماد كمسودة</button>
-              <button type="button" class="btn outline small submission-reject" data-id="${item.id}">رفض</button>
-              ${editDraftAction}
-            </td>
-          </tr>
-          `;
-        })
-        .join("");
-    } catch (error) {
       console.error("فشل تحميل طلبات دورات الأساتذة:", error);
       submissionsTbody.innerHTML = "<tr><td colspan='6'>تعذر تحميل الطلبات.</td></tr>";
     }
   }
 
-  // event delegation لتفادي تكرار listeners
   submissionsTbody?.addEventListener("click", async (event) => {
     const previewBtn = event.target.closest(".submission-preview");
     const approveBtn = event.target.closest(".submission-approve");
     const rejectBtn = event.target.closest(".submission-reject");
-
     if (!previewBtn && !approveBtn && !rejectBtn) return;
 
     const id = (previewBtn || approveBtn || rejectBtn)?.dataset.id;
     if (!id) return;
-
     const item = submissionsMap.get(id);
     if (!item) return;
 
@@ -293,7 +386,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           alert("أدخل سبب الرفض قبل المتابعة.");
           return;
         }
-
         if (shouldUseCallable) {
           await reviewInstructorCourseSubmission({ submissionId: id, decision: "reject", reason });
         } else {
@@ -305,14 +397,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       await loadCourses();
     } catch (error) {
       console.warn("reviewInstructorCourseSubmission failed, trying fallback:", error);
-
       try {
         await fallbackReviewSubmission(item, approveBtn ? "approve" : "reject", reason);
         await loadInstructorSubmissions();
         await loadCourses();
       } catch (fallbackError) {
         console.error("تعذر مراجعة الطلب:", fallbackError);
-        alert("حدث خطأ أثناء مراجعة طلب الأستاذ.");
+        alert(isPermissionDenied(fallbackError)
+          ? "لا تملك صلاحية اعتماد/رفض الطلب. راجع Firestore Rules أو Cloud Functions."
+          : "حدث خطأ أثناء مراجعة طلب الأستاذ.");
       }
     }
   });
@@ -324,11 +417,53 @@ document.addEventListener("DOMContentLoaded", async () => {
     await updateDoc(doc(db, "courses", courseId), payload);
   }
 
+  async function loadCategories() {
+    try {
+      const snap = await getDocs(collection(db, "courseCategories"));
+      allCategories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+      if (!isPermissionDenied(error)) throw error;
+      console.warn("لا توجد صلاحية لقراءة courseCategories");
+      allCategories = [];
+    }
+
+    const current = categoryFilter?.value || "all";
+    const options = ["<option value='all'>كل التصنيفات</option>"];
+    allCategories
+      .map((c) => c.name)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, "ar"))
+      .forEach((name) => options.push(`<option value="${name}">${name}</option>`));
+
+    if (categoryFilter) {
+      categoryFilter.innerHTML = options.join("");
+      if (["all", ...allCategories.map((c) => c.name)].includes(current)) categoryFilter.value = current;
+    }
+  }
+
+  async function loadUsers() {
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      allUsers = snap.docs.map((d) => ({ id: d.id, ...d.data(), uid: d.data().uid || d.id }));
+    } catch (error) {
+      if (!isPermissionDenied(error)) throw error;
+      console.warn("لا توجد صلاحية لقراءة users - سيتم تعطيل قائمة الأساتذة");
+      allUsers = [];
+    }
+
+    userNameMap.clear();
+    userEmailMap.clear();
+    allUsers.forEach((u) => {
+      const key = u.uid || u.id;
+      userNameMap.set(key, u.name || u.displayName || u.fullName || u.email || "أستاذ");
+      userEmailMap.set(key, u.email || "");
+    });
+  }
+
   async function loadCourses() {
-    tbody.innerHTML = "<tr><td colspan='7'>جارٍ تحميل الدورات...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='8'>جارٍ تحميل الدورات...</td></tr>";
 
     try {
-      // enrollments (count unique user per course)
       const enrollmentsSnap = await getDocs(collection(db, "enrollments"));
       const enrollmentKeys = new Set();
       enrollmentsMap = new Map();
@@ -341,7 +476,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         enrollmentsMap.set(data.courseId, (enrollmentsMap.get(data.courseId) || 0) + 1);
       });
 
-      // certificates (completions)
       const completionsSnap = await getDocs(collection(db, "certificates"));
       const completionKeys = new Set();
       completionsMap = new Map();
@@ -355,15 +489,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       const snapshot = await getDocs(collection(db, "courses"));
-      allCourses = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        data: docSnap.data()
-      }));
+      allCourses = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
 
+      renderInstructors();
       applyFilters();
     } catch (err) {
       console.error("خطأ في تحميل الدورات:", err);
-      tbody.innerHTML = "<tr><td colspan='7'>حدث خطأ أثناء التحميل</td></tr>";
+      if (isPermissionDenied(err)) {
+        tbody.innerHTML = "<tr><td colspan='8'>لا تملك صلاحية قراءة الدورات أو التقدمات (courses/enrollments/certificates).</td></tr>";
+        renderInstructors();
+        return;
+      }
+      tbody.innerHTML = "<tr><td colspan='8'>حدث خطأ أثناء التحميل</td></tr>";
     }
   }
 
@@ -391,14 +528,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       await loadCourses();
     } catch (err) {
       console.error("فشل تنفيذ الإجراء على الدورة:", err);
-      alert("حدث خطأ أثناء تنفيذ الإجراء");
+      alert(isPermissionDenied(err)
+        ? "لا تملك صلاحية تعديل الدورة. تحقق من Firestore Rules لصلاحيات admin."
+        : "حدث خطأ أثناء تنفيذ الإجراء");
     }
   });
-
-  await loadCourses();
-  await loadInstructorSubmissions();
 
   statusFilter?.addEventListener("change", applyFilters);
   categoryFilter?.addEventListener("change", applyFilters);
   searchInput?.addEventListener("input", applyFilters);
-});
+  instructorSearch?.addEventListener("input", renderInstructors);
+  submissionStatusFilter?.addEventListener("change", renderSubmissions);
+  submissionSearch?.addEventListener("input", renderSubmissions);
+
+  await loadUsers();
+  await loadCategories();
+  await loadCourses();
+  await loadInstructorSubmissions();
+}

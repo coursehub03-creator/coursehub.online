@@ -18,17 +18,35 @@
       <div id="topbar-placeholder"></div>
       <div class="admin-content">
         <h1>إدارة الصلاحيات</h1>
-        <p class="helper-text">غيّر دور المستخدم وحالته بشكل مباشر. يتم حفظ التعديلات في مجموعة users.</p>
+        <p class="helper-text">تعديل صلاحيات المستخدمين بشكل فعلي مع حفظ مباشر في users والتحقق من الحالة.</p>
+
         <div class="table-toolbar">
+          <div class="table-filters">
+            <select id="permissionsRoleFilter">
+              <option value="all">كل الأدوار</option>
+              <option value="student">طالب</option>
+              <option value="instructor">أستاذ</option>
+              <option value="admin">مشرف</option>
+            </select>
+            <select id="permissionsStatusFilter">
+              <option value="all">كل الحالات</option>
+              <option value="active">نشط</option>
+              <option value="pending">قيد الانتظار</option>
+              <option value="pending_verification">بانتظار التحقق</option>
+              <option value="blocked">محظور</option>
+              <option value="rejected">مرفوض</option>
+            </select>
+          </div>
           <div class="table-search">
             <input id="permissionsSearch" type="text" placeholder="ابحث بالاسم أو البريد" />
           </div>
         </div>
+
         <table>
           <thead>
-            <tr><th>المستخدم</th><th>البريد</th><th>الدور</th><th>الحالة</th><th>حفظ</th></tr>
+            <tr><th>المستخدم</th><th>البريد</th><th>الدور</th><th>الحالة</th><th>آخر تحديث</th><th>حفظ</th></tr>
           </thead>
-          <tbody id="permissionsRows"><tr><td colspan="5">جاري التحميل...</td></tr></tbody>
+          <tbody id="permissionsRows"><tr><td colspan="6">جاري التحميل...</td></tr></tbody>
         </table>
       </div>
     </section>
