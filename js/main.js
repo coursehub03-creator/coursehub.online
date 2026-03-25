@@ -595,7 +595,6 @@ function setupUserState() {
   const loginLink = document.getElementById("login-link");
   const userInfo = document.getElementById("user-info");
   const adminLink = document.getElementById("admin-link");
-
   const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
 
   if (user) {
@@ -656,7 +655,8 @@ function setupUserState() {
     applyRoleBasedUI(user);
 
     if (adminLink) {
-      if (adminEmails.includes(user.email)) {
+      const isAdmin = user.role === "admin" || adminEmails.includes(String(user.email || "").toLowerCase());
+      if (isAdmin) {
         adminLink.innerHTML = `<a href="/admin/dashboard.html" class="admin-btn">لوحة التحكم</a>`;
       } else {
     applyRoleBasedUI(null);

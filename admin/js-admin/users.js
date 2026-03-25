@@ -331,7 +331,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyFilters();
   } catch (error) {
     console.error("خطأ في تحميل المستخدمين:", error);
-    tbody.innerHTML = "<tr><td colspan='5'>حدث خطأ أثناء التحميل.</td></tr>";
+    const denied =
+      String(error?.code || "").includes("permission-denied") ||
+      String(error?.message || "").toLowerCase().includes("insufficient permissions");
+    tbody.innerHTML = denied
+      ? "<tr><td colspan='5'>لا توجد صلاحية لقراءة المستخدمين. تأكد أن الحساب يحمل دور admin أو ضمن الإيميلات الإدارية المعتمدة.</td></tr>"
+      : "<tr><td colspan='5'>حدث خطأ أثناء التحميل.</td></tr>";
   }
 
   roleFilter?.addEventListener("change", applyFilters);

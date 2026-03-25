@@ -8,16 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
     "manage-users.html",
     "add-course.html"
   ];
+  const adminEmails = ["kaleadsalous30@gmail.com", "coursehub03@gmail.com"];
 
   const isAdminPage = adminPages.some(page => path.endsWith(page));
 
-  const adminEmails = [
-    "kaleadsalous30@gmail.com",
-    "coursehub03@gmail.com"
-  ];
-
   if (isAdminPage) {
-    if (!user || !adminEmails.includes(user.email)) {
+    const isAdmin = user && (user.role === "admin" || adminEmails.includes(String(user.email || "").toLowerCase()));
+    if (!isAdmin) {
       // ⛔ مهم جدًا
       window.location.replace("../login.html");
     }
