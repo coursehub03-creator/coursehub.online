@@ -36,6 +36,28 @@ loadCSS("/css/header.css");
 loadCSS("/css/footer.css");
 loadCSS("/css/style.css");
 
+async function performLogout(redirectTo = "/") {
+  try {
+    const [{ auth }, authMod] = await Promise.all([
+      import("/js/firebase-config.js"),
+      import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js")
+    ]);
+    await authMod.signOut(auth);
+  } catch (error) {
+    console.warn("تعذر تسجيل الخروج من Firebase، سيتم إنهاء الجلسة محليًا.", error);
+  } finally {
+    try {
+      localStorage.removeItem("coursehub_user");
+      localStorage.removeItem("coursehub_user_meta");
+      sessionStorage.removeItem("coursehub_user");
+      sessionStorage.removeItem("coursehub_user_meta");
+    } catch (storageError) {
+      console.warn("تعذر تنظيف بيانات الجلسة محليًا.", storageError);
+    }
+    window.location.replace(redirectTo);
+  }
+}
+
 /* ===== Init ===== */
 document.addEventListener("DOMContentLoaded", async () => {
   const headerPlaceholder = document.getElementById("header-placeholder");
@@ -196,10 +218,11 @@ function setupUserState() {
 
       const logout = document.getElementById("logout-link");
       if (logout) {
-        logout.onclick = (e) => {
+        logout.onclick = async (e) => {
           e.preventDefault();
-          localStorage.removeItem("coursehub_user");
-          location.reload();
+          logout.setAttribute("aria-busy", "true");
+          logout.style.pointerEvents = "none";
+          await performLogout("/");
         };
       }
     }

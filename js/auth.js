@@ -47,6 +47,18 @@ const messages = {
     ar: "فشل تسجيل الدخول باستخدام Google.",
     en: "Google sign-in failed."
   },
+  googlePopupClosed: {
+    ar: "تم إغلاق نافذة Google قبل إتمام تسجيل الدخول. حاول مرة أخرى واترك النافذة مفتوحة حتى النهاية.",
+    en: "The Google sign-in popup was closed before completion. Please try again and keep it open."
+  },
+  googlePopupBlocked: {
+    ar: "تم حظر نافذة Google من المتصفح. اسمح بالنوافذ المنبثقة للموقع ثم حاول مجددًا.",
+    en: "Your browser blocked the Google popup. Allow popups for this site and try again."
+  },
+  googleUnauthorizedDomain: {
+    ar: "هذا النطاق غير مضاف في Firebase Authentication (Authorized domains).",
+    en: "This domain is not listed in Firebase Authentication authorized domains."
+  },
   weakPassword: {
     ar: "كلمة المرور يجب أن تحتوي حرفًا كبيرًا وحرفًا صغيرًا ورقمًا، وبطول 8 أحرف على الأقل.",
     en: "Password must include uppercase, lowercase and number, with at least 8 chars."
@@ -500,7 +512,15 @@ if (loginForm) {
     } catch (error) {
       console.error("Google Auth Error:", error);
       const target = errorMsg || registerMsg;
-      setText(target, textFor("googleError"));
+      if (error?.code === "auth/popup-closed-by-user") {
+        setText(target, textFor("googlePopupClosed"));
+      } else if (error?.code === "auth/popup-blocked") {
+        setText(target, textFor("googlePopupBlocked"));
+      } else if (error?.code === "auth/unauthorized-domain") {
+        setText(target, textFor("googleUnauthorizedDomain"));
+      } else {
+        setText(target, textFor("googleError"));
+      }
     }
   });
 });
