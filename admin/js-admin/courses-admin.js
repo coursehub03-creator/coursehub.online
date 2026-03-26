@@ -51,7 +51,10 @@ async function initCoursesAdmin() {
   if (!addBtn || !tbody || !submissionsTbody) return;
 
   const functions = getFunctions(undefined, "us-central1");
-  const reviewInstructorCourseSubmission = httpsCallable(functions, "reviewInstructorCourseSubmission");
+  const reviewInstructorCourseSubmission = httpsCallable(
+    functions,
+    "reviewInstructorCourseSubmission"
+  );
 
   const callableAllowedHosts = new Set([
     "localhost",
@@ -92,7 +95,8 @@ async function initCoursesAdmin() {
     return "أستاذ بدون اسم";
   };
 
-  const getCourseInstructorKey = (course) => course.instructorId || course.instructorEmail || "unknown";
+  const getCourseInstructorKey = (course) =>
+    course.instructorId || course.instructorEmail || "unknown";
 
   async function loadCategories() {
     try {
@@ -104,7 +108,13 @@ async function initCoursesAdmin() {
     }
 
     if (!allCategories.length && allCourses.length) {
-      const inferred = [...new Set(allCourses.map((c) => String(c.category || "").trim()).filter(Boolean))];
+      const inferred = [
+        ...new Set(
+          allCourses
+            .map((c) => String(c.category || "").trim())
+            .filter(Boolean)
+        )
+      ];
       allCategories = inferred.map((name) => ({ id: `inferred-${name}`, name }));
     }
 
@@ -113,7 +123,12 @@ async function initCoursesAdmin() {
     const current = categoryFilter.value || "all";
     categoryFilter.innerHTML =
       "<option value='all'>كل التصنيفات</option>" +
-      allCategories.map((c) => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join("");
+      allCategories
+        .map(
+          (c) =>
+            `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`
+        )
+        .join("");
 
     if (["all", ...allCategories.map((c) => c.name)].includes(current)) {
       categoryFilter.value = current;
@@ -151,24 +166,36 @@ async function initCoursesAdmin() {
 
   async function updateCourseStatus(id, nextStatus) {
     if (!id || !nextStatus) return;
+
     const allowedStatuses = new Set(["draft", "review", "published", "archived"]);
     if (!allowedStatuses.has(nextStatus)) {
       alert("حالة الدورة غير صالحة.");
       return;
     }
 
-    const actor =
-      JSON.parse(localStorage.getItem("coursehub_user") || "null")?.uid ||
-      JSON.parse(localStorage.getItem("coursehub_user") || "null")?.email ||
-      "admin";
+    const storedUser = JSON.parse(localStorage.getItem("coursehub_user") || "null");
+    const actor = storedUser?.uid || storedUser?.email || "admin";
+
+    const currentCourse = allCourses.find((item) => item.id === id) || null;
+    const currentStatus = String(currentCourse?.status || "draft");
+
+    const payload = {
+      status: nextStatus,
+      updatedAt: serverTimestamp(),
+      statusChangedAt: serverTimestamp(),
+      statusChangedBy: actor
+    };
+
+    if (nextStatus === "published" && currentStatus !== "published") {
+      payload.publishedAt = serverTimestamp();
+    }
+
+    if (currentStatus === "published" && nextStatus !== "published") {
+      payload.unpublishedAt = serverTimestamp();
+    }
 
     try {
-      await updateDoc(doc(db, "courses", id), {
-        status: nextStatus,
-        updatedAt: serverTimestamp(),
-        statusChangedAt: serverTimestamp(),
-        statusChangedBy: actor
-      });
+      await updateDoc(doc(db, "courses", id), payload);
 
       const idx = allCourses.findIndex((item) => item.id === id);
       if (idx >= 0) {
@@ -182,7 +209,11 @@ async function initCoursesAdmin() {
       renderCourses();
     } catch (error) {
       console.error("تعذر تحديث حالة الدورة:", error);
-      alert(isPermissionDenied(error) ? "لا تملك صلاحية تحديث حالة الدورة." : "تعذر تحديث حالة الدورة حالياً.");
+      alert(
+        isPermissionDenied(error)
+          ? "لا تملك صلاحية تحديث حالة الدورة."
+          : "تعذر تحديث حالة الدورة حالياً."
+      );
     }
   }
 
@@ -219,7 +250,9 @@ async function initCoursesAdmin() {
 
     let instructors = [...map.values()].sort((a, b) => b.count - a.count);
     if (q) {
-      instructors = instructors.filter((item) => String(item.name).toLowerCase().includes(q));
+      instructors = instructors.filter((item) =>
+        String(item.name).toLowerCase().includes(q)
+      );
     }
 
     instructorsCount.textContent = formatNumber(instructors.length);
@@ -257,23 +290,40 @@ async function initCoursesAdmin() {
 
     const rows = allCourses
       .filter((course) => {
-        if (selectedInstructorId !== "all" && getCourseInstructorKey(course) !== selectedInstructorId) {
+        if (
+          selectedInstructorId !== "all" &&
+          getCourseInstructorKey(course) !== selectedInstructorId
+        ) {
           return false;
         }
-        if (status !== "all" && String(course.status || "draft") !== status) return false;
-        if (category !== "all" && String(course.category || "") !== category) return false;
+        if (status !== "all" && String(course.status || "draft") !== status) {
+          return false;
+        }
+        if (category !== "all" && String(course.category || "") !== category) {
+          return false;
+        }
         if (q) {
-          const text = [course.title, course.description, course.instructorName, course.instructorEmail]
+          const text = [
+            course.title,
+            course.description,
+            course.instructorName,
+            course.instructorEmail
+          ]
             .map((x) => String(x || "").toLowerCase())
             .join(" ");
           if (!text.includes(q)) return false;
         }
         return true;
       })
-      .sort((a, b) => String(b.updatedAt?.seconds || b.createdAt?.seconds || 0) - String(a.updatedAt?.seconds || a.createdAt?.seconds || 0));
+      .sort(
+        (a, b) =>
+          Number(b.updatedAt?.seconds || b.createdAt?.seconds || 0) -
+          Number(a.updatedAt?.seconds || a.createdAt?.seconds || 0)
+      );
 
     if (!rows.length) {
-      tbody.innerHTML = "<tr><td colspan='8'>لا توجد دورات مطابقة للفلاتر الحالية.</td></tr>";
+      tbody.innerHTML =
+        "<tr><td colspan='8'>لا توجد دورات مطابقة للفلاتر الحالية.</td></tr>";
       return;
     }
 
@@ -291,7 +341,9 @@ async function initCoursesAdmin() {
         ];
         const statusOptions = allStatuses
           .filter((option) => option.value !== currentStatus)
-          .map((option) => `<option value="${option.value}">${option.label}</option>`)
+          .map(
+            (option) => `<option value="${option.value}">${option.label}</option>`
+          )
           .join("");
 
         return `
@@ -330,7 +382,11 @@ async function initCoursesAdmin() {
           renderCourses();
         } catch (error) {
           console.error("تعذر حذف الدورة:", error);
-          alert(isPermissionDenied(error) ? "لا تملك صلاحية حذف الدورة." : "تعذر حذف الدورة حالياً.");
+          alert(
+            isPermissionDenied(error)
+              ? "لا تملك صلاحية حذف الدورة."
+              : "تعذر حذف الدورة حالياً."
+          );
         }
       });
     });
@@ -340,6 +396,7 @@ async function initCoursesAdmin() {
         const id = btn.dataset.courseStatusApply;
         const select = btn.parentElement?.querySelector("[data-course-status-select]");
         const nextStatus = String(select?.value || "");
+
         if (!id || !nextStatus) {
           alert("اختر حالة جديدة أولاً.");
           return;
@@ -351,7 +408,14 @@ async function initCoursesAdmin() {
           published: "منشورة",
           archived: "مؤرشفة"
         };
-        if (!confirm(`تأكيد نقل الدورة إلى حالة: ${statusLabels[nextStatus] || nextStatus}؟`)) return;
+
+        if (
+          !confirm(
+            `تأكيد نقل الدورة إلى حالة: ${statusLabels[nextStatus] || nextStatus}؟`
+          )
+        ) {
+          return;
+        }
 
         btn.disabled = true;
         try {
@@ -377,15 +441,21 @@ async function initCoursesAdmin() {
           reviewedAt: serverTimestamp()
         });
       }
+
       if (decision === "approve") {
         await loadCourses();
       }
+
       await loadSubmissions();
       renderCourses();
       renderSubmissions();
     } catch (error) {
       console.error("تعذر تحديث حالة الطلب:", error);
-      alert(isPermissionDenied(error) ? "لا تملك صلاحية مراجعة الطلب." : "تعذر تحديث حالة الطلب.");
+      alert(
+        isPermissionDenied(error)
+          ? "لا تملك صلاحية مراجعة الطلب."
+          : "تعذر تحديث حالة الطلب."
+      );
     }
   }
 
@@ -395,9 +465,16 @@ async function initCoursesAdmin() {
 
     const rows = allSubmissions
       .filter((item) => {
-        if (status !== "all" && String(item.status || "pending") !== status) return false;
+        if (status !== "all" && String(item.status || "pending") !== status) {
+          return false;
+        }
         if (!q) return true;
-        const searchable = [item.title, item.instructorName, item.instructorEmail, item.note]
+        const searchable = [
+          item.title,
+          item.instructorName,
+          item.instructorEmail,
+          item.note
+        ]
           .map((x) => String(x || "").toLowerCase())
           .join(" ");
         return searchable.includes(q);
@@ -405,7 +482,8 @@ async function initCoursesAdmin() {
       .sort((a, b) => Number(b.createdAt?.seconds || 0) - Number(a.createdAt?.seconds || 0));
 
     if (!rows.length) {
-      submissionsTbody.innerHTML = "<tr><td colspan='6'>لا توجد طلبات مطابقة.</td></tr>";
+      submissionsTbody.innerHTML =
+        "<tr><td colspan='6'>لا توجد طلبات مطابقة.</td></tr>";
       return;
     }
 
@@ -443,7 +521,9 @@ async function initCoursesAdmin() {
           }
         }
 
-        const decisionText = decision === "approve" ? "اعتماد الطلب وتحويله لمسودة" : "رفض الطلب";
+        const decisionText =
+          decision === "approve" ? "اعتماد الطلب وتحويله لمسودة" : "رفض الطلب";
+
         if (!confirm(`تأكيد ${decisionText}؟`)) return;
 
         btn.disabled = true;
