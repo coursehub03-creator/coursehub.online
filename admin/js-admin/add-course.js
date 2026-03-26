@@ -1,10 +1,10 @@
 import { db, storage } from "/js/firebase-config.js";
-import { addDoc, collection, doc, getDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDownloadURL, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-const LOCAL_DRAFT_KEY = "coursehub_admin_builder2_draft";
-const STEP_TEMPLATES = ["text", "video", "image", "exercise", "checkpointQuiz", "summary"];
+const LOCAL_DRAFT_KEY = "coursehub_admin_builder3_draft";
+const STEP_TEMPLATES = ["text", "video", "image", "file", "checkpointQuiz", "summary"];
 
 let authUser = null;
 let wizardStep = 0;
@@ -17,19 +17,21 @@ let state = {
   level: "مبتدئ",
   language: "العربية",
   durationHours: 0,
-  lessons: []
+  lessons: [],
+  finalQuiz: []
 };
 
 const auth = getAuth();
+const uid = () => crypto.randomUUID();
+const esc = (v = "") => String(v).replace(/[&<>\"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   initWizard();
   bindEvents();
-
+  await loadCategories();
   auth.onAuthStateChanged(async (u) => {
     authUser = u;
     await restoreDraft();
-    await maybeLoadMigrationCourse();
     renderLessons();
     setStep(0);
   });
@@ -37,9 +39,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initWizard() {
   const labels = ["معلومات", "Lessons", "Checkpoints", "Preview"];
-  document.getElementById("wizardSteps").innerHTML = labels
-    .map((label, idx) => `<div class="wizard-step ${idx === 0 ? "active" : ""}">${idx + 1}. ${label}</div>`)
-    .join("");
+  document.getElementById("wizardSteps").innerHTML = labels.map((label, idx) => `<div class="wizard-step ${idx === 0 ? "active" : ""}">${idx + 1}. ${label}</div>`).join("");
+}
+
+async function loadCategories() {
+  const select = document.getElementById("category");
+  try {
+    const snap = await getDocs(collection(db, "courseCategories"));
+    const cats = snap.docs.map((d) => d.data()?.name).filter(Boolean);
+    select.innerHTML = cats.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join("") || "<option value='عام'>عام</option>";
+  } catch {
+    select.innerHTML = "<option value='عام'>عام</option>";
+  }
 }
 
 function bindEvents() {
@@ -48,6 +59,11 @@ function bindEvents() {
   document.getElementById("addLesson")?.addEventListener("click", addLesson);
   document.getElementById("saveDraft")?.addEventListener("click", () => saveDraft(true));
   document.getElementById("builderForm")?.addEventListener("submit", submitCourse);
+  document.getElementById("addFinalQuestion")?.addEventListener("click", () => {
+    state.finalQuiz.push({ id: uid(), question: "", options: ["", ""], correctIndexes: [] });
+    renderFinalQuiz();
+    debouncedAutosave();
+  });
 
   ["title", "category", "description", "image", "price", "level", "language", "durationHours"].forEach((id) => {
     document.getElementById(id)?.addEventListener("input", () => {
@@ -61,9 +77,10 @@ function bindEvents() {
   document.getElementById("coverImage")?.addEventListener("change", () => {
     const file = document.getElementById("coverImage").files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    document.getElementById("coverPreview").src = url;
-    document.getElementById("previewCover").src = url;
+    if (!file.type.startsWith("image/")) return setStatus("❌ يجب اختيار صورة من الجهاز", true);
+    document.getElementById("coverPreview").src = URL.createObjectURL(file);
+    const prev = document.getElementById("previewCover");
+    if (prev) prev.src = URL.createObjectURL(file);
   });
 }
 
@@ -77,7 +94,7 @@ function setStep(next) {
 }
 
 function addLesson() {
-  state.lessons.push({ id: crypto.randomUUID(), title: `Lesson ${state.lessons.length + 1}`, duration: "", summary: "", steps: [] });
+  state.lessons.push({ id: uid(), title: `Lesson ${state.lessons.length + 1}`, duration: "", requiredWatchSeconds: 60, summary: "", theme: "clean", layout: { textScale: 1, mediaScale: 1, x: 0, y: 0 }, steps: [] });
   renderLessons();
   debouncedAutosave();
 }
@@ -85,50 +102,53 @@ function addLesson() {
 function addStep(lessonId, type) {
   const lesson = state.lessons.find((l) => l.id === lessonId);
   if (!lesson) return;
-  lesson.steps.push({ id: crypto.randomUUID(), type, title: `${type} step`, content: "", mediaUrl: "", options: type === "checkpointQuiz" ? ["خيار 1", "خيار 2"] : [], correctIndex: 0, points: 10 });
+  lesson.steps.push({ id: uid(), type, title: `${type} step`, content: "", mediaUrl: "", questions: type === "checkpointQuiz" ? [{ id: uid(), question: "", options: ["", ""], correctIndexes: [] }] : [] });
   renderLessons();
   debouncedAutosave();
 }
 
-function moveItem(arr, from, to) {
-  if (to < 0 || to >= arr.length) return;
-  const [item] = arr.splice(from, 1);
-  arr.splice(to, 0, item);
-}
-
 function renderLessons() {
   const root = document.getElementById("lessonsBuilder");
-  root.innerHTML = state.lessons.map((lesson, lessonIndex) => `
+  root.innerHTML = state.lessons.map((lesson) => `
     <article class="lesson-card" data-lesson-id="${lesson.id}">
       <header>
         <input data-lesson-field="title" value="${esc(lesson.title)}" placeholder="عنوان الدرس">
-        <input data-lesson-field="duration" value="${esc(lesson.duration)}" placeholder="المدة">
-        <button type="button" class="btn ghost" data-lesson-move="up" ${lessonIndex === 0 ? "disabled" : ""}>↑</button>
-        <button type="button" class="btn ghost" data-lesson-move="down" ${lessonIndex === state.lessons.length - 1 ? "disabled" : ""}>↓</button>
+        <input data-lesson-field="requiredWatchSeconds" type="number" min="10" value="${lesson.requiredWatchSeconds}" placeholder="المدة بالثواني">
+        <select data-lesson-field="theme"><option value="clean" ${lesson.theme === "clean" ? "selected" : ""}>Clean</option><option value="dark" ${lesson.theme === "dark" ? "selected" : ""}>Dark</option><option value="gradient" ${lesson.theme === "gradient" ? "selected" : ""}>Gradient</option></select>
       </header>
       <textarea data-lesson-field="summary" placeholder="ملخص الدرس">${lesson.summary || ""}</textarea>
-      <div class="step-actions-inline">
-        ${STEP_TEMPLATES.map((type) => `<button type="button" class="btn ghost" data-add-step="${type}">+ ${type}</button>`).join("")}
+      <div class="grid-2">
+        <label>تكبير النص<input type="range" min="0.7" max="1.8" step="0.1" data-layout="textScale" value="${lesson.layout.textScale}"></label>
+        <label>تكبير الوسائط<input type="range" min="0.7" max="1.8" step="0.1" data-layout="mediaScale" value="${lesson.layout.mediaScale}"></label>
       </div>
+      <div class="step-actions-inline">${STEP_TEMPLATES.map((type) => `<button type="button" class="btn ghost" data-add-step="${type}">+ ${type}</button>`).join("")}</div>
       <div class="steps-list">
-        ${lesson.steps.map((step, stepIndex) => `
+        ${lesson.steps.map((step) => `
           <div class="step-row" data-step-id="${step.id}">
             <input data-step-field="title" value="${esc(step.title)}" placeholder="عنوان الخطوة">
             <select data-step-field="type">${STEP_TEMPLATES.map((type) => `<option value="${type}" ${step.type === type ? "selected" : ""}>${type}</option>`).join("")}</select>
             <textarea data-step-field="content" placeholder="المحتوى">${step.content || ""}</textarea>
-            <input data-step-field="mediaUrl" value="${esc(step.mediaUrl || "")}" placeholder="mediaUrl">
-            ${step.type === "checkpointQuiz" ? `<input data-step-field="options" value="${esc((step.options || []).join("|"))}" placeholder="خيارات مفصولة |">` : ""}
-            <div class="step-actions-inline">
-              <button type="button" class="btn ghost" data-step-move="up" ${stepIndex === 0 ? "disabled" : ""}>↑</button>
-              <button type="button" class="btn ghost" data-step-move="down" ${stepIndex === lesson.steps.length - 1 ? "disabled" : ""}>↓</button>
-              <button type="button" class="btn ghost" data-step-delete>حذف</button>
-            </div>
+            <input type="file" data-step-file accept="image/*,video/*,.pdf,.zip,.doc,.docx,.ppt,.pptx">
+            ${step.mediaUrl ? "<small>✅ ملف مرفوع</small>" : ""}
+            ${step.type === "checkpointQuiz" ? renderCheckpoint(step) : ""}
+            <button type="button" class="btn ghost" data-step-delete>حذف</button>
           </div>`).join("")}
       </div>
+      <div class="preview-shell">${renderLessonPreview(lesson)}</div>
     </article>`).join("");
 
   bindLessonEvents();
+  renderFinalQuiz();
   renderPreview();
+}
+
+function renderCheckpoint(step) {
+  return `<div class='checkpoint-block'>${step.questions.map((q) => `<div data-qid='${q.id}'><input data-q='question' value='${esc(q.question)}' placeholder='السؤال'>${q.options.map((o, i) => `<div><input data-opt='${i}' value='${esc(o)}'><label><input type='checkbox' data-correct='${i}' ${q.correctIndexes.includes(i) ? "checked" : ""}> صحيح</label></div>`).join("")}<button type='button' class='btn ghost' data-add-option='${q.id}'>+ خيار</button></div>`).join("")}<button type='button' class='btn ghost' data-add-question='${step.id}'>+ سؤال</button></div>`;
+}
+
+function renderLessonPreview(lesson) {
+  const style = lesson.theme === "dark" ? "background:#0f172a;color:#fff" : lesson.theme === "gradient" ? "background:linear-gradient(135deg,#dbeafe,#f5d0fe)" : "background:#fff";
+  return `<div style='${style};padding:10px;border-radius:10px'><strong>${esc(lesson.title)}</strong><p style='font-size:${lesson.layout.textScale}rem'>${esc(lesson.summary || "معاينة الدرس")}</p><div>Timer: <span id='timer-${lesson.id}'>${lesson.requiredWatchSeconds}</span>s <button type='button' class='btn ghost' data-start-timer='${lesson.id}'>ابدأ</button><button type='button' class='btn ghost' data-next-after-timer='${lesson.id}' disabled>التالي</button></div></div>`;
 }
 
 function bindLessonEvents() {
@@ -138,62 +158,113 @@ function bindLessonEvents() {
 
     card.querySelectorAll("[data-lesson-field]").forEach((input) => {
       input.addEventListener("input", () => {
-        lesson[input.dataset.lessonField] = input.value;
+        const key = input.dataset.lessonField;
+        lesson[key] = key === "requiredWatchSeconds" ? Number(input.value || 0) : input.value;
         debouncedAutosave();
-        renderPreview();
+        renderLessons();
       });
     });
 
-    card.querySelector("[data-lesson-move='up']")?.addEventListener("click", () => {
-      const idx = state.lessons.findIndex((l) => l.id === lesson.id);
-      moveItem(state.lessons, idx, idx - 1);
-      renderLessons();
+    card.querySelectorAll("[data-layout]").forEach((input) => input.addEventListener("input", () => {
+      lesson.layout[input.dataset.layout] = Number(input.value || 1);
       debouncedAutosave();
-    });
-
-    card.querySelector("[data-lesson-move='down']")?.addEventListener("click", () => {
-      const idx = state.lessons.findIndex((l) => l.id === lesson.id);
-      moveItem(state.lessons, idx, idx + 1);
       renderLessons();
-      debouncedAutosave();
-    });
+    }));
 
     card.querySelectorAll("[data-add-step]").forEach((btn) => btn.addEventListener("click", () => addStep(lesson.id, btn.dataset.addStep)));
 
     card.querySelectorAll(".step-row").forEach((stepRow) => {
       const step = lesson.steps.find((s) => s.id === stepRow.dataset.stepId);
       if (!step) return;
-
-      stepRow.querySelectorAll("[data-step-field]").forEach((field) => {
-        field.addEventListener("input", () => {
-          const key = field.dataset.stepField;
-          step[key] = key === "options" ? field.value.split("|").map((v) => v.trim()).filter(Boolean) : field.value;
-          debouncedAutosave();
-          renderPreview();
-        });
-      });
-
+      stepRow.querySelectorAll("[data-step-field]").forEach((field) => field.addEventListener("input", () => {
+        step[field.dataset.stepField] = field.value;
+        debouncedAutosave();
+      }));
       stepRow.querySelector("[data-step-delete]")?.addEventListener("click", () => {
         lesson.steps = lesson.steps.filter((s) => s.id !== step.id);
         renderLessons();
         debouncedAutosave();
       });
-
-      stepRow.querySelector("[data-step-move='up']")?.addEventListener("click", () => {
-        const idx = lesson.steps.findIndex((s) => s.id === step.id);
-        moveItem(lesson.steps, idx, idx - 1);
+      stepRow.querySelector("[data-step-file]")?.addEventListener("change", async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 250 * 1024 * 1024) return setStatus("❌ الملف كبير جداً", true);
+        try {
+          const r = ref(storage, `courses/lesson-assets/${Date.now()}_${file.name}`);
+          await uploadBytes(r, file);
+          step.mediaUrl = await getDownloadURL(r);
+        } catch {
+          step.mediaUrl = URL.createObjectURL(file);
+        }
         renderLessons();
         debouncedAutosave();
       });
 
-      stepRow.querySelector("[data-step-move='down']")?.addEventListener("click", () => {
-        const idx = lesson.steps.findIndex((s) => s.id === step.id);
-        moveItem(lesson.steps, idx, idx + 1);
+      stepRow.querySelectorAll("[data-add-option]").forEach((btn) => btn.addEventListener("click", () => {
+        const q = step.questions.find((x) => x.id === btn.dataset.addOption);
+        q.options.push("");
         renderLessons();
+      }));
+      stepRow.querySelectorAll("[data-add-question]").forEach((btn) => btn.addEventListener("click", () => {
+        step.questions.push({ id: uid(), question: "", options: ["", ""], correctIndexes: [] });
+        renderLessons();
+      }));
+      stepRow.querySelectorAll("[data-q='question']").forEach((qEl) => qEl.addEventListener("input", () => {
+        const q = step.questions.find((x) => x.id === qEl.closest("[data-qid]")?.dataset.qid);
+        q.question = qEl.value;
         debouncedAutosave();
-      });
+      }));
+      stepRow.querySelectorAll("[data-opt]").forEach((oEl) => oEl.addEventListener("input", () => {
+        const q = step.questions.find((x) => x.id === oEl.closest("[data-qid]")?.dataset.qid);
+        q.options[Number(oEl.dataset.opt)] = oEl.value;
+        debouncedAutosave();
+      }));
+      stepRow.querySelectorAll("[data-correct]").forEach((cEl) => cEl.addEventListener("change", () => {
+        const q = step.questions.find((x) => x.id === cEl.closest("[data-qid]")?.dataset.qid);
+        const idx = Number(cEl.dataset.correct);
+        q.correctIndexes = cEl.checked ? [...new Set([...(q.correctIndexes || []), idx])] : q.correctIndexes.filter((x) => x !== idx);
+        debouncedAutosave();
+      }));
     });
   });
+
+  document.querySelectorAll("[data-start-timer]").forEach((btn) => btn.addEventListener("click", () => {
+    const lesson = state.lessons.find((l) => l.id === btn.dataset.startTimer);
+    const label = document.getElementById(`timer-${lesson.id}`);
+    const nextBtn = document.querySelector(`[data-next-after-timer='${lesson.id}']`);
+    let left = Number(lesson.requiredWatchSeconds || 0);
+    nextBtn.disabled = true;
+    const i = setInterval(() => {
+      left -= 1;
+      label.textContent = String(Math.max(left, 0));
+      if (left <= 0) {
+        clearInterval(i);
+        nextBtn.disabled = false;
+      }
+    }, 1000);
+  }));
+}
+
+function renderFinalQuiz() {
+  const root = document.getElementById("finalQuizBuilder");
+  if (!root) return;
+  root.innerHTML = state.finalQuiz.map((q) => `<div data-final-id='${q.id}'><input data-final='question' value='${esc(q.question)}' placeholder='سؤال نهائي'>${q.options.map((o, i) => `<div><input data-final-opt='${i}' value='${esc(o)}'><label><input type='checkbox' data-final-correct='${i}' ${q.correctIndexes.includes(i) ? "checked" : ""}> صحيح</label></div>`).join("")}<button type='button' class='btn ghost' data-final-del='${q.id}'>حذف</button></div>`).join("");
+  root.querySelectorAll("[data-final='question'], [data-final-opt], [data-final-correct]").forEach((el) => el.addEventListener("input", saveFinalFromDom));
+  root.querySelectorAll("[data-final-del]").forEach((btn) => btn.addEventListener("click", () => {
+    state.finalQuiz = state.finalQuiz.filter((x) => x.id !== btn.dataset.finalDel);
+    renderFinalQuiz();
+  }));
+}
+
+function saveFinalFromDom() {
+  document.querySelectorAll("[data-final-id]").forEach((row) => {
+    const q = state.finalQuiz.find((x) => x.id === row.dataset.finalId);
+    if (!q) return;
+    q.question = row.querySelector("[data-final='question']")?.value || "";
+    row.querySelectorAll("[data-final-opt]").forEach((o) => (q.options[Number(o.dataset.finalOpt)] = o.value));
+    q.correctIndexes = [...row.querySelectorAll("[data-final-correct]:checked")].map((x) => Number(x.dataset.finalCorrect));
+  });
+  debouncedAutosave();
 }
 
 function renderPreview() {
@@ -211,15 +282,15 @@ function renderPreview() {
     <hr>
     <strong>${firstLesson?.title || "أضف Lesson لعرض المعاينة"}</strong>
     <p>${firstStep?.title || "أضف Step"}</p>
-    <div>${firstStep?.content || ""}</div>`;
+    <div>${firstStep?.content || ""}</div>
+    <p>أسئلة الاختبار النهائي: ${state.finalQuiz.length}</p>`;
 
   const checkpoints = state.lessons.flatMap((l) => l.steps).filter((s) => s.type === "checkpointQuiz").length;
   document.getElementById("checkpointHint").textContent = `عدد checkpoints الحالية: ${checkpoints}`;
 }
 
 async function uploadCoverIfNeeded() {
-  const coverInput = document.getElementById("coverImage");
-  const file = coverInput?.files?.[0];
+  const file = document.getElementById("coverImage")?.files?.[0];
   if (!file) return state.image || "";
   const coverRef = ref(storage, `courses/covers/${Date.now()}_${file.name}`);
   await uploadBytes(coverRef, file);
@@ -240,23 +311,22 @@ async function restoreDraft() {
   const remoteSnap = authUser?.uid ? await getDoc(doc(db, "adminCourseDrafts", authUser.uid)) : null;
   const remote = remoteSnap?.exists() ? remoteSnap.data() : null;
   state = pickLatestDraft(local, remote) || state;
-
   fillInfoFields();
+  renderFinalQuiz();
 }
 
 function fillInfoFields() {
-  ["title", "category", "description", "image", "price", "level", "language", "durationHours"].forEach((key) => {
+  ["title", "description", "image", "price", "level", "language", "durationHours"].forEach((key) => {
     const el = document.getElementById(key);
-    if (!el) return;
-    el.value = state[key] ?? "";
+    if (el) el.value = state[key] ?? "";
   });
+  if (document.getElementById("category") && state.category) document.getElementById("category").value = state.category;
   document.getElementById("coverPreview").src = state.image || "/assets/images/default-course.png";
 }
 
 async function submitCourse(event) {
   event.preventDefault();
   try {
-    state.image = document.getElementById("image").value || state.image;
     const uploadedImage = await uploadCoverIfNeeded();
     if (uploadedImage) state.image = uploadedImage;
     const payload = getPayload("published");
@@ -269,34 +339,29 @@ async function submitCourse(event) {
   }
 }
 
+function normalizeCheckpointQuestions(step) {
+  if (!Array.isArray(step.questions)) return [];
+  return step.questions.map((q) => ({ question: q.question || "", options: q.options || [], correctIndexes: q.correctIndexes || [] }));
+}
+
 function getPayload(status) {
   const lessons = state.lessons.map((lesson) => ({
     id: lesson.id,
     title: lesson.title,
     duration: lesson.duration,
     summary: lesson.summary,
+    requiredWatchSeconds: Number(lesson.requiredWatchSeconds || 0),
+    theme: lesson.theme,
+    layout: lesson.layout,
     steps: lesson.steps.map((step) => ({
       id: step.id,
       type: step.type,
       title: step.title,
       content: step.content,
       mediaUrl: step.mediaUrl,
-      options: step.options || [],
-      correctIndex: Number(step.correctIndex || 0),
-      points: Number(step.points || 10)
+      questions: normalizeCheckpointQuestions(step)
     })),
-    slides: lesson.steps.filter((step) => step.type !== "checkpointQuiz").map((step) => ({
-      id: step.id,
-      type: step.type,
-      title: step.title,
-      text: step.content,
-      mediaUrl: step.mediaUrl
-    })),
-    quiz: lesson.steps.filter((step) => step.type === "checkpointQuiz").map((step) => ({
-      question: step.title,
-      options: step.options || [],
-      correct: Number(step.correctIndex || 0)
-    }))
+    quiz: lesson.steps.filter((step) => step.type === "checkpointQuiz").flatMap((step) => normalizeCheckpointQuestions(step))
   }));
 
   return {
@@ -311,93 +376,35 @@ function getPayload(status) {
     image: state.image,
     status,
     lessons,
+    finalQuiz: state.finalQuiz,
     modules: lessons.map((lesson) => ({ title: lesson.title })),
-    assessmentQuestions: lessons.flatMap((lesson) => lesson.steps.filter((step) => step.type === "checkpointQuiz").map((step) => ({
-      question: step.title,
-      options: step.options || [],
-      correctIndex: Number(step.correctIndex || 0)
-    }))),
+    assessmentQuestions: state.finalQuiz,
+    levelsSupported: ["مبتدئ", "متوسط", "متقدم"],
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
 }
 
-async function maybeLoadMigrationCourse() {
-  const courseId = new URLSearchParams(window.location.search).get("courseId");
-  if (!courseId) return;
-  const snap = await getDoc(doc(db, "courses", courseId));
-  if (!snap.exists()) return;
-  const data = snap.data();
-  state = {
-    ...state,
-    title: data.title || "",
-    category: data.category || "",
-    description: data.description || "",
-    image: data.image || "",
-    price: Number(data.price || 0),
-    level: data.level || "مبتدئ",
-    language: data.language || "العربية",
-    durationHours: Number(data.durationHours || data.duration || 0),
-    lessons: Array.isArray(data.lessons) && data.lessons.length ? data.lessons.map(normalizeLesson) : migrateLegacyToLessons(data.modules || [], data.assessmentQuestions || [])
-  };
-  fillInfoFields();
-}
-
-function normalizeLesson(lesson, idx) {
-  const rawSteps = Array.isArray(lesson.steps) && lesson.steps.length ? lesson.steps : [
-    ...(lesson.slides || []).map((slide, i) => ({ id: slide.id || `${lesson.id || idx}-slide-${i}`, type: slide.type || "text", title: slide.title || `Slide ${i + 1}`, content: slide.content || slide.text || "", mediaUrl: slide.mediaUrl || "" })),
-    ...(lesson.quiz || []).map((q, i) => ({ id: `${lesson.id || idx}-quiz-${i}`, type: "checkpointQuiz", title: q.question || `Quiz ${i + 1}`, options: q.options || [], correctIndex: Number(q.correct ?? q.correctIndex ?? 0) }))
-  ];
-  return {
-    id: lesson.id || `lesson-${idx + 1}`,
-    title: lesson.title || `Lesson ${idx + 1}`,
-    duration: lesson.duration || "",
-    summary: lesson.summary || "",
-    steps: rawSteps.map((step, i) => ({
-      id: step.id || `step-${i + 1}`,
-      type: step.type || "text",
-      title: step.title || `Step ${i + 1}`,
-      content: step.content || step.text || "",
-      mediaUrl: step.mediaUrl || "",
-      options: step.options || [],
-      correctIndex: Number(step.correctIndex ?? step.correct ?? 0),
-      points: Number(step.points || 10)
-    }))
-  };
-}
-
-function migrateLegacyToLessons(modules, questions) {
-  return (modules || []).map((module, idx) => ({
-    id: `legacy-${idx + 1}`,
-    title: module.title || `Module ${idx + 1}`,
-    duration: "",
-    summary: "",
-    steps: [
-      { id: `legacy-${idx + 1}-text`, type: "text", title: module.title || "مقدمة", content: module.description || "مقدمة سريعة" },
-      { id: `legacy-${idx + 1}-exercise`, type: "exercise", title: "تطبيق", content: "نفّذ تمرينًا بسيطًا" },
-      { id: `legacy-${idx + 1}-quiz`, type: "checkpointQuiz", title: questions[idx]?.question || "Checkpoint", options: questions[idx]?.options || ["خيار 1", "خيار 2"], correctIndex: Number(questions[idx]?.correctIndex || 0) },
-      { id: `legacy-${idx + 1}-summary`, type: "summary", title: "ملخص", content: "مراجعة سريعة." }
-    ]
-  }));
-}
-
-function setStatus(msg, isError = false) {
-  const el = document.getElementById("builderStatus");
-  el.style.color = isError ? "#b91c1c" : "#1d4ed8";
-  el.textContent = msg;
-}
-
 function pickLatestDraft(local, remote) {
+  const localDate = Date.parse(local?.updatedAt || 0);
+  const remoteDate = remote?.updatedAt?.toDate ? remote.updatedAt.toDate().getTime() : Date.parse(remote?.updatedAt || 0);
   if (!local && !remote) return null;
-  if (!local) return remote;
-  if (!remote) return local;
-  const localAt = new Date(local.updatedAt || 0).getTime();
-  const remoteRaw = remote.updatedAt?.toDate ? remote.updatedAt.toDate() : remote.updatedAt;
-  const remoteAt = new Date(remoteRaw || 0).getTime();
-  return remoteAt > localAt ? remote : local;
+  return localDate >= remoteDate ? local : remote;
 }
 
-function safeParse(v) { try { return JSON.parse(v); } catch { return null; } }
-function esc(v = "") { return String(v).replace(/"/g, "&quot;"); }
-let saveTimer;
-function debouncedAutosave() { clearTimeout(saveTimer); saveTimer = setTimeout(() => saveDraft(false).catch(() => {}), 700); }
+function safeParse(raw) {
+  try { return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+
+let autosaveTimer = null;
+function debouncedAutosave() {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => saveDraft(false), 400);
+}
+
+function setStatus(message, isError = false) {
+  const el = document.getElementById("builderStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "#b91c1c" : "#166534";
+}

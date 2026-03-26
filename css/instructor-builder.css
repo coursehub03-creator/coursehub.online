@@ -21,3 +21,4 @@
   .wizard-steps { grid-template-columns: repeat(2, 1fr); }
   .grid-2 { grid-template-columns: 1fr; }
 }
+.checkpoint-block{border:1px dashed #cbd5e1;border-radius:8px;padding:8px;margin-top:8px}

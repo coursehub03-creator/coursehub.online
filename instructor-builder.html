@@ -44,8 +44,8 @@
               <label>العنوان<input class="ch-input" id="title" required></label>
               <label>Subtitle<input class="ch-input" id="subtitle"></label>
               <label>Slug<input class="ch-input" id="slug"></label>
-              <label>التصنيف<input class="ch-input" id="category"></label>
-              <label>المستوى<input class="ch-input" id="level"></label>
+              <label>التصنيف<select class="ch-select" id="category"></select></label>
+              <label>المستوى<select class="ch-select" id="level"><option value="مبتدئ">مبتدئ</option><option value="متوسط">متوسط</option><option value="متقدم">متقدم</option></select></label>
               <label>اللغة<input class="ch-input" id="language" value="العربية"></label>
             </div>
             <label>الوصف التفصيلي<textarea class="ch-textarea" id="description"></textarea></label>
@@ -75,6 +75,12 @@
             <h3>Step 3: Curriculum Builder</h3>
             <div id="lessons"></div>
             <button type="button" class="ch-btn secondary" id="addLesson">+ إضافة Lesson</button>
+            <div class="ch-card" style="padding:12px;margin-top:12px">
+              <h4>الاختبار النهائي</h4>
+              <div id="finalQuizBuilder"></div>
+              <button type="button" class="ch-btn secondary" id="addFinalQuestion">+ إضافة سؤال نهائي</button>
+            </div>
+
           </div>
 
           <div class="wizard-panel" data-step="3" hidden>

@@ -24,3 +24,14 @@
 .lesson-row{display:grid;grid-template-columns:1fr 130px 130px auto;gap:8px;align-items:center;margin-bottom:8px}
 .action-sticky{position:sticky;bottom:8px;background:#fff;padding:10px;border:1px solid var(--color-border);border-radius:10px;display:flex;justify-content:space-between}
 @media (max-width:980px){.landing-hero .container,.course-detail-layout,.catalog-layout,.builder-layout{grid-template-columns:1fr}.cards-3,.catalog-grid,.trust-bar{grid-template-columns:1fr}}
+.lesson-card-pro{border:1px solid var(--color-border);border-radius:14px;padding:12px;margin-bottom:12px;background:#fff}
+.lesson-layout-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0}
+.lesson-live-preview{border:1px solid var(--color-border);border-radius:12px;padding:10px;margin-top:8px}
+.lesson-preview-toolbar{display:flex;justify-content:space-between;gap:8px}
+.lesson-preview-canvas{padding:8px;border-radius:10px}
+.media-box{border:1px dashed #94a3b8;padding:8px;border-radius:8px;display:inline-block}
+.timer-zone{display:flex;align-items:center;gap:8px;margin-top:8px}
+.checkpoint-block,.quiz-q{border:1px dashed var(--color-border);padding:8px;border-radius:10px;margin-top:8px}
+.quiz-opt-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:6px 0}
+.file-label{display:block;margin-top:6px}
+@media (max-width:980px){.lesson-layout-controls{grid-template-columns:1fr 1fr}}
