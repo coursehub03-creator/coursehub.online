@@ -33,7 +33,7 @@
               <h2>1) معلومات الدورة</h2>
               <div class="grid-2">
                 <input id="title" placeholder="عنوان الدورة" required>
-                <input id="category" placeholder="التصنيف" required>
+                <select id="category" required></select>
                 <input id="price" type="number" min="0" placeholder="السعر">
                 <select id="level">
                   <option value="مبتدئ">مبتدئ</option>
@@ -56,6 +56,12 @@
               <h2>2) بناء الدروس والخطوات</h2>
               <div id="lessonsBuilder"></div>
               <button class="btn ghost" id="addLesson" type="button">+ إضافة Lesson</button>
+              <div class="card" style="margin-top:10px;padding:10px">
+                <h3>الاختبار النهائي للدورة</h3>
+                <div id="finalQuizBuilder"></div>
+                <button class="btn ghost" id="addFinalQuestion" type="button">+ إضافة سؤال نهائي</button>
+              </div>
+
             </div>
 
             <div class="wizard-panel" data-step="2">
