@@ -168,8 +168,23 @@ async function saveProfessionalProfile() {
 });
 
 el("logoutBtn")?.addEventListener("click", () => {
-  localStorage.removeItem("coursehub_user");
-  window.location.href = "login.html";
+  (async () => {
+    try {
+      const [{ auth }, authMod] = await Promise.all([
+        import("/js/firebase-config.js"),
+        import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js")
+      ]);
+      await authMod.signOut(auth);
+    } catch (error) {
+      console.warn("تعذر تسجيل الخروج من Firebase، سيتم الإنهاء محليًا.", error);
+    } finally {
+      localStorage.removeItem("coursehub_user");
+      localStorage.removeItem("coursehub_user_meta");
+      sessionStorage.removeItem("coursehub_user");
+      sessionStorage.removeItem("coursehub_user_meta");
+      window.location.replace("/");
+    }
+  })();
 });
 
 fillSelectOptions();

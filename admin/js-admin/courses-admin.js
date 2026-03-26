@@ -149,6 +149,53 @@ async function initCoursesAdmin() {
     }
   }
 
+  async function updateCourseStatus(id, nextStatus) {
+    if (!id || !nextStatus) return;
+    const allowedStatuses = new Set(["draft", "review", "published", "archived"]);
+    if (!allowedStatuses.has(nextStatus)) {
+      alert("حالة الدورة غير صالحة.");
+      return;
+    }
+
+    const actor =
+      JSON.parse(localStorage.getItem("coursehub_user") || "null")?.uid ||
+      JSON.parse(localStorage.getItem("coursehub_user") || "null")?.email ||
+      "admin";
+
+    const currentCourse = allCourses.find((item) => item.id === id) || null;
+    const currentStatus = String(currentCourse?.status || "draft");
+    const payload = {
+        status: nextStatus,
+        updatedAt: serverTimestamp(),
+        statusChangedAt: serverTimestamp(),
+        statusChangedBy: actor
+      };
+    if (nextStatus === "published" && currentStatus !== "published") {
+      payload.publishedAt = serverTimestamp();
+    }
+    if (currentStatus === "published" && nextStatus !== "published") {
+      payload.unpublishedAt = serverTimestamp();
+    }
+
+    try {
+      await updateDoc(doc(db, "courses", id), payload);
+
+      const idx = allCourses.findIndex((item) => item.id === id);
+      if (idx >= 0) {
+        allCourses[idx] = {
+          ...allCourses[idx],
+          status: nextStatus
+        };
+      }
+
+      renderInstructors();
+      renderCourses();
+    } catch (error) {
+      console.error("تعذر تحديث حالة الدورة:", error);
+      alert(isPermissionDenied(error) ? "لا تملك صلاحية تحديث حالة الدورة." : "تعذر تحديث حالة الدورة حالياً.");
+    }
+  }
+
   async function loadSubmissions() {
     try {
       const snap = await getDocs(collection(db, "instructorCourseSubmissions"));
@@ -245,18 +292,34 @@ async function initCoursesAdmin() {
         const enrolled = Number(course.enrollmentsCount || 0);
         const completed = Number(course.completedCount || 0);
         const inProgress = Math.max(enrolled - completed, 0);
+        const currentStatus = String(course.status || "draft");
+        const allStatuses = [
+          { value: "draft", label: "مسودة" },
+          { value: "review", label: "قيد المراجعة" },
+          { value: "published", label: "منشورة" },
+          { value: "archived", label: "مؤرشفة" }
+        ];
+        const statusOptions = allStatuses
+          .filter((option) => option.value !== currentStatus)
+          .map((option) => `<option value="${option.value}">${option.label}</option>`)
+          .join("");
 
         return `
           <tr>
             <td>${escapeHtml(course.title || "(بدون عنوان)")}</td>
             <td>${escapeHtml(getInstructorName(course))}</td>
             <td>${escapeHtml(course.category || "-")}</td>
-            <td>${escapeHtml(course.status || "draft")}</td>
+            <td><span class="badge neutral">${escapeHtml(currentStatus)}</span></td>
             <td>${formatNumber(enrolled)}</td>
             <td>${formatNumber(completed)}</td>
             <td>${formatNumber(inProgress)}</td>
             <td>
               <a class="btn outline small" href="/admin/edit-course.html?id=${encodeURIComponent(course.id)}">تعديل</a>
+              <select class="status-select" data-course-status-select="${escapeHtml(course.id)}">
+                <option value="">غيّر الحالة…</option>
+                ${statusOptions}
+              </select>
+              <button class="btn small" data-course-status-apply="${escapeHtml(course.id)}">تطبيق</button>
               <button class="btn danger small" data-delete-course="${escapeHtml(course.id)}">حذف</button>
             </td>
           </tr>
@@ -281,21 +344,54 @@ async function initCoursesAdmin() {
         }
       });
     });
+
+    tbody.querySelectorAll("[data-course-status-apply]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.courseStatusApply;
+        const select = btn.parentElement?.querySelector("[data-course-status-select]");
+        const nextStatus = String(select?.value || "");
+        if (!id || !nextStatus) {
+          alert("اختر حالة جديدة أولاً.");
+          return;
+        }
+
+        const statusLabels = {
+          draft: "مسودة",
+          review: "قيد المراجعة",
+          published: "منشورة",
+          archived: "مؤرشفة"
+        };
+        if (!confirm(`تأكيد نقل الدورة إلى حالة: ${statusLabels[nextStatus] || nextStatus}؟`)) return;
+
+        btn.disabled = true;
+        try {
+          await updateCourseStatus(id, nextStatus);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
   }
 
-  async function updateSubmissionStatus(id, nextStatus) {
+  async function updateSubmissionStatus(id, decision, reason = "") {
     if (!id) return;
 
     try {
       if (shouldUseCallable) {
-        await reviewInstructorCourseSubmission({ submissionId: id, status: nextStatus });
+        await reviewInstructorCourseSubmission({ submissionId: id, decision, reason });
       } else {
+        const status = decision === "approve" ? "approved" : "rejected";
         await updateDoc(doc(db, "instructorCourseSubmissions", id), {
-          status: nextStatus,
+          status,
+          reviewReason: status === "rejected" ? reason : "",
           reviewedAt: serverTimestamp()
         });
       }
+      if (decision === "approve") {
+        await loadCourses();
+      }
       await loadSubmissions();
+      renderCourses();
       renderSubmissions();
     } catch (error) {
       console.error("تعذر تحديث حالة الطلب:", error);
@@ -334,8 +430,8 @@ async function initCoursesAdmin() {
             <td>${escapeHtml(currentStatus)}</td>
             <td>${escapeHtml(item.note || "-")}</td>
             <td>
-              <button class="btn small" data-review-id="${escapeHtml(item.id)}" data-status="approved">اعتماد</button>
-              <button class="btn danger small" data-review-id="${escapeHtml(item.id)}" data-status="rejected">رفض</button>
+              <button class="btn small" data-review-id="${escapeHtml(item.id)}" data-decision="approve">اعتماد وتحويل لمسودة</button>
+              <button class="btn danger small" data-review-id="${escapeHtml(item.id)}" data-decision="reject">رفض</button>
             </td>
           </tr>
         `;
@@ -343,7 +439,30 @@ async function initCoursesAdmin() {
       .join("");
 
     submissionsTbody.querySelectorAll("[data-review-id]").forEach((btn) => {
-      btn.addEventListener("click", () => updateSubmissionStatus(btn.dataset.reviewId, btn.dataset.status));
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.reviewId;
+        const decision = String(btn.dataset.decision || "");
+        if (!id || !decision) return;
+
+        let reason = "";
+        if (decision === "reject") {
+          reason = prompt("اكتب سبب الرفض (إلزامي):", "")?.trim() || "";
+          if (!reason) {
+            alert("سبب الرفض مطلوب.");
+            return;
+          }
+        }
+
+        const decisionText = decision === "approve" ? "اعتماد الطلب وتحويله لمسودة" : "رفض الطلب";
+        if (!confirm(`تأكيد ${decisionText}؟`)) return;
+
+        btn.disabled = true;
+        try {
+          await updateSubmissionStatus(id, decision, reason);
+        } finally {
+          btn.disabled = false;
+        }
+      });
     });
   }
 
