@@ -545,7 +545,10 @@ async function initCoursesAdmin() {
 
         let reason = "";
         if (decision === "reject" || decision === "request_changes") {
-          reason = prompt(decision === "reject" ? "اكتب سبب الرفض (إلزامي):" : "اكتب ملاحظات التعديل (إلزامي):", "")?.trim() || "";
+          reason = prompt(
+            decision === "reject" ? "اكتب سبب الرفض (إلزامي):" : "اكتب ملاحظات التعديل (إلزامي):",
+            ""
+          )?.trim() || "";
           if (!reason) {
             alert("الملاحظة مطلوبة.");
             return;
@@ -553,7 +556,13 @@ async function initCoursesAdmin() {
         }
 
         const decisionText =
-          decision === "approve" ? "اعتماد الطلب" : decision === "request_changes" ? "طلب تعديلات" : decision === "move_review" ? "نقل الحالة إلى تحت المراجعة" : "رفض الطلب";
+          decision === "approve"
+            ? "اعتماد الطلب"
+            : decision === "request_changes"
+              ? "طلب تعديلات"
+              : decision === "move_review"
+                ? "نقل الحالة إلى تحت المراجعة"
+                : "رفض الطلب";
 
         if (!confirm(`تأكيد ${decisionText}؟`)) return;
 

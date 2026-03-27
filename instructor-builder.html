@@ -27,8 +27,16 @@
     </aside>
     <section class="app-main">
       <div id="builderLoading" class="builder-loading">جاري تحميل المنشئ...</div>
-      <div class="app-topbar"><strong id="builderRoleBadge"></strong><small>آخر حفظ تلقائي: <span id="lastAutosave">-</span></small></div>
-      <header class="ch-card builder-header"><h1 id="builderPageTitle"></h1><div id="stepBar" class="step-bar"></div></header>
+      <div class="app-topbar">
+        <strong id="builderRoleBadge"></strong>
+        <small>آخر حفظ تلقائي: <span id="lastAutosave">-</span></small>
+      </div>
+
+      <header class="ch-card builder-header">
+        <h1 id="builderPageTitle"></h1>
+        <div id="stepBar" class="step-bar"></div>
+      </header>
+
       <form id="builderForm" class="builder-layout">
         <section class="ch-card builder-step-panel">
           <h3>1) معلومات أساسية</h3>
@@ -46,6 +54,7 @@
             <label>المتطلبات<textarea id="requirements" data-bind="requirements" class="ch-textarea"></textarea></label>
           </div>
         </section>
+
         <section class="ch-card builder-step-panel" hidden>
           <h3>2) الوسائط وصفحة الهبوط</h3>
           <div class="app-grid-2">
@@ -55,12 +64,14 @@
             <label>رفع فيديو من الجهاز<input id="promoFile" type="file" class="ch-input" accept="video/*"></label>
           </div>
         </section>
+
         <section class="ch-card builder-step-panel" hidden>
           <h3>3) المنهج والوحدات</h3>
           <button type="button" id="addModule" class="ch-btn secondary">+ إضافة وحدة</button>
           <div id="moduleLessonTree" class="stacked"></div>
           <div id="lessonSettings" class="ch-card lesson-settings-card"></div>
         </section>
+
         <section class="ch-card builder-step-panel" hidden>
           <h3>4) محرر الشرائح</h3>
           <div class="slide-grid">
@@ -88,11 +99,16 @@
             </section>
           </div>
         </section>
+
         <section class="ch-card builder-step-panel" hidden>
           <h3>5) الاختبارات ونقاط التحقق</h3>
-          <h4>اختبار الدرس المحدد</h4><div id="lessonQuizEditor"></div>
-          <h4>الاختبار النهائي</h4><button type="button" id="addFinalQuestion" class="ch-btn secondary">+ سؤال نهائي</button><div id="finalQuizEditor"></div>
+          <h4>اختبار الدرس المحدد</h4>
+          <div id="lessonQuizEditor"></div>
+          <h4>الاختبار النهائي</h4>
+          <button type="button" id="addFinalQuestion" class="ch-btn secondary">+ سؤال نهائي</button>
+          <div id="finalQuizEditor"></div>
         </section>
+
         <section class="ch-card builder-step-panel" hidden>
           <h3>6) التسعير والوصول</h3>
           <div class="app-grid-2">
@@ -101,10 +117,12 @@
             <label>نموذج الوصول<select id="accessModel" class="ch-select"><option value="paid">مدفوع</option><option value="free">مجاني</option><option value="private">خاص</option></select></label>
           </div>
         </section>
+
         <section class="ch-card builder-step-panel" hidden>
           <h3>7) المعاينة الواقعية</h3>
           <div id="realPreview"></div>
         </section>
+
         <section class="ch-card builder-step-panel" hidden>
           <h3>8) الإرسال/النشر</h3>
           <p>حالة الدورة الحالية: <span id="courseStatusPill" class="ch-badge draft">مسودة</span></p>
@@ -126,6 +144,7 @@
         <button type="button" id="submitForReview" class="ch-btn primary">إرسال للمراجعة</button>
         <button type="button" id="publishDirect" class="ch-btn primary" hidden>نشر مباشر</button>
       </div>
+
       <p id="builderStatus"></p>
     </section>
   </main>
