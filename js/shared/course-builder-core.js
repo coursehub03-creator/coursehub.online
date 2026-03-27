@@ -1065,14 +1065,25 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
 
     const draft = payload(state.course.status || "draft");
     localStorage.setItem(opts.localDraftKey, JSON.stringify({ ...draft, updatedAtISO: new Date().toISOString() }));
-    await setDoc(doc(db, opts.draftCollection, state.user.uid), draft, { merge: true });
+    let remoteSaved = true;
+
+    try {
+      await setDoc(doc(db, opts.draftCollection, state.user.uid), draft, { merge: true });
+    } catch {
+      remoteSaved = false;
+    }
 
     if (state.course.id) {
-      await updateDoc(doc(db, "courses", state.course.id), { ...draft, status: state.course.status || "draft" }).catch(() => {});
+      try {
+        await updateDoc(doc(db, "courses", state.course.id), { ...draft, status: state.course.status || "draft" });
+      } catch {
+        remoteSaved = false;
+      }
     }
 
     q("#lastAutosave").textContent = new Date().toLocaleTimeString("ar");
-    if (showNotice) setStatus("✅ تم حفظ المسودة بنجاح.");
+    if (showNotice && remoteSaved) setStatus("✅ تم حفظ المسودة بنجاح.");
+    if (showNotice && !remoteSaved) setStatus("⚠️ تم حفظ المسودة محليًا فقط. لا توجد صلاحية للحفظ السحابي حاليًا.", true);
   }
 
   async function submitForReview() {
@@ -1131,8 +1142,13 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
 
   async function restoreDraft() {
     const local = parseJson(localStorage.getItem(opts.localDraftKey));
-    const remoteSnap = await getDoc(doc(db, opts.draftCollection, state.user.uid));
-    const remote = remoteSnap.exists() ? remoteSnap.data() : null;
+    let remote = null;
+    try {
+      const remoteSnap = await getDoc(doc(db, opts.draftCollection, state.user.uid));
+      remote = remoteSnap.exists() ? remoteSnap.data() : null;
+    } catch {
+      setStatus("⚠️ تعذر تحميل المسودة السحابية بسبب الصلاحيات. سيتم استخدام النسخة المحلية.", true);
+    }
 
     state.course = pickLatest(local, remote) || state.course;
 
@@ -1158,24 +1174,28 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     state.activeSlideId = state.course.modules[0].lessons[0].slides[0]?.id || "";
 
     if (role === "instructor") {
-      const snap = await getDocs(
-        query(
-          collection(db, "instructorCourseSubmissions"),
-          where("instructorId", "==", state.user.uid),
-          orderBy("updatedAt", "desc"),
-          limit(5)
-        )
-      );
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "instructorCourseSubmissions"),
+            where("instructorId", "==", state.user.uid),
+            orderBy("updatedAt", "desc"),
+            limit(5)
+          )
+        );
 
-      const notes = snap.docs
-        .map((d) => d.data())
-        .map((x) => ({ status: x.status, note: x.note || x.reviewReason || "" }))
-        .filter((x) => x.note || x.status);
+        const notes = snap.docs
+          .map((d) => d.data())
+          .map((x) => ({ status: x.status, note: x.note || x.reviewReason || "" }))
+          .filter((x) => x.note || x.status);
 
-      if (notes.length) state.course.reviewNotes = notes;
+        if (notes.length) state.course.reviewNotes = notes;
 
-      const recent = snap.docs[0]?.data();
-      if (recent?.status) state.course.status = recent.status;
+        const recent = snap.docs[0]?.data();
+        if (recent?.status) state.course.status = recent.status;
+      } catch {
+        setStatus("⚠️ تعذر تحميل حالة المراجعة بسبب الصلاحيات الحالية.", true);
+      }
     }
 
     applyCourseToForm();
@@ -1318,11 +1338,16 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     auth.onAuthStateChanged(async (user) => {
       if (!user) return;
       state.user = user;
-      await loadCategories();
-      await restoreDraft();
-      renderAll();
-      setLoading(false);
-      state.mounted = true;
+      try {
+        await loadCategories();
+        await restoreDraft();
+        renderAll();
+      } catch {
+        setStatus("⚠️ حدثت مشكلة أثناء تحميل بيانات البناء. تأكد من صلاحيات Firestore.", true);
+      } finally {
+        setLoading(false);
+        state.mounted = true;
+      }
     });
   }
 
