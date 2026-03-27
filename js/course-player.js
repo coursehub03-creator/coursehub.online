@@ -1,3 +1,4 @@
+import { renderSlideElements, slideBackgroundStyle } from "/js/shared/slide-story-renderer.js";
 import { auth, db } from "/js/firebase-config.js";
 import {
   doc,
@@ -43,23 +44,7 @@ function normalizeCourseLessons(rawCourse) {
       : [{ title: lesson.title || `شريحة ${i + 1}`, content: lesson.content || lesson.summary || "", type: lesson.contentType || "text" }];
 
     const slides = rawSlides.map((slide) => {
-      if (Array.isArray(slide.elements) && slide.elements.length) {
-        const firstText = slide.elements.find((el) => ["heading", "text"].includes(el.type));
-        const firstMedia = slide.elements.find((el) => ["image", "video"].includes(el.type));
-        return {
-          title: slide.title || lesson.title || "",
-          content: firstText?.text || "",
-          mediaUrl: firstMedia?.src || "",
-          type: firstMedia?.type || "text",
-          style: {
-            backgroundColor: slide.background || "#ffffff",
-            textAlign: "right",
-            textColor: "#0f172a",
-            fontSize: 22,
-            fontWeight: 600
-          }
-        };
-      }
+      if (Array.isArray(slide.elements) && slide.elements.length) return slide;
       return slide;
     });
 
@@ -185,6 +170,24 @@ function renderSlide() {
   const lesson = course.lessons[currentLesson];
   const slide = lesson.slides[currentSlide];
   const box = document.getElementById("slideContainer");
+
+  if (Array.isArray(slide?.elements) && slide.elements.length) {
+    box.innerHTML = `
+      <div class="lesson-header">
+        <span class="lesson-label">الدرس ${currentLesson + 1} من ${course.lessons.length}</span>
+        <h2>${lesson.title}</h2>
+      </div>
+      <div class="course-slide story-slide-player" style="${slideBackgroundStyle(slide.background)}">
+        ${renderSlideElements(slide, { editable: false })}
+      </div>
+    `;
+
+    updateButtons();
+    updateProgressBar();
+    saveResume();
+    return;
+  }
+
   const slideStyle = slide.style || {};
   const layoutClass = slideStyle.layout || "media-right";
   const textAlign = slideStyle.textAlign || "right";
@@ -194,7 +197,8 @@ function renderSlide() {
   const fontWeight = slideStyle.fontWeight || 600;
   const titleFontSize = Math.max(fontSize + 6, 26);
   const bodyFontSize = Math.max(fontSize - 2, 16);
-  const slideBody = (slide.content ?? slide.text ?? "").replace(/\n/g, "<br>");
+  const slideBody = (slide.content ?? slide.text ?? "").replace(/
+/g, "<br>");
   const hasMedia = Boolean(slide.mediaUrl);
   const mediaMarkup = hasMedia
     ? slide.type === "video"

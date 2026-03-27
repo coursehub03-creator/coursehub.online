@@ -14,6 +14,7 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getDownloadURL, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { renderSlideElements, normalizeSlideBackground, slideBackgroundStyle } from "/js/shared/slide-story-renderer.js";
 
 const STEPS = [
   "معلومات أساسية",
@@ -57,18 +58,25 @@ const slideElement = (type = "text") => ({
   type,
   x: 40,
   y: 40,
-  w: type === "heading" ? 320 : 260,
-  h: type === "shape" ? 120 : 80,
+  w: type === "heading" ? 340 : type === "shape" ? 260 : 280,
+  h: type === "shape" ? 140 : type === "image" || type === "video" ? 180 : 90,
   z: 1,
-  text: type === "heading" ? "عنوان" : "نص",
+  text: type === "heading" ? "عنوان الشريحة" : type === "shape" ? "" : "نص",
   src: "",
-  style: { background: "#ffffff", color: "#0f172a", radius: 10 }
+  style: {
+    background: type === "shape" ? "#dbeafe" : "#ffffff",
+    color: "#0f172a",
+    radius: 10,
+    align: "right",
+    fontSize: type === "heading" ? 34 : 22,
+    fontWeight: type === "heading" ? 700 : 500
+  }
 });
 
 const slideTemplate = (i = 1) => ({
   id: uid(),
   title: `شريحة ${i}`,
-  background: "#f8fafc",
+  background: { type: "color", color: "#f8fafc", image: "" },
   elements: [slideElement("heading")]
 });
 
@@ -455,6 +463,10 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     };
   }
 
+  function getSlideById(lesson, slideId) {
+    return lesson?.slides?.find((item) => item.id === slideId) || null;
+  }
+
   function renderSlides() {
     const lesson = activeLesson();
     const slideList = q("#slideList");
@@ -467,27 +479,42 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     }
 
     if (!lesson.slides.length) lesson.slides = [slideTemplate(1)];
-    if (!state.activeSlideId) state.activeSlideId = lesson.slides[0].id;
+    if (!state.activeSlideId || !getSlideById(lesson, state.activeSlideId)) state.activeSlideId = lesson.slides[0].id;
 
     slideList.innerHTML = lesson.slides
-      .map(
-        (s, i) =>
-          `<button class="slide-thumb ${s.id === state.activeSlideId ? "active" : ""}" type="button" data-open-slide="${s.id}">${i + 1}. ${esc(s.title)}</button>`
-      )
+      .map((slide, i) => {
+        const thumb = renderSlideElements(slide, { scale: 0.18 });
+        return `
+          <article class="slide-thumb ${slide.id === state.activeSlideId ? "active" : ""}" data-slide-card="${slide.id}">
+            <button class="slide-thumb-main" type="button" data-open-slide="${slide.id}">
+              <div class="slide-thumb-canvas" style="${slideBackgroundStyle(slide.background)}">${thumb || `<span class="slide-thumb-empty">شريحة فارغة</span>`}</div>
+              <div class="slide-thumb-title">${i + 1}. ${esc(slide.title || `شريحة ${i + 1}`)}</div>
+            </button>
+            <div class="slide-thumb-actions">
+              <button type="button" class="ch-btn tiny secondary" data-duplicate-slide="${slide.id}">نسخ</button>
+              <button type="button" class="ch-btn tiny secondary" data-delete-slide="${slide.id}">حذف</button>
+            </div>
+          </article>
+        `;
+      })
       .join("");
 
     const slide = activeSlide();
-    q("#slideBackground").value = slide.background || "#f8fafc";
-    canvas.style.background = slide.background || "#f8fafc";
+    if (!slide) return;
+
+    slide.background = normalizeSlideBackground(slide.background);
+    q("#slideTitle").value = slide.title || "";
+    q("#slideBackground").value = slide.background.color || "#f8fafc";
+    q("#slideBackgroundImage").value = slide.background.image || "";
+
+    canvas.style.cssText = slideBackgroundStyle(slide.background);
     canvas.innerHTML =
-      slide.elements
-        .map((el) => {
-          const body = ["image", "video"].includes(el.type)
-            ? `<input class="media-url-inline" data-el-src="${el.id}" value="${esc(el.src || "")}" placeholder="رابط ${el.type}">`
-            : `<div contenteditable="true" spellcheck="false" data-el-text="${el.id}">${esc(el.text || "")}</div>`;
-          return `<div class="canvas-element ${el.id === state.selectedElementId ? "selected" : ""}" data-el-id="${el.id}" style="left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;z-index:${el.z};background:${el.type === "shape" ? el.style.background : "transparent"};color:${el.style.color}">${body}<button type="button" class="resize-handle" data-resize="${el.id}"></button></div>`;
-        })
-        .join("") || `<div class="empty-box">لا توجد عناصر بعد. أضف نصاً أو وسائط.</div>`;
+      renderSlideElements(slide, {
+        editable: true,
+        selectedElementId: state.selectedElementId,
+        withResizeHandle: true,
+        withMediaInput: true
+      }) || `<div class="empty-box">لا توجد عناصر بعد. أضف نصاً أو وسائط.</div>`;
 
     slideList.querySelectorAll("[data-open-slide]").forEach((btn) =>
       btn.addEventListener("click", () => {
@@ -498,24 +525,89 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
       })
     );
 
-    q("#addSlide").onclick = () => {
-      lesson.slides.push(slideTemplate(lesson.slides.length + 1));
-      state.activeSlideId = lesson.slides.at(-1).id;
+    slideList.querySelectorAll("[data-duplicate-slide]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const source = getSlideById(lesson, btn.dataset.duplicateSlide);
+        if (!source) return;
+        const clone = structuredClone(source);
+        clone.id = uid();
+        clone.title = `${source.title || "شريحة"} (نسخة)`;
+        clone.elements = (clone.elements || []).map((el) => ({ ...el, id: uid(), x: (el.x || 0) + 16, y: (el.y || 0) + 16 }));
+        lesson.slides.push(clone);
+        state.activeSlideId = clone.id;
+        renderSlides();
+        autosave();
+        renderPreview();
+      })
+    );
+
+    slideList.querySelectorAll("[data-delete-slide]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        if (lesson.slides.length <= 1) return;
+        lesson.slides = lesson.slides.filter((s) => s.id !== btn.dataset.deleteSlide);
+        if (!lesson.slides.find((s) => s.id === state.activeSlideId)) state.activeSlideId = lesson.slides[0].id;
+        state.selectedElementId = "";
+        renderSlides();
+        autosave();
+        renderPreview();
+      })
+    );
+
+    q("#slideTitle").oninput = (e) => {
+      slide.title = e.target.value;
       renderSlides();
       autosave();
       renderPreview();
     };
+
+    q("#addSlide").onclick = () => {
+      lesson.slides.push(slideTemplate(lesson.slides.length + 1));
+      state.activeSlideId = lesson.slides.at(-1).id;
+      state.selectedElementId = "";
+      renderSlides();
+      autosave();
+      renderPreview();
+    };
+
+    q("#duplicateSlide").onclick = () => {
+      const source = activeSlide();
+      if (!source) return;
+      const clone = structuredClone(source);
+      clone.id = uid();
+      clone.title = `${source.title || "شريحة"} (نسخة)`;
+      clone.elements = (clone.elements || []).map((el) => ({ ...el, id: uid(), x: (el.x || 0) + 16, y: (el.y || 0) + 16 }));
+      lesson.slides.push(clone);
+      state.activeSlideId = clone.id;
+      state.selectedElementId = "";
+      renderSlides();
+      autosave();
+      renderPreview();
+    };
+
     q("#deleteSlide").onclick = () => {
       lesson.slides = lesson.slides.filter((s) => s.id !== state.activeSlideId);
       if (!lesson.slides.length) lesson.slides.push(slideTemplate(1));
       state.activeSlideId = lesson.slides[0].id;
+      state.selectedElementId = "";
       renderSlides();
       autosave();
       renderPreview();
     };
+
     q("#slideBackground").oninput = (e) => {
       const s = activeSlide();
-      s.background = e.target.value;
+      s.background = normalizeSlideBackground(s.background);
+      s.background.color = e.target.value;
+      renderSlides();
+      autosave();
+      renderPreview();
+    };
+
+    q("#slideBackgroundImage").oninput = (e) => {
+      const s = activeSlide();
+      s.background = normalizeSlideBackground(s.background);
+      s.background.image = e.target.value.trim();
+      s.background.type = s.background.image ? "image" : "color";
       renderSlides();
       autosave();
       renderPreview();
@@ -523,6 +615,65 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
 
     bindSlideTools();
     bindCanvasInteractions();
+    renderElementInspector();
+  }
+
+  function renderElementInspector() {
+    const panel = q("#slideElementInspector");
+    if (!panel) return;
+
+    const slide = activeSlide();
+    const el = slide?.elements.find((item) => item.id === state.selectedElementId);
+    if (!el) {
+      panel.innerHTML = `<div class="empty-box">حدد عنصراً داخل اللوحة لتعديل خصائصه.</div>`;
+      return;
+    }
+
+    el.style = {
+      background: "#dbeafe",
+      color: "#0f172a",
+      radius: 10,
+      align: "right",
+      fontSize: el.type === "heading" ? 34 : 22,
+      fontWeight: el.type === "heading" ? 700 : 500,
+      ...(el.style || {})
+    };
+
+    panel.innerHTML = `
+      <div class="element-inspector-grid">
+        <label>نوع العنصر<input class="ch-input" value="${esc(el.type)}" disabled></label>
+        <label>X<input class="ch-input" type="number" data-el-prop="x" value="${Math.round(el.x || 0)}"></label>
+        <label>Y<input class="ch-input" type="number" data-el-prop="y" value="${Math.round(el.y || 0)}"></label>
+        <label>العرض<input class="ch-input" type="number" data-el-prop="w" value="${Math.round(el.w || 120)}"></label>
+        <label>الارتفاع<input class="ch-input" type="number" data-el-prop="h" value="${Math.round(el.h || 60)}"></label>
+        <label>الطبقة Z<input class="ch-input" type="number" min="1" data-el-prop="z" value="${Math.round(el.z || 1)}"></label>
+        ${el.type !== "image" && el.type !== "video" ? `<label class="full">النص<textarea class="ch-textarea" rows="3" data-el-prop="text">${esc(el.text || "")}</textarea></label>` : ""}
+        ${(el.type === "image" || el.type === "video") ? `<label class="full">رابط الوسائط<input class="ch-input" data-el-prop="src" value="${esc(el.src || "")}" placeholder="https://..."></label>` : ""}
+        <label>لون النص<input class="ch-input" type="color" data-el-style="color" value="${esc(el.style.color || "#0f172a")}"></label>
+        <label>لون الخلفية<input class="ch-input" type="color" data-el-style="background" value="${esc(el.style.background || "#dbeafe")}"></label>
+        <label>حجم الخط<input class="ch-input" type="number" min="12" max="80" data-el-style="fontSize" value="${Number(el.style.fontSize || 22)}"></label>
+        <label>وزن الخط<input class="ch-input" type="number" min="300" max="900" step="100" data-el-style="fontWeight" value="${Number(el.style.fontWeight || 500)}"></label>
+      </div>
+    `;
+
+    panel.querySelectorAll("[data-el-prop]").forEach((input) =>
+      input.addEventListener("input", () => {
+        const key = input.dataset.elProp;
+        el[key] = ["x", "y", "w", "h", "z"].includes(key) ? Number(input.value || 0) : input.value;
+        renderSlides();
+        autosave();
+        renderPreview();
+      })
+    );
+
+    panel.querySelectorAll("[data-el-style]").forEach((input) =>
+      input.addEventListener("input", () => {
+        el.style[input.dataset.elStyle] = input.type === "number" ? Number(input.value || 0) : input.value;
+        renderSlides();
+        autosave();
+        renderPreview();
+      })
+    );
   }
 
   function bindSlideTools() {
@@ -596,20 +747,24 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
       node.querySelector("[data-resize]")?.addEventListener("pointerdown", (e) => startResize(e, elementId));
       node.querySelector("[data-el-text]")?.addEventListener("input", (e) => {
         const el = slide.elements.find((x) => x.id === elementId);
+        if (!el) return;
         el.text = e.target.textContent;
         autosave();
         renderPreview();
       });
       node.querySelector("[data-el-src]")?.addEventListener("input", (e) => {
         const el = slide.elements.find((x) => x.id === elementId);
+        if (!el) return;
         el.src = e.target.value;
         autosave();
+        renderPreview();
       });
     });
   }
 
   function startDrag(event, elementId) {
     if (event.target.classList.contains("resize-handle")) return;
+    if (event.target.closest("input,textarea,iframe,video") || event.target.isContentEditable) return;
     const el = activeSlide()?.elements.find((x) => x.id === elementId);
     if (!el) return;
 
@@ -636,6 +791,7 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
       window.removeEventListener("pointerup", onUp);
       autosave();
       renderPreview();
+      renderElementInspector();
     };
 
     window.addEventListener("pointermove", onMove);
@@ -667,6 +823,7 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
       window.removeEventListener("pointerup", onUp);
       autosave();
       renderPreview();
+      renderElementInspector();
     };
 
     window.addEventListener("pointermove", onMove);
@@ -967,12 +1124,10 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
         <p>${esc(lesson?.summary || "")}</p>
         ${
           slide
-            ? `<div class="slide-preview-mini" style="background:${slide.background}">${slide.elements
-                .map(
-                  (el) =>
-                    `<span style="left:${el.x / 4}px;top:${el.y / 4}px;width:${el.w / 4}px;height:${el.h / 4}px">${esc(el.text || el.type)}</span>`
-                )
-                .join("")}</div>`
+            ? `<div class="slide-preview-mini slide-preview-live" style="${slideBackgroundStyle(slide.background)}">${renderSlideElements(slide, {
+                scale: 0.28,
+                editable: false
+              })}</div>`
             : ""
         }
       </section>

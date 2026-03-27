@@ -1,5 +1,6 @@
 import { auth, db } from "/js/firebase-config.js";
 import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { renderSlideElements, slideBackgroundStyle } from "/js/shared/slide-story-renderer.js";
 
 let user;
 let courseId = "";
@@ -92,7 +93,9 @@ function normalizeSteps(steps) {
         mediaUrl: media?.src || "",
         options: [],
         correctIndex: 0,
-        points: 0
+        points: 0,
+        elements: step.elements,
+        background: step.background || "#ffffff"
       };
     }
 
@@ -175,15 +178,23 @@ function renderStep() {
   const container = document.getElementById("stepContainer");
   if (!lesson || !step) return;
 
-  const media = renderMedia(step);
-  const quiz = step.type === "checkpointQuiz" ? renderCheckpoint(step) : "";
-  container.innerHTML = `
-    <span class="step-type">${mapType(step.type)}</span>
-    <h1 class="step-title">${step.title}</h1>
-    <div class="step-content">${step.content || ""}</div>
-    ${media}
-    ${quiz}
-  `;
+  if (Array.isArray(step.elements) && step.elements.length) {
+    container.innerHTML = `
+      <span class="step-type">شريحة مرئية</span>
+      <h1 class="step-title">${step.title}</h1>
+      <div class="student-story-slide" style="${slideBackgroundStyle(step.background)}">${renderSlideElements({ elements: step.elements }, { editable: false })}</div>
+    `;
+  } else {
+    const media = renderMedia(step);
+    const quiz = step.type === "checkpointQuiz" ? renderCheckpoint(step) : "";
+    container.innerHTML = `
+      <span class="step-type">${mapType(step.type)}</span>
+      <h1 class="step-title">${step.title}</h1>
+      <div class="step-content">${step.content || ""}</div>
+      ${media}
+      ${quiz}
+    `;
+  }
 
   document.getElementById("stepMeta").textContent = `الدرس ${currentLessonIndex + 1}/${lessons.length} • خطوة ${currentStepIndex + 1}/${lesson.steps.length}`;
   document.getElementById("prevStepBtn").disabled = currentLessonIndex === 0 && currentStepIndex === 0;
