@@ -386,11 +386,11 @@ exports.reviewInstructorCourseSubmission = onCall({ region: "us-central1" }, asy
   const reason = String(request.data?.reason || "").trim();
 
   if (!submissionId) throw new HttpsError("invalid-argument", "submissionId is required.");
-  if (!["approve", "reject"].includes(decision)) {
-    throw new HttpsError("invalid-argument", "decision must be approve/reject.");
+  if (!["approve", "reject", "request_changes", "move_review"].includes(decision)) {
+    throw new HttpsError("invalid-argument", "decision must be approve/reject/request_changes/move_review.");
   }
-  if (decision === "reject" && !reason) {
-    throw new HttpsError("invalid-argument", "reason is required when rejecting.");
+  if ((decision === "reject" || decision === "request_changes") && !reason) {
+    throw new HttpsError("invalid-argument", "reason is required when rejecting or requesting changes.");
   }
 
   const subRef = db.collection("instructorCourseSubmissions").doc(submissionId);
@@ -400,66 +400,92 @@ exports.reviewInstructorCourseSubmission = onCall({ region: "us-central1" }, asy
   const sub = subSnap.data() || {};
   const instructorEmail = String(sub.instructorEmail || "");
 
-  if (decision === "approve") {
-    const coursePayload = {
-      title: sub.title || "",
-      titleEn: sub.titleEn || "",
-      description: sub.description || "",
-      category: sub.category || "",
-      level: sub.level || "",
-      language: sub.language || "",
-      duration: sub.durationHours || 0,
-      modules: sub.modules?.length || 0,
-      image: sub.image || "",
-      lessons: (sub.modules || []).flatMap((m) => (m.lessons || []).map((lesson) => ({
-        title: lesson.title || "",
-        duration: lesson.duration || "",
-        summary: "",
-        slides: [],
-        quiz: {
-          questions: (sub.assessmentQuestions || []).slice(0, 10)
-        },
-        passScore: 80
-      }))),
-      status: "draft",
-      source: "instructor-submission",
-      instructorId: sub.instructorId || "",
-      instructorEmail,
-      submissionId,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    };
+  const linkedCourseId = String(sub.courseId || sub.linkedCourseId || "");
+  const applyCourseStatus = async (statusValue, noteValue = "") => {
+    if (!linkedCourseId) return;
+    await db.collection("courses").doc(linkedCourseId).set({
+      status: statusValue,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      lastReviewNote: noteValue || ""
+    }, { merge: true });
+    await db.collection("courses").doc(linkedCourseId).collection("history").add({
+      type: statusValue,
+      note: noteValue || "",
+      by: request.auth.uid,
+      role: "admin",
+      at: admin.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {});
+  };
 
-    const courseRef = await db.collection("courses").add(coursePayload);
-
+  if (decision === "move_review") {
     await subRef.set({
-      status: "approved",
+      status: "under_review",
+      note: reason || "",
       reviewReason: "",
       reviewedBy: request.auth.uid,
       reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
-      linkedCourseId: courseRef.id,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+    await applyCourseStatus("under_review", reason || "");
+    return { ok: true, status: "under_review", courseId: linkedCourseId || null };
+  }
+
+  if (decision === "approve") {
+    await subRef.set({
+      status: "approved",
+      note: "",
+      reviewReason: "",
+      reviewedBy: request.auth.uid,
+      reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+      linkedCourseId: linkedCourseId || "",
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    await applyCourseStatus("approved", "");
 
     if (instructorEmail) {
       await queueEmail({
         to: instructorEmail,
         template: "instructor-course-approved",
         subject: "تمت الموافقة على دورة الأستاذ - CourseHub",
-        message: `تمت الموافقة على دورتك (${sub.title || ""}) وتم حفظها كمسودة لدى المشرف لمراجعتها قبل النشر.`
+        message: `تمت الموافقة على دورتك (${sub.title || ""}) ويمكن للمشرف نشرها بعد التحقق النهائي.`
       }).catch(() => {});
     }
 
-    return { ok: true, status: "approved", courseId: courseRef.id };
+    return { ok: true, status: "approved", courseId: linkedCourseId || null };
+  }
+
+  if (decision === "request_changes") {
+    await subRef.set({
+      status: "changes_requested",
+      note: reason,
+      reviewReason: reason,
+      reviewedBy: request.auth.uid,
+      reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    await applyCourseStatus("changes_requested", reason);
+
+    if (instructorEmail) {
+      await queueEmail({
+        to: instructorEmail,
+        template: "instructor-course-changes-requested",
+        subject: "مطلوب تعديلات على الدورة - CourseHub",
+        message: `يرجى تعديل دورتك (${sub.title || ""}). ملاحظات المشرف: ${reason}`
+      }).catch(() => {});
+    }
+
+    return { ok: true, status: "changes_requested", courseId: linkedCourseId || null };
   }
 
   await subRef.set({
     status: "rejected",
+    note: reason,
     reviewReason: reason,
     reviewedBy: request.auth.uid,
     reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
+  await applyCourseStatus("rejected", reason);
 
   if (instructorEmail) {
     await queueEmail({

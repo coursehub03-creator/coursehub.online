@@ -47,6 +47,12 @@ h1,h2,h3,h4,p { margin-top: 0; }
 }
 .ch-badge.draft{background:#f4f4f5;color:#3f3f46;}
 .ch-badge.in_review{background:#fff8eb;color:#9a6316;}
+.ch-badge.submitted{background:#fff8eb;color:#9a6316;}
+.ch-badge.under_review{background:#fff8eb;color:#9a6316;}
+.ch-badge.changes_requested{background:#fff1f2;color:#be123c;}
+.ch-badge.resubmitted{background:#eef2ff;color:#3730a3;}
+.ch-badge.approved{background:#e9fbf2;color:#0f8557;}
+.ch-badge.rejected{background:#fee2e2;color:#991b1b;}
 .ch-badge.published{background:#e9fbf2;color:#0f8557;}
 .ch-badge.archived{background:#edf1ff;color:#3f58b5;}
 .ch-badge.locked{background:#fef2f2;color:#af2f27;}
