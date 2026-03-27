@@ -71,9 +71,12 @@
                 <aside>
                   <div class="inline-actions">
                     <button type="button" id="addSlide" class="ch-btn secondary">+ شريحة</button>
+                    <button type="button" id="duplicateSlide" class="ch-btn secondary">نسخ الشريحة</button>
                     <button type="button" id="deleteSlide" class="ch-btn secondary">حذف الشريحة</button>
                   </div>
-                  <label>خلفية الشريحة<input id="slideBackground" type="color" class="ch-input" value="#f8fafc"></label>
+                  <label>عنوان الشريحة<input id="slideTitle" class="ch-input" placeholder="عنوان الشريحة"></label>
+                  <label>لون الخلفية<input id="slideBackground" type="color" class="ch-input" value="#f8fafc"></label>
+                  <label>صورة الخلفية (اختياري)<input id="slideBackgroundImage" class="ch-input" placeholder="https://..."></label>
                   <div id="slideList" class="slide-list"></div>
                 </aside>
                 <section>
@@ -89,6 +92,7 @@
                     <button type="button" id="sendBack" class="ch-btn secondary">خلف</button>
                   </div>
                   <div id="slideCanvas" class="slide-canvas"></div>
+                  <div id="slideElementInspector" class="element-inspector"></div>
                 </section>
               </div>
             </section>

@@ -41,3 +41,32 @@ body.focus-mode .player-sidebar { display: none; }
   .player-overlay { display: block; position: fixed; inset: 0; background: rgba(15, 23, 42, .45); opacity: 0; visibility: hidden; transition: .2s; z-index: 40; }
   body.sidebar-open .player-overlay { opacity: 1; visibility: visible; }
 }
+
+.student-story-slide {
+  position: relative;
+  min-height: 420px;
+  border-radius: .9rem;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  margin-top: .7rem;
+}
+
+.student-story-slide .canvas-element {
+  position: absolute;
+  overflow: hidden;
+}
+
+.student-story-slide .canvas-element[data-el-type="shape"],
+.student-story-slide .canvas-element[data-el-type="image"],
+.student-story-slide .canvas-element[data-el-type="video"] {
+  padding: 0;
+}
+
+.student-story-slide .canvas-element img,
+.student-story-slide .canvas-element video,
+.student-story-slide .canvas-element iframe {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+}
