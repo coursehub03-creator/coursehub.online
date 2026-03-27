@@ -40,6 +40,8 @@ const WORKFLOW = [
 ];
 
 const CONTENT_TYPES = ["text", "video", "image", "file", "summary", "checkpointQuiz", "slides"];
+const QUIZ_MIN_OPTIONS = 2;
+const QUIZ_DEFAULT_OPTIONS = 4;
 
 const uid = () => crypto.randomUUID();
 const esc = (v = "") =>
@@ -49,8 +51,8 @@ const questionTemplate = () => ({
   id: uid(),
   question: "",
   explanation: "",
-  options: ["", "", "", ""],
-  correctIndexes: []
+  options: Array.from({ length: QUIZ_DEFAULT_OPTIONS }, () => ""),
+  correctIndexes: [0]
 });
 
 const slideElement = (type = "text") => ({
@@ -129,6 +131,40 @@ const courseTemplate = () => ({
   status: "draft",
   reviewNotes: []
 });
+
+function normalizeQuestionShape(rawQuestion) {
+  const options = Array.isArray(rawQuestion?.options) ? rawQuestion.options.map((opt) => String(opt ?? "")) : [];
+  while (options.length < QUIZ_DEFAULT_OPTIONS) options.push("");
+  const normalized = {
+    id: rawQuestion?.id || uid(),
+    question: String(rawQuestion?.question || ""),
+    explanation: String(rawQuestion?.explanation || ""),
+    options,
+    correctIndexes: []
+  };
+
+  const rawCorrect = Array.isArray(rawQuestion?.correctIndexes)
+    ? rawQuestion.correctIndexes
+    : rawQuestion?.correct !== undefined
+      ? [Number(rawQuestion.correct)]
+      : [];
+
+  normalized.correctIndexes = [...new Set(rawCorrect.map((n) => Number(n)).filter((n) => Number.isInteger(n) && n >= 0 && n < options.length))]
+    .slice(0, 1);
+
+  if (!normalized.correctIndexes.length && options.length) normalized.correctIndexes = [0];
+  return normalized;
+}
+
+function normalizeQuizShape(rawQuiz, fallbackTitle = "اختبار") {
+  const questions = Array.isArray(rawQuiz?.questions) ? rawQuiz.questions.map((q) => normalizeQuestionShape(q)) : [questionTemplate()];
+  return {
+    title: String(rawQuiz?.title || fallbackTitle),
+    passingScore: Math.min(100, Math.max(1, Number(rawQuiz?.passingScore || 70))),
+    timeLimitMinutes: Math.max(1, Number(rawQuiz?.timeLimitMinutes || 10)),
+    questions: questions.length ? questions : [questionTemplate()]
+  };
+}
 
 const statusLabel = (s = "draft") =>
   ({
@@ -847,8 +883,14 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
             <textarea class="ch-textarea" data-q-field="explanation" placeholder="توضيح الإجابة">${esc(qz.explanation || "")}</textarea>
             ${qz.options
               .map(
-                (opt, oi) =>
-                  `<div class="quiz-option-row"><input class="ch-input" data-opt-index="${oi}" value="${esc(opt)}" placeholder="الخيار ${oi + 1}"><label><input type="checkbox" data-correct-index="${oi}" ${qz.correctIndexes.includes(oi) ? "checked" : ""}> صحيح</label></div>`
+                (opt, oi) => `
+                  <div class="quiz-option-row">
+                    <input class="ch-input" data-opt-index="${oi}" value="${esc(opt)}" placeholder="الخيار ${oi + 1}">
+                    <div class="inline-actions">
+                      <label><input type="radio" name="correct-${esc(key)}-${esc(qz.id)}" data-correct-index="${oi}" ${qz.correctIndexes.includes(oi) ? "checked" : ""}> الصحيح</label>
+                      <button type="button" class="ch-btn secondary" data-del-option="${key}:${qz.id}:${oi}" ${qz.options.length <= QUIZ_MIN_OPTIONS ? "disabled" : ""}>حذف</button>
+                    </div>
+                  </div>`
               )
               .join("")}
             <div class="inline-actions">
@@ -866,7 +908,7 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
 
   function resolveQuiz(key) {
     if (key === "final") return state.course.finalQuiz;
-    return activeLesson().checkpointQuiz;
+    return activeLesson()?.checkpointQuiz || lessonTemplate(1).checkpointQuiz;
   }
 
   function renderQuizzes() {
@@ -897,6 +939,23 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
         const [key, qId] = btn.dataset.addOption.split(":");
         const qz = resolveQuiz(key).questions.find((q) => q.id === qId);
         if (qz) qz.options.push("");
+        renderQuizzes();
+        autosave();
+      })
+    );
+
+    document.querySelectorAll("[data-del-option]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const [key, qId, rawOptionIndex] = btn.dataset.delOption.split(":");
+        const optionIndex = Number(rawOptionIndex);
+        const qz = resolveQuiz(key).questions.find((q) => q.id === qId);
+        if (!qz || qz.options.length <= QUIZ_MIN_OPTIONS) return;
+        qz.options.splice(optionIndex, 1);
+        qz.correctIndexes = (qz.correctIndexes || [])
+          .filter((idx) => idx !== optionIndex)
+          .map((idx) => (idx > optionIndex ? idx - 1 : idx))
+          .slice(0, 1);
+        if (!qz.correctIndexes.length) qz.correctIndexes = [0];
         renderQuizzes();
         autosave();
       })
@@ -935,9 +994,7 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
       row.querySelectorAll("[data-correct-index]").forEach((el) =>
         el.addEventListener("change", () => {
           const idx = Number(el.dataset.correctIndex);
-          qz.correctIndexes = el.checked
-            ? [...new Set([...(qz.correctIndexes || []), idx])]
-            : (qz.correctIndexes || []).filter((i) => i !== idx);
+          qz.correctIndexes = [idx];
           autosave();
         })
       );
@@ -955,10 +1012,23 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     if (!lessonsCount) errs.push("يجب إضافة درس واحد على الأقل.");
 
     [state.course.finalQuiz, ...state.course.modules.flatMap((m) => m.lessons.map((l) => l.checkpointQuiz))].forEach((quiz) => {
+      if (!quiz.title?.trim()) errs.push("يرجى إدخال عنوان لكل اختبار.");
+      if (!quiz.questions?.length) errs.push("كل اختبار يجب أن يحتوي على سؤال واحد على الأقل.");
+      if (!Number.isFinite(Number(quiz.passingScore)) || Number(quiz.passingScore) < 1 || Number(quiz.passingScore) > 100) {
+        errs.push("درجة النجاح يجب أن تكون بين 1 و100.");
+      }
+      if (!Number.isFinite(Number(quiz.timeLimitMinutes)) || Number(quiz.timeLimitMinutes) < 1) {
+        errs.push("مدة الاختبار يجب أن تكون دقيقة واحدة على الأقل.");
+      }
       quiz.questions.forEach((qz) => {
         if (!qz.question.trim()) errs.push("يوجد سؤال بدون نص.");
-        if ((qz.options || []).filter((x) => String(x).trim()).length < 4) errs.push("كل سؤال يحتاج 4 خيارات على الأقل.");
+        if ((qz.options || []).filter((x) => String(x).trim()).length < QUIZ_MIN_OPTIONS) {
+          errs.push("كل سؤال يحتاج خيارين غير فارغين على الأقل.");
+        }
         if (!(qz.correctIndexes || []).length) errs.push("كل سؤال يحتاج إجابة صحيحة واحدة على الأقل.");
+        if ((qz.correctIndexes || []).some((i) => !String((qz.options || [])[i] || "").trim())) {
+          errs.push("الإجابة الصحيحة يجب أن تشير إلى خيار غير فارغ.");
+        }
       });
     });
 
@@ -1067,7 +1137,20 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     state.course = pickLatest(local, remote) || state.course;
 
     if (!state.course.modules?.length) state.course.modules = [moduleTemplate(1)];
-    if (!state.course.finalQuiz?.questions?.length) state.course.finalQuiz = courseTemplate().finalQuiz;
+    state.course.modules = state.course.modules.map((mod, mi) => ({
+      ...mod,
+      id: mod.id || uid(),
+      title: mod.title || `وحدة ${mi + 1}`,
+      lessons: Array.isArray(mod.lessons) && mod.lessons.length
+        ? mod.lessons.map((lesson, li) => ({
+            ...lesson,
+            id: lesson.id || uid(),
+            title: lesson.title || `درس ${li + 1}`,
+            checkpointQuiz: normalizeQuizShape(lesson.checkpointQuiz, "اختبار نقطة تحقق")
+          }))
+        : [lessonTemplate(1)]
+    }));
+    state.course.finalQuiz = normalizeQuizShape(state.course.finalQuiz, "الاختبار النهائي");
     if (!state.course.pricing) state.course.pricing = { suggestedPrice: 0, finalPrice: 0, accessModel: "paid" };
 
     state.activeModuleId = state.course.modules[0].id;
@@ -1102,6 +1185,9 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     const preview = q("#realPreview");
     const lesson = activeLesson();
     const slide = lesson?.slides?.[0];
+    const checkpointQuiz = lesson?.checkpointQuiz || normalizeQuizShape(null, "اختبار نقطة تحقق");
+    const checkpointSample = checkpointQuiz.questions[0];
+    const finalSample = state.course.finalQuiz.questions[0];
     const shownPrice = Number(state.course.pricing?.finalPrice || state.course.pricing?.suggestedPrice || 0);
 
     preview.innerHTML = `
@@ -1132,8 +1218,26 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
         }
       </section>
       <section class="preview-quiz">
+        <h4>معاينة اختبار نقطة التحقق</h4>
+        <p><strong>${esc(checkpointQuiz.title || "اختبار نقطة تحقق")}</strong> • ${checkpointQuiz.questions.length} سؤال • نجاح ${checkpointQuiz.passingScore}% • ${checkpointQuiz.timeLimitMinutes} دقيقة</p>
+        ${
+          checkpointSample
+            ? `<div class="preview-quiz-question"><p>${esc(checkpointSample.question || "اكتب نص السؤال...")}</p><ol>${checkpointSample.options
+                .filter((opt) => String(opt).trim())
+                .map((opt) => `<li>${esc(opt)}</li>`)
+                .join("")}</ol></div>`
+            : ""
+        }
         <h4>${esc(state.course.finalQuiz.title || "الاختبار النهائي")}</h4>
-        <p>عدد الأسئلة: ${state.course.finalQuiz.questions.length} • النجاح: ${state.course.finalQuiz.passingScore}%</p>
+        <p>${state.course.finalQuiz.questions.length} سؤال • النجاح: ${state.course.finalQuiz.passingScore}% • ${state.course.finalQuiz.timeLimitMinutes} دقيقة</p>
+        ${
+          finalSample
+            ? `<div class="preview-quiz-question"><p>${esc(finalSample.question || "اكتب نص السؤال النهائي...")}</p><ol>${finalSample.options
+                .filter((opt) => String(opt).trim())
+                .map((opt) => `<li>${esc(opt)}</li>`)
+                .join("")}</ol></div>`
+            : ""
+        }
       </section>
     `;
   }

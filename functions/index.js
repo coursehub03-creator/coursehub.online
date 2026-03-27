@@ -324,6 +324,17 @@ exports.submitInstructorCourse = onCall({ region: "us-central1" }, async (reques
   const category = String(payload.category || "").trim();
   const modules = Array.isArray(payload.modules) ? payload.modules : [];
   const assessmentQuestions = Array.isArray(payload.assessmentQuestions) ? payload.assessmentQuestions : [];
+  const finalQuizQuestions = Array.isArray(payload.finalQuiz?.questions) ? payload.finalQuiz.questions : [];
+  const checkpointQuestionsCount = modules.reduce((sum, mod) => {
+    const lessons = Array.isArray(mod?.lessons) ? mod.lessons : [];
+    return (
+      sum +
+      lessons.reduce((lessonSum, lesson) => {
+        const questions = Array.isArray(lesson?.checkpointQuiz?.questions) ? lesson.checkpointQuiz.questions : [];
+        return lessonSum + questions.length;
+      }, 0)
+    );
+  }, 0);
 
   if (!title || !description || !category) {
     throw new HttpsError("invalid-argument", "title, description and category are required.");
@@ -333,8 +344,11 @@ exports.submitInstructorCourse = onCall({ region: "us-central1" }, async (reques
     throw new HttpsError("invalid-argument", "At least one module is required.");
   }
 
-  if (assessmentQuestions.length < 2) {
-    throw new HttpsError("invalid-argument", "At least 2 assessment questions are required.");
+  if (assessmentQuestions.length < 2 && finalQuizQuestions.length < 1 && checkpointQuestionsCount < 1) {
+    throw new HttpsError(
+      "invalid-argument",
+      "At least one quiz is required (final quiz or lesson checkpoint), or provide 2 assessment questions."
+    );
   }
 
   const submission = {

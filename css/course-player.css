@@ -318,6 +318,20 @@
   margin-top: 18px;
 }
 
+.quiz-feedback-list {
+  text-align: right;
+  margin-top: 14px;
+  max-height: 240px;
+  overflow: auto;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.quiz-feedback-list li {
+  margin-bottom: 10px;
+  line-height: 1.65;
+}
+
 .quiz-result-actions .primary {
   padding: 10px 22px;
   border-radius: 8px;

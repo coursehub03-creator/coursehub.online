@@ -20,6 +20,7 @@ let currentSlide = 0;
 let isQuizActive = false;
 let quizState = null;
 let courseCompleted = false;
+let quizTimerInterval = null;
 
 const quizSummary = {
   totalQuestions: 0,
@@ -48,9 +49,36 @@ function normalizeCourseLessons(rawCourse) {
       return slide;
     });
 
-    const quizQuestions = lesson.checkpointQuiz?.questions || lesson.quiz || [];
-    return { ...lesson, slides, quiz: quizQuestions };
+    const checkpointQuiz = normalizeQuizEntity(lesson.checkpointQuiz || { questions: lesson.quiz || [] }, "اختبار الدرس", 80, 10);
+    return { ...lesson, slides, checkpointQuiz, quiz: checkpointQuiz.questions };
   });
+}
+
+function normalizeQuizEntity(rawQuiz, fallbackTitle = "اختبار", fallbackPassing = 80, fallbackMinutes = 10) {
+  const rawQuestions = Array.isArray(rawQuiz?.questions) ? rawQuiz.questions : [];
+  return {
+    id: rawQuiz?.id || `quiz_${Math.random().toString(36).slice(2, 10)}`,
+    title: rawQuiz?.title || fallbackTitle,
+    passingScore: Math.min(100, Math.max(1, Number(rawQuiz?.passingScore || fallbackPassing))),
+    timeLimitMinutes: Math.max(1, Number(rawQuiz?.timeLimitMinutes || fallbackMinutes)),
+    questions: rawQuestions
+      .map((q) => {
+        const options = Array.isArray(q?.options) ? q.options.map((opt) => String(opt ?? "").trim()).filter(Boolean) : [];
+        const correctIndexes = Array.isArray(q?.correctIndexes)
+          ? q.correctIndexes.map(Number)
+          : q?.correct !== undefined
+            ? [Number(q.correct)]
+            : [];
+        return {
+          id: q?.id || `q_${Math.random().toString(36).slice(2, 10)}`,
+          question: String(q?.question || "").trim(),
+          explanation: String(q?.explanation || "").trim(),
+          options,
+          correctIndexes: correctIndexes.filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < options.length).slice(0, 1)
+        };
+      })
+      .filter((q) => q.question && q.options.length >= 2 && q.correctIndexes.length)
+  };
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -94,6 +122,7 @@ async function loadCourse() {
 
   course = snap.data();
   course.lessons = normalizeCourseLessons(course);
+  course.finalQuiz = normalizeQuizEntity(course.finalQuiz, "الاختبار النهائي", 70, 20);
 
   if (course.status !== "published") {
     alert("هذه الدورة غير متاحة حالياً للطلاب.");
@@ -164,6 +193,7 @@ function renderSidebar() {
 
 function renderSlide() {
   isQuizActive = false;
+  clearInterval(quizTimerInterval);
   const playerContent = document.querySelector(".player-content");
   if (playerContent) playerContent.classList.remove("is-quiz");
 
@@ -253,8 +283,8 @@ document.getElementById("nextBtn").onclick = () => {
   if (currentSlide < lesson.slides.length - 1) {
     currentSlide++;
     renderSlide();
-  } else if (lesson.quiz?.length) {
-    renderQuiz(lesson);
+  } else if (lesson.checkpointQuiz?.questions?.length) {
+    renderQuiz({ quiz: lesson.checkpointQuiz, contextTitle: lesson.title, quizType: "checkpoint" });
   } else {
     nextLesson();
   }
@@ -274,38 +304,48 @@ document.getElementById("prevBtn").onclick = () => {
   renderSlide();
 };
 
-function renderQuiz(lesson) {
+function renderQuiz({ quiz, contextTitle, quizType }) {
   const box = document.getElementById("slideContainer");
 
   isQuizActive = true;
   const playerContent = document.querySelector(".player-content");
   if (playerContent) playerContent.classList.add("is-quiz");
 
+  const durationMs = Number(quiz.timeLimitMinutes || 1) * 60 * 1000;
   quizState = {
     lessonIndex: currentLesson,
+    quizType,
     questionIndex: 0,
     answers: [],
-    lesson
+    contextTitle,
+    quiz,
+    startedAt: Date.now(),
+    endsAt: Date.now() + durationMs
   };
 
   box.innerHTML = "";
+  startQuizTimer();
   renderQuizQuestion();
 }
 
 function renderQuizQuestion() {
   const box = document.getElementById("slideContainer");
-  const lesson = quizState.lesson;
-  const question = lesson.quiz[quizState.questionIndex];
+  const quiz = quizState.quiz;
+  const question = quiz.questions[quizState.questionIndex];
 
   const selectedValue = quizState.answers[quizState.questionIndex];
-  const isLast = quizState.questionIndex === lesson.quiz.length - 1;
+  const isLast = quizState.questionIndex === quiz.questions.length - 1;
+  const remainingSecs = Math.max(0, Math.floor((quizState.endsAt - Date.now()) / 1000));
+  const minutes = String(Math.floor(remainingSecs / 60)).padStart(2, "0");
+  const seconds = String(remainingSecs % 60).padStart(2, "0");
 
   box.innerHTML = `
     <div class="quiz-shell">
       <div class="quiz-header">
-        <span class="quiz-label">اختبار الدرس</span>
-        <h2>${lesson.title}</h2>
-        <p class="quiz-progress">سؤال ${quizState.questionIndex + 1} من ${lesson.quiz.length}</p>
+        <span class="quiz-label">${quizState.quizType === "final" ? "الاختبار النهائي" : "اختبار الدرس"}</span>
+        <h2>${quizState.contextTitle}</h2>
+        <p class="quiz-progress">سؤال ${quizState.questionIndex + 1} من ${quiz.questions.length}</p>
+        <p class="quiz-progress">الوقت المتبقي: ${minutes}:${seconds}</p>
       </div>
       <div class="quiz-question">
         <h3>${question.question}</h3>
@@ -350,7 +390,7 @@ function renderQuizQuestion() {
 
   nextBtn.addEventListener("click", () => {
     if (isLast) {
-      submitQuiz(lesson);
+      submitQuiz();
       return;
     }
     quizState.questionIndex += 1;
@@ -364,38 +404,75 @@ function renderQuizQuestion() {
   });
 }
 
-function submitQuiz(lesson) {
+function startQuizTimer() {
+  clearInterval(quizTimerInterval);
+  quizTimerInterval = setInterval(() => {
+    if (!quizState) return;
+    const remainingMs = quizState.endsAt - Date.now();
+    if (remainingMs <= 0) {
+      clearInterval(quizTimerInterval);
+      submitQuiz({ timedOut: true });
+      return;
+    }
+    const progressNode = document.querySelector(".quiz-progress:last-of-type");
+    if (progressNode) {
+      const remainingSecs = Math.floor(remainingMs / 1000);
+      const minutes = String(Math.floor(remainingSecs / 60)).padStart(2, "0");
+      const seconds = String(remainingSecs % 60).padStart(2, "0");
+      progressNode.textContent = `الوقت المتبقي: ${minutes}:${seconds}`;
+    }
+  }, 1000);
+}
+
+function submitQuiz({ timedOut = false } = {}) {
+  const quiz = quizState.quiz;
   let score = 0;
-  lesson.quiz.forEach((q, i) => {
-    if (quizState.answers[i] === q.correct) score++;
+  quiz.questions.forEach((q, i) => {
+    if (q.correctIndexes.includes(quizState.answers[i])) score++;
   });
 
-  const percent = Math.round((score / lesson.quiz.length) * 100);
-  const passed = percent >= 80;
+  clearInterval(quizTimerInterval);
+  const percent = Math.round((score / quiz.questions.length) * 100);
+  const passed = percent >= Number(quiz.passingScore || 70);
   const isLastLesson = currentLesson >= course.lessons.length - 1;
 
-  quizSummary.totalQuestions += lesson.quiz.length;
+  quizSummary.totalQuestions += quiz.questions.length;
   quizSummary.correctAnswers += score;
   quizSummary.lessons.push({
-    title: lesson.title,
+    title: quizState.contextTitle,
     score,
-    total: lesson.quiz.length,
+    total: quiz.questions.length,
     percent,
     passed
   });
 
-  saveQuizAttempt(lesson, score, percent);
+  saveQuizAttempt(quiz, score, percent, quizState.quizType);
+
+  const answersReview = quiz.questions
+    .map((q, i) => {
+      const selectedIdx = quizState.answers[i];
+      const correctIdx = q.correctIndexes[0];
+      const isCorrect = selectedIdx === correctIdx;
+      const selectedText = selectedIdx !== undefined ? q.options[selectedIdx] || "—" : "بدون إجابة";
+      const correctText = q.options[correctIdx] || "—";
+      return `<li><strong>${q.question}</strong><br>إجابتك: ${selectedText}<br>الإجابة الصحيحة: ${correctText}${
+        q.explanation ? `<br>التوضيح: ${q.explanation}` : ""
+      }<br><span>${isCorrect ? "✅ صحيح" : "❌ غير صحيح"}</span></li>`;
+    })
+    .join("");
 
   const box = document.getElementById("slideContainer");
   box.innerHTML = `
       <div class="quiz-result ${passed ? "passed" : "failed"}">
-      <h2>${passed ? "أحسنت! اجتزت اختبار الدرس" : "للأسف، تحتاج لإعادة المحاولة"}</h2>
-      <p>نتيجتك: ${score} من ${lesson.quiz.length} (${percent}%)</p>
+      <h2>${passed ? "أحسنت! تم اجتياز الاختبار" : "للأسف، تحتاج لإعادة المحاولة"}</h2>
+      ${timedOut ? "<p>انتهى الوقت قبل إنهاء جميع الأسئلة.</p>" : ""}
+      <p>نتيجتك: ${score} من ${quiz.questions.length} (${percent}%) • الحد الأدنى للنجاح: ${quiz.passingScore}%</p>
+      <ol class="quiz-feedback-list">${answersReview}</ol>
       <div class="quiz-result-actions">
         ${
           passed
             ? `<button class="primary" id="continueLessonBtn">${
-                isLastLesson ? "استلم شهادتك" : "متابعة الدرس التالي"
+                quizState.quizType === "final" || isLastLesson ? "استلم شهادتك" : "متابعة الدرس التالي"
               }</button>`
             : `<button class="primary" id="retryQuizBtn">إعادة المحاولة</button>`
         }
@@ -407,6 +484,10 @@ function submitQuiz(lesson) {
     document.getElementById("continueLessonBtn").addEventListener("click", async () => {
       isQuizActive = false;
       if (isLastLesson) {
+        if (quizState.quizType !== "final" && course.finalQuiz?.questions?.length) {
+          renderQuiz({ quiz: course.finalQuiz, contextTitle: course.title || "الاختبار النهائي", quizType: "final" });
+          return;
+        }
         const btn = document.getElementById("continueLessonBtn");
         if (btn) {
           btn.disabled = true;
@@ -420,15 +501,20 @@ function submitQuiz(lesson) {
     });
   } else {
     document.getElementById("retryQuizBtn").addEventListener("click", () => {
-      quizSummary.totalQuestions -= lesson.quiz.length;
+      quizSummary.totalQuestions -= quiz.questions.length;
       quizSummary.correctAnswers -= score;
       quizSummary.lessons.pop();
       quizState = {
         lessonIndex: currentLesson,
+        quizType: quizState.quizType,
         questionIndex: 0,
         answers: [],
-        lesson
+        contextTitle: quizState.contextTitle,
+        quiz,
+        startedAt: Date.now(),
+        endsAt: Date.now() + Number(quiz.timeLimitMinutes || 1) * 60 * 1000
       };
+      startQuizTimer();
       renderQuizQuestion();
     });
   }
@@ -441,6 +527,10 @@ function nextLesson() {
     renderSidebar();
     renderSlide();
   } else {
+    if (course.finalQuiz?.questions?.length) {
+      renderQuiz({ quiz: course.finalQuiz, contextTitle: course.title || "الاختبار النهائي", quizType: "final" });
+      return;
+    }
     completeCourse();
   }
 }
@@ -545,15 +635,16 @@ async function loadResume() {
 }
 
 function updateProgressBar() {
+  const hasFinalQuiz = Boolean(course.finalQuiz?.questions?.length);
   const totalSteps = course.lessons.reduce(
-    (sum, lesson) => sum + lesson.slides.length + (lesson.quiz?.length ? 1 : 0),
+    (sum, lesson) => sum + lesson.slides.length + (lesson.checkpointQuiz?.questions?.length ? 1 : 0),
     0
-  );
+  ) + (hasFinalQuiz ? 1 : 0);
 
   const completedLessonsSteps = course.lessons
     .slice(0, currentLesson)
     .reduce(
-      (sum, lesson) => sum + lesson.slides.length + (lesson.quiz?.length ? 1 : 0),
+      (sum, lesson) => sum + lesson.slides.length + (lesson.checkpointQuiz?.questions?.length ? 1 : 0),
       0
     );
 
@@ -699,13 +790,17 @@ function getCompletedCourses() {
   }
 }
 
-async function saveQuizAttempt(lesson, score, percent) {
+async function saveQuizAttempt(quiz, score, percent, quizType = "checkpoint") {
   try {
     await addDoc(collection(db, "quizAttempts"), {
       userId: user.uid,
       courseId,
       courseTitle: courseTitle || course.title,
-      lessonTitle: lesson.title,
+      lessonTitle: quizState?.contextTitle || "",
+      quizTitle: quiz?.title || "",
+      quizType,
+      passingScore: Number(quiz?.passingScore || 0),
+      timeLimitMinutes: Number(quiz?.timeLimitMinutes || 0),
       score,
       percent,
       createdAt: serverTimestamp()

@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const builder = createCourseBuilder({
     role: "instructor",
     selectors: {
-      localDraftKey: "coursehub_instructor_builder_draft_v7",
+      localDraftKey: "coursehub_instructor_builder_draft_v8",
       draftCollection: "instructorCourseDrafts"
     }
   });

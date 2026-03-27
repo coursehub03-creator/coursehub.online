@@ -50,9 +50,12 @@
 .quiz-card { display: grid; gap: 12px; }
 .quiz-question { border: 1px solid var(--color-border); border-radius: 12px; padding: 10px; background: #fff; }
 .quiz-option-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 6px 0; }
+.quiz-option-row .inline-actions { justify-content: flex-end; align-items: center; }
 .preview-landing { display: grid; grid-template-columns: 230px 1fr; gap: 12px; align-items: start; }
 .preview-landing img { width: 100%; border-radius: 12px; object-fit: cover; max-height: 160px; }
 .preview-curriculum, .preview-lesson, .preview-quiz { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border); }
+.preview-quiz-question { border: 1px dashed var(--color-border); border-radius: 10px; padding: 10px; margin-top: 8px; background: #fff; }
+.preview-quiz-question ol { margin: 6px 0 0; padding-inline-start: 20px; }
 .slide-preview-mini { position: relative; height: 180px; border-radius: 10px; overflow: hidden; }
 .slide-preview-live .canvas-element { padding: 2px; pointer-events: none; }
 .slide-preview-live .canvas-element img,
