@@ -12,6 +12,26 @@ const escapeHtml = (value) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
+function normalizeLessons(course) {
+  if (Array.isArray(course.lessons) && course.lessons.length) return course.lessons;
+  if (Array.isArray(course.modules)) {
+    return course.modules.flatMap((module) => (module.lessons || []).map((lesson) => ({ ...lesson, moduleTitle: module.title || "" })));
+  }
+  return [];
+}
+
+function normalizeOutcomes(course) {
+  if (Array.isArray(course.outcomes)) return course.outcomes;
+  if (typeof course.outcomes === "string") return course.outcomes.split(/\n|،|,/).map((x) => x.trim()).filter(Boolean);
+  return [];
+}
+
+function resolvePrice(course) {
+  const pricing = course.pricing || {};
+  const finalPrice = Number(pricing.finalPrice ?? course.price ?? pricing.suggestedPrice ?? 0);
+  return finalPrice;
+}
+
 function renderNotFound(message) {
   document.getElementById("courseTitle").textContent = "الدورة غير متاحة";
   document.getElementById("courseStatus").textContent = "archived";
@@ -24,39 +44,32 @@ function renderNotFound(message) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!id) {
-    renderNotFound("لم يتم العثور على معرف الدورة.");
-    return;
-  }
+  if (!id) return renderNotFound("لم يتم العثور على معرف الدورة.");
 
   try {
     const snap = await getDoc(doc(db, "courses", id));
-    if (!snap.exists()) {
-      renderNotFound("الدورة غير موجودة.");
-      return;
-    }
+    if (!snap.exists()) return renderNotFound("الدورة غير موجودة.");
 
     const course = snap.data() || {};
-    if (String(course.status || "") !== "published") {
-      renderNotFound("هذه الدورة ليست منشورة بعد.");
-      return;
-    }
+    if (String(course.status || "") !== "published") return renderNotFound("هذه الدورة ليست منشورة بعد.");
+
+    const lessons = normalizeLessons(course);
+    const outcomes = normalizeOutcomes(course);
+    const price = resolvePrice(course);
 
     document.getElementById("courseTitle").textContent = course.title || "بدون عنوان";
     document.getElementById("courseStatus").textContent = "published";
     document.getElementById("courseStatus").className = "ch-badge published";
-    document.getElementById("courseMeta").textContent = `${course.instructorName || "مدرّب"} • ${course.duration || "-"} • ${course.level || "-"} • ⭐ ${Number(course.rating || 0).toFixed(1)}`;
-    document.getElementById("coursePrice").textContent = `السعر: ${Number(course.price || 0) <= 0 ? "مجاني" : `${course.price}$`}`;
-    document.getElementById("courseImage").src = course.image || "assets/images/default-course.png";
+    document.getElementById("courseMeta").textContent = `${course.instructorName || "مدرّب"} • ${course.duration || course.durationHours || "-"} • ${course.level || "-"}`;
+    document.getElementById("coursePrice").textContent = `السعر: ${price <= 0 ? "مجاني" : `${price.toLocaleString("ar")} ر.س`}`;
+    document.getElementById("courseImage").src = course.cover || course.image || "assets/images/default-course.png";
 
-    const outcomes = Array.isArray(course.outcomes) ? course.outcomes : [];
     document.getElementById("outcomes").innerHTML = outcomes.length
       ? outcomes.map((x) => `<li>${escapeHtml(x)}</li>`).join("")
       : "<li>سيتم إضافة مخرجات التعلم قريبًا.</li>";
 
-    const lessons = Array.isArray(course.lessons) ? course.lessons : [];
     document.getElementById("curriculum").innerHTML = lessons.length
-      ? lessons.map((lesson, idx) => `<p>الوحدة ${idx + 1}: ${escapeHtml(lesson.title || "درس")}</p>`).join("")
+      ? lessons.map((lesson, idx) => `<p>الدرس ${idx + 1}: ${escapeHtml(lesson.title || "درس")}</p>`).join("")
       : "<p>لا توجد دروس متاحة للعرض الآن.</p>";
 
     document.getElementById("joinBtn").href = `course-player.html?id=${encodeURIComponent(id)}`;

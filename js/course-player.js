@@ -30,6 +30,44 @@ const NOTIFICATION_KEY = "coursehub_notifications";
 const INCOMPLETE_KEY = "coursehub_incomplete_progress";
 const COMPLETED_KEY = "coursehub_completed_courses";
 
+function normalizeCourseLessons(rawCourse) {
+  const lessonSource = Array.isArray(rawCourse.lessons) && rawCourse.lessons.length
+    ? rawCourse.lessons
+    : Array.isArray(rawCourse.modules)
+      ? rawCourse.modules.flatMap((m) => m.lessons || [])
+      : [];
+
+  return lessonSource.map((lesson, i) => {
+    const rawSlides = Array.isArray(lesson.slides) && lesson.slides.length
+      ? lesson.slides
+      : [{ title: lesson.title || `شريحة ${i + 1}`, content: lesson.content || lesson.summary || "", type: lesson.contentType || "text" }];
+
+    const slides = rawSlides.map((slide) => {
+      if (Array.isArray(slide.elements) && slide.elements.length) {
+        const firstText = slide.elements.find((el) => ["heading", "text"].includes(el.type));
+        const firstMedia = slide.elements.find((el) => ["image", "video"].includes(el.type));
+        return {
+          title: slide.title || lesson.title || "",
+          content: firstText?.text || "",
+          mediaUrl: firstMedia?.src || "",
+          type: firstMedia?.type || "text",
+          style: {
+            backgroundColor: slide.background || "#ffffff",
+            textAlign: "right",
+            textColor: "#0f172a",
+            fontSize: 22,
+            fontWeight: 600
+          }
+        };
+      }
+      return slide;
+    });
+
+    const quizQuestions = lesson.checkpointQuiz?.questions || lesson.quiz || [];
+    return { ...lesson, slides, quiz: quizQuestions };
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(window.location.search);
   courseId = params.get("id");
@@ -70,6 +108,7 @@ async function loadCourse() {
   }
 
   course = snap.data();
+  course.lessons = normalizeCourseLessons(course);
 
   if (course.status !== "published") {
     alert("هذه الدورة غير متاحة حالياً للطلاب.");

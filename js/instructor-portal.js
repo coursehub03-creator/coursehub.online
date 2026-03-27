@@ -58,7 +58,7 @@ function fillDashboard(data) {
   const completionRate = totalStudents ? Math.round((completions / totalStudents) * 100) : 0;
   const published = data.courses.filter((c) => c.status === "published").length;
   const draft = data.courses.filter((c) => c.status === "draft").length;
-  const inReview = data.submissions.filter((s) => s.status === "pending").length;
+  const inReview = data.submissions.filter((s) => ["pending", "submitted", "under_review", "resubmitted"].includes(String(s.status || ""))).length;
 
   const set = (id, value) => document.getElementById(id) && (document.getElementById(id).textContent = String(value));
   set("metricStudents", totalStudents);
@@ -71,7 +71,7 @@ function fillDashboard(data) {
   const latestReviews = document.getElementById("latestReviews");
   if (latestReviews) {
     latestReviews.innerHTML = data.submissions.length
-      ? data.submissions.map((s) => `<div style="padding:8px 0;border-bottom:1px solid var(--color-border)"><strong>${s.title || "دورة بدون عنوان"}</strong> ${badge(s.status || "pending")} ${s.reviewReason ? `<p>سبب الرفض: ${s.reviewReason}</p>` : ""}</div>`).join("")
+      ? data.submissions.map((s) => `<div style="padding:8px 0;border-bottom:1px solid var(--color-border)"><strong>${s.title || "دورة بدون عنوان"}</strong> ${badge(s.status || "submitted")} ${(s.reviewReason || s.note) ? `<p>ملاحظات المراجعة: ${s.reviewReason || s.note}</p>` : ""}</div>`).join("")
       : "لا توجد عمليات مراجعة حتى الآن.";
   }
 }

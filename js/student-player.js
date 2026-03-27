@@ -80,16 +80,48 @@ function normalizeLessons(courseData) {
 }
 
 function normalizeSteps(steps) {
-  return steps.map((step, idx) => ({
-    id: step.id || `step-${idx + 1}`,
-    type: step.type || (step.mediaUrl ? "video" : "text"),
-    title: step.title || `خطوة ${idx + 1}`,
-    content: step.content || step.text || "",
-    mediaUrl: step.mediaUrl || "",
-    options: step.options || [],
-    correctIndex: Number(step.correctIndex ?? step.correct ?? 0),
-    points: Number(step.points || 0)
-  }));
+  return steps.map((step, idx) => {
+    if (step?.elements?.length) {
+      const txt = step.elements.find((el) => ["heading", "text"].includes(el.type));
+      const media = step.elements.find((el) => ["image", "video"].includes(el.type));
+      return {
+        id: step.id || `step-${idx + 1}`,
+        type: media?.type || "text",
+        title: step.title || `شريحة ${idx + 1}`,
+        content: txt?.text || "",
+        mediaUrl: media?.src || "",
+        options: [],
+        correctIndex: 0,
+        points: 0
+      };
+    }
+
+    const checkpoint = step.checkpointQuiz || null;
+    if (checkpoint?.questions?.length) {
+      const firstQ = checkpoint.questions[0];
+      return {
+        id: step.id || `step-${idx + 1}`,
+        type: "checkpointQuiz",
+        title: checkpoint.title || `اختبار ${idx + 1}`,
+        content: firstQ.question || "",
+        mediaUrl: "",
+        options: firstQ.options || [],
+        correctIndex: Number(firstQ.correctIndexes?.[0] ?? 0),
+        points: Number(step.points || 0)
+      };
+    }
+
+    return {
+      id: step.id || `step-${idx + 1}`,
+      type: step.type || (step.mediaUrl ? "video" : "text"),
+      title: step.title || `خطوة ${idx + 1}`,
+      content: step.content || step.text || "",
+      mediaUrl: step.mediaUrl || "",
+      options: step.options || [],
+      correctIndex: Number(step.correctIndex ?? step.correct ?? 0),
+      points: Number(step.points || 0)
+    };
+  });
 }
 
 async function loadProgress() {
