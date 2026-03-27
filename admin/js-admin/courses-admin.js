@@ -167,7 +167,7 @@ async function initCoursesAdmin() {
   async function updateCourseStatus(id, nextStatus) {
     if (!id || !nextStatus) return;
 
-    const allowedStatuses = new Set(["draft", "review", "published", "archived"]);
+    const allowedStatuses = new Set(["draft", "submitted", "under_review", "changes_requested", "resubmitted", "approved", "rejected", "published", "archived"]);
     if (!allowedStatuses.has(nextStatus)) {
       alert("حالة الدورة غير صالحة.");
       return;
@@ -335,7 +335,12 @@ async function initCoursesAdmin() {
         const currentStatus = String(course.status || "draft");
         const allStatuses = [
           { value: "draft", label: "مسودة" },
-          { value: "review", label: "قيد المراجعة" },
+          { value: "submitted", label: "تم الإرسال" },
+          { value: "under_review", label: "تحت المراجعة" },
+          { value: "changes_requested", label: "مطلوب تعديلات" },
+          { value: "resubmitted", label: "أعيد الإرسال" },
+          { value: "approved", label: "معتمدة" },
+          { value: "rejected", label: "مرفوضة" },
           { value: "published", label: "منشورة" },
           { value: "archived", label: "مؤرشفة" }
         ];
@@ -404,7 +409,12 @@ async function initCoursesAdmin() {
 
         const statusLabels = {
           draft: "مسودة",
-          review: "قيد المراجعة",
+          submitted: "تم الإرسال",
+          under_review: "تحت المراجعة",
+          changes_requested: "مطلوب تعديلات",
+          resubmitted: "أعيد الإرسال",
+          approved: "معتمدة",
+          rejected: "مرفوضة",
           published: "منشورة",
           archived: "مؤرشفة"
         };
@@ -434,9 +444,16 @@ async function initCoursesAdmin() {
       if (shouldUseCallable) {
         await reviewInstructorCourseSubmission({ submissionId: id, decision, reason });
       } else {
-        const status = decision === "approve" ? "approved" : "rejected";
+        const mapped = {
+          approve: "approved",
+          reject: "rejected",
+          request_changes: "changes_requested",
+          move_review: "under_review"
+        };
+        const status = mapped[decision] || "under_review";
         await updateDoc(doc(db, "instructorCourseSubmissions", id), {
           status,
+          note: reason || "",
           reviewReason: status === "rejected" ? reason : "",
           reviewedAt: serverTimestamp()
         });
@@ -465,7 +482,7 @@ async function initCoursesAdmin() {
 
     const rows = allSubmissions
       .filter((item) => {
-        if (status !== "all" && String(item.status || "pending") !== status) {
+        if (status !== "all" && String(item.status || "submitted") !== status) {
           return false;
         }
         if (!q) return true;
@@ -489,17 +506,20 @@ async function initCoursesAdmin() {
 
     submissionsTbody.innerHTML = rows
       .map((item) => {
-        const currentStatus = String(item.status || "pending");
+        const currentStatus = String(item.status || "submitted");
         return `
           <tr>
             <td>${escapeHtml(item.title || "-")}</td>
             <td>${escapeHtml(item.instructorName || item.instructorEmail || "-")}</td>
             <td>${escapeHtml(item.summary || "-")}</td>
             <td>${escapeHtml(currentStatus)}</td>
-            <td>${escapeHtml(item.note || "-")}</td>
+            <td>${escapeHtml(item.note || item.reviewReason || "-")}</td>
             <td>
-              <button class="btn small" data-review-id="${escapeHtml(item.id)}" data-decision="approve">اعتماد وتحويل لمسودة</button>
+              <button class="btn small" data-review-id="${escapeHtml(item.id)}" data-decision="move_review">استلام للمراجعة</button>
+              <button class="btn small" data-review-id="${escapeHtml(item.id)}" data-decision="approve">اعتماد</button>
+              <button class="btn small" data-review-id="${escapeHtml(item.id)}" data-decision="request_changes">طلب تعديلات</button>
               <button class="btn danger small" data-review-id="${escapeHtml(item.id)}" data-decision="reject">رفض</button>
+              <button class="btn ghost small" data-submission-details="${escapeHtml(item.id)}">تفاصيل</button>
             </td>
           </tr>
         `;
@@ -513,16 +533,16 @@ async function initCoursesAdmin() {
         if (!id || !decision) return;
 
         let reason = "";
-        if (decision === "reject") {
-          reason = prompt("اكتب سبب الرفض (إلزامي):", "")?.trim() || "";
+        if (decision === "reject" || decision === "request_changes") {
+          reason = prompt(decision === "reject" ? "اكتب سبب الرفض (إلزامي):" : "اكتب ملاحظات التعديل (إلزامي):", "")?.trim() || "";
           if (!reason) {
-            alert("سبب الرفض مطلوب.");
+            alert("الملاحظة مطلوبة.");
             return;
           }
         }
 
         const decisionText =
-          decision === "approve" ? "اعتماد الطلب وتحويله لمسودة" : "رفض الطلب";
+          decision === "approve" ? "اعتماد الطلب" : decision === "request_changes" ? "طلب تعديلات" : decision === "move_review" ? "نقل الحالة إلى تحت المراجعة" : "رفض الطلب";
 
         if (!confirm(`تأكيد ${decisionText}؟`)) return;
 
@@ -532,6 +552,21 @@ async function initCoursesAdmin() {
         } finally {
           btn.disabled = false;
         }
+      });
+    });
+
+    submissionsTbody.querySelectorAll("[data-submission-details]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const item = allSubmissions.find((s) => s.id === btn.dataset.submissionDetails);
+        const panel = document.getElementById("submission-details");
+        if (!item || !panel) return;
+        panel.innerHTML = `
+          <h4>${escapeHtml(item.title || "-")}</h4>
+          <p><strong>الحالة:</strong> ${escapeHtml(item.status || "submitted")}</p>
+          <p><strong>الملخص:</strong> ${escapeHtml(item.summary || "-")}</p>
+          <p><strong>ملاحظات المشرف:</strong> ${escapeHtml(item.note || item.reviewReason || "لا توجد")}</p>
+          <p><strong>معرّف الدورة:</strong> ${escapeHtml(item.courseId || item.linkedCourseId || "-")}</p>
+        `;
       });
     });
   }

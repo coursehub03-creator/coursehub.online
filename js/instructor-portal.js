@@ -29,7 +29,8 @@ function setActiveNav() {
 
 function badge(status) {
   const s = String(status || "draft").toLowerCase();
-  return `<span class="ch-badge ${s === "pending" ? "in_review" : s}">${s}</span>`;
+  const normalized = s === "pending" ? "submitted" : s;
+  return `<span class="ch-badge ${normalized === "under_review" ? "in_review" : normalized}">${normalized}</span>`;
 }
 
 async function loadMetrics(uid) {
@@ -83,12 +84,24 @@ function fillCourses(data) {
   const doneByCourse = new Map();
   data.certs.forEach((x) => doneByCourse.set(x.courseId, (doneByCourse.get(x.courseId) || 0) + 1));
 
+  const latestSubmissionByCourse = new Map();
+  data.submissions.forEach((sub) => {
+    const key = sub.courseId || sub.linkedCourseId || sub.title || sub.id;
+    const prev = latestSubmissionByCourse.get(key);
+    const ts = Number(sub.updatedAt?.seconds || sub.createdAt?.seconds || 0);
+    const prevTs = Number(prev?.updatedAt?.seconds || prev?.createdAt?.seconds || 0);
+    if (!prev || ts >= prevTs) latestSubmissionByCourse.set(key, sub);
+  });
+
   rows.innerHTML = data.courses.length ? data.courses.map((c) => {
     const s = enrollByCourse.get(c.id) || 0;
     const d = doneByCourse.get(c.id) || 0;
     const r = s ? Math.round((d / s) * 100) : 0;
-    return `<tr><td>${c.title || "-"}</td><td>${badge(c.status)}</td><td>${s}</td><td>${r}%</td></tr>`;
-  }).join("") : "<tr><td colspan='4'>لا توجد دورات بعد.</td></tr>";
+    const submission = latestSubmissionByCourse.get(c.id);
+    const note = submission?.note || submission?.reviewReason || c.lastReviewNote || "-";
+    const needsAction = ["changes_requested", "rejected"].includes(String(c.status || ""));
+    return `<tr><td>${c.title || "-"}</td><td>${badge(c.status)}</td><td>${s}</td><td>${r}%</td><td>${note}</td><td>${needsAction ? "<a class='ch-btn secondary' href='/instructor-builder.html'>تعديل وإعادة إرسال</a>" : "-"}</td></tr>`;
+  }).join("") : "<tr><td colspan='6'>لا توجد دورات بعد.</td></tr>";
 }
 
 function fillStudents(data) {

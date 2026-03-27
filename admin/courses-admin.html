@@ -57,7 +57,12 @@
                 <select id="course-status-filter">
                   <option value="all">كل الحالات</option>
                   <option value="draft">مسودة</option>
-                  <option value="review">قيد المراجعة</option>
+                  <option value="submitted">تم الإرسال</option>
+                  <option value="under_review">تحت المراجعة</option>
+                  <option value="changes_requested">مطلوب تعديلات</option>
+                  <option value="resubmitted">أعيد الإرسال</option>
+                  <option value="approved">معتمدة</option>
+                  <option value="rejected">مرفوضة</option>
                   <option value="published">منشورة</option>
                   <option value="archived">مؤرشفة</option>
                 </select>
@@ -103,7 +108,10 @@
             <div class="table-filters">
               <select id="submission-status-filter">
                 <option value="all">كل حالات الطلبات</option>
-                <option value="pending">قيد المراجعة</option>
+                <option value="submitted">تم الإرسال</option>
+                <option value="under_review">تحت المراجعة</option>
+                <option value="changes_requested">مطلوب تعديلات</option>
+                <option value="resubmitted">أعيد الإرسال</option>
                 <option value="approved">معتمدة</option>
                 <option value="rejected">مرفوضة</option>
               </select>
@@ -130,6 +138,11 @@
             </tbody>
           </table>
         </section>
+        <section class="builder-card" style="margin-top:12px;padding:12px;">
+          <h3 style="margin-top:0;">تفاصيل طلب المراجعة</h3>
+          <div id="submission-details">اختر طلباً لعرض التفاصيل والملاحظات.</div>
+        </section>
+
       </div>
     </section>
   </div>

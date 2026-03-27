@@ -3,100 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>إضافة دورة جديدة | CourseHub Admin</title>
+  <title>منشئ الدورات | المشرف</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
   <link rel="stylesheet" href="/admin/css-admin/admin.css">
+  <link rel="stylesheet" href="/css/design-system.css">
   <link rel="stylesheet" href="/css/instructor-builder.css">
 </head>
 <body>
   <div id="header-placeholder"></div>
-
-  <main class="admin-wrapper">
+  <main class="admin-wrapper" id="builderRoot">
     <div class="admin-layout">
-      <aside class="admin-sidebar">
-        <div id="sidebar-placeholder"></div>
-      </aside>
-
+      <aside class="admin-sidebar"><div id="sidebar-placeholder"></div></aside>
       <section class="admin-main">
         <div id="topbar-placeholder"></div>
-
         <div class="admin-content">
-          <section class="wizard-head card">
-            <h1>منشئ الدورات الجديد (Admin)</h1>
-            <div class="wizard-steps" id="wizardSteps"></div>
-          </section>
+          <div class="app-topbar"><strong id="builderRoleBadge"></strong><small>آخر حفظ تلقائي: <span id="lastAutosave">-</span></small></div>
+          <header class="ch-card builder-header"><h1 id="builderPageTitle"></h1><div id="stepBar" class="step-bar"></div></header>
+          <!-- Reuse same shared builder UI -->
+          <form id="builderForm" class="builder-layout"></form>
+          <script>
+            // hydrate shared layout from instructor-builder shell for parity
+            const template = `
+              <section class="ch-card builder-step-panel"><h3>1) معلومات أساسية</h3><div class="app-grid-2"><label>العنوان<input id="title" data-bind="title" class="ch-input" required></label><label>العنوان الفرعي<input id="subtitle" data-bind="subtitle" class="ch-input"></label><label>Slug<input id="slug" data-bind="slug" class="ch-input"></label><label>التصنيف<select id="category" data-bind="category" class="ch-select"></select></label><label>المستوى<select id="level" data-bind="level" class="ch-select"><option>مبتدئ</option><option>متوسط</option><option>متقدم</option></select></label><label>اللغة<input id="language" data-bind="language" class="ch-input"></label></div><label>الوصف<textarea id="description" data-bind="description" class="ch-textarea"></textarea></label><div class="app-grid-2"><label>المخرجات<textarea id="outcomes" data-bind="outcomes" class="ch-textarea"></textarea></label><label>المتطلبات<textarea id="requirements" data-bind="requirements" class="ch-textarea"></textarea></label></div></section>
+              <section class="ch-card builder-step-panel" hidden><h3>2) الوسائط وصفحة الهبوط</h3><div class="app-grid-2"><label>صورة الغلاف (رابط)<input id="cover" data-bind="cover" class="ch-input"></label><label>فيديو ترويجي (رابط)<input id="promoVideo" data-bind="promoVideo" class="ch-input"></label><label>رفع صورة من الجهاز<input id="coverFile" type="file" class="ch-input" accept="image/*"></label><label>رفع فيديو من الجهاز<input id="promoFile" type="file" class="ch-input" accept="video/*"></label></div></section>
+              <section class="ch-card builder-step-panel" hidden><h3>3) المنهج والوحدات</h3><button type="button" id="addModule" class="ch-btn secondary">+ إضافة وحدة</button><div id="moduleLessonTree" class="stacked"></div><div id="lessonSettings" class="ch-card lesson-settings-card"></div></section>
+              <section class="ch-card builder-step-panel" hidden><h3>4) محرر الشرائح</h3><div class="slide-grid"><aside><div class="inline-actions"><button type="button" id="addSlide" class="ch-btn secondary">+ شريحة</button><button type="button" id="deleteSlide" class="ch-btn secondary">حذف الشريحة</button></div><label>خلفية الشريحة<input id="slideBackground" type="color" class="ch-input" value="#f8fafc"></label><div id="slideList" class="slide-list"></div></aside><section><div class="inline-actions"><button type="button" id="addTextElement" class="ch-btn secondary">+ نص</button><button type="button" id="addHeadingElement" class="ch-btn secondary">+ عنوان</button><button type="button" id="addImageElement" class="ch-btn secondary">+ صورة</button><button type="button" id="addVideoElement" class="ch-btn secondary">+ فيديو</button><button type="button" id="addShapeElement" class="ch-btn secondary">+ شكل</button><button type="button" id="duplicateElement" class="ch-btn secondary">نسخ عنصر</button><button type="button" id="deleteElement" class="ch-btn secondary">حذف عنصر</button><button type="button" id="bringFront" class="ch-btn secondary">أمام</button><button type="button" id="sendBack" class="ch-btn secondary">خلف</button></div><div id="slideCanvas" class="slide-canvas"></div></section></div></section>
+              <section class="ch-card builder-step-panel" hidden><h3>5) الاختبارات ونقاط التحقق</h3><h4>اختبار الدرس المحدد</h4><div id="lessonQuizEditor"></div><h4>الاختبار النهائي</h4><button type="button" id="addFinalQuestion" class="ch-btn secondary">+ سؤال نهائي</button><div id="finalQuizEditor"></div></section>
+              <section class="ch-card builder-step-panel" hidden><h3>6) التسعير والوصول</h3><div class="app-grid-2"><label>السعر المقترح<input id="suggestedPrice" class="ch-input" type="number" min="0"></label><label id="finalPriceWrap">السعر النهائي<input id="finalPrice" class="ch-input" type="number" min="0"></label><label>نموذج الوصول<select id="accessModel" class="ch-select"><option value="paid">مدفوع</option><option value="free">مجاني</option><option value="private">خاص</option></select></label></div></section>
+              <section class="ch-card builder-step-panel" hidden><h3>7) المعاينة الواقعية</h3><div id="realPreview"></div></section>
+              <section class="ch-card builder-step-panel" hidden><h3>8) الإرسال/النشر</h3><p>حالة الدورة الحالية: <span id="courseStatusPill" class="ch-badge draft">مسودة</span></p><ul id="validationList"></ul><div id="reviewTimeline" class="review-timeline"></div><div id="instructorReviewPanel" class="review-panel"></div></section>`;
+            document.getElementById('builderForm').innerHTML = template;
+          </script>
 
-          <form id="builderForm" class="card builder-form">
-            <div class="wizard-panel active" data-step="0">
-              <h2>1) معلومات الدورة</h2>
-              <div class="grid-2">
-                <input id="title" placeholder="عنوان الدورة" required>
-                <select id="category" required></select>
-                <input id="price" type="number" min="0" placeholder="السعر">
-                <select id="level">
-                  <option value="مبتدئ">مبتدئ</option>
-                  <option value="متوسط">متوسط</option>
-                  <option value="متقدم">متقدم</option>
-                </select>
-                <select id="language">
-                  <option value="العربية">العربية</option>
-                  <option value="English">English</option>
-                </select>
-                <input id="durationHours" type="number" min="1" placeholder="المدة بالساعات">
-                <input id="image" placeholder="رابط صورة الغلاف">
-                <input id="coverImage" type="file" accept="image/*">
-              </div>
-              <img id="coverPreview" src="/assets/images/default-course.png" alt="cover" style="width:200px;border-radius:10px;margin-top:10px;">
-              <textarea id="description" rows="5" placeholder="وصف الدورة"></textarea>
-            </div>
-
-            <div class="wizard-panel" data-step="1">
-              <h2>2) بناء الدروس والخطوات</h2>
-              <div id="lessonsBuilder"></div>
-              <button class="btn ghost" id="addLesson" type="button">+ إضافة Lesson</button>
-              <div class="card" style="margin-top:10px;padding:10px">
-                <h3>الاختبار النهائي للدورة</h3>
-                <div id="finalQuizBuilder"></div>
-                <button class="btn ghost" id="addFinalQuestion" type="button">+ إضافة سؤال نهائي</button>
-              </div>
-
-            </div>
-
-            <div class="wizard-panel" data-step="2">
-              <h2>3) Checkpoints</h2>
-              <p>أضف checkpointQuiz ضمن خطوات كل درس.</p>
-              <div id="checkpointHint" class="hint"></div>
-            </div>
-
-            <div class="wizard-panel" data-step="3">
-              <h2>4) المعاينة النهائية</h2>
-              <div id="playerPreview" class="preview-shell"></div>
-              <ul class="checklist">
-                <li>✅ وجود Summary في كل Lesson.</li>
-                <li>✅ وجود Checkpoint واحد على الأقل.</li>
-                <li>✅ التحقق من ترتيب الدروس.</li>
-              </ul>
-            </div>
-
-            <footer class="wizard-actions">
-              <button type="button" class="btn ghost" id="prevWizard">السابق</button>
-              <div>
-                <button type="button" class="btn ghost" id="saveDraft">حفظ مسودة</button>
-                <button type="button" class="btn ghost" id="nextWizard">التالي</button>
-                <button type="submit" class="btn primary" id="submitCourse">نشر الدورة</button>
-              </div>
-            </footer>
-            <p id="builderStatus"></p>
-          </form>
+          <footer class="builder-footer-actions">
+            <button type="button" id="prevStep" class="ch-btn secondary">السابق</button>
+            <div class="inline-actions"><button type="button" id="saveDraft" class="ch-btn secondary">حفظ مسودة</button><button type="button" id="nextStep" class="ch-btn primary">التالي</button></div>
+          </footer>
+          <div id="submitActions" hidden class="submit-actions"><button type="button" id="submitForReview" class="ch-btn primary">إرسال للمراجعة</button><button type="button" id="publishDirect" class="ch-btn primary">نشر مباشر</button></div>
+          <p id="builderStatus"></p>
         </div>
       </section>
     </div>
   </main>
-
   <div id="footer-placeholder"></div>
-
   <script type="module" src="/js/main.js"></script>
   <script type="module" src="/admin/js-admin/admin-layout.js"></script>
   <script type="module" src="/admin/js-admin/admin-guard.js"></script>
