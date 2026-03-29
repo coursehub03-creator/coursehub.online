@@ -34,12 +34,23 @@ function badge(status) {
 }
 
 async function loadMetrics(uid) {
+  const safeGetDocs = async (label, resolver) => {
+    try {
+      return await resolver();
+    } catch (error) {
+      console.warn(`تعذر تحميل ${label} بسبب الصلاحيات الحالية`, error);
+      return { docs: [] };
+    }
+  };
+
   const [coursesSnap, enrollmentsSnap, certsSnap, submissionsSnap, attemptsSnap] = await Promise.all([
-    getDocs(query(collection(db, "courses"), where("instructorId", "==", uid))),
-    getDocs(collection(db, "enrollments")),
-    getDocs(collection(db, "certificates")),
-    getDocs(query(collection(db, "instructorCourseSubmissions"), where("instructorId", "==", uid), orderBy("createdAt", "desc"), limit(10))),
-    getDocs(collection(db, "quizAttempts"))
+    safeGetDocs("الدورات", () => getDocs(query(collection(db, "courses"), where("instructorId", "==", uid)))),
+    safeGetDocs("التسجيلات", () => getDocs(collection(db, "enrollments"))),
+    safeGetDocs("الشهادات", () => getDocs(collection(db, "certificates"))),
+    safeGetDocs("طلبات المراجعة", () =>
+      getDocs(query(collection(db, "instructorCourseSubmissions"), where("instructorId", "==", uid), orderBy("createdAt", "desc"), limit(10)))
+    ),
+    safeGetDocs("محاولات الاختبار", () => getDocs(collection(db, "quizAttempts")))
   ]);
 
   const courses = coursesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
