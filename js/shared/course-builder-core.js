@@ -280,6 +280,8 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     q("#courseStatusPill").className = `ch-badge ${status}`;
     q("#submitForReview").hidden = role !== "instructor";
     q("#publishDirect").hidden = role !== "admin";
+    q("#publishDirect").disabled = role !== "admin";
+    q("#publishDirect").style.display = role === "admin" ? "inline-flex" : "none";
     q("#submitForReview").textContent = status === "changes_requested" ? "إعادة الإرسال بعد التعديل" : "إرسال للمراجعة";
   }
 
@@ -341,6 +343,21 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
       renderPreview();
     } catch {
       setStatus("⚠️ تعذر رفع الملف الآن، تم حفظ معاينة محلية فقط.", true);
+    }
+  }
+
+  async function uploadFileToStorage(file, folder) {
+    if (!file) return "";
+    const localPreview = URL.createObjectURL(file);
+    if (!state.user?.uid) return localPreview;
+
+    try {
+      const storageRef = ref(storage, `${role}-courses/${state.user.uid}/${folder}/${Date.now()}-${file.name}`);
+      await uploadBytes(storageRef, file);
+      return await getDownloadURL(storageRef);
+    } catch {
+      setStatus("⚠️ تعذر رفع الملف الآن، تم استخدام ملف محلي للمعاينة.", true);
+      return localPreview;
     }
   }
 
@@ -438,6 +455,10 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
       </div>
       <label>ملخص الدرس<textarea id="lessonSummary" class="ch-textarea">${esc(lesson.summary)}</textarea></label>
       <label>محتوى الدرس / رابط وسيط<textarea id="lessonContent" class="ch-textarea">${esc(lesson.content || "")}</textarea></label>
+      <div class="app-grid-2">
+        <label>رابط وسائط الدرس (اختياري)<input id="lessonMediaUrl" class="ch-input" value="${esc(lesson.content || "")}" placeholder="https://..."></label>
+        <label>رفع وسائط للدرس<input id="lessonMediaFile" type="file" class="ch-input" accept="image/*,video/*"></label>
+      </div>
       <label class="switch-row"><input id="lessonPreviewToggle" type="checkbox" ${lesson.allowPreview ? "checked" : ""}> متاح كدرس تجريبي</label>
       <div class="inline-actions">
         <button type="button" class="ch-btn secondary" id="duplicateLesson">نسخ الدرس</button>
@@ -473,6 +494,21 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     q("#lessonContent").oninput = (e) => {
       lesson.content = e.target.value;
       autosave();
+    };
+    q("#lessonMediaUrl").oninput = (e) => {
+      lesson.content = e.target.value.trim();
+      q("#lessonContent").value = lesson.content;
+      autosave();
+      renderPreview();
+    };
+    q("#lessonMediaFile").onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      lesson.content = await uploadFileToStorage(file, "lesson-media");
+      q("#lessonContent").value = lesson.content;
+      q("#lessonMediaUrl").value = lesson.content;
+      autosave();
+      renderPreview();
     };
     q("#lessonPreviewToggle").onchange = (e) => {
       lesson.allowPreview = e.target.checked;
@@ -649,6 +685,22 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
       renderPreview();
     };
 
+    const bgFileInput = q("#slideBackgroundFile");
+    if (bgFileInput) {
+      bgFileInput.onchange = async (e) => {
+        const s = activeSlide();
+        const file = e.target.files?.[0];
+        if (!s || !file) return;
+        s.background = normalizeSlideBackground(s.background);
+        s.background.image = await uploadFileToStorage(file, "slide-backgrounds");
+        s.background.type = "image";
+        q("#slideBackgroundImage").value = s.background.image;
+        renderSlides();
+        autosave();
+        renderPreview();
+      };
+    }
+
     bindSlideTools();
     bindCanvasInteractions();
     renderElementInspector();
@@ -684,7 +736,8 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
         <label>الارتفاع<input class="ch-input" type="number" data-el-prop="h" value="${Math.round(el.h || 60)}"></label>
         <label>الطبقة Z<input class="ch-input" type="number" min="1" data-el-prop="z" value="${Math.round(el.z || 1)}"></label>
         ${el.type !== "image" && el.type !== "video" ? `<label class="full">النص<textarea class="ch-textarea" rows="3" data-el-prop="text">${esc(el.text || "")}</textarea></label>` : ""}
-        ${(el.type === "image" || el.type === "video") ? `<label class="full">رابط الوسائط<input class="ch-input" data-el-prop="src" value="${esc(el.src || "")}" placeholder="https://..."></label>` : ""}
+        ${(el.type === "image" || el.type === "video") ? `<label class="full">رابط الوسائط<input class="ch-input" data-el-prop="src" value="${esc(el.src || "")}" placeholder="https://..."></label>
+        <label class="full">رفع ${el.type === "video" ? "فيديو" : "صورة"} للعنصر<input class="ch-input" type="file" data-el-file="${el.id}" accept="${el.type === "video" ? "video/*" : "image/*"}"></label>` : ""}
         <label>لون النص<input class="ch-input" type="color" data-el-style="color" value="${esc(el.style.color || "#0f172a")}"></label>
         <label>لون الخلفية<input class="ch-input" type="color" data-el-style="background" value="${esc(el.style.background || "#dbeafe")}"></label>
         <label>حجم الخط<input class="ch-input" type="number" min="12" max="80" data-el-style="fontSize" value="${Number(el.style.fontSize || 22)}"></label>
@@ -705,6 +758,17 @@ export function createCourseBuilder({ role = "instructor", selectors = {} }) {
     panel.querySelectorAll("[data-el-style]").forEach((input) =>
       input.addEventListener("input", () => {
         el.style[input.dataset.elStyle] = input.type === "number" ? Number(input.value || 0) : input.value;
+        renderSlides();
+        autosave();
+        renderPreview();
+      })
+    );
+
+    panel.querySelectorAll("[data-el-file]").forEach((input) =>
+      input.addEventListener("change", async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        el.src = await uploadFileToStorage(file, "slide-elements");
         renderSlides();
         autosave();
         renderPreview();
