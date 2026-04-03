@@ -17,7 +17,8 @@
 .lesson-settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .switch-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
 
-.slide-grid { display: grid; grid-template-columns: 340px 1fr; gap: 14px; }
+.slide-grid { display: grid; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.slide-grid > section { min-width: 0; }
 .slide-list { display: grid; gap: 10px; margin-top: 8px; max-height: 340px; overflow: auto; }
 .slide-thumb { border: 1px solid var(--color-border); background: #fff; border-radius: 10px; padding: 8px; display: grid; gap: 8px; }
 .slide-thumb-main { border: 0; background: transparent; padding: 0; text-align: right; cursor: pointer; display: grid; gap: 8px; }
@@ -28,7 +29,7 @@
 .slide-thumb-actions { display: flex; justify-content: flex-end; gap: 6px; }
 .slide-thumb-empty { color: #64748b; font-size: 12px; padding: 8px; display: inline-block; }
 
-.slide-canvas { border: 1px dashed #9db1ec; min-height: 680px; border-radius: 14px; position: relative; overflow: hidden; background: #f8fafc; }
+.slide-canvas { border: 1px dashed #9db1ec; width: 100%; aspect-ratio: 16 / 9; min-height: 520px; border-radius: 14px; position: relative; overflow: hidden; background: #f8fafc; }
 .canvas-element { position: absolute; border: 1px solid transparent; padding: 6px; user-select: none; touch-action: none; overflow: hidden; }
 .canvas-element.selected { border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(51, 92, 255, 0.2); }
 .canvas-element [contenteditable="true"] { width: 100%; height: 100%; outline: none; cursor: text; white-space: pre-wrap; }
@@ -73,3 +74,6 @@
   .step-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .slide-grid, .lesson-settings-grid, .preview-landing, .element-inspector-grid { grid-template-columns: 1fr; }
 }
+
+
+#builderRoot.app-shell { width: min(1500px, 97%); }
